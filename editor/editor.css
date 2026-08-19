@@ -1,0 +1,399 @@
+/* The editor's own styling. Deliberately shares nothing with css/ — the game's
+   stylesheets are a game's stylesheets (a fixed full-bleed app with a mobile
+   layout and safe-area insets), and a tool wants a plain desktop three-pane
+   window. Nothing here is loaded by index.html and nothing in css/ is loaded by
+   editor.html, so neither can drag the other around. */
+
+:root {
+  --bg: #0d1117;
+  --panel: #151b26;
+  --panel2: #1b2231;
+  --line: #26303f;
+  --ink: #dfe6f2;
+  --dim: #8d9bb5;
+  --accent: #4da3ff;
+  --good: #5ad48a;
+  --warn: #ffb347;
+  --bad: #ff5f56;
+  --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+  --side: 336px;
+  --bar: 46px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+
+/* A thumb dragged across a tool selects its labels instead of using it, and a
+   long press on the canvas raises the magnifier. Both prefixes are written out
+   rather than left to the unprefixed property: Safari before 16.4 does not
+   honour `user-select` without `-webkit-`, and Chromium mirrors one into the
+   other so getComputedStyle cannot tell you that you got it wrong. Inputs are
+   exempt further down — the whole point of a textarea here is selecting it. */
+#bar, #side, #stage, #edAsk {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input, textarea, .pane code, #edOut2 {
+  -webkit-user-select: text;
+  user-select: text;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 13px/1.45 var(--ui);
+  /* `auto`, not `hidden`. Nothing on this page ever overflows a window of a
+     sensible size — but see the min-height below: in a frame shorter than that
+     the page has to be reachable by scrolling rather than clipped off. */
+  overflow: auto;
+}
+
+#app {
+  height: 100dvh;
+  /* A tool needs room, and `100dvh` alone cannot ask for any.
+     Hosted inside a frame that is sized to its content, a page whose height is
+     purely a fraction of the viewport can never grow: it reports exactly the
+     height it was given, the host keeps it there, and an editor that wants a
+     canvas and a side panel arrives as a squashed strip. The floor is what the
+     page asks for when the viewport will not say. */
+  min-height: 640px;
+  display: grid;
+  grid-template-columns: 1fr var(--side);
+  /* The bar wraps rather than scrolls: a control you cannot see is a control
+     you do not have, and the one that fell off the end was the zoom. */
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "bar bar" "stage side";
+}
+
+/* ---- toolbar ---- */
+#bar {
+  grid-area: bar;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  min-height: var(--bar);
+  padding: 6px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+#bar select { max-width: 200px; }
+#bar .brand { font-weight: 600; letter-spacing: .2px; }
+#bar .brand b { color: var(--accent); }
+#bar .spacer { flex: 1; }
+
+.fld { display: flex; align-items: center; gap: 5px; color: var(--dim); font-size: 12px; }
+select, input, textarea, button {
+  font: inherit; color: var(--ink);
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 7px;
+}
+textarea { font-family: var(--mono); font-size: 12px; line-height: 1.5; width: 100%; resize: vertical; }
+/* Source, not prose: soft-wrapping an exported block breaks the indentation
+   that tells you where it goes. */
+textarea.code { white-space: pre; overflow-x: auto; }
+input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); padding: 0; }
+input[type=number] { width: 68px; }
+button { cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.warn { color: var(--bad); }
+button.warn:hover { border-color: var(--bad); }
+
+.tools { display: flex; gap: 3px; }
+.tools button { padding: 4px 9px; }
+.tools button.on { background: var(--accent); border-color: var(--accent); color: #08111d; font-weight: 600; }
+
+.back {
+  color: var(--dim); text-decoration: none;
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 4px 9px; font-size: 12px;
+}
+.back:hover { color: var(--ink); border-color: var(--accent); }
+
+.toggles { display: flex; gap: 10px; color: var(--dim); font-size: 12px; }
+.toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+
+.zoom { display: flex; align-items: center; gap: 4px; }
+.zoom button { padding: 4px 8px; }
+.zoom span { min-width: 44px; text-align: center; color: var(--dim); font: 12px var(--mono); }
+
+/* ---- canvas ---- */
+#stage { grid-area: stage; position: relative; overflow: hidden; background: #070a0f; }
+#view { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+#minimap { display: none; }
+
+#hint, #readout {
+  position: absolute; left: 10px;
+  padding: 4px 9px;
+  background: rgba(13, 17, 23, .82);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--dim);
+  font: 11px/1.5 var(--mono);
+  pointer-events: none;
+}
+#hint { top: 10px; }
+#readout { bottom: 10px; color: var(--ink); max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; }
+kbd {
+  font: 10px var(--mono);
+  background: var(--panel2); border: 1px solid var(--line);
+  border-radius: 3px; padding: 0 4px;
+}
+
+/* ---- side panel ---- */
+#side {
+  grid-area: side;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tabs button {
+  flex: 1; border: 0; border-radius: 0;
+  background: transparent; color: var(--dim);
+  padding: 9px 4px; font-size: 12px;
+}
+.tabs button.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+.pill {
+  display: inline-block; min-width: 16px;
+  border-radius: 8px; padding: 0 4px;
+  font: 10px var(--mono); background: var(--line);
+}
+.pill.warn { background: var(--warn); color: #241703; }
+.pill.bad { background: var(--bad); color: #2a0806; }
+
+.pane { display: none; padding: 12px; overflow-y: auto; flex: 1; min-height: 0; }
+.pane.on { display: block; }
+.pane h3 { margin: 0 0 10px; font-size: 14px; }
+.pane h4 { margin: 16px 0 6px; font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: .5px; }
+.pane code { font: 12px var(--mono); color: var(--accent); }
+
+.frow { display: grid; grid-template-columns: 74px 1fr; gap: 8px; align-items: center; margin-bottom: 7px; }
+.frow > span:first-child { color: var(--dim); font-size: 12px; }
+.frow input:not([type=checkbox]):not([type=number]), .frow select { width: 100%; }
+
+.note {
+  margin: 12px 0; padding: 8px 10px;
+  background: var(--panel2); border-left: 2px solid var(--line);
+  border-radius: 0 6px 6px 0;
+  color: var(--dim); font-size: 12px;
+}
+.empty { color: var(--dim); font-size: 12px; }
+.ok { color: var(--good); }
+.btns { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+
+.stat { font: 12px var(--mono); color: var(--dim); margin-bottom: 10px; }
+.stat b { color: var(--ink); }
+.stat b.good { color: var(--good); }
+.stat b.bad { color: var(--bad); }
+
+ul.faults, ul.list { list-style: none; margin: 0; padding: 0; }
+ul.faults li, ul.list li {
+  padding: 7px 9px; margin-bottom: 5px;
+  background: var(--panel2); border-radius: 6px;
+  border-left: 2px solid var(--line);
+  cursor: pointer; font-size: 12px;
+}
+ul.faults li:hover, ul.list li:hover { border-left-color: var(--accent); }
+ul.faults li.error { border-left-color: var(--bad); }
+ul.faults li.warn { border-left-color: var(--warn); }
+ul.faults em, ul.list em { display: block; color: var(--dim); font-style: normal; font-family: var(--mono); font-size: 11px; margin-top: 2px; }
+
+/* ---- palette ---- */
+.pal { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 5px; }
+.pal button {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 7px 4px; text-align: center;
+}
+.pal .pe { font-size: 20px; line-height: 1; }
+.pal .pn {
+  font-size: 10px; color: var(--dim); line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---- asking something ---- */
+#edAsk {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  padding: 16px 18px;
+  min-width: 340px; max-width: min(440px, 92vw);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .55);
+}
+#edAsk::backdrop { background: rgba(6, 9, 14, .62); }
+#edAsk h3 { margin: 0 0 12px; font-size: 14px; }
+#edAsk p { margin: 0 0 14px; color: var(--dim); font-size: 12px; }
+#edAsk .frow { grid-template-columns: 88px 1fr; }
+#edAsk .btns { justify-content: flex-end; margin-top: 16px; }
+#edAsk button { padding: 6px 14px; }
+#edAsk button[value=ok] { background: var(--accent); border-color: var(--accent); color: #08111d; font-weight: 600; }
+#edAsk button[value=ok].warn { background: var(--bad); border-color: var(--bad); color: #2a0806; }
+#edAsk button.ghost { color: var(--dim); }
+
+/* Focus has to be visible: this is a tool operated with both hands, and the
+   dialog is the one place a keyboard is the fastest way through. */
+:where(button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ---- it did not start ----
+   Deliberately loud and deliberately not dependent on anything the editor sets
+   up: this is what is on screen when the setup is what failed. */
+#edDead {
+  position: fixed; inset: 0; z-index: 999;
+  background: var(--bg); color: var(--ink);
+  padding: 40px; overflow: auto;
+  font: 14px/1.6 var(--ui);
+}
+#edDead h2 { color: var(--bad); margin: 0 0 12px; font-size: 18px; }
+#edDead pre {
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font: 12px/1.5 var(--mono); color: var(--dim);
+}
+#edDead .hint { color: var(--dim); font-size: 12px; }
+
+/* ---- undo ---- */
+.hist { display: flex; gap: 3px; }
+.hist button { padding: 4px 9px; min-width: 34px; }
+.hist button:disabled { opacity: .38; cursor: default; border-color: var(--line); }
+
+/* On a desktop the two rows are not rows: the wrappers vanish and the bar is
+   the single flex line it always was. */
+.barrow { display: contents; }
+.sheet-toggle { display: none; }
+
+/* A tool is a desktop thing; below this there is not enough room for a canvas
+   and a panel at once, so the panel goes under the map rather than beside it. */
+@media (max-width: 900px) {
+  #app { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; grid-template-areas: "bar" "stage" "side"; }
+  #side { border-left: 0; border-top: 1px solid var(--line); }
+}
+
+/* Short and wide — an embedded frame, or a laptop in a video call. Every row
+   above the canvas costs canvas, so the chrome gives its padding back and the
+   brand (which names a page you are already looking at) goes entirely. */
+@media (max-height: 700px) {
+  #bar { padding: 4px 10px; gap: 6px; font-size: 12px; }
+  #bar .brand { display: none; }
+  #hint { display: none; }
+}
+
+/* ---- a phone ----
+   The bar used to wrap to four lines AND push the page sideways: `nowrap` on
+   items that could not shrink made its content 579px wide on a 390px screen, so
+   the whole layout was built for a viewport nobody had. Everything below follows
+   from fixing that.
+
+   Each row is its own sideways strip, the way the game's panel puts seven tabs
+   on one scrolling row. Nothing wraps, nothing overflows the page, and the two
+   rows cost ~96px instead of 132 — while every target grows to something a thumb
+   can actually hit. */
+@media (pointer: coarse), (max-width: 700px) {
+  html, body { overscroll-behavior: none; }
+  #app { min-height: 0; }               /* a phone's viewport is the floor here */
+
+  /* A grid track and a flex item both default to `min-width: auto`, which means
+     "never smaller than my content" — so a strip that scrolls internally still
+     forced the whole page to its content width, and the layout was built for
+     853px on a 390px screen. Every ancestor of a scrolling strip has to be told
+     it may be narrower than what is inside it, or the scrolling does nothing. */
+  #app > *, #bar, .barrow, #stage, #side, .tabs { min-width: 0; }
+
+  #bar { flex-direction: column; align-items: stretch; gap: 5px; padding: 5px 8px; }
+  #bar .brand, #bar .spacer { display: none; }
+  .barrow {
+    display: flex; flex-wrap: nowrap; align-items: center; gap: 5px;
+    /* Explicit, not inherited from `stretch`. A column flex container's cross
+       size is meant to give this its width, but the strip's own content wins
+       the negotiation and it grows to 836px inside a 390px bar — taking the
+       document with it. Pinning the width is what makes overflow-x mean
+       something. */
+    width: 100%; max-width: 100%;
+    overflow-x: auto; overflow-y: hidden;
+    /* The scrollbar is a desktop affordance and costs a row of pixels here. */
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .barrow::-webkit-scrollbar { display: none; }
+  /* Nothing in a scrolling strip may shrink — a squashed select is unreadable
+     and a squashed button is unhittable. They scroll instead. */
+  .barrow > *, .tools button, .zoom button, .hist button { flex: 0 0 auto; }
+
+  /* 40px, because a 25px button is a button you miss. The game settled on 34 as
+     the floor for a chip; a primary control gets more. */
+  #bar button, #bar select, .back { min-height: 40px; }
+  #bar select { max-width: 44vw; min-width: 96px; font-size: 13px; }
+  .fld { gap: 4px; font-size: 11px; }
+
+  .tools { gap: 4px; }
+  .tools button { min-width: 46px; padding: 4px 8px; font-size: 10px; line-height: 1.1;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tools button i { font-style: normal; font-size: 16px; line-height: 1; }
+
+  /* A checkbox is 15px and cannot be made bigger without looking wrong, so the
+     LABEL becomes the target and the box sits inside it. */
+  .toggles { gap: 4px; }
+  .toggles label {
+    min-height: 40px; padding: 0 9px; gap: 6px;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--panel2); font-size: 12px;
+  }
+  .zoom button, .hist button { min-width: 40px; justify-content: center; }
+  .zoom span { min-width: 46px; }
+
+  /* The map is the thing. It gets what is left, and what is left is most of the
+     screen once the sheet below is closed. */
+  #stage { min-height: 42vh; }
+  #hint { display: none; }
+  #readout { font-size: 10px; bottom: 6px; left: 6px; padding: 3px 6px; }
+
+  /* ---- the panel as a bottom sheet ----
+     Open it takes a fixed share of the screen; closed it is the tab strip and
+     nothing else, which is the difference between an editor with a map in it and
+     an editor with a form in it. */
+  #side { max-height: 46vh; }
+  #app.sheet-shut #side { max-height: none; }
+  #app.sheet-shut .pane { display: none; }
+
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { flex: 0 0 auto; min-height: 44px; padding: 0 14px; font-size: 12px; }
+  .sheet-toggle {
+    display: block; flex: 0 0 auto;
+    min-width: 44px; color: var(--dim);
+    border-left: 1px solid var(--line);
+    position: sticky; right: 0;
+    background: var(--panel);
+  }
+  #app.sheet-shut .sheet-toggle { transform: rotate(180deg); }
+
+  .pane { padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .pal { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+  .pal button { min-height: 62px; }
+  ul.faults li, ul.list li { padding: 10px; }
+  .frow { grid-template-columns: 68px 1fr; }
+  .frow input, .frow select { min-height: 38px; }
+  .btns button { min-height: 40px; padding: 0 14px; }
+  #edAsk { min-width: 0; width: min(94vw, 440px); }
+  #edAsk button { min-height: 42px; }
+}
+
+/* A phone on its side has 342px of height and the chrome was taking 96 of it.
+   Two strips become one — there is width to spare here and none at all
+   vertically, which is the same trade the game's own landscape HUD makes. */
+@media (pointer: coarse) and (max-height: 480px), (max-width: 700px) and (max-height: 480px) {
+  #bar { flex-direction: row; align-items: center; }
+  .barrow { display: contents; }
+  #bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  #bar::-webkit-scrollbar { display: none; }
+  #bar > *, .tools, .toggles, .zoom, .hist { flex: 0 0 auto; }
+  #stage { min-height: 0; }
+  #side { max-height: 40vh; }
+  .tools button { flex-direction: row; gap: 5px; }
+  .tools button i { font-size: 13px; }
+}

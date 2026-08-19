@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="dark">
+<title>CALLHALL Level Editor</title>
+<!-- PROJECT-SIDE. This page is a tool, not the game, and it is never published:
+     scripts/release.sh stages only what index.html declares and refuses outright
+     to stage anything under editor/. Its own URL for the same reason — the game
+     is index.html and stays exactly what it was. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%BA%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="editor/editor.css?v=b68d289">
+</head>
+<body>
+<div id="app">
+
+  <!-- Two rows, and on a desktop they are not rows at all: `.barrow` is
+       display:contents there, so the bar stays the single flex line it has
+       always been and the grouping costs nothing. On a phone each row becomes
+       its own horizontally-scrolling strip, which is the only arrangement in
+       which fifteen controls fit a 390px screen without either wrapping to four
+       lines or pushing the page sideways. -->
+  <header id="bar">
+    <div class="barrow r1">
+      <span class="brand">🗺️ <b>CALLHALL</b> level editor</span>
+
+      <label class="fld">Level
+        <select id="edLevel"></select>
+      </label>
+
+      <div class="tools" id="edTools" role="toolbar" aria-label="Tools">
+        <button data-tool="select" class="on" title="Select and drag (V)"><i>↖</i> Select</button>
+        <button data-tool="room" title="Drag out a room (R)"><i>▦</i> Room</button>
+        <button data-tool="door" title="Place a door (D)"><i>🚪</i> Door</button>
+        <button data-tool="object" title="Place from the palette (O)"><i>✚</i> Object</button>
+        <button data-tool="erase" title="Delete what is on the tile (X)"><i>⌫</i> Erase</button>
+        <button data-tool="entry" title="Move an arrival point (E)"><i>⚑</i> Entry</button>
+        <button data-tool="counter" title="Drag out a counter (C)"><i>▤</i> Counter</button>
+        <button data-tool="pan" title="Drag to move around (H)"><i>✋</i> Pan</button>
+      </div>
+
+      <label class="fld">Zone
+        <select id="edZone"></select>
+      </label>
+    </div>
+
+    <div class="barrow r2">
+      <span class="spacer"></span>
+
+      <div class="toggles">
+        <label title="Tile grid"><input type="checkbox" id="edGrid" checked> grid</label>
+        <label title="Room and door outlines"><input type="checkbox" id="edPlan" checked> plan</label>
+        <label title="Highlight what validation found"><input type="checkbox" id="edFaults" checked> faults</label>
+        <label title="Where the colleagues are sent (WP)"><input type="checkbox" id="edWps"> waypoints</label>
+      </div>
+
+      <div class="hist">
+        <button id="edUndo" title="Undo">↶</button>
+        <button id="edRedo" title="Redo">↷</button>
+      </div>
+
+      <div class="zoom">
+        <button id="edOut" title="Zoom out">−</button>
+        <span id="edZoomV">100%</span>
+        <button id="edIn" title="Zoom in">+</button>
+        <button id="edFit" title="Fit the whole level">fit</button>
+      </div>
+
+      <button id="edRevert" class="warn" title="Throw away every change to this level">Revert</button>
+      <!-- Published beside the game, so there is somewhere to go back to. A plain
+           link, not a script: the game is index.html and this page must stay
+           something it never has to know about. -->
+      <a class="back" href="index.html" title="Open the game">▶ the game</a>
+    </div>
+  </header>
+
+  <main id="stage">
+    <canvas id="view" aria-label="The level being edited"></canvas>
+    <!-- R.init() measures and rescales this on the way past. The editor never
+         draws a minimap; it exists so the renderer can initialise unchanged. -->
+    <canvas id="minimap" width="168" height="118" hidden></canvas>
+    <div id="hint"><kbd>1</kbd>–<kbd>8</kbd> tools · scroll or pinch to zoom · <kbd>space</kbd>-drag or ✋ to move around · <kbd>Del</kbd> removes the selection</div>
+    <div id="readout"></div>
+  </main>
+
+  <aside id="side">
+    <nav class="tabs" id="edTabs" role="tablist">
+      <button data-tab="inspect" class="on">Inspect</button>
+      <button data-tab="check">Check <span class="pill" id="edFaultN"></span></button>
+      <button data-tab="palette">Palette</button>
+      <button data-tab="level">Level</button>
+      <button data-tab="export">Export</button>
+      <!-- Phone only. The panel is a bottom sheet there, and a sheet that cannot
+           be got out of the way is a sheet that has taken half the map. -->
+      <button id="edSheet" class="sheet-toggle" title="Collapse the panel" aria-label="Collapse the panel">▾</button>
+    </nav>
+    <div class="pane on" id="paneInspect"></div>
+    <div class="pane" id="paneCheck"></div>
+    <div class="pane" id="panePalette"></div>
+    <div class="pane" id="paneLevel"></div>
+    <div class="pane" id="paneExport"></div>
+  </aside>
+
+</div>
+
+<!-- The game, unchanged and in the order index.html loads it: the editor edits
+     the real data through the real builder and previews it with the real
+     renderer, so what you see here is what the player gets. It deliberately
+     does NOT load engine/boot.js — that starts a shift. -->
+<script src="art/sprites/manifest.js?v=b68d289"></script>
+<script src="data/world.js?v=b68d289"></script>
+<script src="data/levels.js?v=b68d289"></script>
+<script src="data/npcs.js?v=b68d289"></script>
+<script src="data/items.js?v=b68d289"></script>
+<script src="data/callers.js?v=b68d289"></script>
+<script src="data/office.js?v=b68d289"></script>
+<script src="data/acts.js?v=b68d289"></script>
+<script src="engine/core.js?v=b68d289"></script>
+<script src="engine/controls.js?v=b68d289"></script>
+<script src="engine/audio.js?v=b68d289"></script>
+<script src="engine/state.js?v=b68d289"></script>
+<script src="engine/world.js?v=b68d289"></script>
+<script src="engine/levels.js?v=b68d289"></script>
+<script src="engine/ui.js?v=b68d289"></script>
+<script src="engine/progress.js?v=b68d289"></script>
+<script src="engine/office.js?v=b68d289"></script>
+<script src="engine/dialogue.js?v=b68d289"></script>
+<script src="engine/combat.js?v=b68d289"></script>
+<script src="engine/npc.js?v=b68d289"></script>
+<script src="engine/sprites.js?v=b68d289"></script>
+<script src="engine/render.js?v=b68d289"></script>
+<script src="engine/panels.js?v=b68d289"></script>
+<script src="engine/menus.js?v=b68d289"></script>
+<script src="engine/input.js?v=b68d289"></script>
+
+<!-- The editor itself. -->
+<script src="editor/ask.js?v=b68d289"></script>
+<script src="editor/doc.js?v=b68d289"></script>
+<script src="editor/validate.js?v=b68d289"></script>
+<script src="editor/emit.js?v=b68d289"></script>
+<script src="editor/view.js?v=b68d289"></script>
+<script src="editor/tools.js?v=b68d289"></script>
+<script src="editor/panels.js?v=b68d289"></script>
+<script src="editor/boot.js?v=b68d289"></script>
+</body>
+</html>

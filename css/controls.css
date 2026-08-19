@@ -1,0 +1,76 @@
+/* touch controls */
+#touch{position:absolute;inset:0;z-index:6;display:none;pointer-events:none}
+#touch.on{display:block}
+/* While a conversation is up it covers the bottom of the screen — and with it
+   the pad. Hide the controls so they are not showing through as dead buttons. */
+body.talking #touch.on{display:none}
+/* Same for the full-screen overlays. They already swallow the taps; this just
+   stops the pad ghosting through their translucent backdrop. Falling back to a
+   faint pad behind a modal is harmless if :has() is missing. */
+#app:has(#combat.on) #touch.on,
+#app:has(#panel.on) #touch.on,
+#app:has(#report.on) #touch.on,
+#app:has(#ending.on) #touch.on{display:none}
+/* The stick's catchment. A thumb pressing "somewhere near the bottom-left" is
+   the actual gesture people make; a 150px pad you have to find first is not.
+   The zone is invisible and does nothing but claim the corner the thumb is
+   already resting in — the stick itself springs to wherever inside it you
+   landed. It stops well short of the E button's side, so the two thumbs never
+   contend for the same pixels.
+
+   The height is deliberately the 244px the interaction prompt sits above (see
+   the coarse-pointer block): the stick is clamped inside this box, so a zone
+   that stops where the prompt starts is a stick that can never be dragged up
+   over it. */
+#stickZone{position:absolute;left:0;bottom:0;width:min(58%,340px);height:min(50%,244px);
+  pointer-events:auto;touch-action:none}
+/* The base rests here and is moved to the thumb by an inline left/top, which
+   is cleared again on release — so the resting position, including which side
+   of the screen it is on, stays entirely in CSS where the southpaw mirror can
+   reach it. Set once per press, not per frame. */
+.stick{position:absolute;left:calc(18px + env(safe-area-inset-left));
+  bottom:calc(84px + env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;
+  pointer-events:none;opacity:.42;transition:opacity .18s}
+.stick::before{content:'';position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);background:rgba(9,12,18,.34)}
+/* The knob is dragged every frame, so it moves by transform and is deliberately
+   not eased: a transition here puts it permanently a tenth of a second behind
+   the thumb, which reads as the control being broken. */
+#stickKnob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;
+  border-radius:50%;background:radial-gradient(circle at 50% 32%,rgba(77,163,255,.62),rgba(77,163,255,.3));
+  border:2px solid var(--brand);box-shadow:0 8px 20px -10px rgba(77,163,255,.9);will-change:transform}
+.stick.grab{opacity:.96}
+body.southpaw .stick{left:auto;right:calc(18px + env(safe-area-inset-right))}
+/* D-pad mode. Same footprint, same corner — for anyone who would rather have
+   four edges to find by feel than an analogue stick. */
+.dpad{display:none;position:absolute;left:calc(14px + env(safe-area-inset-left));
+  bottom:calc(76px + env(safe-area-inset-bottom));width:150px;height:150px;pointer-events:auto;touch-action:none}
+.dpad button{position:absolute;width:50px;height:50px;background:rgba(34,43,59,.8);border:1px solid var(--line);
+  border-radius:10px;color:var(--text);font-size:16px;touch-action:none}
+.dpad button:active{background:rgba(77,163,255,.35);border-color:var(--brand)}
+.dpad .u{left:50px;top:0}.dpad .d{left:50px;top:100px}.dpad .l{left:0;top:50px}.dpad .r{left:100px;top:50px}
+/* Exactly one of the two is ever on screen. Both live in the markup so the
+   switch is a class rather than a rebuild — see Hand.apply(). */
+body.dpad-controls #stickZone{display:none}
+body.dpad-controls .dpad{display:block}
+#touchE{position:absolute;right:calc(18px + env(safe-area-inset-right));
+  bottom:calc(96px + env(safe-area-inset-bottom));width:74px;height:74px;border-radius:50%;
+  background:rgba(77,163,255,.25);border:2px solid var(--brand);color:#fff;font-size:15px;
+  pointer-events:auto;font-family:var(--mono);touch-action:none}
+#touchE:active{background:rgba(77,163,255,.5)}
+#hudBottom{padding-bottom:env(safe-area-inset-bottom)}
+#hudTL{top:calc(12px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left))}
+#hudTR{top:calc(12px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right))}
+#touchMenu{position:absolute;right:calc(18px + env(safe-area-inset-right));
+  bottom:calc(182px + env(safe-area-inset-bottom));width:54px;height:54px;border-radius:50%;
+  background:rgba(21,27,37,.88);border:1px solid var(--line);color:var(--text);font-size:20px;
+  pointer-events:auto;touch-action:none}
+#touchMenu:active{border-color:var(--brand);background:rgba(77,163,255,.3)}
+/* Southpaw: the whole control layout mirrors. Left-handers were holding the
+   phone in the hand that had to reach across it for the pad. Nothing about the
+   controls changes except which side they are on, so this is pure CSS off a
+   body class — see Hand.apply(). */
+body.southpaw #stickZone{left:auto;right:0}
+body.southpaw .dpad{left:auto;right:calc(14px + env(safe-area-inset-right))}
+body.southpaw #touchE{right:auto;left:calc(18px + env(safe-area-inset-left))}
+body.southpaw #touchMenu{right:auto;left:calc(18px + env(safe-area-inset-left))}
