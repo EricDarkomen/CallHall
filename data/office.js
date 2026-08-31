@@ -1,0 +1,359 @@
+'use strict';
+/* CALLHALL — the office around you: random events, the chat and mail feeds
+ * that run on the clock, the endings, and the opening cutscene. */
+
+/* ---------------- Random events ---------------- */
+const EVENTS = [
+  { id: 'printerpoc', e: '🖨️', t: 'PRINTER APOCALYPSE', d: 'The printer has begun printing. Nobody sent anything. It is on page 340.',
+    go() { count('printer'); Sfx.printer(); FX.shake(9); } },
+  { id: 'coffeeout', e: '☕', t: 'COFFEE MACHINE DOWN', d: 'The coffee machine is displaying “ERR: BEANS”. Morale drops through the floor and into the archive.',
+    go() { G.flags.coffeeBroken = true; setTimeout(() => { G.flags.coffeeBroken = false; UI.toast('☕', 'The coffee machine has recovered. Nobody fixed it.', 'good'); }, 90000); } },
+  { id: 'outage', e: '📞', t: 'PHONE SYSTEM OUTAGE', d: 'All phones are down. The floor experiences four minutes of pure, terrifying silence.',
+    go() { G.flags.phonesDown = true; Phones.clearAll(); setTimeout(() => { G.flags.phonesDown = false; UI.toast('📞', 'Phones are back. They are all ringing at once.', 'bad'); }, 60000); } },
+  { id: 'firealarm', e: '🔥', t: 'FIRE ALARM (TEST)', d: 'It is a test. It is always a test. Nobody moves. Ron does not even look up.',
+    go() { Sfx.bad(); FX.shake(6); Player.mod({ patience: -5 }); } },
+  { id: 'pizza', e: '🍕', t: 'FREE PIZZA IN THE BREAK ROOM', d: 'Somebody’s budget expired. Thirty-one adults are now running.',
+    go() { Item.give('pizza'); Player.mod({ energy: 10 }); } },
+  { id: 'email', e: '📧', t: 'COMPANY-WIDE EMAIL', d: 'Subject: URGENT. Body: “Please disregard the previous email.”',
+    go() { Mail.push('All Staff <noreply@callhall.co.uk>', 'URGENT', 'Please disregard the previous email.\n\nThanks.'); } },
+  { id: 'itdown', e: '💻', t: 'IT OUTAGE', d: 'The account system is “degraded”, which means it works but lies.',
+    go() { G.flags.itDown = true; setTimeout(() => { G.flags.itDown = false; }, 80000); } },
+  { id: 'toilet', e: '🚽', t: 'CUBICLE 2 CLOSED', d: 'A sign has appeared. The sign says OUT OF ORDER. The sign is handwritten. Nobody knows who wrote it.',
+    go() { G.flags.looClosed = true; } },
+  { id: 'birthday', e: '🎉', t: 'SOMEBODY’S BIRTHDAY', d: 'A card is circulating. You have never met this person. Sign it anyway.',
+    go() { Player.mod({ patience: 8 }); Chat.push('#general', 'Marjorie', '👩‍🦰', 'Card for Marcus going round — please sign AND WRITE SOMETHING, not just your name.'); Chat.push('#general', 'Dave', '🧔', 'Dave'); } },
+  { id: 'audit', e: '📋', t: 'SURPRISE AUDIT', d: 'Two people with lanyards are walking slowly and writing things down.',
+    go() { G.flags.audit = true; setTimeout(() => { G.flags.audit = false; }, 70000); } },
+  { id: 'cleaning', e: '🧹', t: 'OFFICE DEEP CLEAN', d: 'Everything on every desk has been moved 4cm. Precisely 4cm. As a message.',
+    go() { Player.mod({ patience: -4 }); } },
+  { id: 'rodent', e: '🐀', t: 'MYSTERIOUS OFFICE RODENT', d: 'Something moved behind the archive boxes. Facilities have been informed and have chosen violence.',
+    go() { G.flags.rodent = true; Chat.push('#general', 'Terry', '👴', 'Nobody go in the archive for a bit. No reason.'); } },
+  { id: 'manager', e: '👞', t: '👞 👞 👞', d: '“Everything alright?”',
+    go() { Nigel.appear(); } },
+  { id: 'escalation', e: '😱', t: 'CUSTOMER ESCALATION', d: 'A caller has asked for “whoever is in charge of the whole thing”. That is technically the spreadsheet.',
+    go() { Phones.ringRandom(true); } },
+  /* ---------------- the expansion ---------------- */
+  { id: 'briefing', e: '📽️', t: 'ALL-STAFF BRIEFING ANNOUNCED', d: 'Meeting Room 2. “30 mins.” Attendance is expected, which is a word chosen instead of “required” by someone who knew exactly what they were doing.',
+    go() {
+      G.flags.briefingToday = true;
+      Mail.push('Nigel Braithwaite <area.manager@callhall.co.uk>', 'All-staff briefing — 30 mins',
+        'Team,\n\nQuick all-staff in Meeting Room 2. Should be 30 mins.\n\nNothing to worry about.\n\nNigel');
+      Chat.push('#general', 'Gary', '🧑‍🦱', 'nothing to worry about. brilliant. love that.');
+      Chat.push('#general', 'Dave', '🧔', 'It is never nothing.');
+    } },
+  { id: 'newsystem', e: '🖥️', t: 'NEW SYSTEM ROLLOUT', d: 'The account system has been updated overnight. Everything is in a different place and the search no longer finds anything containing a space.',
+    go() { G.flags.newSystem = true; Player.mod({ patience: -6 }); setTimeout(() => { G.flags.newSystem = false; UI.toast('🖥️', 'The new system has been rolled back. The rollback has also broken the search. Nobody is going to mention this.', 'bad'); }, 100000); } },
+  { id: 'consultants', e: '🕴️', t: 'CONSULTANTS ON THE FLOOR', d: 'Three people in very good coats are being shown round. One of them is holding a clipboard and nodding at a bin.',
+    go() { G.flags.consultants = true; P.stats.bullshit += 1; setTimeout(() => { G.flags.consultants = false; }, 80000); Chat.push('#general', 'Karen', '👩‍💼', 'Please be aware we have visitors on the floor today! Best behaviour!! 🙂'); Chat.push('#general', 'Marjorie', '👩‍🦰', 'we are always on best behaviour karen'); } },
+  { id: 'aircon2', e: '🥶', t: 'AIR CONDITIONING INCIDENT', d: 'The air conditioning has gone to Baltic. Terry has the key. Terry is on leave. Four people are working in coats.',
+    go() { Player.mod({ patience: -5, energy: -5 }); Chat.push('#general', 'Sarah', '👩', 'it is 14 degrees on this side of the floor. FOURTEEN.'); Chat.push('#general', 'Marcus', '🧔‍♂️', 'it is 24 on this side. we could just meet in the middle'); } },
+  { id: 'goodcall', e: '💚', t: 'SOMEBODY HAD A GOOD CALL', d: 'Mo has just resolved something difficult and is sitting very still with the headset still on, quietly amazed at himself.',
+    go() { Player.mod({ patience: 8 }); Rel.add('mo', 1); Chat.push('#general', 'Mo', '🧑‍🎓', 'i just fixed something. an actual thing. it is fixed. i did that'); Chat.push('#general', 'Alan', '🧓', 'That’s the job. That right there. Well done.'); } },
+  { id: 'leaving', e: '🎈', t: 'SOMEBODY IS LEAVING', d: 'A card is going round for someone on the fourth floor whose last day is Friday. Nobody on this floor knows them. Everybody signs it.',
+    go() { Player.mod({ patience: 4 }); Chat.push('#general', 'Karen', '👩‍💼', 'Card going round for Priti in Billing — 12 years!! Please sign 💐'); Chat.push('#general', 'Gary', '🧑‍🦱', '12 years. imagine'); Chat.push('#general', 'Gary', '🧑‍🦱', 'im off in a couple of months anyway'); } },
+  { id: 'firealarm2', e: '🚨', t: 'FIRE ALARM (NOT A TEST)', d: 'It is not a test. Everybody stands in the car park for eleven minutes. It is the best eleven minutes of the quarter.',
+    go() { G.minutes += 11; Player.mod({ patience: 14, energy: 4 }); Phones.clearAll(); FX.shake(4); Chat.push('#general', 'Ron', '💂', 'Assembly point B is a Greggs now. I have said this. Every year I say this.'); } },
+  { id: 'wifi', e: '📶', t: 'THE WI-FI HAS GONE', d: 'The wired network is fine. The wi-fi is down. Nobody on this floor uses the wi-fi. Everybody is deeply, personally affected.',
+    go() { G.flags.wifiDown = true; setTimeout(() => { G.flags.wifiDown = false; }, 60000); Chat.push('#it-support', 'Steve', '🧑‍🔧', 'Aware of the wifi. Have you tried restarting it.'); Chat.push('#it-support', 'Priya', '👩‍💻', 'Steve it is the wifi'); Chat.push('#it-support', 'Steve', '🧑‍🔧', 'Have you tried restarting it'); } },
+  { id: 'survey2', e: '📋', t: 'THE ENGAGEMENT SURVEY', d: 'The annual engagement survey has opened. It is anonymous. It asks for your team, your role, your length of service and your site.',
+    go() {
+      Mail.push('People Team <peoplepartner@callhall.co.uk>', 'Your voice matters — Engagement Survey 2026',
+        'The annual engagement survey is now open.\n\nIt takes 25 minutes.\n\nIt is completely anonymous.\n\nPlease enter your team, role, length of service, line manager and site so we can break the results down meaningfully.\n\nFiona (0.6 FTE)');
+      Chat.push('#random', 'Tomasz', '🧑‍🍳', 'i am not on the list for the survey. i have been not on the list for six years. it is my favourite thing about me');
+    } },
+  { id: 'restructure', e: '📉', t: 'THE WORD “REALIGNMENT”', d: 'The word “realignment” has appeared in an email. The floor has gone quiet in a way that the floor does not usually go quiet.',
+    go() { Player.mod({ patience: -8 }); P.stats.chaos += 1; Chat.push('#general', 'Dave', '🧔', 'Right.'); Chat.push('#general', 'Sarah', '👩', 'dave what does right mean'); Chat.push('#general', 'Dave', '🧔', 'I have seen four of these. Two were nothing. Two were something. This is a Tuesday one.'); } },
+  { id: 'kettlebreak', e: '🫖', t: 'THE KETTLE HAS DIED', d: 'The kettle has died. Not the coffee machine — the kettle. The tea people and the coffee people are, for one day only, allies.',
+    go() { G.flags.kettleDead = true; Chat.push('#general', 'Marjorie', '👩‍🦰', 'the kettle has gone.'); Chat.push('#general', 'Terry', '👴', 'I have a kettle. I have had a kettle since 2011. It is not for general use.'); Chat.push('#general', 'Marjorie', '👩‍🦰', 'terry'); Chat.push('#general', 'Terry', '👴', '...bring your own mug.'); } },
+  { id: 'pigeonin', e: '🐦', t: 'THE PIGEON IS INSIDE', d: 'The fire door was propped open. The pigeon has entered the building. It is on the wallboard. It is looking at the service level.',
+    go() { FX.burst(P.x, P.y, '🐦', 10, '#8d9bb5'); Player.mod({ patience: 10 }); G.flags.pigeonInside = true; Chat.push('#general', 'Mo', '🧑‍🎓', 'THERE IS A BIRD IN HERE'); Chat.push('#general', 'Dave', '🧔', 'That’s Kevin.'); Chat.push('#general', 'Mo', '🧑‍🎓', 'WHAT'); Chat.push('#general', 'Dave', '🧔', 'The pigeon. We call the pigeon Kevin. Calm down.'); } },
+  { id: 'lunchtheft2', e: '🥪', t: 'ANOTHER LUNCH HAS GONE', d: 'Something has been removed from the fridge. There is a clean rectangle in the frost. The floor is now, formally, a crime scene.',
+    go() { G.flags.fridgeClues = (G.flags.fridgeClues || 0); Chat.push('#general', 'Sarah', '👩', 'IT HAS HAPPENED AGAIN'); Chat.push('#general', 'Sarah', '👩', 'I am starting a channel'); Chat.push('#general', 'Dave', '🧔', 'No.'); } },
+  { id: 'chairtaken', e: '💺', t: 'SOMEBODY HAS TAKEN A CHAIR', d: 'A chair has moved between rows. This is the single most destabilising event that can occur on an office floor and everybody knows exactly whose it was.',
+    go() { P.stats.chaos += 1; Chat.push('#general', 'Kevin', '🧑‍💻', 'has anyone seen my chair'); Chat.push('#general', 'Marjorie', '👩‍🦰', 'kevin'); Chat.push('#general', 'Kevin', '🧑‍💻', 'i know. i know. but this time it is the chair'); } }
+];
+
+
+/* ---------------- Office chat + mail scripts ---------------- */
+const CHAT_SCRIPT = [
+  { t: 545, c: '#general', who: 'Sarah', f: '👩', m: 'Does anyone know whose yoghurt this is?' },
+  { t: 548, c: '#general', who: 'Dave', f: '🧔', m: 'No.' },
+  { t: 550, c: '#general', who: 'Sarah', f: '👩', m: 'It has my name on it.' },
+  { t: 552, c: '#general', who: 'Dave', f: '🧔', m: 'Then why are you asking?' },
+  { t: 561, c: '#general', who: 'Karen', f: '👩‍💼', m: 'Morning team!! Big day. Let’s smash the queue 💪' },
+  { t: 563, c: '#general', who: 'Gary', f: '🧑‍🦱', m: 'I’m off in a couple of months anyway' },
+  { t: 600, c: '#it-support', who: 'Steve', f: '🧑‍🔧', m: 'Aware of the printer. Have you tried restarting it.' },
+  { t: 602, c: '#it-support', who: 'Priya', f: '👩‍💻', m: 'Steve it is a printer' },
+  { t: 604, c: '#it-support', who: 'Steve', f: '🧑‍🔧', m: 'Have you tried restarting it' },
+  { t: 640, c: '#general', who: 'Marjorie', f: '👩‍🦰', m: 'Whoever put a mug in the dishwasher lid-down: I know. I know exactly.' },
+  { t: 700, c: '#general', who: 'Mo', f: '🧑‍🎓', m: 'is it normal for someone to shout about a boiler for 20 minutes' },
+  { t: 702, c: '#general', who: 'Dave', f: '🧔', m: 'yes' },
+  { t: 703, c: '#general', who: 'Kevin', f: '🧑‍💻', m: 'has anyone seen my headset' },
+  { t: 720, c: '#general', who: 'Karen', f: '👩‍💼', m: 'Quick reminder that lunch is 30 mins not 45!! 🙂' },
+  { t: 722, c: '#general', who: 'Ron', f: '💂', m: 'It is legally 60.' },
+  { t: 723, c: '#general', who: 'Karen', f: '👩‍💼', m: '🙂' },
+  { t: 780, c: '#random', who: 'Colin', f: '🧑‍💼', m: 'Synergy.' },
+  { t: 782, c: '#random', who: 'Sarah', f: '👩', m: 'colin this is the random channel you cant just say that' },
+  { t: 784, c: '#random', who: 'Colin', f: '🧑‍💼', m: 'Synergy.' },
+  { t: 840, c: '#general', who: 'Sarah', f: '👩', m: 'UPDATE: the wrap is gone. Not moved. GONE.' },
+  { t: 845, c: '#general', who: 'Gary', f: '🧑‍🦱', m: 'wasnt me im leaving anyway' },
+  { t: 900, c: '#general', who: 'Priya', f: '👩‍💻', m: 'The compliance packs are due at 5. The printer knows this.' },
+  { t: 960, c: '#general', who: 'Karen', f: '👩‍💼', m: 'Great effort today everyone! Numbers are numbers 📈' },
+  { t: 1005, c: '#general', who: 'Dave', f: '🧔', m: 'Right.' },
+  /* ---------------- the expansion ---------------- */
+  { t: 542, c: '#general', who: 'Bev', f: '👩‍🔧', m: 'Floor by the printers is wet. It has been wet for forty minutes. There is a cone.' },
+  { t: 544, c: '#general', who: 'Mo', f: '🧑‍🎓', m: 'i walked through it sorry' },
+  { t: 546, c: '#general', who: 'Bev', f: '👩‍🔧', m: 'I know love. I watched you do it.' },
+  { t: 556, c: '#general', who: 'Marcus', f: '🧔‍♂️', m: 'morning' },
+  { t: 568, c: '#general', who: 'Karen', f: '👩‍💼', m: 'Morning team!! 💪' },
+  { t: 566, c: '#general', who: 'Tomasz', f: '🧑‍🍳', m: 'I did not receive the morning email. I have not received one since 2019. I am at peace.' },
+  { t: 572, c: '#wins', who: 'Karen', f: '👩‍💼', m: 'Starting a #wins channel!! Post your wins!! Any size!! 🎉' },
+  { t: 578, c: '#wins', who: 'Dave', f: '🧔', m: 'Got in.' },
+  { t: 580, c: '#wins', who: 'Sarah', f: '👩', m: 'dave that is not a win' },
+  { t: 582, c: '#wins', who: 'Dave', f: '🧔', m: 'It was today.' },
+  { t: 590, c: '#general', who: 'Alan', f: '🧓', m: 'Reminder: if a call is going badly you can transfer it to me. That is not failure. That is the system working. It is literally my job title.' },
+  { t: 592, c: '#general', who: 'Gary', f: '🧑‍🦱', m: 'alan youve just made everyones day worse by being nice about it' },
+  { t: 606, c: '#printer-watch', who: 'Priya', f: '👩‍💻', m: 'Starting a channel for this. ERROR 47 again. Day 14.' },
+  { t: 608, c: '#printer-watch', who: 'Steve', f: '🧑‍🔧', m: 'Have you tried restarting it' },
+  { t: 610, c: '#printer-watch', who: 'Priya', f: '👩‍💻', m: 'steve i have restarted it 41 times. i have a spreadsheet of the restarts.' },
+  { t: 612, c: '#printer-watch', who: 'Terry', f: '👴', m: 'Hit it.' },
+  { t: 614, c: '#printer-watch', who: 'Priya', f: '👩‍💻', m: 'terry we cannot put that in the channel' },
+  { t: 616, c: '#printer-watch', who: 'Terry', f: '👴', m: 'Hit it.' },
+  { t: 628, c: '#general', who: 'Sandra', f: '👩‍⚖️', m: 'Quality scores are out. Reminder that a low score is not a judgement of you as a person. It is a judgement of nineteen specific things you did in four minutes.' },
+  { t: 632, c: '#general', who: 'Mo', f: '🧑‍🎓', m: 'thats worse sandra' },
+  { t: 634, c: '#general', who: 'Sandra', f: '👩‍⚖️', m: 'Yes. Sorry, Mo. It is worse.' },
+  { t: 655, c: '#random', who: 'Kevin', f: '🧑‍💻', m: 'does anyone else hear hold music when there is no hold music' },
+  { t: 657, c: '#random', who: 'Marjorie', f: '👩‍🦰', m: 'yes' },
+  { t: 659, c: '#random', who: 'Dave', f: '🧔', m: 'Yes.' },
+  { t: 661, c: '#random', who: 'Terry', f: '👴', m: 'Aye.' },
+  { t: 663, c: '#random', who: 'Kevin', f: '🧑‍💻', m: 'oh good. good. thats reassuring. that is not reassuring' },
+  { t: 672, c: '#general', who: 'Fiona', f: '👩‍🦳', m: 'Gentle reminder that I am in Tuesdays and Thursdays. Please stop leaving things on my chair on a Wednesday. It is a chair. It is not an inbox.' },
+  { t: 690, c: '#general', who: 'Nigel', f: '👔', m: 'Great to see the energy on the floor this morning. Really tangible.' },
+  { t: 692, c: '#general', who: 'Nigel', f: '👔', m: 'Sent from my iPhone' },
+  { t: 694, c: '#random', who: 'Gary', f: '🧑‍🦱', m: 'hes not in the building. hes in stoke. hes been in stoke since 8' },
+  { t: 710, c: '#general', who: 'Marjorie', f: '👩‍🦰', m: 'The blue mug has moved. I want to be very clear that I am not accusing anyone. The blue mug has moved.' },
+  { t: 712, c: '#general', who: 'Tomasz', f: '🧑‍🍳', m: 'It was on the wrong shelf. I put it on the right shelf.' },
+  { t: 714, c: '#general', who: 'Marjorie', f: '👩‍🦰', m: 'Tomasz you are the only person here who knows which is the right shelf. I want you to know that I have noticed that.' },
+  { t: 726, c: '#general', who: 'Ron', f: '💂', m: 'Whoever chained the bike to the radiator in 2021: the radiator is being replaced. Speak now.' },
+  { t: 728, c: '#general', who: 'Ron', f: '💂', m: '...' },
+  { t: 730, c: '#general', who: 'Ron', f: '💂', m: 'Right. The bike stays.' },
+  { t: 742, c: '#wins', who: 'Mo', f: '🧑‍🎓', m: 'a man said thank you and meant it' },
+  { t: 744, c: '#wins', who: 'Alan', f: '🧓', m: 'That is the biggest win posted in this channel and it will not be beaten today.' },
+  { t: 756, c: '#general', who: 'Karen', f: '👩‍💼', m: 'Just a heads up there may be some visitors on the floor this afternoon. Nothing to worry about!! 🙂' },
+  { t: 758, c: '#general', who: 'Dave', f: '🧔', m: 'Every time someone says nothing to worry about I put a tin of biscuits in the drawer. I have four tins.' },
+  { t: 790, c: '#general', who: 'Sarah', f: '👩', m: 'has anyone seen the good stapler' },
+  { t: 792, c: '#general', who: 'Priya', f: '👩‍💻', m: 'define good' },
+  { t: 794, c: '#general', who: 'Sarah', f: '👩', m: 'the METAL one priya. the HEAVY one. the one that WORKS' },
+  { t: 796, c: '#general', who: 'Priya', f: '👩‍💻', m: 'ah. that one. no.' },
+  { t: 810, c: '#it-support', who: 'Steve', f: '🧑‍🔧', m: 'Reminder: do not adjust the server room thermostat. It is 31. It has been 31 for six years. 31 is correct.' },
+  { t: 812, c: '#it-support', who: 'Mo', f: '🧑‍🎓', m: 'why is 31 correct' },
+  { t: 814, c: '#it-support', who: 'Steve', f: '🧑‍🔧', m: 'Because it has been 31 for six years.' },
+  { t: 830, c: '#general', who: 'Janet', f: '👩‍🏫', m: 'Refresher training is available to all staff. Nobody has booked since 2019. The room is warm and there are biscuits and I would genuinely love to see somebody.' },
+  { t: 834, c: '#general', who: 'Mo', f: '🧑‍🎓', m: 'ill come janet' },
+  { t: 836, c: '#general', who: 'Janet', f: '👩‍🏫', m: '🙂' },
+  { t: 850, c: '#general', who: 'Karen', f: '👩‍💼', m: 'Really quick — has anyone got 5 mins?' },
+  { t: 852, c: '#general', who: 'Gary', f: '🧑‍🦱', m: 'no' },
+  { t: 854, c: '#general', who: 'Dave', f: '🧔', m: 'No.' },
+  { t: 856, c: '#general', who: 'Priya', f: '👩‍💻', m: 'no' },
+  { t: 858, c: '#general', who: 'Karen', f: '👩‍💼', m: '🙂' },
+  { t: 872, c: '#random', who: 'Colin', f: '🧑‍💼', m: 'There is no meeting. There is only the invite.' },
+  { t: 874, c: '#random', who: 'Sarah', f: '👩', m: 'colin i have asked you' },
+  { t: 876, c: '#random', who: 'Colin', f: '🧑‍💼', m: 'I have circled back.' },
+  { t: 890, c: '#general', who: 'Bev', f: '👩‍🔧', m: 'Chairs in please. That is all. Chairs in.' },
+  { t: 892, c: '#general', who: 'Alan', f: '🧓', m: 'Chairs in, everyone. Bev asks for one thing.' },
+  { t: 910, c: '#printer-watch', who: 'Priya', f: '👩‍💻', m: 'Day 14. ERROR 47. The compliance packs are due at 5.' },
+  { t: 930, c: '#general', who: 'Marcus', f: '🧔‍♂️', m: 'is there a card going round' },
+  { t: 932, c: '#general', who: 'Karen', f: '👩‍💼', m: 'no!!' },
+  { t: 934, c: '#general', who: 'Karen', f: '👩‍💼', m: 'ignore that' },
+  { t: 970, c: '#wins', who: 'Tomasz', f: '🧑‍🍳', m: 'Contract renewed. Three more months. See you all in January, probably.' },
+  { t: 972, c: '#wins', who: 'Marjorie', f: '👩‍🦰', m: 'your mug stays on the shelf either way' },
+  { t: 974, c: '#wins', who: 'Tomasz', f: '🧑‍🍳', m: '...' },
+  { t: 990, c: '#general', who: 'Karen', f: '👩‍💼', m: 'Anyone who can stay a bit past 5 — no pressure at all!! — the queue is quite long 🙏' },
+  { t: 992, c: '#general', who: 'Ron', f: '💂', m: 'It is legally not required.' },
+  { t: 994, c: '#general', who: 'Karen', f: '👩‍💼', m: '🙂' },
+  { t: 1008, c: '#general', who: 'Bev', f: '👩‍🔧', m: 'Night all. Screens off if you can. Forty screens saying WELCOME to an empty room all night.' },
+  { t: 1010, c: '#general', who: 'Marcus', f: '🧔‍♂️', m: 'night bev' }
+];
+
+const MAIL_SCRIPT = [
+  { t: 541, from: 'HR <peoplepartner@callhall.co.uk>', s: 'Welcome to the CALLHALL family!',
+    b: 'We’re thrilled to have you on the journey.\n\nYour induction pack is attached. (Attachment removed by IT for security reasons.)\n\nPlease complete your 30/60/90 day plan by Friday.\n\nBest,\nThe People Team (currently one person, part-time)' },
+  { t: 610, from: 'Facilities <terry@callhall.co.uk>', s: 'Fridge',
+    b: 'The fridge will be emptied Friday.\n\nEverything in it will be thrown away.\n\nEverything.\n\nTerry' },
+  { t: 700, from: 'Nigel Braithwaite <area.manager@callhall.co.uk>', s: 'Team Building',
+    b: 'Mandatory fun activity Friday.\n\nAttendance is compulsory.\n\nThis is a fun activity.\n\nNigel' },
+  { t: 760, from: 'All Staff <noreply@callhall.co.uk>', s: 'RE: RE: RE: Printer',
+    b: 'Please stop replying all.\n\nSent to: All Staff (612 recipients)' },
+  { t: 860, from: 'reporting@callhall.co.uk', s: 'Your performance, as of now',
+    b: 'AHT 4:12 (▲)\nCSAT 78% (▼)\nUtilisation 61% (▲)\n\nNo action required.\n\nWe are pleased with your trajectory.\n\nThis message was not sent by a person.' },
+  { t: 1000, from: 'Karen Whitlow <team.leader@callhall.co.uk>', s: 'Quick one',
+    b: 'Have you got 5 mins?\n\nNot urgent.\n\nSent 17:00' },
+  /* ---------------- the expansion ---------------- */
+  { t: 552, from: 'IT Service Desk <servicedesk@callhall.co.uk>', s: 'Your password will expire in 0 days',
+    b: 'Your password will expire in 0 days.\n\nYour new password must:\n\n· be at least 14 characters\n· contain an uppercase letter, a number and a symbol\n· not resemble any of your previous 24 passwords\n· not contain your name, the company name, the word “password”, or any word\n\nDo not write it down.\n\nThis is your fourth reminder. The first three were sent to an address you cannot access because your password has expired.' },
+  { t: 575, from: 'Sandra Ojo <quality@callhall.co.uk>', s: 'Your quality scores — this week',
+    b: 'Hello,\n\nSix calls reviewed. Average 71%.\n\nStrengths: warmth, listening, genuine attempt to resolve.\n\nDevelopment areas: did not brand the call at opening (x4), said “bear with” rather than “thank you for holding” (x6), did not offer the survey (x6).\n\nOverall: these were good calls. The framework does not have a box for that, so I am putting it here instead.\n\nSandra' },
+  { t: 620, from: 'All Staff <noreply@callhall.co.uk>', s: 'FW: FW: RE: Kitchen',
+    b: 'Please see below.\n\n> Please see below.\n\n>> Please see below.\n\n>>> Can whoever is putting teabags in the recycling please stop\n\n>>>> Sent to: All Staff (612 recipients)\n\n>>>>> Please stop replying all\n\n>>>>>> Please stop replying all\n\n>>>>>>> +1' },
+  { t: 668, from: 'Learning & Development <janet@callhall.co.uk>', s: 'Refresher training — spaces available',
+    b: 'Spaces are available on all refresher modules.\n\nMODULE 1: SMILE WHILE BEING INSULTED\nMODULE 2: SAY “I COMPLETELY UNDERSTAND”\nMODULE 3: DO NOT ACTUALLY SAY WHAT YOU ARE THINKING\nMODULE 4: THE ESCALATION LADDER\n\nSpaces available: 40 of 40.\n\nSpaces available last month: 40 of 40.\n\nThe room is warm. There are biscuits. I put the biscuits out at nine.\n\nJanet' },
+  { t: 705, from: 'Facilities <terry@callhall.co.uk>', s: 'The air conditioning',
+    b: 'The air conditioning is set correctly.\n\nIt is not set to “Baltic”. “Baltic” is not a setting. There are two settings and one of them is off.\n\nIf you are cold, that is a personal matter between you and the building.\n\nI am on leave from Thursday.\n\nTerry' },
+  { t: 735, from: 'reporting@callhall.co.uk', s: 'Weekly performance digest',
+    b: 'AHT 4:09 (▼ 0:03 — good)\nCSAT 76% (▼ 2% — attention)\nUtilisation 63% (▲ 2% — good)\nAdherence 91% (▼ 1% — attention)\n\nYou spent 22 minutes away from your desk on Tuesday.\n\nNo action required.\n\nThis is not a criticism. Criticism requires a person.\n\nThis message was not sent by a person.' },
+  { t: 800, from: 'Colin <synergy@callhall.co.uk>', s: 'Invite: Alignment (no agenda)',
+    b: 'You have been invited to: Alignment\n\nWhen: recurring\nWhere: —\nAgenda: —\nOrganiser: Synergy\n\nOptional attendees: everyone\nRequired attendees: you\n\nThis invite cannot be declined. The Decline button is present. It has been tested. It works. It simply does not remove the invite.' },
+  { t: 845, from: 'Fiona Ashworth <peoplepartner@callhall.co.uk>', s: 'Wellbeing Week!',
+    b: 'It is Wellbeing Week!\n\nThis year we have:\n\n· A fruit bowl (Tuesday, main floor, until it goes)\n· A webinar on resilience (lunchtime — please attend in your own time)\n· The Wellbeing Room (booked out as overflow storage Mon–Thu)\n· A step challenge (the lifts are decorative, so you are all already winning)\n\nIf you are genuinely struggling, please come and find me. I am in Tuesdays and Thursdays and I mean the offer.\n\nFiona' },
+  { t: 905, from: 'Nigel Braithwaite <area.manager@callhall.co.uk>', s: 'Compliance packs — 5pm',
+    b: 'The compliance packs must be printed and on my desk by 5.\n\nI am aware of the printer.\n\nI do not want to hear about the printer.\n\nI want the packs.\n\nNigel' },
+  { t: 940, from: 'Priya Raman <sme@callhall.co.uk>', s: 'RE: Compliance packs — 5pm',
+    b: 'Nigel,\n\nThe packs are 501 pages. The paper tray holds 500. This has been the case since 2019 and is the actual reason the packs have never once been printed in one run.\n\nI have raised it four times. The ticket was closed by nobody.\n\nWe will hit the printer at about half four, as usual, and it will work, as usual, and next quarter we will do this again.\n\nPriya' },
+  { t: 985, from: 'All Staff <noreply@callhall.co.uk>', s: 'Please disregard',
+    b: 'Please disregard the previous email.\n\nThe previous email was correct. Please disregard this one.\n\nSent to: All Staff (612 recipients)' },
+  { t: 1012, from: 'reporting@callhall.co.uk', s: 'Tomorrow',
+    b: 'Tomorrow’s target has been set.\n\nIt is today’s result.\n\nWe are pleased with your trajectory.\n\nThis message was not sent by a person.' }
+];
+
+/* Both scripts are written in blocks, so put them back in clock order — the
+   feed reads as a day, and Chat.tick's index keys stay stable after the sort. */
+CHAT_SCRIPT.sort((a, b) => a.t - b.t);
+MAIL_SCRIPT.sort((a, b) => a.t - b.t);
+
+/* ---------------- Endings ---------------- */
+const ENDINGS = {
+  ladder: { t: '🏆 THE CORPORATE LADDER', b: [
+    'You take the team leader job. Dave was right: it is more emails. Dave was wrong that this is the whole of it.',
+    'You do one thing with the power. You put a proper chair on the main floor, and you fix the rota so nobody does Saturday twice in a row.',
+    'Nobody notices. Two years later somebody new starts and says “this place isn’t that bad, actually”, and you are the only person in the building who knows why.'] },
+  coffee: { t: '☕ COFFEE LEGEND', b: [
+    'You stop taking calls and start taking orders. Nine, at first. Then twenty-two. Then the whole floor and two people from Synergy.',
+    'You buy a proper machine with your own money. Management try to make it a KPI. You refuse. They cannot make you. It is your machine.',
+    'You are the most important person in the building and it is not close.'] },
+  it: { t: '🧑‍💻 IT', b: [
+    'Steve retires, in the sense that he stops coming in and nobody processes anything.',
+    'You inherit 341 tickets, all titled “Printer”, and one server that must never be touched.',
+    'When people ask, you say: “Have you tried restarting it?” You say it kindly. You do go and look. That is the difference, and it is enough.'] },
+  escape: { t: '🚪 ESCAPE', b: [
+    'You walk out through reception at twenty to ten in the morning. Ron does not stop you. Ron nods.',
+    'The bus is not due for eleven minutes. You stand at the stop with the lanyard still on, and the sun is out, and it is Tuesday, and nobody in the world knows where you are.',
+    'Somewhere behind you, a phone rings. It is not yours. It has never been yours.'] },
+  ceo: { t: '👑 REGIONAL OPERATIONS DIRECTOR', b: [
+    'It turns out that when the reporting system stops writing the targets, somebody has to, and everybody looks at whoever is standing nearest.',
+    'You are standing nearest.',
+    'Your first act is to delete the utilisation metric. Your second is to put the fax machine in the archive, gently, with the others.',
+    'Your third is a mandatory fun activity, which you cancel, and which everyone attends anyway, because the free pizza is real.'] },
+  spread: { t: '📊 BECOME THE SPREADSHEET', b: [
+    'You do not defeat it. You audit it.',
+    'You go in and you check the formulas, and the formulas are wrong, and have been wrong since 2009, and every target ever set in this building has been the output of a rounding error in a cell nobody owns.',
+    'You could fix it. Instead you take the pen out of your pocket and you write, in the one empty cell: “meets expectations”.',
+    'The building relaxes. Somewhere, sixteen years of hold music stops.',
+    'You still work here. You are just also, now, slightly load-bearing.'] },
+  alan: { t: '🧓 ESCALATIONS', b: [
+    'Alan retires on a Friday with a card and a Marks & Spencer voucher and eleven minutes of applause, which is nine minutes longer than anyone expects and nobody stops.',
+    'You take the red tray. Not the job title — nobody bothers to change the job title for two years — the tray.',
+    'You do it his way: you say hello, and then you are quiet, and you let them do the whole speech they rehearsed in the car park.',
+    'One call a fortnight ends with somebody saying “thank you for actually listening”, and you bank it, because Alan was right: they are the wage.'] },
+  bev: { t: '🌅 THE SIX O’CLOCK SHIFT', b: [
+    'You start coming in at six. Not for the overtime — there is no overtime — for the three hours before the phones go on.',
+    'Lights on, kettle on, radio on. Bev does the floor and you do the ends of the desks she can’t reach and neither of you says much.',
+    'You learn the building’s note. You learn it changes on Tuesdays, and you learn why, and you decide not to tell anyone, and that is the correct decision.',
+    'Some mornings you leave a cup of tea on a desk on the fourth floor. You have never met him. He has never said. Neither have you.'] },
+  marcus: { t: '🎂 MARCH', b: [
+    'Nothing changes structurally. The card still goes round in October, because the calendar entry cannot be edited by anyone who still works here.',
+    'But in March, on the actual day, there is a second card. It is small and there are four signatures on it and one of them is Dave’s.',
+    'Marcus moves two rows in. Then another two. By the following year he is in the middle of the floor and he talks in meetings, briefly, and people listen, because it turns out he has been paying attention for nine years.',
+    'You did that by walking to the end of a row. That is the entire mechanism. Nobody will ever put it in a framework.'] },
+  tomasz: { t: '📝 PERMANENT', b: [
+    'It takes fourteen months, a subject access request, and one enormously boring meeting in which you read the Agency Workers Regulations aloud to a man from Head Office who had assumed nobody would.',
+    'Tomasz goes permanent on a Tuesday. He gets a photograph on the intranet, a birthday in the calendar, and access to the all-staff email, which he immediately describes as “the worst thing that has ever happened to me”.',
+    'He is still the best agent on the floor. Now his scores make somebody promotable and that somebody is him.',
+    'Marjorie moves his mug forward one place on the shelf. That is the actual ceremony. That is the one that counts.'] },
+  pigeon: { t: '🐦 THE PIGEON', b: [
+    'You never do work out whether it is the same pigeon.',
+    'You keep going out at eleven and at three. You keep taking the crust off. Other people start to notice, and then join, and by the spring there are four of you out there at eleven, saying nothing, watching a bird eat.',
+    'Facilities send an email about not feeding the birds. The email is ignored so completely that it achieves a kind of grace.',
+    'You leave, eventually, the way everyone leaves. The pigeon does not. The pigeon is still there. The pigeon was always going to outlast the company and it knew it the whole time.'] },
+  stay: { t: '🪑 YOU STAY', b: [
+    'You do not become anything. You do not defeat anything. You do not go into the reporting dimension and come back changed.',
+    'You get good at it. Quietly, over about a year, in the way people actually get good at things.',
+    'You learn which cubicle is the good one, and when to ask for a postcode, and that the router is never the thing. You push your chair in. You do the washing up sometimes. You buy the biscuits about once a quarter and never mention it.',
+    'A new starter arrives on a Monday looking exactly like you looked, and you say “morning”, and you tell them three things, and the third one is about Karen and Meeting Room 2.',
+    'They will not remember your name in five years. They will remember that somebody was decent to them on their first day, and that is the whole of it, and it turns out that was always the job.'] },
+  kevin: { t: '🕵️ WHAT HAPPENED TO KEVIN', b: [
+    'Kevin rang on launch day in 2009 to ask about his bill. He was told someone would be with him shortly. He said he would hold. He meant it.',
+    'The call never closed. An open call needs an agent, so the system assigned him one: himself. Employee of the month, every month, for sixteen years, because his handle time was infinite and his abandon rate was zero.',
+    'You picked up. That was all it needed. Sixteen years and it needed somebody to pick up.',
+    'They put his gold headset in the cabinet in the archive. You wear it now. It works perfectly. Both ears.'] }
+};
+
+/* ---------------- Opening cutscene ----------------
+   Eighteen beats, and three fields on each of them that are not prose.
+
+     k    what SHAPE the beat is. 'scene' is the default — a caption in the
+          lower third. 'line' is somebody speaking, which wants the room a
+          paragraph does not: Big Ron's four lines are the comic timing of the
+          whole opening and as full-size cards they read as four essays.
+          'title' is the last card and is display type.
+     cam  where the camera is, in TILES, on the level the shift starts on.
+          A beat with no `cam` keeps the shot before it — and until the FIRST
+          one the building is not shown at all, which is why nothing here puts
+          a camera behind "outside": the office cannot honestly draw a street,
+          so it stays dark until you are through the door.
+     len  seconds to glide there. Short is a cut, long is a move.
+
+   THE PLAYER NEVER LEAVES RECEPTION, and the tense is what says so. The shift
+   starts on the spawn tile in the lobby, under an objective that reads "find
+   the fourth floor, find your desk" — so an opening that walks you up there
+   and sits you down contradicts the first thing the game asks you to do. It
+   used to. The camera goes up ahead of you instead and the narrator describes
+   what is waiting in the future tense, which fixes the continuity and is the
+   funnier voice anyway: somebody who has watched this happen to a lot of
+   people and is telling you how it goes.
+
+   No beat runs past about 260 characters, and that is a layout rule that turned
+   out to be a writing rule. At 320px a 370-character beat is thirteen lines: it
+   fills the whole frame between the letterbox bars, which buries the building
+   the opening exists to show you. Splitting the long ones cured that and read
+   better anyway — the four cards that came out of the split are all punchlines
+   ("...you will be doing it yourself", "...not to mention that"), and a
+   punchline on its own card is the oldest timing there is.
+
+   Everything named here is paid off somewhere in data/acts.js — the sold
+   assembly point, the decorative lift, the propped fire door, the out-of-date
+   floor plan, The Good Chair, the spreadsheet whose formulas have been wrong
+   since 2009. The opening sets them up and is careful not to spend them. */
+const CUT = [
+  { k: 'scene', f: '🏢', l: 'Outside · 08:57',
+    t: 'CALLHALL SERVICES has floors three to five of a building that also contains a Greggs and a firm called NORTHGATE whose door has a letterbox and no handle. The Greggs is the best thing about the building: the one matter on which this company has ever reached consensus, and it took no meetings at all.' },
+  { k: 'scene', f: '🚪', l: 'Reception · 08:58', cam: [31, 39], len: 2.4,
+    t: 'The revolving door turns at a speed agreed by a committee. Your lanyard is in your hand rather than round your neck, because putting it on is the part that makes it true — so you are carrying it the way people carry a passport through an airport: correctly, and an hour too early.' },
+  { k: 'line', f: '💂', l: 'Big Ron · Security', cam: [30, 38], len: 1.4, t: '“First day?”' },
+  { k: 'line', f: '🧑', l: 'You', cam: [31, 41], len: 1.1, t: '“Yeah.”' },
+  { k: 'line', f: '💂', l: 'Big Ron · Security', cam: [30, 38], len: 1.1, t: '“Sorry.”' },
+  { k: 'line', f: '💂', l: 'Big Ron · Security', cam: [29, 38], len: 2.2,
+    t: '“Fourth floor. The lift is decorative. Take the stairs and keep going up until it gets louder.”' },
+  { k: 'scene', f: '📋', l: 'The induction pack', cam: [27, 39], len: 2.6,
+    t: 'He hands you a folder. Inside: a fire evacuation notice naming an assembly point that was sold in 2021; a password you must change immediately, printed directly beneath the password; and a card reading WE ARE ONE TEAM. The card has been laminated. Somebody costed that.' },
+  { k: 'scene', f: '🧯', l: 'The stairs', cam: [17, 39], len: 3.0,
+    t: 'Four flights. On the second landing a fire door is propped open with a fire extinguisher, an arrangement that has never once had to justify itself to anybody.' },
+  { k: 'scene', f: '👥', l: 'The second landing', cam: [16, 41], len: 1.8,
+    t: 'Past it, a concrete step, and on the step two people not talking about work. They will stop when you pass. They will start again once you have gone, at the exact word they broke off on, which takes practice.' },
+  { k: 'scene', f: '📞', l: 'The noise', cam: [31, 24], len: 3.4,
+    t: 'At the top there is a sound you will still be able to hear tonight, in the shower, with the water running: forty people saying “I completely understand” at slightly different times.' },
+  { k: 'scene', f: '🔊', l: 'Twice a year', cam: [34, 22], len: 2.4,
+    t: 'It never quite lines up. Roughly twice a year it very nearly does, and everybody agrees, without ever having discussed it, not to mention that.' },
+  { k: 'scene', f: '🖨️', l: 'The floor', cam: [42, 20], len: 3.0,
+    t: 'Nobody looks up. One person will look up. He will look at you a moment too long, then at the printer, then back at his screen, and you will not work out what that was about for four days.' },
+  { k: 'scene', f: '👀', l: 'Four days later', cam: [45, 18], len: 2.0,
+    t: 'When you do, you will want to go and find him and say so. You will not. By then you will be doing it yourself.' },
+  { k: 'scene', f: '🖥️', l: 'Your desk', cam: [25, 26], len: 3.4,
+    t: 'There is a desk waiting for you in the middle of a row of thirty-one identical ones. A monitor. A keyboard faintly tacky from a previous tenant. And a chair that is not The Good Chair.' },
+  { k: 'scene', f: '🪑', l: 'The Good Chair', cam: [25, 27], len: 1.8,
+    t: 'The Good Chair is elsewhere on this floor, being sat in by somebody who has no idea what they have. You will learn to want it. That is the first thing this building teaches, and it teaches it inside a week.' },
+  { k: 'scene', f: '📊', l: 'Three weeks ago', cam: [25, 21], len: 3.0,
+    t: 'And somewhere above you, on a floor your badge will not open, there is a spreadsheet. A row was added to it three weeks ago. It has your name in it, spelled correctly, eleven other columns you will never see, and one of those columns is already amber.' },
+  { k: 'scene', f: '🕰️', l: 'Reception · 08:59', cam: [31, 40], len: 3.6,
+    t: 'The clock behind reception says 08:59. It has been saying 08:59 for a while now. This is the longest minute the building has, and it is issued to everybody exactly once, on their first morning, free of charge.' },
+  { k: 'title', f: '🧑‍💻', l: 'Nine o’clock', cam: [31, 41], len: 2.6, t: 'SURVIVE THE SHIFT.' }
+];

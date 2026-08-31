@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="A call centre RPG. Answer the phones, survive the shift, and find out who writes the numbers.">
+<meta name="author" content="Grant van Zyl">
+<meta name="copyright" content="© 2026 Grant van Zyl">
+<link rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">
+<meta name="theme-color" content="#0d1117">
+<meta name="color-scheme" content="dark">
+<!-- The Fullscreen API a click can request (see Boot.goFullscreen) does not
+     exist at all in iOS Safari for anything but a <video> — the button asks and
+     is refused silently, every time, in every browser tab. These three lines are
+     the one path to a chrome-free screen that actually works there: added to the
+     home screen, the game launches "standalone" — no address bar, no browser
+     chrome — automatically, with no click and no request to refuse. Harmless
+     everywhere else; a plain tab ignores tags it does not use. -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9E%3C/text%3E%3C/svg%3E">
+<title>Call of Duty: Customer Service — CALLHALL SERVICES</title>
+<link rel="stylesheet" href="css/base.css?v=a8f62af">
+<link rel="stylesheet" href="css/hud.css?v=a8f62af">
+<link rel="stylesheet" href="css/dialogue.css?v=a8f62af">
+<link rel="stylesheet" href="css/combat.css?v=a8f62af">
+<link rel="stylesheet" href="css/panels.css?v=a8f62af">
+<link rel="stylesheet" href="css/controls.css?v=a8f62af">
+<link rel="stylesheet" href="css/arcade.css?v=a8f62af">
+<link rel="stylesheet" href="css/cutscene.css?v=a8f62af">
+<link rel="stylesheet" href="css/responsive.css?v=a8f62af">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ TITLE ============ -->
+  <section id="titleScreen" class="screen on">
+    <div class="hero">
+      <span class="phone-icon" aria-hidden="true">📞</span>
+      <div class="badge">CALLHALL Services plc · Induction Simulation v4.7 · approved version: 4.6</div>
+      <h1 class="title-line1">CALL OF DUTY:</h1>
+      <h1 class="title-line2">CUSTOMER SERVICE</h1>
+      <p class="tagline">“Every call is an opportunity.”<small>Nobody has ever said what for.</small></p>
+      <div class="title-menu">
+        <button class="btn primary" id="btnNew">Start your first shift</button>
+        <button class="btn" id="btnLoad">Load saved shift</button>
+        <button class="btn" id="btnHelp">How to play</button>
+      </div>
+    </div>
+    <div class="legal">CALLHALL SERVICES · “Your call is important to us and will be answered in the order in which it stopped mattering.” · Calls may be recorded for training and for quiet mockery.
+      <span class="copyright">© 2026 Grant van Zyl · a work of fiction · <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license noopener" target="_blank">CC BY-NC-ND 4.0</a>
+        · character art by <a href="art/CREDITS.md" rel="noopener" target="_blank">LPC contributors</a>, <a href="https://static.opengameart.org/OGA-BY-3.0.txt" rel="license noopener" target="_blank">OGA-BY 3.0</a>, modified</span></div>
+  </section>
+
+  <!-- ============ NAME ============ -->
+  <section id="nameScreen" class="screen">
+    <div class="sign">
+      <div class="sign-title"><span>New starter form · Section 1 of 1</span><span class="badge">HR</span></div>
+      <input id="nameInput" maxlength="14" placeholder="YOUR NAME" autocomplete="off" spellcheck="false">
+      <p class="field-note">HR needs a name for the lanyard. It will be spelled incorrectly on your first payslip regardless.</p>
+      <button class="btn primary" id="btnName">Accept lanyard</button>
+    </div>
+  </section>
+
+  <!-- ============ WHO YOU ARE ============ -->
+  <!-- Section 2 of the same form. The preview is the REAL sprite, drawn by the
+       real renderer and walking on the spot: a still picture would hide the one
+       thing worth checking, which is that every layer is present in every
+       frame. -->
+  <section id="lookScreen" class="screen">
+    <div class="sign look">
+      <div class="sign-title"><span>New starter form · Section 2 of 1</span><span class="badge">HR</span></div>
+      <div class="look-body">
+        <canvas id="lookView" aria-label="Your character, walking on the spot"></canvas>
+        <div id="lookPick" class="look-pick"></div>
+      </div>
+      <p class="field-note" id="lookNote"></p>
+      <p class="field-note look-flavour">Photographs are for the lanyard only and will be printed at a resolution
+        that makes everyone look like they are being questioned.</p>
+      <div class="look-btns">
+        <button class="btn" id="btnLookRandom">Surprise me</button>
+        <button class="btn primary" id="btnLookGo">Start the shift</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CUTSCENE ============
+       Four layers, and the order of them is the whole design.
+
+       #cutGround is the dark the opening starts in. It fades away the first
+       time a beat names a camera, which is the moment you are through the door
+       — before that the building is deliberately not shown, because the office
+       level cannot honestly draw a street and a wide shot of the fourth floor
+       under the words "outside" is a lie the player can see.
+       #cutGrade is the grade over the world once it IS showing: a scrim and a
+       vignette, so the caption has something to sit on and the floor reads as
+       a place being looked at rather than a game being played.
+       #cutBars is the letterbox. #cutBody is the writing.
+
+       The game canvas is BEHIND all of it — body.cinema shows #game with every
+       piece of its chrome hidden, so the shot under the words is the real
+       renderer drawing the real building. -->
+  <section id="cutscene" class="screen">
+    <div id="cutGround" aria-hidden="true"></div>
+    <div id="cutGrade" aria-hidden="true"></div>
+    <div id="cutBars" aria-hidden="true"><i class="cut-bar"></i><i class="cut-bar"></i></div>
+
+    <div id="cutBody">
+      <div id="cutCard">
+        <div class="cut-emoji" id="cutFace">🏢</div>
+        <div class="cut-say">
+          <div class="cut-label" id="cutLabel">Outside · 08:57</div>
+          <!-- The typed line and, behind it at zero opacity, the whole line —
+               so the box is already the height of the finished sentence and the
+               layout does not grow a row as the words arrive. -->
+          <div class="cut-text" id="cutText"></div>
+          <div class="cut-text cut-ghost" id="cutGhost" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="cutFoot">
+      <div id="cutDots" class="cut-dots" aria-hidden="true"></div>
+      <p class="cut-hint" id="cutHint"><span class="kbd">Space</span> continue · <span class="kbd">Esc</span> skip</p>
+    </div>
+    <button id="btnSkip" class="cut-skip" type="button">Skip<span aria-hidden="true"> ▸▸</span></button>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section id="game">
+    <div id="stage">
+      <canvas id="view" aria-label="The fourth floor of CALLHALL Services, seen from above" role="img"></canvas>
+      <div id="vignette" aria-hidden="true"></div>
+      <div id="flash" aria-hidden="true"></div>
+      <!-- The curtain across a change of level. Purely decorative: the swap
+           itself happens on one frame whether this is here or not. -->
+      <div id="fade" aria-hidden="true"></div>
+      <div id="zoneName" aria-hidden="true"></div>
+    </div>
+
+    <!-- Two cards in opposite corners on a desktop; ONE bar across the top of a
+         phone. The wrapper is what the mobile layout makes that bar out of — on
+         a desktop it is a zero-height anchor along the top of the stage, so both
+         corners are exactly where they always were. -->
+    <div id="hudTop">
+      <div class="hud" id="hudTL">
+        <div class="card">
+          <div class="who-row">
+            <span class="who-face" id="hFace">🧑‍💻</span>
+            <div>
+              <div class="who-name" id="hName">TRAINEE</div>
+              <div class="who-rank" id="hRank">Lv.1 · Trainee</div>
+            </div>
+          </div>
+          <!-- Wrapped so the phone bar can stand the three meters BESIDE the
+               name instead of under it. A plain block on a desktop. -->
+          <div class="vitals">
+            <!-- The maximum is a separate element so the phone bar can drop it:
+                 "103/103" is twice the width of "103" and the three of them
+                 together were leaving the meters about thirteen pixels of bar
+                 to draw in. The Profile panel carries the full numbers. -->
+            <div class="bar-row"><span class="lbl" title="Patience">❤️</span><span class="bar" role="progressbar" aria-label="Patience" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><i id="bPat" style="background:linear-gradient(90deg,#ff5f56,#ff8f56)"></i></span><span class="val"><b id="vPat">100</b><i id="mPat">/100</i></span></div>
+            <div class="bar-row"><span class="lbl" title="Energy">⚡</span><span class="bar" role="progressbar" aria-label="Energy" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><i id="bEne" style="background:linear-gradient(90deg,#ffb347,#ffe08a)"></i></span><span class="val"><b id="vEne">100</b><i id="mEne">/100</i></span></div>
+            <div class="bar-row"><span class="lbl" title="Experience">⭐</span><span class="bar" role="progressbar" aria-label="Experience" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="bXp" style="background:linear-gradient(90deg,#4da3ff,#b48cff)"></i></span><span class="val"><b id="vXp">0</b><i id="mXp">/100</i></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud" id="hudTR">
+        <div class="card">
+          <div class="clock" id="hClock">09:00<small id="hDay">DAY 1 · MONDAY</small></div>
+          <div class="money-row"><span title="Earned today">💷 <b id="hMoney">0.00</b></span><span title="Calls handled today">📞 <b id="hCalls">0</b></span></div>
+          <div class="queue" id="hQueue" hidden><span class="qdot" aria-hidden="true"></span><span id="hQueueT">1 call waiting</span></div>
+        </div>
+      </div>
+
+      <!-- How far through the shift you are, as a hairline along the bottom edge
+           of the bar. Phone only: the desktop corners have no bottom edge to
+           draw it on and the clock is already the size of a clock there. -->
+      <div id="shiftBar" aria-hidden="true"><i id="shiftBarI"></i></div>
+    </div>
+
+    <div id="minimapWrap" aria-hidden="true"><canvas id="minimap" width="168" height="118"></canvas></div>
+
+    <!-- What you are doing, and everything you have said you would do. The
+         objective used to be the bottom half of the top-right card, where it
+         wrapped to four lines on a phone and made that card the tallest thing on
+         the screen; it is the first line of this box now, with the open jobs
+         under it. Every job folds to its title, the whole box folds to its
+         header, and one job at a time can be tracked — which puts the same pin
+         and compass on it that finding your desk gets. -->
+    <div class="hud" id="tracker">
+      <div class="card">
+        <div class="tk-head">
+          <span class="tk-lbl" id="tkLbl">Jobs</span>
+          <span class="tk-n" id="tkCount"></span>
+          <button class="tk-b" id="tkTitles" type="button" title="Collapse every job to its title" aria-label="Collapse every job to its title">⇕</button>
+          <button class="tk-b" id="tkFold" type="button" title="Collapse the tracker" aria-label="Collapse the tracker" aria-expanded="true">▾</button>
+        </div>
+        <div class="tk-body" id="tkBody">
+          <div class="tk-obj" id="hObj">Find your desk. Try not to be noticed.</div>
+          <div class="tk-list" id="tkList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud" id="hudBottom">
+      <div id="prompt" role="status" aria-live="polite"></div>
+      <nav id="keyhints" aria-label="Open a panel">
+        <button data-panel="quests"><span class="kh-i" aria-hidden="true">🗂️</span>J · Jobs</button>
+        <button data-panel="inventory"><span class="kh-i" aria-hidden="true">🎒</span>I · Inventory</button>
+        <button data-panel="skills"><span class="kh-i" aria-hidden="true">📈</span>K · Skills</button>
+        <button data-panel="chat"><span class="kh-i" aria-hidden="true">💬</span>C · Chat</button>
+        <button data-panel="email"><span class="kh-i" aria-hidden="true">✉️</span>M · Email</button>
+        <button data-panel="stats"><span class="kh-i" aria-hidden="true">🪪</span>P · Profile</button>
+        <button data-panel="settings"><span class="kh-i" aria-hidden="true">⚙️</span>Esc · Menu</button>
+      </nav>
+    </div>
+
+    <div id="touch" aria-hidden="true">
+      <div id="stickZone">
+        <div class="stick" id="stick"><div id="stickKnob"></div></div>
+      </div>
+      <div class="dpad">
+        <button class="u" data-dir="up">▲</button><button class="l" data-dir="left">◀</button>
+        <button class="r" data-dir="right">▶</button><button class="d" data-dir="down">▼</button>
+      </div>
+      <button id="touchE">E</button>
+      <button id="touchMenu" aria-label="Open jobs, inventory and menus">☰</button>
+    </div>
+
+    <div id="notify">
+      <div id="toasts" class="idle" role="log" aria-live="polite" aria-relevant="additions" aria-label="Notifications"></div>
+      <button id="toastPeek" type="button" aria-label="Show recent notifications">
+        <span class="pk-e" id="pkFace" aria-hidden="true">💬</span><span class="pk-n" id="pkCount" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <!-- dialogue -->
+    <div id="dialogue" role="dialog" aria-label="Conversation" aria-modal="false">
+      <div class="dlg sign">
+        <div class="dlg-head">
+          <span class="dlg-face" id="dFace">🧑</span>
+          <div><div class="dlg-name" id="dName">DAVE</div><div class="dlg-role" id="dRole">Senior Agent</div></div>
+          <div class="dlg-mood" id="dMood"></div>
+        </div>
+        <div class="dlg-text" id="dText" aria-live="polite"></div>
+        <div class="dlg-choices" id="dChoices" role="group" aria-label="What you say"></div>
+        <div class="dlg-cont" id="dCont">Space — continue</div>
+      </div>
+    </div>
+
+    <!-- combat -->
+    <div id="combat" role="dialog" aria-modal="true" aria-label="Telephone call">
+      <div class="cb sign">
+        <div class="sign-title"><span id="cbTitle">Incoming call · queue position 1</span><span class="badge" id="cbTimer">TURN 1</span></div>
+        <div class="cb-top">
+          <span class="cb-face" id="cbFace">📞</span>
+          <div class="cb-who"><h3 id="cbName">CUSTOMER</h3><div class="sub" id="cbIssue">Account query</div></div>
+          <div class="cb-meters">
+            <div class="bar-row"><span class="lbl" title="Caller frustration">😡</span><span class="bar" role="progressbar" aria-label="Caller frustration" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><i id="cbFrus" style="background:linear-gradient(90deg,#ff5f56,#ffb347)"></i></span><span class="val" id="cbFrusV">80</span></div>
+            <div class="bar-row"><span class="lbl" title="Caller patience">⏳</span><span class="bar" role="progressbar" aria-label="Caller patience" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><i id="cbCPat" style="background:linear-gradient(90deg,#b48cff,#4da3ff)"></i></span><span class="val" id="cbCPatV">100</span></div>
+            <div class="bar-row"><span class="lbl" title="Your patience">❤️</span><span class="bar" role="progressbar" aria-label="Your patience" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><i id="cbYou" style="background:linear-gradient(90deg,#5ad48a,#4da3ff)"></i></span><span class="val" id="cbYouV">100</span></div>
+            <div class="bar-row"><span class="lbl" title="Rapport">🤝</span><span class="bar" role="progressbar" aria-label="Rapport" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="cbRap" style="background:linear-gradient(90deg,#b48cff,#5ad48a);width:0%"></i></span><span class="val" id="cbRapV">0</span></div>
+          </div>
+        </div>
+        <div class="cb-line" id="cbLine" role="status" aria-live="polite"></div>
+        <div class="cb-tell" id="cbTell" role="status" aria-live="polite"></div>
+        <div class="cb-moves" id="cbMoves" role="group" aria-label="What you say next"></div>
+        <div class="hold-note" id="cbHold">♪ hold music: “Greensleeves”, but wrong</div>
+        <div class="cb-log scroll" id="cbLog" role="log" aria-live="polite" aria-label="Call transcript"></div>
+      </div>
+    </div>
+
+    <!-- arcade: whatever minigame is running. The shell is the same for all of
+         them — a live bar, a canvas, the touch pads a game declares, and a card
+         over the top before and after a round. Everything inside the canvas
+         belongs to minigames/, and engine/arcade.js is the only thing that
+         knows both sides. -->
+    <div id="arcade" role="dialog" aria-modal="true" aria-label="Arcade">
+      <div class="mg sign">
+        <div class="sign-title"><span id="mgTitle">Arcade</span><span class="badge" id="mgBadge">ARCADE</span></div>
+        <div class="mg-hud"><span id="mgHudL"></span><span id="mgHudR"></span></div>
+        <div class="mg-stage">
+          <canvas id="mgView" aria-label="Minigame" role="img"></canvas>
+          <div class="mg-card" id="mgCard"></div>
+        </div>
+        <div class="mg-pads" id="mgPads" role="group" aria-label="Controls"></div>
+        <div class="mg-foot"><span class="mg-hint" id="mgHint"></span>
+          <button class="btn small" id="mgQuit">Leave · Esc</button></div>
+      </div>
+    </div>
+
+    <!-- panel -->
+    <div id="panel" role="dialog" aria-modal="true" aria-label="Employee self-service portal">
+      <div class="pn sign">
+        <div class="sign-title"><span id="pnTitle">Employee self-service portal</span>
+          <button class="btn small" id="pnClose">Close · Esc</button></div>
+        <div class="tabs" id="pnTabs" role="tablist"></div>
+        <div class="pn-body scroll" id="pnBody"></div>
+      </div>
+    </div>
+
+    <!-- report -->
+    <div id="report" role="dialog" aria-modal="true" aria-label="End of shift report">
+      <div class="rep sign">
+        <div class="sign-title"><span>End of shift · performance summary</span><span class="badge" id="repDay">DAY 1</span></div>
+        <div class="rep-body scroll" id="repBody"></div>
+        <div style="padding:0 18px 18px"><button class="btn primary" id="repNext" style="width:100%">Clock out</button></div>
+      </div>
+    </div>
+
+    <!-- ending -->
+    <div id="ending" role="dialog" aria-modal="true" aria-label="Exit interview">
+      <div class="rep sign" style="text-align:center">
+        <div class="sign-title"><span>Exit interview</span><span class="badge">CONFIDENTIAL</span></div>
+        <div class="rep-body scroll" id="endBody"></div>
+        <div style="padding:0 18px 18px;display:flex;gap:8px;justify-content:center">
+          <button class="btn primary" id="endAgain">Start a new shift</button>
+          <button class="btn" id="endTitle">Back to title</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<!-- The game's content, and the manifest for its art. Plain scripts, not
+     modules: a module is fetched, and a fetch is what file:// forbids — this
+     way the game still opens straight off disk. Their top-level consts land in
+     the global lexical scope, which the engine below reads by bare name. -->
+<script src="art/sprites/manifest.js?v=a8f62af"></script>
+<script src="data/world.js?v=a8f62af"></script>
+<script src="data/levels.js?v=a8f62af"></script>
+<script src="data/npcs.js?v=a8f62af"></script>
+<script src="data/items.js?v=a8f62af"></script>
+<script src="data/callers.js?v=a8f62af"></script>
+<script src="data/office.js?v=a8f62af"></script>
+<script src="data/acts.js?v=a8f62af"></script>
+<script src="engine/core.js?v=a8f62af"></script>
+<script src="engine/controls.js?v=a8f62af"></script>
+<script src="engine/audio.js?v=a8f62af"></script>
+<script src="engine/state.js?v=a8f62af"></script>
+<script src="engine/world.js?v=a8f62af"></script>
+<script src="engine/levels.js?v=a8f62af"></script>
+<script src="engine/ui.js?v=a8f62af"></script>
+<script src="engine/progress.js?v=a8f62af"></script>
+<script src="engine/office.js?v=a8f62af"></script>
+<script src="engine/dialogue.js?v=a8f62af"></script>
+<script src="engine/combat.js?v=a8f62af"></script>
+<script src="engine/npc.js?v=a8f62af"></script>
+<script src="engine/sprites.js?v=a8f62af"></script>
+<script src="engine/render.js?v=a8f62af"></script>
+<script src="engine/panels.js?v=a8f62af"></script>
+<script src="engine/menus.js?v=a8f62af"></script>
+<script src="engine/arcade.js?v=a8f62af"></script>
+<script src="engine/look.js?v=a8f62af"></script>
+<script src="engine/input.js?v=a8f62af"></script>
+<!-- The minigame library. Separate files on purpose: each is a whole game
+     that knows only the interface in engine/arcade.js, and a fourth is a new
+     file here rather than a change to anything above it. -->
+<script src="minigames/holdmusic.js?v=a8f62af"></script>
+<script src="minigames/inbox.js?v=a8f62af"></script>
+<script src="minigames/patch.js?v=a8f62af"></script>
+<script src="engine/boot.js?v=a8f62af"></script>
+</body>
+</html>
