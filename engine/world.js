@@ -26,6 +26,7 @@ const World = {
     /* Everything derived. Reset rather than left over, or a level with no desks
        in it draws the previous level's desks on its floor. */
     this.desks = []; this.worktops = []; this.tables = []; this.doorways = [];
+    this.openings = new Set();
     this.blocked = new Set();
     for (let y = 0; y < MAPH; y++) {
       this.solid[y] = []; this.zone[y] = []; this.seed[y] = [];
@@ -37,6 +38,14 @@ const World = {
     });
     (def.doors || []).forEach(d => {
       this.solid[d.y][d.x] = 0;
+      /* Whether this door is a HOLE CUT IN A WALL or a leaf standing on floor a
+         room already covers is known here and nowhere else, and it is the same
+         fact as `|| d.z` below: a tile with no zone yet had no room over it, so
+         the door is what opened it. Kept, because the renderer asks it of the
+         two tiles either side of a doorway in a wall run — the one above an
+         opening is its head and is finished like the room it leads to, and the
+         one below an opening is NOT the room above it and must not be. */
+      if (this.zone[d.y][d.x] === null) this.openings.add(d.x + ',' + d.y);
       this.zone[d.y][d.x] = this.zone[d.y][d.x] || d.z;
       this.add({ x: d.x, y: d.y, e: d.locked ? '🔐' : '🚪', name: d.name, kind: 'door', solid: false, use: d.locked ? 'lockedDoor' : 'door', locked: d.locked || null });
     });
@@ -46,6 +55,12 @@ const World = {
     this.buildFurniture();
     return this;
   },
+  /* Is this tile an opening cut through a wall run rather than floor a room
+     covers? Only `def.doors` can be one — a hatch or a lift is an object that
+     stands on a floor a room already has, and answering yes for those would
+     make a wall above one stop belonging to the room it is in. */
+  isOpening(x, y) { return !!this.openings && this.openings.has(x + ',' + y); },
+
   /* Is there a sky over this one. Everything outdoors is decided from this
      single flag: no ceiling lights, daylight instead of strip lighting, and the
      void beyond the walls painted as sky rather than left black. */
