@@ -415,7 +415,7 @@ const Side = {
     const built = Doc.built(i);
     const extra = {};
     Object.keys(o).forEach(k => {
-      if (['_k', 'x', 'y', 'e', 'name', 'kind', 'solid', 'use', 'furn'].indexOf(k) < 0) extra[k] = o[k];
+      if (['_k', 'x', 'y', 'e', 'name', 'kind', 'solid', 'use', 'furn', 'turn'].indexOf(k) < 0) extra[k] = o[k];
     });
 
     p.innerHTML = '<h3><span class="h-e">' + esc(o.e || '\u00b7') + '</span>'
@@ -427,6 +427,7 @@ const Side = {
       + this.row('tile', '<input type="number" data-f="x" value="' + o.x + '"> '
         + '<input type="number" data-f="y" value="' + o.y + '">')
       + this.row('solid', '<input type="checkbox" data-f="solid"' + (o.solid ? ' checked' : '') + '>')
+      + this.row('facing', this.turnOptions(o))
       + this.row('sprite', this.spriteOptions(o))
       + this.row('other', '<textarea data-f="_extra" rows="3">'
         + esc(Object.keys(extra).length ? JSON.stringify(extra) : '') + '</textarea>')
@@ -462,6 +463,9 @@ const Side = {
        each KIND, so it cannot offer the one that has been edited since — a
        `furn:` override, a custom `use`. This can, and alt-click on the map is
        the same thing for a mouse. */
+    p.querySelectorAll('[data-turn]').forEach(b => {
+      b.onclick = () => { Doc.setObject(i, 'turn', +b.dataset.turn || ''); this.refresh(); };
+    });
     p.querySelector('[data-a="brush"]').onclick = () => {
       const b = clone(o); delete b._k; delete b.x; delete b.y;
       Tools.brush = b;
@@ -475,6 +479,22 @@ const Side = {
      in through the Art tab. It is stored as `furn: { sprite }` on the object —
      an override merged over FURN[kind], which is the same mechanism that gives
      The Printer the whole copier while the other three get the desk crop. */
+  /* Which way round it is. Four quarter turns, because the art is pixel art on
+     a square grid and anything between them is a smear — and as buttons rather
+     than a number, because "2" is not a direction anybody can picture.
+
+     ART ONLY, and the note says so: turning a desk does not turn what it is
+     solid on or where you press E. `T` on the map does the same thing, so the
+     one you reach for is whichever is nearer. */
+  TURNS: [[0, '↑', 'as drawn'], [1, '→', 'a quarter turn clockwise'],
+    [2, '↓', 'upside down'], [3, '←', 'a quarter turn anticlockwise']],
+  turnOptions(o) {
+    const t = (o.turn || 0) & 3;
+    return '<span class="turns">' + this.TURNS.map(([v, glyph, title]) =>
+      '<button type="button" data-turn="' + v + '" class="' + (v === t ? 'on' : '') + '"'
+      + ' title="' + esc(title) + '">' + glyph + '</button>').join('') + '</span>';
+  },
+
   spriteOptions(o) {
     const own = (o.furn || {}).sprite || '';
     const names = Tiles.rects ? Object.keys(Tiles.rects).sort() : [];

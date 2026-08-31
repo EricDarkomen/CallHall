@@ -180,8 +180,16 @@ const Emit = {
      pairs and a column of thirty lines reads as thirty facts when it is really
      one table. */
   waypointDefs() {
+    const t = this.waypointTable();
+    return t ? '/* named spots used by NPC schedules */\n' + t
+      : '/* This level has no waypoints. */\n';
+  },
+  /* The declaration on its own. The writer replaces `const WP = …` in place and
+     the comment above it is the file's, already there — emitting the comment
+     too would leave data/world.js with two of them. */
+  waypointTable() {
     const keys = Object.keys(Doc.waypoints);
-    if (!keys.length) return '/* This level has no waypoints. */\n';
+    if (!keys.length) return '';
     const lines = [];
     let row = '';
     keys.forEach(k => {
@@ -190,8 +198,7 @@ const Emit = {
       row += bit;
     });
     if (row.trim()) lines.push('  ' + row.trimEnd().replace(/,$/, ''));
-    return '/* named spots used by NPC schedules */\nconst WP = {\n'
-      + lines.join('\n') + '\n};\n';
+    return 'const WP = {\n' + lines.join('\n') + '\n};\n';
   },
 
   /* ---- furniture ----

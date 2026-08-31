@@ -155,6 +155,20 @@ const HIST = {
        makes the document differ from the files again, which is exactly what
        has happened and exactly what `changed()` should then say. */
   },
+  /* Some of what this document had is in the files now and the rest is not,
+     which settle() cannot say — it empties the bench. Given the subjects that
+     actually landed, forget those and leave every other one exactly where it
+     was. Used by the two documents written a subject at a time (a level, a
+     minigame); the eight whose table goes in whole have nothing partial to
+     say and still settle(). */
+  settleSome(keys) {
+    if (!keys || !keys.length) return;
+    if (this.bench) keys.forEach(k => { delete this.bench[k]; });
+    const open = this.subjectKey();
+    if (open === null || open === undefined || keys.indexOf(open) < 0) return;
+    const p = this.pristineState ? this.pristineState() : null;
+    this.base = p || clone(this.state());
+  },
   /* Every subject of this document with work on it, the open one included.
      This is what "you have not exported this yet" is counted from. */
   editedKeys() {

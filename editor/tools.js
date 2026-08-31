@@ -444,6 +444,9 @@ const Tools = {
       e.preventDefault(); this.duplicate(); return;
     }
     if (e.code === 'Delete' || e.code === 'Backspace') { this.deleteSelection(); return; }
+    /* T for turn. R is the room tool and has been since there were three of
+       them, so the letter this wants is taken; T is next to it and free. */
+    if (e.code === 'KeyT') { this.turn(e.shiftKey ? -1 : 1); return; }
     if (e.code === 'KeyF') { View.fit(); return; }
     if (e.key === '+' || e.key === '=') { View.setZoom(View.zoom * 1.25); return; }
     if (e.key === '-' || e.key === '_') { View.setZoom(View.zoom / 1.25); return; }
@@ -467,6 +470,21 @@ const Tools = {
       e.preventDefault();
       Doc.setWaypoint(Sel.name, w[0] + nudge[0], w[1] + nudge[1]);
     } else return;
+    Side.refresh();
+  },
+
+  /* A quarter turn on the selected object, the same edit the inspector's four
+     buttons make — one place, so the key and the buttons cannot drift apart.
+     Art only: what an object is solid on and what pressing E does are the same
+     whichever way round it is drawn. */
+  turn(by) {
+    if (Sel.kind !== 'object') { Side.say('Select an object to turn it.'); return; }
+    const o = Doc.objects[Sel.i];
+    if (!o) return;
+    const t = (((o.turn || 0) + by) % 4 + 4) % 4;
+    Doc.setObject(Sel.i, 'turn', t || '');
+    Side.say((o.name || o.kind) + ' — ' + ['as drawn', 'a quarter turn', 'upside down',
+      'three quarters'][t] + '.');
     Side.refresh();
   },
 

@@ -537,9 +537,26 @@ const Mode = {
      not changed — it is absent — and only a list taken at boot can tell the
      difference. */
   onFile: null,
-  noteWhatIsOnFile() {
-    this.onFile = {};
-    Object.keys(this.DOCS).forEach(k => { this.onFile[k] = this.subjectIds(k); });
+  /* With no argument: everything, which is what boot wants. With a list of
+     modes: only those, which is what a save that wrote SOME of the game wants —
+     re-counting a document this run could not write would quietly forget that a
+     level was made here, or that a minigame was deleted here, and the reminder
+     to do it by hand would go with it. */
+  noteWhatIsOnFile(modes) {
+    if (!this.onFile || !modes) {
+      this.onFile = {};
+      Object.keys(this.DOCS).forEach(k => { this.onFile[k] = this.subjectIds(k); });
+      return;
+    }
+    modes.forEach(k => { this.onFile[k] = this.subjectIds(k); });
+  },
+  /* These subjects are on file now, and nothing else about their document has
+     changed. A level written one at a time needs exactly this: re-counting the
+     whole mode would put every OTHER new level on file with it. */
+  noteOnFile(mode, keys) {
+    if (!this.onFile) return;
+    const list = this.onFile[mode] || (this.onFile[mode] = []);
+    keys.forEach(k => { if (list.indexOf(k) < 0) list.push(k); });
   },
   subjectIds(mode) {
     const was = this.id;

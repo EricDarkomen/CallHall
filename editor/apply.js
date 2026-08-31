@@ -59,11 +59,32 @@ const Sync = {
   plan() {
     const rows = Mode.changes();
     const writes = [], manual = [], seen = {};
+    /* ---- and which documents may afterwards say the files have their work ----
+       settle() empties a bench and rebases the document against what is on
+       disk. Doing that to a document THIS RUN COULD NOT WRITE is the editor
+       forgetting an afternoon on somebody's behalf and then telling them it is
+       saved: a level edit made beside a room-type edit used to go exactly that
+       way — the room type landed in data/world.js, the level (which cannot be
+       written while its furnish() is procedural) was dropped from the bench and
+       from the autosave with it, and the change list went quiet.
+
+       So this is built deliberately rather than read back off `writes`: `true`
+       where a table went in whole and every subject of it with it, a list of
+       subjects where a document was written one at a time, and absent where all
+       this run had for a document was a note. Absent is the safe answer — an
+       editor that says work is unsaved when it is saved is untidy; the other
+       way round loses it. */
+    const done = {};
     const add = (file, decl, code, why, entries) => {
       const k = file + '|' + decl;
       if (seen[k]) return;
       seen[k] = 1;
       writes.push({ file: file, decl: decl, code: code, why: why, entries: entries || null });
+    };
+    /* A table emitted whole: everything the document has is in the file. */
+    const whole = (mode, file, decl, code, why) => {
+      add(file, decl, code, why);
+      done[mode] = true;
     };
     const kinds = mode => {
       const out = {};
@@ -76,23 +97,23 @@ const Sync = {
     const touched = mode => rows.some(r => r.mode === mode);
 
     try {
-      if (touched('jobs')) add('data/items.js', 'QUESTS', Emit.questTable(), 'the jobs');
-      if (touched('zones')) add('data/world.js', 'ZONES', Emit.zoneTable(), 'the room types');
-      if (touched('things')) add('data/world.js', 'FURN', Emit.furnTable(), 'how kinds are furnished');
-      if (touched('talk')) add('data/npcs.js', 'NPCS', Emit.talkTable(), 'the people and what they say');
+      if (touched('jobs')) whole('jobs', 'data/items.js', 'QUESTS', Emit.questTable(), 'the jobs');
+      if (touched('zones')) whole('zones', 'data/world.js', 'ZONES', Emit.zoneTable(), 'the room types');
+      if (touched('things')) whole('things', 'data/world.js', 'FURN', Emit.furnTable(), 'how kinds are furnished');
+      if (touched('talk')) whole('talk', 'data/npcs.js', 'NPCS', Emit.talkTable(), 'the people and what they say');
       kinds('prog').forEach(k => this.DECL.prog[k]
-        && add('data/items.js', this.DECL.prog[k], Emit.progTable(k), 'the rewards'));
+        && whole('prog', 'data/items.js', this.DECL.prog[k], Emit.progTable(k), 'the rewards'));
       kinds('calls').forEach(k => this.DECL.calls[k]
-        && add('data/callers.js', this.DECL.calls[k], Emit.callTable(k), 'the calls'));
+        && whole('calls', 'data/callers.js', this.DECL.calls[k], Emit.callTable(k), 'the calls'));
       kinds('office').forEach(k => this.DECL.office[k]
-        && add('data/office.js', this.DECL.office[k], Emit.officeTable(k), 'the day'));
-      if (touched('games')) this.games(rows, add, manual);
-      if (touched('levels')) this.levels(rows, add, manual);
+        && whole('office', 'data/office.js', this.DECL.office[k], Emit.officeTable(k), 'the day'));
+      if (touched('games')) this.games(rows, add, manual, done);
+      if (touched('levels')) this.levels(rows, add, manual, done);
     } catch (e) {
       manual.push({ label: 'Something would not emit', file: '',
         why: 'The export for one of these threw: ' + (e && e.message ? e.message : e)
           + '. Nothing has been written.' });
-      return { writes: [], manual: manual, blocked: true };
+      return { writes: [], manual: manual, done: {}, blocked: true };
     }
 
     /* The manifest is build output — tools/build-sprites.mjs rewrites it — so
@@ -104,15 +125,16 @@ const Sync = {
         why: 'the manifest is build output. Its Export tab has the entry, the credit and the '
           + 'PNG; a sheet that is staying goes into tools/build-sprites.mjs.' });
     }
-    return { writes: writes, manual: manual, blocked: false };
+    return { writes: writes, manual: manual, done: done, blocked: false };
   },
 
   /* A minigame is a whole FILE, which is the one case where writing is easier
      than pasting rather than harder. What it cannot do is wire one up: the
      script tag in two pages, the typeof guard in catalogue() and the act that
      opens it are four places outside the file, and three of them are code. */
-  games(rows, add, manual) {
+  games(rows, add, manual, done) {
     const ids = {};
+    const wrote = [];
     rows.filter(r => r.mode === 'games').forEach(r => { ids[String(r.key)] = r.how; });
     add('data/items.js', 'CABINETS', Emit.cabinetTable(), 'where the games are played');
     /* The open game's edits live on the document, not on the bench, and
@@ -130,6 +152,10 @@ const Sync = {
       if (!Games.load(id)) return;
       Games.resume();
       add('minigames/' + id + '.js', null, Emit.gameFile(), 'the ' + id + ' minigame');
+      /* The FILE is written even for a new game; what is manual is the wiring
+         around it, which is four places in two other files. So the game itself
+         is on disk and settles, and the note stays. */
+      wrote.push(id);
       if (ids[id] === 'new') {
         manual.push({ label: Games.label ? Games.label(id) : id, file: 'index.html · editor.html',
           why: 'a new game needs its script tag on both pages and a typeof guard in '
@@ -137,19 +163,52 @@ const Sync = {
       }
     });
     if (was && Games.load(was)) Games.resume();
+    if (wrote.length) done.games = wrote;
   },
 
-  /* A level is the one document that cannot be committed back into its own
-     catalogue in the general case: `office` builds thirty-two desks in two
-     loops and explains itself in twenty comments, and a flat furnish() would
-     replace all of that with one line per object. That is the call
-     Emit.flatIsSafe() already makes for the Export tab, and it is the same call
-     here — a flat level round-trips and is written, a procedural one is named
-     with its change list left where it is. */
-  levels(rows, add, manual) {
+  /* ---- what a level keeps, and where ----
+     A level cannot be committed back into its own catalogue in the general
+     case: `office` builds thirty-two desks in two loops and explains itself in
+     twenty comments, and a flat furnish() would replace all of that with one
+     line per object. That is the call Emit.flatIsSafe() already makes for the
+     Export tab, and it is the same call here.
+
+     But it used to be the WHOLE call, and it left the fourth floor — the level
+     everybody actually draws on — with a save button that saved nothing on it
+     at all. Its floor plan is not in its catalogue entry: `rooms: ROOM_DEFS,
+     doors: DOOR_DEFS` names two arrays in data/world.js and the waypoints are a
+     third, and all three are whole top-level declarations of exactly the shape
+     this can write. So the rooms, the doors and the waypoints of the hub go in
+     with everything else, and what is left over is named part by part instead
+     of the level being written off entire. */
+  SHARED: ['rooms', 'doors', 'waypoints'],
+  PARTS: { objects: 'the furniture', desks: 'the desks', counters: 'the front desks',
+    entries: 'the arrival points', links: 'the ways out', name: 'its name',
+    w: 'its size', h: 'its size', indoors: 'whether it is outdoors',
+    hub: 'whether it is the hub' },
+  /* What has changed on the open level that the floor plan does not carry.
+     Against `base`, which is the version the document was loaded in — a level
+     is built from the catalogue every time it is opened, so that is the file's. */
+  leftOver() {
+    const base = Doc.base || {}, now = Doc.state(), out = [];
+    Object.keys(now).forEach(k => {
+      if (this.SHARED.indexOf(k) >= 0) return;
+      if (JSON.stringify(base[k]) === JSON.stringify(now[k])) return;
+      const n = this.PARTS[k] || k;
+      if (out.indexOf(n) < 0) out.push(n);
+    });
+    return out;
+  },
+  words(list) {
+    const s = list.length < 2 ? list[0]
+      : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1];
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  },
+
+  levels(rows, add, manual, done) {
     const ids = {};
     rows.filter(r => r.mode === 'levels').forEach(r => { ids[String(r.key)] = r.how; });
-    const entries = [];
+    const entries = [], wrote = [];
     Doc.stash();
     const was = Doc.id;
     Object.keys(ids).forEach(id => {
@@ -161,19 +220,37 @@ const Sync = {
       }
       if (!Doc.load(id)) return;
       Doc.resume(); Doc.rebuild();
-      if (!Emit.flatIsSafe() || Emit.usesSharedDefs()) {
+      if (Emit.usesSharedDefs()) {
+        add('data/world.js', 'ROOM_DEFS', Emit.roomDefs(), 'the fourth floor’s rooms');
+        add('data/world.js', 'DOOR_DEFS', Emit.doorDefs(), 'its doors');
+        /* Only the hub has any: WP is one table and the schedules that read it
+           belong to the floor the colleagues work on. */
+        const wp = Doc.hub ? Emit.waypointTable() : '';
+        if (wp) add('data/world.js', 'WP', wp, 'where the colleagues are sent');
+        const left = this.leftOver();
+        if (left.length) {
+          manual.push({ label: Doc.name || id, file: 'data/levels.js',
+            why: 'its rooms, its doors and its waypoints live in data/world.js and have just '
+              + 'been written. ' + this.words(left) + (left.length > 1 ? ' are' : ' is')
+              + ' inside its catalogue entry, beside a '
+              + 'furnish() that builds thirty-two desks in two loops — writing that entry out '
+              + 'flat would replace all of it with one line per object. The Export tab’s change '
+              + 'list is what to edit from.' });
+        } else wrote.push(id);
+        return;
+      }
+      if (!Emit.flatIsSafe()) {
         manual.push({ label: Doc.name || id, file: 'data/levels.js',
-          why: Emit.flatIsSafe()
-            ? 'its floor plan is shared with data/world.js, so the entry is not the whole story. '
-              + 'Its Export tab has the geometry and the plan separately.'
-            : 'it builds its furniture with loops and explains itself in comments. Writing a flat '
-              + 'furnish() would replace all of that with one line per object — the Export tab’s '
-              + 'change list is what to edit from.' });
+          why: 'it builds its furniture with loops and explains itself in comments. Writing a flat '
+            + 'furnish() would replace all of that with one line per object — the Export tab’s '
+            + 'change list is what to edit from.' });
         return;
       }
       entries.push({ id: id, code: Emit.levelEntry() });
+      wrote.push(id);
     });
     if (was && Doc.load(was)) { Doc.resume(); Doc.rebuild(); }
+    if (wrote.length) done.levels = wrote;
     /* An entry write is a splice INSIDE a declaration rather than a replacement
        of it, so it carries its entries and no body of its own. LEVELS is the
        one table in the game where that is the right shape: the others are
@@ -379,12 +456,23 @@ const Sync = {
           .then(w => w.write(staged[p].text).then(() => w.close())));
       });
       return put.then(() => {
-        /* The files now have it, so the page must stop saying they do not.
-           Every bench is empty, every base is the version just written, and
-           the list of what the files hold is taken again — a subject invented
-           here is on file now, and one deleted here is gone from it. */
-        Mode.docs().forEach(({ doc }) => { if (doc.settle) doc.settle(); });
-        Mode.noteWhatIsOnFile();
+        /* The files have it, so the page must stop saying they do not — and it
+           must go on saying so for everything they still do not have. Only the
+           documents this run actually wrote are settled, and the per-subject
+           ones only for the subjects that landed: see `done` in plan(). */
+        const done = plan.done || {};
+        Mode.docs().forEach(({ mode, doc }) => {
+          const d = done[mode];
+          if (d === true) { if (doc.settle) doc.settle(); }
+          else if (Array.isArray(d) && d.length && doc.settleSome) doc.settleSome(d);
+        });
+        /* And the same question for what the files HOLD, which is how a subject
+           made here stops reading as new. Whole modes re-counted; a level or a
+           game written one at a time says which. */
+        Mode.noteWhatIsOnFile(Object.keys(done).filter(m => done[m] === true));
+        Object.keys(done).forEach(m => {
+          if (Array.isArray(done[m])) Mode.noteOnFile(m, done[m]);
+        });
         Bank.save();
         Side.refresh();
         this.report(plan, files);
