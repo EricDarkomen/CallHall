@@ -40,6 +40,84 @@ const Zones = {
   WSURF: ['tile', 'block'],
   FIELDS: ['name', 'floor', 'alt', 'wall', 'tint', 'surf', 'wsurf', 'tile', 'wtile'],
 
+  /* ---- what a floor or a wall can be made of ----
+     Two answers per surface, and `tile`/`wtile` win over `surf`/`wsurf`: a rect
+     in the world atlas, or a texture the renderer draws itself. The atlas half
+     used to be offered as every name beginning `wall.`, which is four framed
+     pictures, a mirror and a television — none of which tiles — while
+     `loo.wall`, the one glazed brick in the game and the wall of an actual
+     room, was not on the list at all. The toilets could not be repainted and
+     every other room could be papered in a photograph of a beach.
+
+     So it is asked of the ATLAS rather than of the name:
+
+       SQUARE, and the size of a tile. A poster is 39×31 and a fire door 39×87;
+         a surface is 32×32 because it is laid edge to edge.
+       ANCHORED FLAT. `wall`-anchored art hangs on the face of a wall and
+         `floor`-anchored art stands on the ground — both are things IN a room
+         rather than what the room is made of.
+       NOT an object and not a door, which are square and flat often enough
+         (`obj.mug`, `obj.laptop`) to be worth saying.
+
+     One name test then decides which of the two lists it is in, and it is the
+     only part of this that reads a name at all: a wall is anything with `wall`
+     as a word in it, because that is what the atlas calls one at either end,
+     and everything else that tiles is a floor. A sheet imported on the Art tab
+     naming a tile `grass` is offered as a floor, which is the useful way to be
+     wrong. */
+  tileable(n) {
+    if (typeof Tiles === 'undefined' || !Tiles.rects) return false;
+    const r = Tiles.rects[n];
+    if (!r || r[2] !== r[3] || r[2] !== TILE) return false;
+    if ((Tiles.anchors || {})[n] !== 'flat') return false;
+    return !/^(obj|door)\./.test(n);
+  },
+  isWall(n) { return /(^|\.)wall(\.|$)/.test(n); },
+  /* The atlas rects on offer for one surface of the open zone. Whatever the
+     zone already names is on its list even when nothing else would have put it
+     there: a value you cannot see is a value you cannot put back, which is how
+     `loo.wall` came to be uneditable in the first place. */
+  materials(where) {
+    if (typeof Tiles === 'undefined' || !Tiles.rects) return [];
+    const wall = where === 'wall';
+    const out = Object.keys(Tiles.rects)
+      .filter(n => this.tileable(n) && this.isWall(n) === wall).sort();
+    const has = this.z && this.z[wall ? 'wtile' : 'tile'];
+    if (has && out.indexOf(has) < 0) out.unshift(has);
+    return out;
+  },
+
+  /* ---- what one of them looks like ----
+     Baked by the RENDERER, not drawn again here: R.floorTile() is the only
+     thing that knows the kit is multiplied through the room's own colours, and
+     a swatch painted any other way is a picture of a decision you are not
+     making. So a candidate is previewed by being a zone for as long as the bake
+     takes — one scratch entry, keyed per candidate so the bake cache tells them
+     apart, and removed in a `finally` because every export walks ZONES and a
+     `__swatch` left in it is a line written into data/world.js.
+
+     Nothing has to invalidate these: rebuild() throws the whole bake cache away
+     on every edit, which is the same reason it has to. */
+  swatch(where, patch, key) {
+    if (typeof R === 'undefined' || !this.z) return null;
+    const id = '__swatch:' + where + ':' + key;
+    ZONES[id] = Object.assign({}, this.z, patch);
+    try {
+      return where === 'wall' ? R.wallTile(id, 1) : R.floorTile(id, 1);
+    } catch (_) {
+      return null;
+    } finally {
+      delete ZONES[id];
+    }
+  },
+  /* The same bitmap for a zone that really exists, which is what the room
+     inspector over in the level editor shows. No scratch entry: the renderer
+     is being asked about a room the game has. */
+  tileOf(where, id) {
+    if (typeof R === 'undefined' || !ZONES[id]) return null;
+    try { return where === 'wall' ? R.wallTile(id, 1) : R.floorTile(id, 1); } catch (_) { return null; }
+  },
+
   ids() { return Object.keys(ZONES); },
   entry(id) { return ZONES[id === undefined ? this.id : id] || null; },
 
@@ -90,9 +168,21 @@ const Zones = {
   },
 
   set(k, v) {
-    this.mark('edit ' + k);
-    if (v === null || v === undefined || v === '') delete this.z[k];
-    else this.z[k] = v;
+    const p = {};
+    p[k] = v;
+    this.setAll('edit ' + k, p);
+  },
+  /* Several fields, one intent, one undo step. Choosing a drawn surface while
+     the zone names a rect in the atlas is choosing something you would never
+     see — the atlas wins in R.floorTile() — so the art goes with it, in the
+     same edit rather than as a second one you have to know to make. */
+  setAll(label, patch) {
+    this.mark(label);
+    Object.keys(patch).forEach(k => {
+      const v = patch[k];
+      if (v === null || v === undefined || v === '') delete this.z[k];
+      else this.z[k] = v;
+    });
     this.rebuild();
   },
 

@@ -166,6 +166,18 @@ const Pop = {
     if (levels) items.push({ label: 'Fit the whole level', icon: 'fit', run: () => View.fit() });
     if (levels) items.push({ label: '▶ Try this level', hint: 'the game, on what you are drawing',
       run: () => Play.go() });
+    /* The Rooms tab gets it too, and only the Rooms tab: ZONES is one of the
+       three things that cross over into a trial, so a repainted floor is
+       something you can walk around. Nothing an NPC or an item says does, which
+       is why the other seven documents do not offer this. */
+    if (Mode.id === 'zones') {
+      const on = Play.levelFor(Zones.id);
+      if (on) {
+        items.push({ label: '▶ Try it in the game',
+          hint: 'the game, on ' + ((LEVELS[on] || {}).name || on),
+          run: () => Play.go(on) });
+      }
+    }
     const n = Mode.changes().length;
     items.push({ label: 'The whole game', icon: 'all',
       hint: n ? n + ' edited and not exported' : 'what every check found',
