@@ -1480,10 +1480,28 @@ const R = {
            symmetrical enough that the mirror is a variation rather than a
            mistake: nothing with a handle, a hinge or a console on one side. */
         const canFlip = FLIPPABLE.has(o.kind) && ((o.x * 7 + o.y * 13) & 1) === 1;
+        /* `turn` is quarter turns clockwise, and it is ART AND NOTHING ELSE —
+           the same standing as `flip`. A sofa turned to face the other way is
+           still one tile, still solid or not exactly as it was, and still
+           interacted with from wherever it always was: nothing here touches
+           World.solid and nothing downstream reads this.
+
+           About the sprite's own middle rather than about the tile it is
+           anchored to, or a bookcase would swing out of the room when it
+           turned. The shadow, the highlight and the ringing pool stay square
+           to the map above: they are the floor and the UI, not the object. */
+        const turn = (o.turn || 0) & 3;
+        if (turn) {
+          const mid = (f.sprite && Tiles.has(f.sprite))
+            ? Tiles.centre(f.sprite, ex, ey + bob) : { x: ex, y: ey + bob };
+          c.save();
+          c.translate(mid.x, mid.y); c.rotate(turn * Math.PI / 2); c.translate(-mid.x, -mid.y);
+        }
         if (edgeOn || !(f.sprite && Tiles.draw(c, f.sprite, ex, ey + bob, canFlip))) {
           if (o.art) this.wallArt(o, ex, ey + bob, size);
           else if (!o.noEmoji) this.emoji(o.e, ex, ey + bob, size);
         }
+        if (turn) c.restore();
         if (o.kind === 'pc' && this.animate) {
           c.fillStyle = 'rgba(120,190,255,' + (0.05 + Math.abs(Math.sin(this.t * 2 + o.wob)) * .08) + ')';
           c.fillRect(ex - 13, ey - 12, 26, 16);

@@ -220,6 +220,7 @@ const Help = {
     ['Undo · redo', 'Ctrl+Z · Ctrl+Shift+Z'],
     ['Delete what is selected', 'Del'],
     ['Nudge it a tile', '← ↑ ↓ →'],
+    ['Turn an object a quarter · the other way', 'T · Shift+T'],
     ['Duplicate it', 'Ctrl+D'],
     ['Let go of the selection', 'Esc'],
     ['Find anything, anywhere in the game', 'Ctrl+F'],

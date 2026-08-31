@@ -79,8 +79,9 @@ own renderer, so what you see is what the player gets.
 It is published beside the game, at
 <https://ericdarkomen.github.io/CallHall/editor.html>.
 
-Draw rooms, place doors and counters, move the furniture, set the arrival points
-and the links between levels. It checks the level on every edit — the one that
+Draw rooms, place doors and counters, move the furniture, turn it a quarter at a
+time (`T`, or the four buttons in the inspector — art only, nothing about what
+is solid or what `E` does), set the arrival points and the links between levels. It checks the level on every edit — the one that
 matters counts how many separate pieces the walkable floor is in, which is the
 class of fault you cannot see on screen and that has shipped here before. Then it
 writes the source back out for you to paste into `data/levels.js` and
@@ -91,9 +92,14 @@ tiles laid over them. Both are picked as tiles rather than as names — each swa
 is the bitmap the renderer bakes, tinted through that room's own colours, so what
 you are choosing between is what the room will be. A room selected on the map
 shows its floor and its wall and opens the same page. `▶ Try it in the game`
-opens the game in a new tab on a level the room type is painted on, and
-**Save to the game files** on the whole-game sheet writes `ZONES` back into
-`data/world.js`.
+opens the game in a new tab on a level the room type is painted on.
+
+**Save to the game files**, on the whole-game sheet, writes each table back into
+`data/` whole — including the fourth floor's own floor plan, which lives in
+`data/world.js` as `ROOM_DEFS`, `DOOR_DEFS` and `WP` rather than in its
+catalogue entry. What it cannot write it says so by name: a procedural
+`furnish()` is the file's, and the Export tab's change list is what to edit it
+from. Nothing it declines to write is taken off the bench.
 
 ```sh
 python3 -m http.server 8000    # then http://localhost:8000/editor.html

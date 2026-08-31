@@ -406,6 +406,15 @@ const Tiles = {
     c.restore();
     return true;
   },
+  /* Where a sprite's own middle lands when it is drawn at (wx, wy), which is
+     NOT (wx, wy) for anything standing on the floor: a fridge is two tiles tall
+     and anchored by its feet. Asked by anything that has to turn a sprite about
+     itself rather than about the tile it stands on. */
+  centre(n, wx, wy) {
+    const r = this.has(n) && this.rects[n];
+    if (!r) return { x: wx, y: wy };
+    return { x: wx, y: (this.anchors[n] || 'flat') === 'floor' ? wy + TILE / 2 - r[3] / 2 : wy };
+  },
   /* One floor tile at the top-left of its cell. */
   floor(c, n, px, py) {
     const r = this.has(n) && this.rects[n];

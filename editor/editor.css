@@ -1131,6 +1131,17 @@ ul.tight li b { font-family: var(--mono); font-weight: 400; }
 .matnote { color: var(--dimmer); font-size: 11px; margin: -2px 0 10px; }
 .matnote code { font-family: var(--mono); color: var(--dim); }
 
+/* Which way round an object is drawn. Four buttons rather than a number,
+   because "2" is not a direction anybody can picture. */
+.turns { display: inline-flex; gap: 4px; }
+.turns button {
+  min-width: 30px; padding: 4px 0; line-height: 1;
+  background: var(--sunk); border: 1px solid var(--line); border-radius: var(--r-sm);
+  color: var(--dim); font-size: 13px; cursor: pointer;
+}
+.turns button:hover { border-color: var(--line2); color: var(--ink); }
+.turns button.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 0 1px var(--accent) inset; }
+
 /* Six numeric effects on an item. A grid rather than six rows, because each is
    a word and a small number and stacking them costs a screen for nothing. */
 .effs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin: 6px 0 2px; }
