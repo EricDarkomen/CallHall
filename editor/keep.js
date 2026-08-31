@@ -285,23 +285,56 @@ const Play = {
     };
   },
 
-  go() {
-    if (Mode.id !== 'levels') { Side.say('There is a map to try in the Levels editor.'); return; }
-    if (!Object.keys(Doc.entries).length) {
-      Side.say('This level has no arrival point, so there is nowhere to start. The Level tab adds one.');
-      return;
+  /* Which level to try a ROOM TYPE on. ZONES crosses over whole, so repainting
+     a room is a thing you can walk around — but only somewhere it is actually
+     painted, and the Rooms tab is not the Levels tab and has no opinion about
+     which map you were looking at. The one you have open wins if the room type
+     is on it at all; otherwise the level with the most of it. Nowhere is a real
+     answer and the button is not offered. */
+  levelFor(zone) {
+    const used = Zones.usage().get(zone) || [];
+    if (!used.length) return null;
+    if (used.some(r => r.level === Doc.id)) return Doc.id;
+    const by = {};
+    used.forEach(r => { by[r.level] = (by[r.level] || 0) + r.tiles; });
+    return Object.keys(by).sort((a, b) => by[b] - by[a])[0];
+  },
+
+  /* `id` names a level other than the open one, which is what the Rooms tab
+     hands over. Swapping the document is the same manoeuvre Sync.levels()
+     makes for the same reason — the payload is read off Doc and there is only
+     one Doc — and the open level is put back before this returns, whichever
+     way out is taken. */
+  go(id) {
+    const want = id || Doc.id;
+    if (!want || !LEVELS[want]) { Side.say('There is no level to try this on.'); return; }
+    const swap = want !== Doc.id;
+    const was = Doc.id;
+    let text = null, name = '';
+    if (swap) Doc.stash();
+    try {
+      if (swap) {
+        if (!Doc.load(want)) { Side.say('Could not open ' + want + ' to try it on.'); return; }
+        Doc.resume(); Doc.rebuild();
+      }
+      name = Doc.name || want;
+      if (!Object.keys(Doc.entries).length) {
+        Side.say(name + ' has no arrival point, so there is nowhere to start. The Level tab adds one.');
+        return;
+      }
+      try { text = JSON.stringify(this.payload()); } catch (_) { text = null; }
+    } finally {
+      if (swap && was && Doc.load(was)) { Doc.resume(); Doc.rebuild(); }
     }
-    let text;
-    try { text = JSON.stringify(this.payload()); } catch (_) { text = null; }
     if (!text || !Store.set(this.KEY, text)) {
       Side.say('Cannot hand the level over — ' + Store.why());
       return;
     }
     /* A new tab, so the editor and everything on its bench is still here when
        you come back. Popup blockers allow this from inside a click. */
-    const url = 'index.html?try=' + encodeURIComponent(Doc.id);
+    const url = 'index.html?try=' + encodeURIComponent(want);
     const w = window.open(url, '_blank');
     if (!w) { Side.say('The browser blocked the new tab. Allow pop-ups here and try again.'); return; }
-    Side.say('Trying ' + Doc.name + ' in a new tab — your level, the file’s writing.');
+    Side.say('Trying ' + name + ' in a new tab — your level, your rooms, the file’s writing.');
   }
 };

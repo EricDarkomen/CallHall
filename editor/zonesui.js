@@ -69,24 +69,112 @@ const ZonesUI = {
       + '<input data-f="' + esc(k) + '" value="' + esc(v === undefined ? '' : String(v))
       + '" spellcheck="false">' + '</span>');
   },
-  pick(label, k, list, none) {
-    const v = Zones.z[k];
-    return Side.row(label, '<select data-f="' + esc(k) + '">'
-      + '<option value="">' + esc(none) + '</option>'
-      + list.map(o => '<option value="' + esc(o) + '"' + (o === v ? ' selected' : '') + '>'
-        + esc(o) + '</option>').join('')
-      + (v !== undefined && list.indexOf(v) < 0
-        ? '<option value="' + esc(v) + '" selected>' + esc(v) + '  (unknown)</option>' : '')
-      + '</select>');
+  /* ---- choosing a floor or a wall ----
+     This is the control the mode exists for and it was a <select> of atlas
+     names: `floor.sub` against `floor.herring` is a decision made entirely by
+     eye, and a dropdown of strings is the one shape that cannot be looked at.
+     So it is the tiles themselves, baked by the renderer through this room's
+     own colours — what you are choosing between is what the room will be.
+
+     Two rows, because the data has two fields and they are not the same
+     question. The top row is the ATLAS, which wins; the bottom is the surface
+     the renderer DRAWS, which is what the room falls back to when the art is
+     off — or missing, which is what happens to a copy of the game taken
+     without art/. Nothing is hidden behind the other: picking a drawn surface
+     while the atlas is set clears the atlas in the same edit, because the
+     alternative is a click that visibly does nothing. */
+  label(n) { return n.replace(/^(floor|wall)\./, '').replace(/\./g, ' · '); },
+
+  cell(where, o) {
+    return '<button type="button" class="mat' + (o.on ? ' on' : '') + '"'
+      + ' data-mat="' + esc(where) + '" data-set="' + esc(o.set) + '"'
+      + ' data-v="' + esc(o.v) + '" data-key="' + esc(o.key) + '"'
+      + ' title="' + esc(o.title) + '"><span class="mat-p"></span>'
+      + '<b>' + esc(o.label) + '</b></button>';
+  },
+
+  material(where) {
+    const wall = where === 'wall';
+    const kitK = wall ? 'wtile' : 'tile', surfK = wall ? 'wsurf' : 'surf';
+    const kit = Zones.z[kitK], surf = Zones.z[surfK] || '';
+    const drawn = (wall ? Zones.WSURF : Zones.SURF);
+    const plain = wall ? 'plain' : 'carpet';
+    const art = [{ set: kitK, v: '', key: 'none', on: !kit, label: 'no art',
+      title: 'No rect from the atlas — the drawn surface below is what you get.' }]
+      .concat(Zones.materials(where).map(n => ({
+        set: kitK, v: n, key: n, on: n === kit, label: this.label(n),
+        title: n + ' — a rect in the world atlas, multiplied through this room’s colours.',
+      })));
+    const surfs = [{ set: surfK, v: '', key: 'plain', on: !surf, label: plain,
+      title: 'The default the renderer draws when nothing names a texture.' }]
+      .concat(drawn.map(n => ({
+        set: surfK, v: n, key: n, on: n === surf, label: n,
+        title: n + ' — drawn by the renderer, no art needed.',
+      })));
+
+    return '<h4>' + (wall ? 'Walls' : 'Floor') + '</h4>'
+      + '<div class="mats">' + art.map(o => this.cell(where, o)).join('') + '</div>'
+      + '<div class="matnote">' + (kit
+        ? '<code>' + esc(kit) + '</code>'
+        : 'No art — drawn by the renderer.') + '</div>'
+      + '<div class="mats small' + (kit ? ' muted' : '') + '">'
+      + surfs.map(o => this.cell(where, o)).join('') + '</div>'
+      + '<div class="matnote">' + (kit
+        ? 'Drawn <b>' + esc(surf || plain) + '</b> underneath, which is what a copy of the game '
+          + 'without <code>art/</code> shows. Picking one here turns the art off.'
+        : 'Drawn <b>' + esc(surf || plain) + '</b>.') + '</div>';
+  },
+
+  /* The previews are drawn AFTER the panel is in the DOM, into canvases rather
+     than into a background-image: turning one into a data URI means reading the
+     pixels back out of a canvas the atlas has been drawn into, and this project
+     opens off `file://`, where that canvas is tainted and the read throws. */
+  paint(p) {
+    p.querySelectorAll('.mat').forEach(b => {
+      const where = b.dataset.mat, patch = {};
+      const kitK = where === 'wall' ? 'wtile' : 'tile';
+      patch[b.dataset.set] = b.dataset.v || undefined;
+      /* A drawn surface is previewed WITHOUT the atlas over it, because that is
+         what clicking it does: the rect wins in R.floorTile(), so leaving it in
+         would draw six identical swatches of the tile you already have. */
+      if (b.dataset.set !== kitK) patch[kitK] = undefined;
+      const cv = Zones.swatch(where, patch, b.dataset.set + ':' + b.dataset.key);
+      const host = b.querySelector('.mat-p');
+      if (!cv || !host) return;
+      const out = document.createElement('canvas');
+      out.width = cv.width; out.height = cv.height;
+      out.getContext('2d').drawImage(cv, 0, 0);
+      host.appendChild(out);
+    });
+  },
+
+  wireMaterials(p) {
+    p.querySelectorAll('.mat').forEach(b => {
+      b.onclick = () => {
+        const k = b.dataset.set, v = b.dataset.v;
+        const wall = b.dataset.mat === 'wall';
+        const kitK = wall ? 'wtile' : 'tile';
+        /* The atlas wins, so choosing a drawn surface under one that is set is
+           choosing something you would never see. One edit, one undo step, and
+           said out loud — a click that silently does nothing is worse. */
+        if (k !== kitK && Zones.z[kitK]) {
+          const patch = {};
+          patch[k] = v; patch[kitK] = '';
+          Zones.setAll('edit ' + k, patch);
+          Side.say('Turned the ' + (wall ? 'wall' : 'floor') + ' art off — it would have '
+            + 'covered the drawn surface you just chose.');
+          return;
+        }
+        Zones.set(k, v);
+      };
+    });
   },
 
   inspect() {
     const p = $('#paneInspect');
     if (!Zones.z) { p.innerHTML = '<p class="empty">No zone open.</p>'; return; }
-    const atlas = (typeof Tiles !== 'undefined' && Tiles.rects) ? Object.keys(Tiles.rects) : [];
-    const floors = atlas.filter(n => /^floor\./.test(n)).sort();
-    const walls = atlas.filter(n => /^wall\./.test(n)).sort();
     const used = Zones.usage().get(Zones.id) || [];
+    const where = Play.levelFor(Zones.id);
 
     p.innerHTML = '<h3>' + esc(Zones.z.name || Zones.id) + '</h3>'
       + '<div class="note">Rooms · <code>' + esc(Zones.id) + '</code></div>'
@@ -101,15 +189,13 @@ const ZonesUI = {
       + 'and the room chip, not the floor. A wall too close to its own floor in brightness loses '
       + 'the edge of the room — these colours are dark on purpose, which is what makes that easy '
       + 'to do.</div>'
-      + '<h4>Texture</h4>'
-      + this.pick('floor art', 'tile', floors, 'none — use the drawn surface')
-      + this.pick('wall art', 'wtile', walls, 'none — use the drawn surface')
-      + this.pick('floor surface', 'surf', Zones.SURF, 'carpet (the default)')
-      + this.pick('wall surface', 'wsurf', Zones.WSURF, 'plain')
+      + this.material('floor')
+      + this.material('wall')
       + '<div class="note">A named rect from the world atlas wins over the drawn surface, and is '
       + 'tinted through the colours above — straight from the atlas each material is one flat '
       + 'colour and every room becomes the same room. The drawn surfaces are what the toilets and '
-      + 'the fire escape use on purpose.</div>'
+      + 'the fire escape use on purpose, and they are what a copy of the game taken without '
+      + '<code>art/</code> falls back to.</div>'
       + '<h4>Where it is <span class="pill">' + used.length + '</span></h4>'
       + (used.length
         ? '<ul class="list tight">' + used.map(r =>
@@ -117,6 +203,13 @@ const ZonesUI = {
           + '<em>' + r.tiles + ' tiles</em></li>').join('') + '</ul>'
         : '<div class="note bad">No room anywhere is painted with this, so nobody will ever '
           + 'see it. Paint one with the room tool on the Levels tab.</div>')
+      + (where
+        ? '<div class="btns"><button data-a="try" class="primary">▶ Try it in the game</button></div>'
+          + '<div class="note">Opens the game in a new tab on '
+          + esc((LEVELS[where] || {}).name || where) + ', with every room type as you have them '
+          + 'here. Nothing is written to <code>data/</code> by that — the whole game sheet’s '
+          + '<b>Save to the game files</b> is what does that.</div>'
+        : '')
       + '<div class="btns"><button data-a="new">New room type…</button>'
       + '<button data-a="dup">Duplicate</button>'
       + '<button data-a="drop" class="warn">Delete</button></div>';
@@ -134,9 +227,12 @@ const ZonesUI = {
       b.onclick = () => {
         if (b.dataset.a === 'new') ZonesMake.create();
         else if (b.dataset.a === 'dup') Mode.duplicate();
+        else if (b.dataset.a === 'try') Play.go(where);
         else ZonesMake.drop();
       };
     });
+    this.wireMaterials(p);
+    this.paint(p);
   },
 
   check() {

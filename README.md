@@ -86,6 +86,15 @@ class of fault you cannot see on screen and that has shipped here before. Then i
 writes the source back out for you to paste into `data/levels.js` and
 `data/world.js`.
 
+What a room is MADE of is the Rooms tab: its colours, and the floor and wall
+tiles laid over them. Both are picked as tiles rather than as names — each swatch
+is the bitmap the renderer bakes, tinted through that room's own colours, so what
+you are choosing between is what the room will be. A room selected on the map
+shows its floor and its wall and opens the same page. `▶ Try it in the game`
+opens the game in a new tab on a level the room type is painted on, and
+**Save to the game files** on the whole-game sheet writes `ZONES` back into
+`data/world.js`.
+
 ```sh
 python3 -m http.server 8000    # then http://localhost:8000/editor.html
 ```

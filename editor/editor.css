@@ -1098,6 +1098,39 @@ ul.tight li b { font-family: var(--mono); font-weight: 400; }
 }
 .pair input:not([type="color"]) { flex: 1 1 auto; width: auto; min-width: 0; font-family: var(--mono); }
 
+/* ---- what a room is made of ----
+   Floor and wall tiles, as tiles. `floor.sub` against `floor.herring` is a
+   decision made entirely by eye and it used to be a <select> of forty strings;
+   these are the bitmaps the renderer bakes, tinted through the room's own
+   colours, so the swatch IS the floor. Three to a row at 340px, and the caption
+   is under it rather than beside it because the picture is the control. */
+.mats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 2px 0 6px; }
+.mats.read { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 190px; }
+/* The drawn surfaces under an atlas tile that wins over them: still there,
+   still choosable, and visibly not what you are looking at on the map. */
+.mats.muted { opacity: .5; }
+.mats.muted:hover, .mats.muted:focus-within { opacity: 1; }
+.mat {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 5px 3px 4px; min-width: 0;
+  background: var(--sunk); border: 1px solid var(--line); border-radius: var(--r-sm);
+  color: var(--dim); font: inherit; font-size: 10px; cursor: pointer;
+}
+.mats.read .mat { cursor: default; }
+.mat:hover { border-color: var(--line2); color: var(--ink); }
+.mat.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 0 1px var(--accent) inset; }
+.mat b { font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A fixed box whatever the bake came out at, so a row of swatches is a grid
+   rather than a staircase. The canvas inside is 2× a tile. */
+.mat-p {
+  display: block; width: 40px; height: 40px; border-radius: 3px; overflow: hidden;
+  background: var(--panel2); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35) inset;
+}
+.mats.small .mat-p { width: 34px; height: 34px; }
+.mat-p canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.matnote { color: var(--dimmer); font-size: 11px; margin: -2px 0 10px; }
+.matnote code { font-family: var(--mono); color: var(--dim); }
+
 /* Six numeric effects on an item. A grid rather than six rows, because each is
    a word and a small number and stacking them costs a screen for nothing. */
 .effs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin: 6px 0 2px; }

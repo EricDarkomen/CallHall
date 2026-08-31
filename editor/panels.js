@@ -524,7 +524,41 @@ const Side = {
       + this.row('to', '<input type="number" data-f="x2" value="' + x2 + '"> '
         + '<input type="number" data-f="y2" value="' + y2 + '">')
       + '<div class="note">' + (x2 - x1 + 1) + ' × ' + (y2 - y1 + 1) + ' tiles</div>'
+      /* What this room is MADE of, where you are drawing it. A zone is one row
+         of data/world.js shared by every room painted with it, so the floor and
+         the wall are edited on the Rooms tab and not here — but "what is this
+         floor" was a question the level editor could not answer at all, and the
+         answer to it is a picture rather than a word. */
+      + '<h4>Made of</h4>'
+      + (ZONES[rm.z]
+        ? '<div class="mats read">'
+          + '<span class="mat" data-room-mat="floor"><span class="mat-p"></span><b>floor</b></span>'
+          + '<span class="mat" data-room-mat="wall"><span class="mat-p"></span><b>wall</b></span>'
+          + '</div>'
+          + '<div class="btns"><button data-a="paint">Change what it is made of…</button></div>'
+          + '<div class="note">Opens this room type on the Rooms tab, where its floor, its walls '
+          + 'and its colours are. Every room painted with it changes — that is what a room type '
+          + 'is.</div>'
+        /* A room painted with a zone ZONES has no entry for. The check says so
+           too; here it is the reason there is nothing to show a picture of. */
+        : '<div class="note bad">This room names <code>' + esc(rm.z) + '</code>, and there is no '
+          + 'such room type — so the renderer has nothing to look it up in and draws it as bare '
+          + 'default. Pick one above, or make it on the Rooms tab.</div>')
       + '<div class="btns"><button data-a="del" class="warn">Delete</button></div>';
+
+    /* Read-only swatches: the bitmap the renderer will use, asked of the
+       renderer. Canvases rather than data URIs — see ZonesUI.paint(). */
+    p.querySelectorAll('[data-room-mat]').forEach(el => {
+      const cv = Zones.tileOf(el.dataset.roomMat, rm.z);
+      const host = el.querySelector('.mat-p');
+      if (!cv || !host) return;
+      const out = document.createElement('canvas');
+      out.width = cv.width; out.height = cv.height;
+      out.getContext('2d').drawImage(cv, 0, 0);
+      host.appendChild(out);
+    });
+    const paint = p.querySelector('[data-a="paint"]');
+    if (paint) paint.onclick = () => Project.goTo('zones', rm.z, 'inspect');
 
     p.querySelectorAll('[data-f]').forEach(el => {
       el.onchange = () => {
