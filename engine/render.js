@@ -1196,7 +1196,19 @@ const R = {
          get a look, in the order the wall could actually be seen from: the
          room it caps from below, then the room it caps from above, then
          whichever side is left. */
-      const nz = (World.zone[y + 1] && World.zone[y + 1][x]) || (World.zone[y - 1] && World.zone[y - 1][x])
+      /* Looking DOWN finds a doorway as readily as a room, and that is right:
+         the wall above an opening is its head, seen from the opening, and it
+         takes the finish of the room the door leads to. That is what puts two
+         courses of glazed brick over the toilet door and it is the whole of
+         why a doorway in a wall you walk through east-west reads as a door.
+         Looking UP must NOT: a doorway above this tile is a hole in the same
+         wall run, not a room this wall caps, and taking its zone painted the
+         one tile south of the toilet door in the toilets' white brick while
+         the rest of the column stayed office drywall. Left as the only wrong
+         tile on that wall, in the one room whose finish is light enough to
+         see it. */
+      const nz = (World.zone[y + 1] && World.zone[y + 1][x])
+        || (!World.isOpening(x, y - 1) && World.zone[y - 1] && World.zone[y - 1][x])
         /* WEST before east, and that is a tie-break rather than a symmetry.
            A vertical wall run has wall above and below it, so it never reaches
            the two cases above and is decided entirely here — and whichever way
@@ -1243,8 +1255,15 @@ const R = {
            though nothing is actually hidden. Full strength looking up at it
            from the room it encloses; faded by the time the player is a tile
            past it into whatever is on the other side. */
+        /* Except over a doorway. The fade answers "which side of this wall is
+           the player on", and the head of an opening has no sides to be on:
+           what it hides is a tile of wall you are already looking through a
+           hole in. Fading it took the top half off the door surround and left
+           the bottom half standing, which is the one thing on this wall that
+           reads as a fault rather than as depth. */
+        const head = World.isOpening(x, y + 1);
         const rel = (P.y - py) / (TILE * 1.6);
-        const wallAlpha = Math.max(.15, Math.min(1, rel + .35));
+        const wallAlpha = head ? 1 : Math.max(.15, Math.min(1, rel + .35));
         c.save();
         c.globalAlpha = wallAlpha;
         c.drawImage(this.wallTile(nz || 'main', (x * 3 + y + 1) & 1), px, py - TILE, TILE, TILE);

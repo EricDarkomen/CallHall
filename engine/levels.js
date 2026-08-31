@@ -47,7 +47,7 @@ const Levels = {
      complete: anything left off is silently retained from the previous level,
      and a stale `desks` draws the fourth floor's workstations on the road. */
   FIELDS: ['def', 'level', 'solid', 'zone', 'seed', 'ao', 'objects', 'byTile',
-    'doorways', 'desks', 'worktops', 'tables', 'counters', 'blocked'],
+    'doorways', 'openings', 'desks', 'worktops', 'tables', 'counters', 'blocked'],
 
   /* Object fields that a level's own state may change after it is built, and
      that therefore have to survive being evicted and rebuilt. Everything else
