@@ -97,7 +97,11 @@ opens the game in a new tab on a level the room type is painted on.
 **Save to the game files**, on the whole-game sheet, writes each table back into
 `data/` whole — including the fourth floor's own floor plan, which lives in
 `data/world.js` as `ROOM_DEFS`, `DOOR_DEFS` and `WP` rather than in its
-catalogue entry. What it cannot write it says so by name: a procedural
+catalogue entry. In Chrome or Edge it asks for the game's folder once and writes
+there. Safari and Firefox have no folder picker, so it prepares the same files —
+read from where the page was served, spliced, and parsed before they are offered
+— and downloads them for you to drop back into `data/`; nothing there is settled
+off the bench, because a browser cannot tell whether you moved them. What it cannot write it says so by name: a procedural
 `furnish()` is the file's, and the Export tab's change list is what to edit it
 from. Nothing it declines to write is taken off the bench.
 

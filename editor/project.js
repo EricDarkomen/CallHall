@@ -300,8 +300,9 @@ const Project = {
       + '<div class="btns"><button type="button" data-a="sync">Save to the game files</button></div>'
       + '<div class="note">' + (Sync.can()
         ? 'Writes each table back into data/, whole. You will be asked for the game’s folder once.'
-        : 'This browser cannot be given a folder to write to, so this saves a change file and '
-          + 'tells you the one command that applies it.') + '</div>'
+        : 'This browser has no folder picker, so this prepares the finished files — each one as '
+          + 'the page was served it with your work spliced in and checked — and hands them to you '
+          + 'to drop back into the game’s folder.') + '</div>'
       + Object.keys(byFile).sort().map(file => '<div class="pfile"><code>' + esc(file) + '</code></div>'
         + '<ul class="list pickitems">' + byFile[file].map(x =>
           /* A deleted subject has nowhere to go, so it is a line rather than a

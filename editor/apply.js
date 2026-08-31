@@ -416,12 +416,20 @@ const Sync = {
      these files name each other, and a data/items.js from after your edits
      beside a data/npcs.js from before them is a game that boots and is subtly
      wrong. */
-  write(dir, plan) {
-    /* Keyed by path and carried forward, because SEVERAL WRITES CAN LAND IN ONE
-       FILE — jobs and rewards both live in data/items.js, and so do the
-       cabinets. Each one has to start from what the one before it produced
-       rather than from the copy on disk, or the last to be staged is the only
-       one that survives. */
+  /* ---- staging ----
+     Read, splice, parse: every write, before any of them lands anywhere. The
+     two ways out of here disagree about exactly two things — where the current
+     text is read from and where the finished text goes. A directory handle does
+     both ends. A page that was never given one can still READ what it was
+     served beside itself, which is the same source its tables were loaded from,
+     and hand you the result. Everything between those ends is this, written
+     once.
+
+     Keyed by path and carried forward, because SEVERAL WRITES CAN LAND IN ONE
+     FILE — jobs and rewards both live in data/items.js, and so do the cabinets.
+     Each one has to start from what the one before it produced rather than from
+     the copy on disk, or the last to be staged is the only one that survives. */
+  stage(plan, read) {
     const staged = {};
     const order = [];
     let chain = Promise.resolve();
@@ -429,9 +437,7 @@ const Sync = {
       chain = chain.then(() => {
         if (order.indexOf(w.file) < 0) order.push(w.file);
         if (w.decl === null) { staged[w.file] = { text: w.code, made: true }; return; }
-        const have = staged[w.file]
-          ? Promise.resolve(staged[w.file].text)
-          : this.file(dir, w.file).then(h => h.getFile()).then(f => f.text());
+        const have = staged[w.file] ? Promise.resolve(staged[w.file].text) : read(w.file);
         return have.then(src => {
           const out = w.entries
             ? w.entries.reduce((s, e) => {
@@ -446,64 +452,141 @@ const Sync = {
         });
       });
     });
-
-    return chain.then(() => {
-      const files = order;
-      let put = Promise.resolve();
-      files.forEach(p => {
-        put = put.then(() => this.file(dir, p, staged[p].made)
-          .then(h => h.createWritable())
-          .then(w => w.write(staged[p].text).then(() => w.close())));
-      });
-      return put.then(() => {
-        /* The files have it, so the page must stop saying they do not — and it
-           must go on saying so for everything they still do not have. Only the
-           documents this run actually wrote are settled, and the per-subject
-           ones only for the subjects that landed: see `done` in plan(). */
-        const done = plan.done || {};
-        Mode.docs().forEach(({ mode, doc }) => {
-          const d = done[mode];
-          if (d === true) { if (doc.settle) doc.settle(); }
-          else if (Array.isArray(d) && d.length && doc.settleSome) doc.settleSome(d);
-        });
-        /* And the same question for what the files HOLD, which is how a subject
-           made here stops reading as new. Whole modes re-counted; a level or a
-           game written one at a time says which. */
-        Mode.noteWhatIsOnFile(Object.keys(done).filter(m => done[m] === true));
-        Object.keys(done).forEach(m => {
-          if (Array.isArray(done[m])) Mode.noteOnFile(m, done[m]);
-        });
-        Bank.save();
-        Side.refresh();
-        this.report(plan, files);
-      });
-    }).catch(err => {
-      Side.say('Nothing was written — ' + (err && err.message ? err.message : 'the write failed') + '.');
-    });
+    return chain.then(() => ({ staged: staged, order: order }));
   },
 
-  /* Everywhere else: the same plan as a file, and a script that applies it.
-     Firefox and Safari have no directory picker, and a file:// page has no
-     secure context to be given one in — so this is not a lesser path for
-     unusual setups, it is the path for two of the three browsers. */
+  write(dir, plan) {
+    return this.stage(plan, path => this.file(dir, path).then(h => h.getFile()).then(f => f.text()))
+      .then(res => {
+        const staged = res.staged, files = res.order;
+        let put = Promise.resolve();
+        files.forEach(p => {
+          put = put.then(() => this.file(dir, p, staged[p].made)
+            .then(h => h.createWritable())
+            .then(w => w.write(staged[p].text).then(() => w.close())));
+        });
+        return put.then(() => {
+          this.landed(plan);
+          Side.refresh();
+          this.report(plan, files);
+        });
+      }).catch(err => {
+        Side.say('Nothing was written — ' + (err && err.message ? err.message : 'the write failed') + '.');
+      });
+  },
+
+  /* The files have it, so the page must stop saying they do not — and it must
+     go on saying so for everything they still do not have. Only the documents
+     this run actually wrote are settled, and the per-subject ones only for the
+     subjects that landed: see `done` in plan().
+
+     Called by the folder path and by nothing else. A prepared file is not a
+     saved one until somebody moves it, and this page cannot see that happen. */
+  landed(plan) {
+    const done = plan.done || {};
+    Mode.docs().forEach(({ mode, doc }) => {
+      const d = done[mode];
+      if (d === true) { if (doc.settle) doc.settle(); }
+      else if (Array.isArray(d) && d.length && doc.settleSome) doc.settleSome(d);
+    });
+    /* And the same question for what the files HOLD, which is how a subject
+       made here stops reading as new. Whole modes re-counted; a level or a game
+       written one at a time says which. */
+    Mode.noteWhatIsOnFile(Object.keys(done).filter(m => done[m] === true));
+    Object.keys(done).forEach(m => {
+      if (Array.isArray(done[m])) Mode.noteOnFile(m, done[m]);
+    });
+    Bank.save();
+  },
+
+  /* ---- everywhere else ----
+     Safari and Firefox have no directory picker at all, so this is not a lesser
+     path for unusual setups: it is the path for two of the three browsers, and
+     it used to be a JSON file plus a command to run on it. That was a save for
+     nobody. The command is a script in the project's own tools/, which is not
+     in a copy of the game taken to play, and a page that hands you a bag of
+     fragments has done the hard half of the work and left you the rest.
+
+     A page cannot put a file in a folder, and nothing will make it. What it CAN
+     do is everything up to that: fetch the file it was served beside — which is
+     the same source its tables were read from, so the splice is against exactly
+     what it is editing — write the change into it, check the result parses, and
+     hand you the finished file. One copy per file, and usually there is one. */
   bundle(plan) {
+    this.stage(plan, path => this.fetchText(path)).then(res => {
+      const staged = res.staged, order = res.order;
+      const names = this.names(order);
+      /* One at a time and spaced out: a browser asked for several downloads in
+         the same tick offers the first and quietly drops the rest. */
+      order.forEach((p, i) => setTimeout(() => Side.download(names[p], staged[p].text), i * 400));
+      /* After the last of them, because Side.download() says "Saved x.js" as
+         each one goes and the last word here has to be the true one: nothing is
+         saved until these are back in the folder. */
+      setTimeout(() => Side.say(order.length === 1
+        ? names[order[0]] + ' is ready — put it back in the game’s folder as ' + order[0] + '.'
+        : order.length + ' files are ready — put each one back where it came from.'),
+      order.length * 400 + 60);
+      this.report(plan, null, order.map(p => ({ name: names[p], file: p })));
+    }).catch(err => this.changeFile(plan, err));
+  },
+
+  /* The file as it was served to this page. A query string on the way out
+     because the copy in the browser's cache is the one thing here that could be
+     older than the tables the page is editing. */
+  fetchText(path) {
+    if (typeof fetch !== 'function') return Promise.reject(new Error('this page cannot read ' + path));
+    const url = path + (path.indexOf('?') < 0 ? '?' : '&') + 'v=' + Date.now();
+    return fetch(url, { cache: 'no-store' }).then(r => {
+      if (!r.ok) throw new Error('could not read ' + path + ' — ' + r.status);
+      return r.text();
+    }, () => { throw new Error('could not read ' + path); });
+  },
+
+  /* What to call each download: the name it has to have when it goes back, and
+     the folder in front of it only where two would otherwise arrive as one. */
+  names(order) {
+    const n = {}, out = {};
+    order.forEach(p => { const b = p.split('/').pop(); n[b] = (n[b] || 0) + 1; });
+    order.forEach(p => {
+      const b = p.split('/').pop();
+      out[p] = n[b] > 1 ? p.replace(/\//g, '-') : b;
+    });
+    return out;
+  },
+
+  /* Last resort, and the only one left when the page cannot READ what it is
+     editing: a file:// page has no fetch and was never given a folder. Nothing
+     can be prepared from nothing, so the emitted source goes out as the change
+     file it always was, and the message says which of the two happened. */
+  changeFile(plan, err) {
     const text = JSON.stringify({
       v: this.V, at: new Date().toISOString(),
       writes: plan.writes.map(w => ({ file: w.file, decl: w.decl, code: w.code, entries: w.entries || null })),
       manual: plan.manual,
     }, null, 1);
     Side.download('editor-changes.json', text);
-    Side.say('Saved editor-changes.json. Run: node tools/apply-editor-changes.mjs <file>');
+    /* Last, for the same reason as above: Side.download() says "Saved" and this
+       is the sentence that has to be left on the screen. */
+    setTimeout(() => Side.say((err && err.message ? err.message : 'The files could not be read')
+      + '. Saved editor-changes.json instead — it holds the same source, and '
+      + 'tools/apply-editor-changes.mjs in the project applies it.'), 60);
     this.report(plan);
   },
 
   /* What happened, and what is still yours to do. The manual list is the point
      of this: a save that quietly did eight of nine things is how you find out
      in a fortnight that the arcade has no script tag. */
-  report(plan, files) {
+  report(plan, files, downloads) {
     const L = [];
     if (files && files.length) L.push('<h4>Written</h4><ul class="list">'
       + files.map(f => '<li><code>' + esc(f) + '</code></li>').join('') + '</ul>');
+    else if (downloads && downloads.length) L.push('<h4>Ready to put back</h4><ul class="list">'
+      + downloads.map(d => '<li><code>' + esc(d.name) + '</code>'
+        + '<em>goes back as <code>' + esc(d.file) + '</code></em></li>').join('') + '</ul>'
+      + '<div class="note">Each is the file as this page was served it with your work spliced into '
+      + 'it, parsed before it was offered — the same check the folder path makes. This browser '
+      + 'cannot put them back for you and cannot tell when you have, so the bench keeps every one '
+      + 'of them until you reload with the files in place.</div>');
     else if (plan.writes.length) L.push('<h4>' + plan.writes.length + ' to apply</h4><ul class="list">'
       + plan.writes.map(w => '<li><code>' + esc(w.file) + '</code>'
         + '<em>' + esc(w.decl || 'the whole file') + ' · ' + esc(w.why) + '</em></li>').join('') + '</ul>');
@@ -512,11 +595,12 @@ const Sync = {
         + '<em>' + (m.file ? '<code>' + esc(m.file) + '</code> — ' : '') + esc(m.why) + '</em></li>').join('')
       + '</ul>');
     if (!L.length) return;
-    Ask.tell('Saved to the game', L.join(''));
+    Ask.tell(files ? 'Saved to the game' : 'Prepared', L.join(''));
   },
 
   why() {
-    return 'A page opened off disk cannot be given a folder to write to. '
-      + 'Serve it — python3 -m http.server — or use the change file and the apply script.';
+    return 'A page opened off disk cannot be given a folder to write to, and cannot read one '
+      + 'either. Serve it — python3 -m http.server — and the save prepares the finished files '
+      + 'even where the browser has no folder picker.';
   },
 };
