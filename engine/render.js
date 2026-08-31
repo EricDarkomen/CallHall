@@ -682,15 +682,43 @@ const R = {
   /* Worktops: kitchen counters and the row of sinks in the toilets. Given a
      splashback when they stand against a wall, which is what stops them
      reading as a plank floating on the carpet. */
+  /* Kit units in the break room only: the same run type is also the toilets'
+     vanity and the training room's bench, and a wooden kitchen carcass under a
+     washroom sink is worse than the grey slab it replaced.
+
+     Asked in one place because two things need the answer and they must not
+     disagree: this draws the run, and the object pass has to know how high to
+     stand a kettle on it. */
+  kitRun(t) { return !!t && World.zoneAt(t.x, t.y) === 'brk' && Tiles.has('obj.counter'); },
+  /* The run under a tile, or null. World.worktops is a handful of entries — a
+     scan is cheaper than another grid to keep in step with it. */
+  worktopAt(x, y) {
+    const list = World.worktops || [];
+    for (let i = 0; i < list.length; i++) {
+      const t = list[i];
+      if (t.y === y && x >= t.x && x < t.x + t.w) return t;
+    }
+    return null;
+  },
+  /* How far above the centre of its tile a worktop's surface is.
+
+     The slab is drawn 8/44 of a tile down from the top of its own tile, which
+     puts its front edge a whisker under the centre — that is what the 11 was
+     measured against, and it is why a jug on the vanity sits ON the vanity.
+     The kit's kitchen unit is a two-tile sprite standing on the same tile: its
+     worktop is the band 12..31 of a 64px slot whose foot is half a tile below
+     the centre, so the surface is 26px ABOVE it and everything on that counter
+     was standing fifteen pixels down the cupboard doors. */
+  SLAB_TOP: 11,
+  KIT_TOP: 26,
+  worktopTop(x, y) { return this.kitRun(this.worktopAt(x, y)) ? this.KIT_TOP : this.SLAB_TOP; },
+
   worktops(x0, y0, x1, y1) {
-    /* Kit units in the break room only: the same run type is also the toilets'
-       vanity and the training room's bench, and a wooden kitchen carcass under
-       a washroom sink is worse than the grey slab it replaced. */
     const list = World.worktops; if (!list) return;
     const kit = [];
     for (const t of list) {
       if (t.x + t.w < x0 - 1 || t.x > x1 + 1 || t.y < y0 - 2 || t.y > y1 + 1) continue;
-      if (World.zoneAt(t.x, t.y) === 'brk' && Tiles.has('obj.counter')) kit.push(t); else kit.push(null);
+      if (this.kitRun(t)) kit.push(t); else kit.push(null);
     }
     let i = 0;
     this.legacy(TILE => {
@@ -1385,7 +1413,10 @@ const R = {
           ey -= 8;                                   /* up onto the tabletop */
           onFloor = false;
         } else if (o.mount === 'surface' || o.onCounter) {
-          ey -= 11;                                  /* up onto the worktop */
+          /* Up onto the worktop — and there are two of those. A front desk is
+             the counter's own height, which is what the slab is; the break
+             room's kitchen units are the kit's, and a tile taller. */
+          ey -= o.onCounter ? this.SLAB_TOP : this.worktopTop(o.x, o.y);
           onFloor = false;
         }
         c.save();
