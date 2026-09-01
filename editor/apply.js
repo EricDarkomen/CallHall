@@ -360,7 +360,11 @@ const Sync = {
 
   dir: null,
 
-  go() {
+  /* One way in for all three ends, so the plan, the two refusals and the "there
+     is nothing but a note to give you" case are decided once. `how` picks the
+     end: 'github' commits, and everything else takes whichever of the folder
+     and the download this browser can do. */
+  go(how) {
     const plan = this.plan();
     if (plan.blocked) { Side.say(plan.manual[0].why); return; }
     if (!plan.writes.length && !plan.manual.length) {
@@ -368,7 +372,8 @@ const Sync = {
       return;
     }
     if (!plan.writes.length) { this.report(plan); return; }
-    if (this.can()) this.direct(plan);
+    if (how === 'github') this.publish(plan);
+    else if (this.can()) this.direct(plan);
     else this.bundle(plan);
   },
 
@@ -499,6 +504,50 @@ const Sync = {
     Bank.save();
   },
 
+  /* ---- straight into the repository ----
+     The third way out, and the only one a phone has: the same staged files, and
+     instead of a folder or a download they become one commit on the branch the
+     page was served from. See editor/publish.js for the token and the calls.
+
+     This one DOES settle. A committed file is on the branch — for anybody whose
+     only copy of the game is the repository, that is exactly what "the files
+     have it" means — so the bench empties as it does for a folder write. What
+     it is not yet is deployed: Pages takes a minute, and the report says so
+     rather than leaving you reloading a page that cannot have changed yet. */
+  publish(plan) {
+    Side.say('Committing to ' + Repo.label() + '…');
+    this.stage(plan, path => Repo.read(path)).then(res => {
+      const staged = res.staged, order = res.order;
+      const files = order.map(p => ({ path: p, text: staged[p].text }));
+      return Repo.commit(files, this.message(plan)).then(c => {
+        this.landed(plan);
+        Side.refresh();
+        Side.say('Committed to ' + Repo.label() + '.');
+        this.report(plan, order, null, c);
+      });
+    }).catch(err => {
+      Side.say('Nothing was committed — ' + (err && err.message ? err.message : 'the commit failed') + '.');
+    });
+  },
+
+  /* What the commit says it is. The subject names what you changed rather than
+     which files moved, because "Break Room, The Fridge" is what you will be
+     looking for in a list of commits and `data/world.js` is not. */
+  message(plan) {
+    const rows = Mode.changes();
+    const names = [];
+    rows.forEach(r => { if (names.indexOf(r.label) < 0) names.push(r.label); });
+    const head = names.slice(0, 3).join(', ')
+      + (names.length > 3 ? ' and ' + (names.length - 3) + ' more' : '');
+    const body = rows.map(r => '- ' + Mode.def(r.mode).label + ' · ' + r.label
+      + ' (' + r.how + ')').join('\n');
+    const left = plan.manual.length
+      ? '\n\nStill by hand:\n' + plan.manual.map(m => '- ' + m.label
+        + (m.file ? ' (' + m.file + ')' : '')).join('\n')
+      : '';
+    return 'Editor: ' + (head || 'changes from the level editor') + '\n\n' + body + left + '\n';
+  },
+
   /* ---- everywhere else ----
      Safari and Firefox have no directory picker at all, so this is not a lesser
      path for unusual setups: it is the path for two of the three browsers, and
@@ -576,9 +625,16 @@ const Sync = {
   /* What happened, and what is still yours to do. The manual list is the point
      of this: a save that quietly did eight of nine things is how you find out
      in a fortnight that the arcade has no script tag. */
-  report(plan, files, downloads) {
+  report(plan, files, downloads, commit) {
     const L = [];
-    if (files && files.length) L.push('<h4>Written</h4><ul class="list">'
+    if (commit) L.push('<h4>Committed</h4><ul class="list">'
+      + (files || []).map(f => '<li><code>' + esc(f) + '</code></li>').join('') + '</ul>'
+      + '<div class="note">One commit on <code>' + esc(Repo.label()) + '</code> — '
+      + '<a href="' + esc(Repo.commitUrl(commit.sha)) + '" target="_blank" rel="noopener"><code>'
+      + esc(String(commit.sha).slice(0, 7)) + '</code></a>. The site rebuilds itself from the '
+      + 'branch, which takes a minute or two; after that the game may still hand you a cached '
+      + 'copy for a few minutes more, so reload it twice before believing it.</div>');
+    else if (files && files.length) L.push('<h4>Written</h4><ul class="list">'
       + files.map(f => '<li><code>' + esc(f) + '</code></li>').join('') + '</ul>');
     else if (downloads && downloads.length) L.push('<h4>Ready to put back</h4><ul class="list">'
       + downloads.map(d => '<li><code>' + esc(d.name) + '</code>'
@@ -595,7 +651,7 @@ const Sync = {
         + '<em>' + (m.file ? '<code>' + esc(m.file) + '</code> — ' : '') + esc(m.why) + '</em></li>').join('')
       + '</ul>');
     if (!L.length) return;
-    Ask.tell(files ? 'Saved to the game' : 'Prepared', L.join(''));
+    Ask.tell(commit ? 'Published' : files ? 'Saved to the game' : 'Prepared', L.join(''));
   },
 
   why() {

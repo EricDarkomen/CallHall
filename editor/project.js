@@ -214,6 +214,18 @@ const Project = {
     /* The sheet closes first. Writing files puts a report up in its place, and
        two dialogs deep is a page you have to press your way out of. */
     if (save) save.onclick = () => { api.close(); Sync.go(); };
+    const pub = host.querySelector('[data-a="publish"]');
+    if (pub) pub.onclick = () => {
+      api.close();
+      if (Repo.ready()) { Sync.go('github'); return; }
+      Repo.setup().then(ok => { if (ok) Sync.go('github'); });
+    };
+    const forget = host.querySelector('[data-a="forget"]');
+    if (forget) forget.onclick = () => {
+      Repo.forget();
+      Side.say('Forgotten. The repository is still remembered; the token is not.');
+      this.show();
+    };
     Find.wire(host, api);
   },
 
@@ -297,12 +309,22 @@ const Project = {
       /* type=button, because the sheet is a <form method="dialog"> and a bare
          button in one submits it — which closes the dialog out from under the
          handler that is about to ask for a folder. */
-      + '<div class="btns"><button type="button" data-a="sync">Save to the game files</button></div>'
+      + '<div class="btns"><button type="button" data-a="sync">Save to the game files</button>'
+      + '<button type="button" data-a="publish">Publish to GitHub'
+      + (Repo.ready() ? '' : '…') + '</button></div>'
       + '<div class="note">' + (Sync.can()
         ? 'Writes each table back into data/, whole. You will be asked for the game’s folder once.'
         : 'This browser has no folder picker, so this prepares the finished files — each one as '
           + 'the page was served it with your work spliced in and checked — and hands them to you '
           + 'to drop back into the game’s folder.') + '</div>'
+      /* The phone's whole answer, and the only one it has: there is no folder
+         to be given and nowhere to put a download. */
+      + '<div class="note">' + (Repo.ready()
+        ? 'Or straight into <code>' + esc(Repo.label()) + '</code> as one commit, and the site '
+          + 'rebuilds itself. <button type="button" class="linky" data-a="forget">Forget the '
+          + 'token</button>'
+        : 'Or straight into the repository this page was served from, as one commit — which on a '
+          + 'phone is the only way there is. It asks for a fine-grained token once.') + '</div>'
       + Object.keys(byFile).sort().map(file => '<div class="pfile"><code>' + esc(file) + '</code></div>'
         + '<ul class="list pickitems">' + byFile[file].map(x =>
           /* A deleted subject has nowhere to go, so it is a line rather than a

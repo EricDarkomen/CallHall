@@ -37,11 +37,15 @@ const Ask = {
   /* fields: [{ k, label, value, hint, options }]. `options` makes it a select,
      which is the whole reason "which level does this go to" stops being a
      spelling test. Resolves with { k: value } or null if cancelled. */
-  form(title, fields, okLabel) {
+  /* `intro` is markup above the fields, for the one form that has to explain
+     itself before it can be filled in. Built in code and never from anything
+     typed, exactly as tell() is — which is why it is not escaped. */
+  form(title, fields, okLabel, intro) {
     return new Promise(resolve => {
       this.close();
       this.resolve = resolve;
       this.el.innerHTML = '<form method="dialog"><h3>' + esc(title) + '</h3>'
+        + (intro || '')
         + fields.map(f => '<label class="frow"><span>' + esc(f.label) + '</span><span>'
           + (f.options
             ? '<select data-k="' + esc(f.k) + '">' + f.options.map(o =>
