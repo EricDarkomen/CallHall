@@ -1142,6 +1142,14 @@ ul.tight li b { font-family: var(--mono); font-weight: 400; }
 .turns button:hover { border-color: var(--line2); color: var(--ink); }
 .turns button.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 0 1px var(--accent) inset; }
 
+/* A button that reads as a link, for the one action that belongs inside a
+   sentence rather than beside it. */
+.linky {
+  background: none; border: 0; padding: 0; font: inherit; color: var(--accent);
+  text-decoration: underline; cursor: pointer; min-height: 0;
+}
+.linky:hover { color: var(--ink); }
+
 /* Six numeric effects on an item. A grid rather than six rows, because each is
    a word and a small number and stacking them costs a screen for nothing. */
 .effs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin: 6px 0 2px; }

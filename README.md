@@ -94,16 +94,40 @@ you are choosing between is what the room will be. A room selected on the map
 shows its floor and its wall and opens the same page. `▶ Try it in the game`
 opens the game in a new tab on a level the room type is painted on.
 
-**Save to the game files**, on the whole-game sheet, writes each table back into
-`data/` whole — including the fourth floor's own floor plan, which lives in
-`data/world.js` as `ROOM_DEFS`, `DOOR_DEFS` and `WP` rather than in its
-catalogue entry. In Chrome or Edge it asks for the game's folder once and writes
-there. Safari and Firefox have no folder picker, so it prepares the same files —
-read from where the page was served, spliced, and parsed before they are offered
-— and downloads them for you to drop back into `data/`; nothing there is settled
-off the bench, because a browser cannot tell whether you moved them. What it cannot write it says so by name: a procedural
+### Saving, and publishing from a phone
+
+**Publish to GitHub**, on the whole-game sheet, is the one that works anywhere:
+the finished files go straight into the repository the page was served from, as
+a single commit, and the site rebuilds itself. On a phone there is no folder to
+be given and nowhere to put a download, so this is the only way there is — and
+it is the reason the editor is published beside the game at all.
+
+It asks once for a repository and a token. On a Pages URL the first three
+fields are already filled in — `owner.github.io/repo/editor.html` names both
+halves — so the only thing to type is the token. Make a **fine-grained** one at
+[github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new):
+**this repository only**, **Contents: read and write**, and an expiry date. It
+is kept in that browser's storage and sent to `api.github.com` and nowhere else;
+"Forget the token" is beside the button that uses it.
+
+Each file is read from the branch it is about to land on rather than from the
+served copy, so a deploy running a minute behind cannot put yesterday back. It
+is one commit — blobs, a tree, a commit, then the ref moves — so there is no
+state in which half a save is on the branch. Pages then takes a minute or two,
+and the game may hand you a cached copy for a few minutes after that.
+
+**Save to the game files** is the same work with a different destination: a
+folder on the machine you are sitting at. Chrome and Edge ask for the game's
+folder once and write there; Safari and Firefox have no folder picker, so it
+prepares the same files and downloads them for you to drop into `data/` — and
+settles nothing off the bench, because a browser cannot tell whether you moved
+them.
+
+Both write each table whole, including the fourth floor's own floor plan, which
+lives in `data/world.js` as `ROOM_DEFS`, `DOOR_DEFS` and `WP` rather than in its
+catalogue entry. What neither can write, they say by name: a procedural
 `furnish()` is the file's, and the Export tab's change list is what to edit it
-from. Nothing it declines to write is taken off the bench.
+from. Nothing declined is taken off the bench.
 
 ```sh
 python3 -m http.server 8000    # then http://localhost:8000/editor.html
