@@ -77,20 +77,27 @@ const Nav = {
      is genuinely shorter — the sweep is four-connected, so a diagonal neighbour
      two steps closer is a corner being cut honestly rather than a shortcut
      through a desk. Both tiles it passes between have to be open, or people
-     walk through the corner of the partition. */
-  next(fx, fy, tx, ty) {
+     walk through the corner of the partition.
+
+     `cost` is an optional extra price per tile, which is how somebody standing
+     in the way becomes a reason to go round rather than a reason to stop. It
+     can only pick between tiles that are already closer than this one, so no
+     cost can send anybody backwards or into a loop. */
+  next(fx, fy, tx, ty, cost) {
     const f = this.field(tx, ty);
     if (!f) return null;
     const here = this.at(f, fx, fy);
     if (here <= 0) return null;
-    let bx = 0, by = 0, best = here;
+    let bx = 0, by = 0, best = Infinity;
     const open = (x, y) => this.at(f, x, y) >= 0;
     for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
       if (!ox && !oy) continue;
-      const v = this.at(f, fx + ox, fy + oy);
-      if (v < 0 || v >= best) continue;
-      if (ox && oy && !(open(fx + ox, fy) && open(fx, fy + oy))) continue;
-      best = v; bx = ox; by = oy;
+      const x = fx + ox, y = fy + oy, v = this.at(f, x, y);
+      if (v < 0 || v >= here) continue;
+      if (ox && oy && !(open(x, fy) && open(fx, y))) continue;
+      const c = v + (cost ? cost(x, y) : 0);
+      if (c >= best) continue;
+      best = c; bx = ox; by = oy;
     }
     return (bx || by) ? [fx + bx, fy + by] : null;
   }
@@ -107,6 +114,10 @@ const NPCM = {
      a person rather than their whereabouts — a job that names them, a
      relationship, the rolodex — reads `all`. */
   list: [], all: [],
+  /* Seconds since the page loaded, which is the clock the floor's own reactions
+     run on. NOT G.minutes: an event that adds eleven minutes to the shift would
+     end an evacuation before anybody had stood up. */
+  now: 0, busyTiles: new Set(), boss: null, lastEvent: null,
   spawn() {
     this.all = NPCS.map(def => {
       const t = this.traits(def);
@@ -124,7 +135,7 @@ const NPCM = {
            strike up a conversation. All of it is where they are and what they
            are doing rather than who they are, so none of it is saved: a
            reloaded shift puts everybody at their desk and the day starts. */
-        post: null, walking: false, chat: null, chatCool: rnd(5, 40),
+        post: null, walking: false, chat: null, chatCool: rnd(5, 40), callOut: null,
         lookAt: null, lookT: 0, idleT: rnd(2, 9), evade: 0, evadeX: 0, evadeY: 0
       };
     });
@@ -154,7 +165,10 @@ const NPCM = {
       social: .15 + bit(1) * .75,         /* how readily they start a conversation */
       restless: bit(2),                   /* whether standing still stays still */
       drift: Math.round(-3 + bit(3) * 9), /* minutes ahead of the timetable, or behind it */
-      notice: 1 + bit(4)                  /* how close you get before they look up, in tiles */
+      /* How close you get before they look up, in tiles. The floor of it is the
+         reach of E — 1.05 tiles, engine/panels.js — so anybody you are close
+         enough to talk to has already noticed you, whoever they are. */
+      notice: 1.15 + bit(4) * .95
     }, def.traits || {});
   },
   /* Recompute presence for a level. Called by Levels.go(); a filter once per
@@ -164,7 +178,9 @@ const NPCM = {
     /* Nobody carries a conversation, a claimed spot or a grudge against a
        doorway across a level change: all three are about a floor plan that is
        no longer loaded. */
-    this.all.forEach(n => { this.hangUp(n); n.post = null; n.stuck = 0; n.evade = 0; n.destKey = ''; });
+    this.all.forEach(n => {
+      this.hangUp(n); n.post = null; n.stuck = 0; n.evade = 0; n.destKey = ''; n.callOut = null;
+    });
   },
   get(id) { return this.all.find(n => n.id === id); },
   /* Is this colleague on the level you are on. A job that points at somebody
@@ -175,6 +191,12 @@ const NPCM = {
      of it or behind it, which is the whole reason twenty people no longer stand
      up for their break in the same frame. */
   destTile(n) {
+    /* Called away. An override on the timetable with an expiry on it, set by
+       watchFloor() when something happens to the building — see REACT. */
+    if (n.callOut) {
+      if (this.now < n.callOut.until && WP[n.callOut.wp]) { n.dest = n.callOut.wp; return WP[n.callOut.wp]; }
+      n.callOut = null;
+    }
     const sch = n.def.schedule || [];
     const now = G.minutes + (n.t ? n.t.drift : 0);
     let d = 'desk';
@@ -197,6 +219,13 @@ const NPCM = {
     const taken = new Set();
     for (const o of this.list) if (o !== n && o.post) taken.add(o.post[0] + ',' + o.post[1]);
     const f = Nav.field(dx, dy);
+    /* A chair first, if there is a free one within a couple of squares of where
+       they were sent. Every break table, the meeting room and the training room
+       have them, the renderer already seats anybody who stops on one, and it
+       was drawing twelve people standing bolt upright round a table with eight
+       empty chairs at it. Sitting down is most of what a break is. */
+    const chair = this.freeChair(n, dx, dy, taken, f);
+    if (chair) return (n.post = chair);
     /* Outwards a shell at a time, and round each shell from a different point
        per person: nearest to the thing they came for wins, and the queue for
        the kettle does not form in the same direction every day with the third
@@ -220,9 +249,92 @@ const NPCM = {
         return (n.post = [x, y]);
       }
     }
+    /* Nothing free for three squares in any direction, which means the room is
+       full — a fire drill, or lunch. Stand where you are rather than joining a
+       scrum on a tile somebody else has already claimed. */
+    const hx = Math.floor(n.x / TILE), hy = Math.floor(n.y / TILE);
+    if (!World.isSolid(hx, hy) && !taken.has(hx + ',' + hy)) return (n.post = [hx, hy]);
     return (n.post = [dx, dy]);
   },
+  /* The nearest chair to a destination that nobody has claimed and everybody
+     can reach. Three squares: that reaches the far side of both break tables
+     and the back row of the training room, and stops well short of the next
+     room along. */
+  freeChair(n, dx, dy, taken, f) {
+    let best = null, bd = 9;
+    for (const o of World.objects) {
+      if (o.kind !== 'chair' || o.solid) continue;
+      const d = Math.max(Math.abs(o.x - dx), Math.abs(o.y - dy));
+      if (d > 3 || d >= bd) continue;
+      if (taken.has(o.x + ',' + o.y) || World.isSolid(o.x, o.y)) continue;
+      if (f && Nav.at(f, o.x, o.y) < 0) continue;
+      /* Not the one you sit at all day. A desk chair is somebody's desk, and
+         the only person who should ever be in it is the person whose name is
+         on the monitor. */
+      if (o.deskId || o.use === 'playerDesk') continue;
+      best = [o.x, o.y]; bd = d;
+    }
+    return best;
+  },
+  /* What the floor does when something happens to it, keyed by the event id in
+     data/office.js. The writing already says what the room does — thirty-one
+     adults are now running, nobody moves for the test, everybody stands in the
+     car park for eleven minutes — and this is that happening on the floor
+     rather than only in the toast that announces it.
+
+     Reading ids out of the content is a coupling and a deliberately loose one:
+     an event not named here simply gets no reaction, and one that is renamed or
+     deleted quietly stops having one. Nothing in this table can fail. */
+  REACT: {
+    /* Not a test. */
+    firealarm2: { go: 'fireEsc', secs: 62, haste: 1.5 },
+    /* A test. Nobody moves — they look up, and they go back to it, which is
+       the joke the event is already making. Ron is in the lobby and out of
+       range of the look, so Ron does not even look up. */
+    firealarm: { look: 'fireEsc', secs: 2.6 },
+    /* Thirty-one adults are now running. */
+    pizza: { go: 'breakTable', secs: 75, haste: 1.55 },
+    printerpoc: { look: 'printer', secs: 3 },
+    kettlebreak: { look: 'kettle', secs: 3 },
+    coffeeout: { look: 'coffee', secs: 3 }
+  },
+  watchFloor() {
+    const ev = G.activeEvent;
+    if (ev === this.lastEvent) return;
+    this.lastEvent = ev;
+    const r = ev && this.REACT[ev.id];
+    if (!r) return;
+    const until = this.now + r.secs;
+    for (const n of this.list) {
+      if (r.go && WP[r.go]) { n.callOut = { wp: r.go, until, haste: r.haste || 1 }; this.hangUp(n); }
+      if (r.look && WP[r.look]) {
+        const w = WP[r.look];
+        /* Not in unison. Twenty heads turning on the same frame is a chorus
+           line, not a room noticing something. */
+        n.lookAt = { x: (w[0] + .5) * TILE, y: (w[1] + .5) * TILE };
+        n.lookT = r.secs * rnd(.6, 1.35);
+      }
+    }
+  },
+  /* Is the manager standing over this person right now, somewhere it matters.
+     At a desk or anywhere on the main floor it matters; in the break room at
+     lunch it does not, and everybody in this building knows the difference. */
+  lookBusy(n) {
+    const b = this.boss;
+    if (!b || b === n || Math.hypot(b.x - n.x, b.y - n.y) >= TILE * 3.4) return false;
+    return n.dest === 'desk' || World.zoneAt(Math.floor(n.x / TILE), Math.floor(n.y / TILE)) === 'main';
+  },
   update(dt) {
+    this.now += dt;
+    this.watchFloor();
+    /* Where everybody who is standing still is standing, once per frame, as
+       tile keys. The walk below prices these up so a knot of people is walked
+       round rather than into — and nothing else reads it, so it is rebuilt
+       rather than maintained. */
+    this.busyTiles.clear();
+    for (const n of this.list) if (!n.walking) this.busyTiles.add(Math.floor(n.x / TILE) + ',' + Math.floor(n.y / TILE));
+    if (G.state === 'play') this.busyTiles.add(Math.floor(P.x / TILE) + ',' + Math.floor(P.y / TILE));
+    this.boss = this.list.find(x => x.id === 'nigel') || null;
     /* Whoever you are talking to stands still until you have finished. They
        used to keep walking their schedule mid-sentence and simply leave, which
        reads as a bug even when the dialogue carries on perfectly well. The rest
@@ -276,7 +388,12 @@ const NPCM = {
     this.hangUp(n);
     n.walking = true;
     const fx = Math.floor(n.x / TILE), fy = Math.floor(n.y / TILE);
-    const step = Nav.next(fx, fy, tx, ty);
+    /* Somebody standing in the next square is a reason to go round them, worth
+       about two and a half steps of detour. It can only ever choose between
+       tiles that are already closer than this one, so it cannot send anybody
+       backwards, in a circle, or through a wall — at worst everybody is in the
+       way and the cheapest tile is the one it would have picked anyway. */
+    const step = Nav.next(fx, fy, tx, ty, (x, y) => this.busyTiles.has(x + ',' + y) ? 2.5 : 0);
     /* No next tile means one of two things and the same answer does for both:
        the last stretch across the destination tile itself, and a destination
        the sweep never reached — somebody standing inside a desk, or a way that
@@ -299,7 +416,7 @@ const NPCM = {
     if (vx * gx + vy * gy < .2) { vx = vx * .35 + gx * .9; vy = vy * .35 + gy * .9; }
     const l2 = Math.hypot(vx, vy) || 1; vx /= l2; vy /= l2;
 
-    const sp = n.speed * dt;
+    const sp = n.speed * (n.callOut ? n.callOut.haste : 1) * dt;
     const mx = vx * sp, my = vy * sp;
     const was = { x: n.x, y: n.y };
     if (this.canGo(n, mx, my)) { n.x += mx; n.y += my; }
@@ -381,7 +498,15 @@ const NPCM = {
        away that starts is the one trait you can actually see. */
     if (playing && !n.chat) {
       const d = Math.hypot(P.x - n.x, P.y - n.y);
-      if (d < TILE * n.t.notice) { n.lookAt = P; n.lookT = Math.max(n.lookT, .9); }
+      /* How far away they look up from, and how long they hold it. Somebody
+         fond of you notices you a square earlier and watches you go past;
+         somebody who has told a colleague about you barely raises their head.
+         It is the only place in the game where a relationship is visible
+         without opening a panel or saying a word. */
+      const rel = typeof Rel === 'undefined' ? 0 : Rel.get(n.id);
+      if (d < TILE * (n.t.notice + clamp(rel, -3, 6) * .18)) {
+        n.lookAt = P; n.lookT = Math.max(n.lookT, .9 + Math.max(0, rel) * .12);
+      }
       /* A phone that has been ringing for a while. Everybody looks at it. This
          is a call centre, so nobody answers it. */
       else if (n.lookT <= 0 && typeof Phones !== 'undefined' && Phones.ringing && Phones.ringing.length && chance(dt * .3)) {
@@ -396,6 +521,9 @@ const NPCM = {
        at, the thing they came over here for, and failing all of that the room. */
     const partner = n.chat && this.get(n.chat.with);
     if (partner) n.dir = Sprites.dirOf(partner.x - n.x, partner.y - n.y);
+    /* The manager is standing over them. Whatever they were looking at, they
+       are now looking at their screen. */
+    else if (n.dest === 'desk' && this.lookBusy(n)) n.dir = 0;
     else if (n.lookT > 0 && n.lookAt) n.dir = Sprites.dirOf(n.lookAt.x - n.x, n.lookAt.y - n.y);
     else if (n.dest === 'desk') n.dir = 0;    /* the screen is on the far side of the desk */
     else if (n.post && (n.post[0] !== dx || n.post[1] !== dy)) n.dir = Sprites.dirOf(dx - n.post[0], dy - n.post[1]);
@@ -420,6 +548,8 @@ const NPCM = {
          at all. Both halves are torn down together — see hangUp. */
       if (!o || !o.chat || o.chat.with !== n.id || o.walking || n.walking
         || o.stunTimer > 0 || o.id === talkingTo) return this.hangUp(n);
+      /* And it stops dead when the manager comes past. */
+      if (this.lookBusy(n)) return this.hangUp(n);
       if (!n.chat.host) return;
       n.chat.t -= dt;
       if (n.chat.t > 0) return;
@@ -443,6 +573,7 @@ const NPCM = {
       return;
     }
     if (!playing || n.walking || n.chatCool > 0 || n.stunTimer > 0) return;
+    if (this.lookBusy(n)) return;
     if (!n.def.lines || !n.def.lines.length) return;
     if (!chance(dt * n.t.social * .55)) return;
     const o = this.list.find(o => o !== n && !o.walking && !o.chat && o.chatCool <= 0
@@ -487,6 +618,24 @@ const NPCM = {
       if (d < TILE * .42 && d <= Math.hypot(n.x - o.x, n.y - o.y)) return false;
     }
     return true;
+  },
+  /* Somewhere to stand near a point: the first free tile round it that is not
+     the one the player is on. Used by anything that puts a person on the floor
+     from outside the walk — the manager appearing behind you, which used to
+     land him wherever the arithmetic said and drew him standing inside a desk
+     about a third of the time. */
+  standNear(wx, wy) {
+    const cx = Math.floor(wx / TILE), cy = Math.floor(wy / TILE);
+    const ring = [[0, 0], [0, 1], [1, 0], [-1, 0], [1, 1], [-1, 1], [0, 2], [1, 2], [-1, 2],
+                  [2, 0], [-2, 0], [0, -1], [2, 1], [-2, 1]];
+    for (const [ox, oy] of ring) {
+      const x = cx + ox, y = cy + oy;
+      if (World.isSolid(x, y)) continue;
+      const px = (x + .5) * TILE, py = (y + .5) * TILE;
+      if (G.state !== 'title' && Math.hypot(px - P.x, py - P.y) < TILE * .8) continue;
+      return [px, py];
+    }
+    return [wx, wy];
   },
   nearest(x, y, max) {
     let best = null, bd = max;
