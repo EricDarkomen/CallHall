@@ -118,6 +118,9 @@ const NPCM = {
      run on. NOT G.minutes: an event that adds eleven minutes to the shift would
      end an evacuation before anybody had stood up. */
   now: 0, busyTiles: new Set(), boss: null, lastEvent: null,
+  /* Who is going through which doorway. A door is one tile wide and two people
+     cannot be in it, so it is taken and given back rather than fought over. */
+  doorHold: new Map(),
   spawn() {
     this.all = NPCS.map(def => {
       const t = this.traits(def);
@@ -143,7 +146,12 @@ const NPCM = {
            whether a walk is finished or hopeless; `stuck` only ever knew about
            the last frame, and somebody shuffling sideways for ever was, frame
            by frame, moving perfectly well. */
-        hx: 0, hy: 1, next: null, nextFrom: '', best: 1e9, noProg: 0, gaveUp: null
+        hx: 0, hy: 1, next: null, nextFrom: '', best: 1e9, noProg: 0, gaveUp: null,
+        /* Where they decided to go, when they set off, when they got there and
+           how long they mean to stay. See destTile. */
+        errand: null,
+        /* Standing somewhere on purpose, rather than merely being near it. */
+        parked: false, waitDoor: 0, holdWant: null, holdFor: 0, lastAim: 'desk'
       };
     });
     this.enter(World.level);
@@ -204,7 +212,8 @@ const NPCM = {
        doorway across a level change: all three are about a floor plan that is
        no longer loaded. */
     this.all.forEach(n => {
-      this.hangUp(n); n.post = null; n.gaveUp = null; n.destKey = ''; n.callOut = null; this.repath(n);
+      this.hangUp(n); n.post = null; n.gaveUp = null; n.destKey = ''; n.callOut = null;
+      n.errand = null; this.repath(n);
     });
   },
   get(id) { return this.all.find(n => n.id === id); },
@@ -215,20 +224,95 @@ const NPCM = {
   /* Where the timetable says to be. `drift` is the minutes this person is ahead
      of it or behind it, which is the whole reason twenty people no longer stand
      up for their break in the same frame. */
-  destTile(n) {
-    /* Called away. An override on the timetable with an expiry on it, set by
-       watchFloor() when something happens to the building — see REACT. */
-    if (n.callOut) {
-      if (this.now < n.callOut.until && WP[n.callOut.wp]) { n.dest = n.callOut.wp; return WP[n.callOut.wp]; }
-      n.callOut = null;
-    }
+  /* Where the timetable says to be, in its own words. `drift` is the minutes
+     this person is ahead of it or behind it, which is why twenty people no
+     longer stand up for their break in the same frame. */
+  scheduled(n) {
     const sch = n.def.schedule || [];
     const now = G.minutes + (n.t ? n.t.drift : 0);
     let d = 'desk';
     for (const [t, where] of sch) if (now >= t) d = where;
-    n.dest = d;
-    if (d === 'desk') return [n.def.desk[0], n.def.desk[1]];
-    const w = WP[d]; return w ? w : [n.def.desk[0], n.def.desk[1]];
+    return d;
+  },
+  /* How long the writer meant somebody to be there, in real seconds: the gap to
+     the next entry in their day. A game minute is 430ms, which is the whole
+     problem below. */
+  slotSecs(n) {
+    const sch = n.def.schedule || [];
+    const now = G.minutes + (n.t ? n.t.drift : 0);
+    let start = DAY_START, end = DAY_END;
+    for (let i = 0; i < sch.length; i++) {
+      if (now >= sch[i][0]) { start = sch[i][0]; end = i + 1 < sch.length ? sch[i + 1][0] : DAY_END; }
+    }
+    return (end - start) * MS_PER_GAME_MIN / 1000;
+  },
+  /* WHERE SOMEBODY IS ACTUALLY GOING.
+
+     The timetable proposes and an errand disposes, because the timetable is
+     written in game minutes and the building is crossed in real ones. A game
+     minute is 430ms: Dave's coffee at 10:15 is fifteen game minutes, which is
+     six and a half seconds, and the walk from his desk to the break room is
+     nearer thirty. Read literally — which is what this did — he sets off, gets
+     as far as the break room door, is told his coffee break ended while he was
+     in the corridor, and turns round and walks back. Seventeen of the twenty
+     have a slot too short to reach, so the floor was mostly people reversing in
+     doorways, all day, and it read exactly as badly as it sounds.
+
+     So: setting off somewhere is a commitment. They go, they arrive, they stay
+     long enough for it to have been worth going — the shorter of what the
+     writer wrote and their own patience for standing about — and only then does
+     the timetable get a say again. Nothing in data/npcs.js changes, and what it
+     says now happens: Dave has a coffee at quarter past ten.
+
+     A desk is not an errand. Going back to your desk is what you do when there
+     is nothing else, and it can be interrupted by anything. */
+  destTile(n) {
+    /* Called away. An override on everything, with an expiry on it, set by
+       watchFloor() when something happens to the building — see REACT. */
+    if (n.callOut) {
+      if (this.now < n.callOut.until && WP[n.callOut.wp]) {
+        n.errand = null; n.dest = n.callOut.wp; return WP[n.callOut.wp];
+      }
+      n.callOut = null;
+    }
+    const want = this.scheduled(n);
+    const e = n.errand;
+    if (e) {
+      /* Still on the way. The timetable can say what it likes. */
+      if (!e.arrived && this.now - e.began < 90) return this.aim(n, e.wp);
+      /* Been and stood there. It is over when they have had their moment AND
+         the day has moved on; if the timetable still wants them here they stay,
+         which is what a lunch break is. */
+      const done = e.arrived && this.now - e.arrived >= e.dwell;
+      if (!done && this.now - e.began < 90) return this.aim(n, e.wp);
+      n.errand = null;
+    }
+    if (want !== 'desk' && WP[want]) {
+      /* Not the instant the clock says so. Nobody stands up mid-sentence
+         because it has become half past: they finish the thing they are doing
+         and then they go. Without the wait the timetable's entries — which
+         cluster, because a day has a shape — took the whole floor out of their
+         chairs on the same frame, and twenty people crossing the office at once
+         is a fire drill, not a Tuesday. */
+      if (n.holdWant !== want) { n.holdWant = want; n.holdFor = this.now + rnd(1, 11); }
+      if (this.now < n.holdFor) return this.aim(n, n.lastAim || 'desk');
+      /* Forgotten once they have set off, so the next time the day asks them to
+         go there they take a moment about it again rather than leaping up. */
+      n.holdWant = null;
+      n.errand = { wp: want, began: this.now, arrived: 0,
+        /* Long enough to have been worth the walk, short enough that a quick
+           one reads as a quick one. */
+        dwell: clamp(this.slotSecs(n), 7, 26) };
+      return this.aim(n, want);
+    }
+    return this.aim(n, want);
+  },
+  /* Resolve a destination name to the square it means, and record it. */
+  aim(n, where) {
+    n.dest = n.lastAim = where;
+    if (where === 'desk') return [n.def.desk[0], n.def.desk[1]];
+    const w = WP[where];
+    return w ? w : [n.def.desk[0], n.def.desk[1]];
   },
   /* Is this square a way through rather than a place to be. Standing in a
      doorway stops everybody behind you getting in — which during a fire drill
@@ -246,6 +330,27 @@ const NPCM = {
      A desk is the exception and is exactly itself: it is a chair with a name on
      it, the renderer seats whoever stops on it, and two people cannot want the
      same one. */
+  /* A doorway is one square wide, and what happens in it depends entirely on
+     which way the two people are going. Two going the SAME way file through it
+     one behind the other, which is what a door is for and what it must not be
+     stopped from doing — an exclusive door halved the way into the break room
+     and left two thirds of the floor in the corridor at lunch. Two going
+     OPPOSITE ways are two people stuck in a door, and one of them waits.
+
+     The one already in it has it. That asymmetry is the whole mechanism: both
+     of them ask the same question and exactly one of them gets no for an
+     answer, so nobody waits for somebody who is also waiting. */
+  doorClear(n, x, y, hx, hy) {
+    const k = x + ',' + y;
+    const held = this.doorHold.get(k);
+    if (held && held.id !== n.id && this.now - held.t < 2) {
+      const o = this.get(held.id);
+      if (o && Math.hypot(o.x - (x + .5) * TILE, o.y - (y + .5) * TILE) < TILE * 1.6
+        && held.hx * hx + held.hy * hy < -.2) return false;
+    }
+    this.doorHold.set(k, { id: n.id, t: this.now, hx, hy });
+    return true;
+  },
   post(n, dx, dy) {
     if (n.post) return n.post;
     if (n.dest === 'desk') return (n.post = [dx, dy]);
@@ -422,11 +527,22 @@ const NPCM = {
          the rest of lunch being pushed off it and walking back. */
       const near = Math.hypot(tx - cx, ty - cy);
       const onPost = Math.floor(n.x / TILE) === tx && Math.floor(n.y / TILE) === ty;
-      const there = near <= (n.walking ? .34 : .62) || (onPost && n.noProg > 1.5);
+      /* Parked is a decision, not a distance. Somebody who has stopped
+         somewhere stays stopped until the square changes under them or they are
+         shoved the better part of a square off it — not because a colleague
+         squeezed past and the arithmetic briefly said they were half an inch
+         too far away. That reading is what had people setting off again the
+         instant they arrived. */
+      if (n.parked && (near > 1.05 || (!onPost && near > .8))) n.parked = false;
+      const there = n.parked || near <= (n.walking ? .34 : .62) || (onPost && n.noProg > 1.5);
       if (!there) this.walk(n, dt, tx, ty);
       else {
         if (n.walking) this.repath(n);
-        n.walking = false;
+        n.walking = false; n.parked = true; n.waitDoor = 0;
+        /* Got there. From here the errand is a thing that happened rather than
+           a thing being attempted, and the clock on standing about starts. */
+        if (n.errand && !n.errand.arrived) n.errand.arrived = this.now;
+        this.nestle(n, dt, tx, ty);
         this.settle(n, dt, dx, dy, playing);
       }
 
@@ -474,9 +590,40 @@ const NPCM = {
     const from = fx + ',' + fy;
     if (n.nextFrom !== from) {
       n.nextFrom = from;
-      n.next = Nav.next(fx, fy, tx, ty, (x, y) => this.busyTiles.has(x + ',' + y) ? 2.5 : 0);
+      /* The second term is a lane. Twenty people walking the same corridor to
+         the same room have the same field in front of them and, without this,
+         take the identical squares in the identical order and arrive as one
+         lump. A fixed dislike of particular squares, different for each person
+         and worth well under a step, breaks that tie differently for each of
+         them: the same crowd fans out across the width of the corridor and
+         reads as people going the same way rather than a queue of one file. */
+      n.next = Nav.next(fx, fy, tx, ty, (x, y) =>
+        (this.busyTiles.has(x + ',' + y) ? 2.5 : 0) + (this.hash(n.id + ':' + x + ',' + y) % 64) / 100);
     }
     const step = n.next;
+    /* Waiting for somebody to come the other way through a door. Standing, not
+       shuffling: a queue at a door is people standing behind each other, and a
+       walk cycle running on the spot is the tell that nothing is really being
+       simulated. Held for its whole duration rather than re-asked every frame,
+       or they flicker between standing and walking sixty times a second. */
+    if (n.waitDoor > 0) {
+      n.waitDoor -= dt; n.walking = false;
+      /* Waiting your turn is not failing to get anywhere: without this, a busy
+         door would eventually convince somebody that the walk was hopeless and
+         send them to stand somewhere else. */
+      n.noProg = Math.max(0, n.noProg - dt);
+      return;
+    }
+    if (step && this.inDoorway(step[0], step[1])) {
+      const ax = (step[0] + .5) * TILE - n.x, ay = (step[1] + .5) * TILE - n.y;
+      const al = Math.hypot(ax, ay) || 1;
+      if (!this.doorClear(n, step[0], step[1], ax / al, ay / al)) {
+        n.walking = false; n.waitDoor = .45;
+        n.noProg = Math.max(0, n.noProg - dt);
+        n.dir = this.face(n, ax, ay);
+        return;
+      }
+    }
     /* No next tile means one of two things and the same answer does for both:
        the last stretch across the destination tile itself, and a destination
        the sweep never reached — somebody standing inside a desk, or a way that
@@ -508,7 +655,20 @@ const NPCM = {
     const hl = Math.hypot(n.hx, n.hy) || 1;
     vx = n.hx / hl; vy = n.hy / hl;
 
-    const sp = n.speed * (n.callOut ? n.callOut.haste : 1) * dt;
+    /* Easing in, and not barging: somebody arriving slows into the last square
+       rather than stopping dead on it, and somebody walking up behind a person
+       who is standing still slows down instead of shoving.
+
+       Not both at once, and neither of them far from the target. Compounded —
+       and measured in steps rather than in distance, which meant the whole last
+       square — they multiplied out to a fifth of walking pace across a crowded
+       room, and twenty people crawling the last stretch is twenty people
+       arriving in a heap. */
+    let pace = n.speed * (n.callOut ? n.callOut.haste : 1);
+    const eu = Math.hypot(tx - (n.x / TILE - .5), ty - (n.y / TILE - .5));
+    if (eu < .9) pace *= clamp(.5 + eu * .55, .5, 1);
+    else if (step && this.busyTiles.has(step[0] + ',' + step[1])) pace *= .72;
+    const sp = pace * dt;
     const mx = vx * sp, my = vy * sp;
     const was = { x: n.x, y: n.y };
     if (this.canGo(n, mx, my)) { n.x += mx; n.y += my; }
@@ -530,11 +690,19 @@ const NPCM = {
     } else {
       n.stuck += dt;
       /* Blocked by a person rather than a wall — the walls are already routed
-         around. Pick a side ONCE and commit to it for half a second: rolling a
-         new direction every frame is a person vibrating in a doorway. */
+         around. Step to your OWN RIGHT, always, and commit to it for half a
+         second.
+
+         Which side used to be a coin toss, and a coin toss is how two people
+         end up doing the little dance in a doorway: both of them step the same
+         way, block each other again, and roll again. Everybody keeping right is
+         the rule actual corridors run on — two people walking into each other
+         both step right and pass, without either of them having to know that
+         the other one exists. */
       if (n.evade <= 0 && n.stuck > .45) {
-        const s = chance(.5) ? 1 : -1;
-        n.evadeX = -vy * s; n.evadeY = vx * s; n.evade = .6;
+        const rx = -vy, ry = vx;
+        const ok = this.canGo(n, rx * TILE * .3, ry * TILE * .3);
+        n.evadeX = ok ? rx : -rx; n.evadeY = ok ? ry : -ry; n.evade = .6;
       }
     }
     /* And whether or not this frame moved them, has the walk as a whole given
@@ -579,6 +747,7 @@ const NPCM = {
      changes under it. */
   repath(n) {
     n.best = 1e9; n.noProg = 0; n.stuck = 0; n.evade = 0; n.next = null; n.nextFrom = '';
+    n.parked = false; n.waitDoor = 0;
   },
   /* The nearest square to somebody that they can stand on and nobody has
      claimed — theirs first, then the ring around it. */
@@ -592,6 +761,20 @@ const NPCM = {
       return [x, y];
     }
     return null;
+  },
+  /* Standing on your own square but not in the middle of it, because that is
+     where the crowd let them stop. Ease into the middle: a few pixels a second,
+     no walk cycle, and only ever into space nobody else is in. Twenty people
+     each ending up on the centre of their own square is a room that reads as
+     people standing about; twenty people stopped wherever the shoving left them
+     is a heap. */
+  nestle(n, dt, tx, ty) {
+    const ax = (tx + .5) * TILE - n.x, ay = (ty + .5) * TILE - n.y;
+    const d = Math.hypot(ax, ay);
+    if (d < 1.2) return;
+    const sp = Math.min(d, TILE * .5 * dt);
+    const mx = ax / d * sp, my = ay / d * sp;
+    if (this.canGo(n, mx, my)) { n.x += mx; n.y += my; }
   },
   /* Lean away from anybody standing too close. Not collision — that is canGo —
      but the reason two people walking the same corridor drift apart instead of
@@ -661,8 +844,12 @@ const NPCM = {
        just got out of. Shuffling is a square you can see from where you are. */
     n.idleT -= dt;
     if (n.idleT <= 0) {
-      n.idleT = rnd(7, 20);
-      if (!n.chat && n.dest !== 'desk' && chance(n.t.restless * .55)) {
+      /* Once every couple of minutes for the restless, and never for the still.
+         It was ten times that, which across twenty people is somebody shifting
+         about every three seconds somewhere in the room — not a room of people,
+         a room of fidgeting. */
+      n.idleT = rnd(14, 40);
+      if (!n.chat && n.dest !== 'desk' && chance(n.t.restless * .35)) {
         const spot = this.shuffleSpot(n, dx, dy);
         if (spot) { n.post = spot; this.repath(n); }
       }
