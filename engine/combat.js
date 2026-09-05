@@ -45,11 +45,25 @@ const Combat = {
        giving away, how much of you has got through, and which lines they have
        already heard from you today. */
     E.rap = 0; E.used = {}; E.wear = {}; E.matched = 0; E.landed = false;
-    /* How hard they came in, and how many turns running you have answered a
-       question they were not asking. Both drive `agg`, which is otherwise a
-       constant per caller and made every call the same shape whatever you did
-       in it — see play(). */
-    E.base = E.agg; E.miss = 0;
+    /* What the day has taught you about this kind of call. Nine of them come
+       through in a shift and every one used to open exactly like the last: the
+       elderly caller at 16:40 was the elderly caller at 09:20, whatever you had
+       learned in between. A run of these going well now opens the next one a
+       little easier, and a run of them going badly opens it harder — at most
+       eighteen per cent either way, which is a call you have got the measure
+       of rather than a call that has been turned off. Cleared with the run, and
+       carried by a save like everything else in G. */
+    const mem = E.boss ? 0 : ((G.callers || {})[E.caller] || 0);
+    if (mem) {
+      E.agg = Math.max(1, E.agg * (1 - mem * .06));
+      E.frus = Math.max(8, Math.round(E.frus * (1 - mem * .05)));
+      E.maxFrus = E.frus;
+    }
+    /* How hard they came in, how many turns running you have answered a
+       question they were not asking, and how many have gone nowhere at all.
+       All three drive the call now; `agg` used to be a constant per caller,
+       which made every call the same shape whatever you did in it. */
+    E.base = E.agg; E.miss = 0; E.stall = 0;
     this.shiftNeed(E, true);
     G.state = 'combat'; $('#combat').classList.add('on');
     $('#cbTitle').textContent = E.boss ? 'ENCOUNTER · ' + BOSSES[E.boss].title : 'Incoming call · queue position ' + ri(1, 9);
@@ -59,6 +73,10 @@ const Combat = {
       '♪ hold music: four bars of jazz, forever', '♪ hold music: someone’s ringtone from 2007',
       '♪ hold music: it has a saxophone and it is not sorry']);
     this.line(pick(E.lines.open), 'say');
+    /* Said in the log rather than in their mouth: it is a fact about you, not
+       about them. They have never rung before. You have taken this call before. */
+    if (mem >= 2) this.log('You have handled one of these before, and it went well. You start on the front foot.');
+    else if (mem <= -2) this.log('The last one of these went badly. You can hear yourself bracing for it.');
     this.refresh();
   },
   line(txt, cls) { $('#cbLine').innerHTML = '<span class="' + (cls || 'say') + '">' + esc(txt) + '</span>'; },
@@ -192,6 +210,9 @@ const Combat = {
     if (m.cost.ene) P.energy = Math.max(0, P.energy - m.cost.ene);
     const r = m.run(E);
     if (r.stat) { P.stats[r.stat] = (P.stats[r.stat] || 0) + 0.25; }
+    /* A turn that moved nothing: a backfire, or two minutes of hold music. They
+       are still holding, and they are counting — see customerTurn. */
+    if (r.dmg > 0 || r.dmg >= 900) E.stall = 0; else E.stall = Math.min(3, E.stall + 1);
 
     /* Reading them, and repeating yourself. Both only apply to a move that is
        actually trying to move the call along — the enders (999) and the
@@ -248,7 +269,15 @@ const Combat = {
   },
   customerTurn() {
     const E = this.E; if (!E) return;
-    if (!E.boss) E.cpat -= ri(5, 11);
+    /* How long they will keep holding, which used to be a flat roll and so was
+       the one part of a call you could not affect at all. Being understood buys
+       time; a turn that went nowhere costs it, and three of those in a row cost
+       a lot, because what a person on hold is actually measuring is whether
+       anything is happening. Never below two: no single turn ends a call. */
+    if (!E.boss) {
+      let drain = ri(5, 11) - (E.lastMatch ? 3 : 0) + Math.min(6, (E.stall || 0) * 2);
+      E.cpat -= Math.max(2, drain);
+    }
     const hot = E.frus > E.maxFrus * 0.6;
     const say = pick(hot ? E.lines.hot : E.lines.mid);
     let dmg = E.agg * (0.8 + clamp(E.frus / E.maxFrus, 0, 1)) * (1 - Sk.rank('deesc') * 0.13);
@@ -365,6 +394,13 @@ const Combat = {
        or transferring the encounter away must not award the flag. */
     if (E.boss && how === 'win') this.bossWin(E);
     else if (E.boss) this.bossLost(E, how);
+    /* And this is what the next one of these opens like — see begin(). A
+       transfer teaches nothing, which is exactly what a transfer is. */
+    if (!E.boss) {
+      const d = how === 'win' ? 1 : how === 'transfer' ? 0 : -1;
+      G.callers = G.callers || {};
+      if (d) G.callers[E.caller] = clamp((G.callers[E.caller] || 0) + d, -3, 3);
+    }
     Player.xp(xp); if (money) Player.mod({ money }); if (rep) Player.mod({ rep });
     const after = () => {
       $('#combat').classList.remove('on');

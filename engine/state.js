@@ -24,6 +24,10 @@ const G = {
   todayStats: {},
   totals: { calls: 0, coffee: 0, toiletMin: 0, printer: 0, angered: 0, satisfied: 0, transfers: 0, bullshit: 0 },
   chat: [], mail: [], unread: 0, unreadMail: 0,
+  /* What the day has taught you about each kind of caller, −3 to +3. Read by
+     Combat.begin() to open the next one of them a little easier or a little
+     harder. Plain data, so a save carries it. */
+  callers: {},
   eventCooldown: 6, activeEvent: null, discovered: {}, endings: [],
   /* The job tracker: which job is being followed, which are folded to their
      titles, and whether the box itself is folded away. In G so that a save
@@ -73,6 +77,7 @@ function resetRun() {
   G.totals = freshTotals();
   G.todayStats = {}; G.flags = {}; G.quests = {}; G.achievements = {}; G.rel = {};
   G.chat = []; G.mail = []; G.chatSent = {}; G.mailSent = {};
+  G.callers = {};
   G.unread = 0; G.unreadMail = 0;
   G.eventCooldown = 6; G.activeEvent = null;
   G.discovered = {}; G.endings = []; G.lastZone = null; G.objective = '';

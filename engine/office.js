@@ -76,8 +76,12 @@ const Phones = {
 const Nigel = {
   appear() {
     const n = NPCM.get('nigel'); if (!n) return;
-    n.x = P.x + rnd(-60, 60); n.y = P.y + TILE * 2.2;
-    n.target = null; n.stunTimer = 6;
+    /* Behind you and slightly to one side, on a tile somebody can actually
+       stand on: the old arithmetic put him wherever it landed, which on a floor
+       that is one third desks meant he regularly appeared inside one. */
+    const [nx, ny] = NPCM.standNear(P.x + rnd(-30, 30), P.y + TILE * 2.2);
+    n.x = nx; n.y = ny;
+    n.target = null; n.stunTimer = 6; n.stuck = 0; n.post = null;
     Sfx.tone(120, .12, 'square', .3); Sfx.tone(120, .12, 'square', .3, .3); Sfx.tone(120, .12, 'square', .3, .6);
     FX.float(n.x, n.y - 50, '👞 👞 👞', '#ff5f56');
     setTimeout(() => {

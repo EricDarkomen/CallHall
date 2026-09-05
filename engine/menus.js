@@ -64,7 +64,7 @@ const Save = {
       Object.assign(P, d.P); Object.assign(G, d.G);
       G.totals = Object.assign(freshTotals(), G.totals || {});
       G.todayStats = G.todayStats || {}; G.flags = G.flags || {}; G.quests = G.quests || {};
-      G.achievements = G.achievements || {}; G.rel = G.rel || {};
+      G.achievements = G.achievements || {}; G.rel = G.rel || {}; G.callers = G.callers || {};
       G.chat = G.chat || []; G.mail = G.mail || []; G.endings = G.endings || [];
       G.discovered = G.discovered || {}; G.chatSent = G.chatSent || {}; G.mailSent = G.mailSent || {};
       P.equipment = Object.assign({ headset: null, trinket: null, mug: null }, P.equipment || {});
