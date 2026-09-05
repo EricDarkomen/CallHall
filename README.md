@@ -65,10 +65,31 @@ Keep the folder together when you copy the game somewhere. `data/` is the game;
 back into an emoji.
 
 ```sh
-node tools/build-sprites.mjs            # rebuild every sheet and the manifest
-node tools/build-sprites.mjs office     # rebuild one sheet
-node tools/build-sprites.mjs --check    # fail if the committed output is stale
+cd tools && npm install                 # once, to fetch pngjs — dev-only, never shipped
+cd .. && node tools/build-sprites.mjs         # rebuild every managed sheet and the manifest
+node tools/build-sprites.mjs town        # rebuild one sheet
+node tools/build-sprites.mjs --check     # fail if the committed output is stale
 ```
+
+Two kinds of sheet, because there are two kinds of history. **Pinned** sheets —
+`sanitary`, `world`, `revised`, the `parts-*` character layers — went through a
+compositing and curation pass (layers stacked, recoloured, hand-picked seamless
+crops) that predates this tool and was never captured as code. It cannot
+rebuild them, so it doesn't try: `tools/lib/pinned.mjs` reads their entry
+straight out of the committed manifest and carries it forward untouched, with
+a checksum of the PNG as a tripwire — the build refuses outright if one of
+those files ever changes on disk without this tool having done it.
+
+**Managed** sheets are the rest — declared in `tools/sheets/*.mjs`, one file
+per sheet, each sprite naming an upstream repo, a commit, a file, a crop rect
+and the asset's display name in that project's own `Credits.txt`. Every build
+fetches that PNG and that `Credits.txt` fresh, re-checks the licence is still
+OGA-BY 3.0 or CC0, crops, packs, and refuses the whole sheet if a licence has
+changed underneath it. Adding a sprite to the town, or anywhere else, means
+adding an entry to one of these files — never hand-editing `manifest.js` or
+`CREDITS.md`, both of which this regenerates and would just overwrite.
+Picking the crop rect is still a human job: never take one off a contact
+sheet without tiling it a few times over to check for a seam.
 
 ## The level editor
 

@@ -14,6 +14,7 @@ at one commit:
 - `art/sprites/parts-torso.png` — [ElizaWy/LPC](https://github.com/ElizaWy/LPC), commit `f07f7f5892e67c932c68f70bb04472f2c64e46bc`
 - `art/sprites/parts-hair.png` — [ElizaWy/LPC](https://github.com/ElizaWy/LPC), commit `f07f7f5892e67c932c68f70bb04472f2c64e46bc`
 - `art/sprites/parts-beard.png` — [ElizaWy/LPC](https://github.com/ElizaWy/LPC), commit `f07f7f5892e67c932c68f70bb04472f2c64e46bc`
+- `art/sprites/town.png` — [ElizaWy/LPC](https://github.com/ElizaWy/LPC), commit `f07f7f5892e67c932c68f70bb04472f2c64e46bc`
 
 **The original artwork has been modified**: layers were composited into single
 characters, recoloured using the LPC palette definitions, cropped to the walking
@@ -482,6 +483,14 @@ or by the Liberated Pixel Cup.
 - **Authors:** BlueCarrot16, Eliza Wyatt (DeathsDarling)
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Original CC0 by BlueCarrot16. Edited, animated, and recolored by Eliza Wyatt.
+
+### `Sign Backgrounds A`
+
+- **Used for:** sign.board
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt.
 
 ### `Structure/Doors/32x48px Doors/12 Panel Door A.png`
 

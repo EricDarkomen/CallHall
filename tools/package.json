@@ -1,0 +1,9 @@
+{
+  "name": "callhall-build-tools",
+  "private": true,
+  "type": "module",
+  "description": "Dev-time tooling. Not shipped: the game itself stays dependency-free.",
+  "dependencies": {
+    "pngjs": "^7.0.0"
+  }
+}
