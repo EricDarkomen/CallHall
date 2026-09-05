@@ -136,7 +136,14 @@ const NPCM = {
            are doing rather than who they are, so none of it is saved: a
            reloaded shift puts everybody at their desk and the day starts. */
         post: null, walking: false, chat: null, chatCool: rnd(5, 40), callOut: null,
-        lookAt: null, lookT: 0, idleT: rnd(2, 9), evade: 0, evadeX: 0, evadeY: 0
+        lookAt: null, lookT: 0, idleT: rnd(2, 9), evade: 0, evadeX: 0, evadeY: 0,
+        /* The steering: the heading actually being held, the tile being crossed
+           to, and how the walk is going — closest they have been to where they
+           are going, and how long since that improved. Progress is what decides
+           whether a walk is finished or hopeless; `stuck` only ever knew about
+           the last frame, and somebody shuffling sideways for ever was, frame
+           by frame, moving perfectly well. */
+        hx: 0, hy: 1, next: null, nextFrom: '', best: 1e9, noProg: 0, gaveUp: null
       };
     });
     this.enter(World.level);
@@ -171,6 +178,24 @@ const NPCM = {
       notice: 1.15 + bit(4) * .95
     }, def.traits || {});
   },
+  /* Which way to face, given a direction to face in. Sprites.dirOf takes the
+     dominant axis, and a walk of exactly 45° — which is most of them, since the
+     field is happy to go diagonally — has no dominant axis: |dx| and |dy| trade
+     places on floating-point noise and the sprite flips between facing sideways
+     and facing down every single frame. That was the jitter.
+
+     So the axis being faced now keeps it until the other one wins by half
+     again, and only the sign changes freely. Turning a corner still reads
+     immediately; walking a diagonal picks a face and holds it. */
+  face(n, dx, dy) {
+    const ax = Math.abs(dx), ay = Math.abs(dy);
+    if (!ax && !ay) return n.dir;
+    const sideways = n.dir === 1 || n.dir === 3;
+    if (sideways ? ax * 1.5 >= ay : ay * 1.5 >= ax) {
+      return sideways ? (dx < 0 ? 1 : 3) : (dy < 0 ? 0 : 2);
+    }
+    return Sprites.dirOf(dx, dy);
+  },
   /* Recompute presence for a level. Called by Levels.go(); a filter once per
      transition rather than a filter every frame in five hot paths. */
   enter(level) {
@@ -179,7 +204,7 @@ const NPCM = {
        doorway across a level change: all three are about a floor plan that is
        no longer loaded. */
     this.all.forEach(n => {
-      this.hangUp(n); n.post = null; n.stuck = 0; n.evade = 0; n.destKey = ''; n.callOut = null;
+      this.hangUp(n); n.post = null; n.gaveUp = null; n.destKey = ''; n.callOut = null; this.repath(n);
     });
   },
   get(id) { return this.all.find(n => n.id === id); },
@@ -205,6 +230,14 @@ const NPCM = {
     if (d === 'desk') return [n.def.desk[0], n.def.desk[1]];
     const w = WP[d]; return w ? w : [n.def.desk[0], n.def.desk[1]];
   },
+  /* Is this square a way through rather than a place to be. Standing in a
+     doorway stops everybody behind you getting in — which during a fire drill
+     is the whole floor, queueing in the lobby behind one person who found a
+     free square and stopped on it. Bev has a line about this. */
+  inDoorway(x, y) {
+    if (World.isOpening(x, y)) return true;
+    return World.at(x, y).some(o => o.kind === 'door' || o.kind === 'exit' || o.kind === 'hatch');
+  },
   /* Which square to actually stand on. Five people sent to `coffee` were sent
      to the same square of lino, where they spent the break shoving each other
      off it; a destination is a place in the room, so it is claimed one square
@@ -218,6 +251,10 @@ const NPCM = {
     if (n.dest === 'desk') return (n.post = [dx, dy]);
     const taken = new Set();
     for (const o of this.list) if (o !== n && o.post) taken.add(o.post[0] + ',' + o.post[1]);
+    /* The square they just walked away from because they could not get to it.
+       One pick only: it is off the list for this choice and available again
+       the next time anybody looks, including them. */
+    if (n.gaveUp) { taken.add(n.gaveUp); n.gaveUp = null; }
     const f = Nav.field(dx, dy);
     /* A chair first, if there is a free one within a couple of squares of where
        they were sent. Every break table, the meeting room and the training room
@@ -226,34 +263,41 @@ const NPCM = {
        empty chairs at it. Sitting down is most of what a break is. */
     const chair = this.freeChair(n, dx, dy, taken, f);
     if (chair) return (n.post = chair);
-    /* Outwards a shell at a time, and round each shell from a different point
-       per person: nearest to the thing they came for wins, and the queue for
-       the kettle does not form in the same direction every day with the third
-       person to arrive always standing in the doorway. Three shells is
-       forty-eight squares, which is more people than work here. */
-    const spin = this.hash(n.id);
+    /* Outwards a shell at a time, so nearest to the thing they came for always
+       wins. Three shells is forty-eight squares, which is more people than work
+       here. Which square within a shell is the interesting half — see below. */
+    const cx = n.x / TILE - .5, cy = n.y / TILE - .5;
     for (let ring = 0; ring <= 3; ring++) {
       const cells = [];
-      for (let oy = -ring; oy <= ring; oy++) for (let ox = -ring; ox <= ring; ox++)
-        if (Math.max(Math.abs(ox), Math.abs(oy)) === ring) cells.push([ox, oy]);
-      const off = spin % cells.length;
-      for (let i = 0; i < cells.length; i++) {
-        const r = cells[(i + off) % cells.length];
-        const x = dx + r[0], y = dy + r[1];
-        if (World.isSolid(x, y) || taken.has(x + ',' + y)) continue;
+      for (let oy = -ring; oy <= ring; oy++) for (let ox = -ring; ox <= ring; ox++) {
+        if (Math.max(Math.abs(ox), Math.abs(oy)) !== ring) continue;
+        const x = dx + ox, y = dy + oy;
+        if (World.isSolid(x, y) || taken.has(x + ',' + y) || this.inDoorway(x, y)) continue;
         /* Connected to the destination, not merely near it: the tile the other
            side of the break room wall is one square from the kettle and a walk
            round three corridors away from it. One field answers this for every
            candidate, which is why the destination's is the one asked. */
         if (f && Nav.at(f, x, y) < 0) continue;
-        return (n.post = [x, y]);
+        cells.push([x, y]);
       }
+      if (!cells.length) continue;
+      /* Of the free squares this close to the thing they came for, the one on
+         the side they are arriving from. A spot chosen without regard to that
+         is a spot on the far side of everybody already standing there, and the
+         last four people into a busy break room spent the whole of lunch trying
+         to cross it — each of them walking into the backs of the people who got
+         there first, giving up, and choosing another square behind them.
+
+         Rooms fill from the door now, which is also how a room fills. */
+      cells.sort((a, b) => (Math.hypot(a[0] - cx, a[1] - cy) - Math.hypot(b[0] - cx, b[1] - cy))
+        || (this.hash(n.id + a) % 8) - (this.hash(n.id + b) % 8));
+      return (n.post = cells[0]);
     }
     /* Nothing free for three squares in any direction, which means the room is
        full — a fire drill, or lunch. Stand where you are rather than joining a
        scrum on a tile somebody else has already claimed. */
     const hx = Math.floor(n.x / TILE), hy = Math.floor(n.y / TILE);
-    if (!World.isSolid(hx, hy) && !taken.has(hx + ',' + hy)) return (n.post = [hx, hy]);
+    if (!World.isSolid(hx, hy) && !taken.has(hx + ',' + hy) && !this.inDoorway(hx, hy)) return (n.post = [hx, hy]);
     return (n.post = [dx, dy]);
   },
   /* The nearest chair to a destination that nobody has claimed and everybody
@@ -353,7 +397,7 @@ const NPCM = {
            question with their back to you is the single most obvious tell that
            nobody is home behind the sprite. */
         n.walking = false; this.hangUp(n);
-        n.dir = Sprites.dirOf(P.x - n.x, P.y - n.y);
+        n.dir = this.face(n, P.x - n.x, P.y - n.y);
         return;
       }
       if (n.stunTimer > 0) { n.stunTimer -= dt; n.walking = false; return; }
@@ -363,12 +407,28 @@ const NPCM = {
       /* The timetable has moved them on. Give up the square of carpet, and stop
          talking — you can be mid-sentence when it gets to half past, and that
          is what an office sounds like. */
-      if (key !== n.destKey) { n.destKey = key; n.post = null; this.hangUp(n); n.stuck = 0; n.evade = 0; }
+      if (key !== n.destKey) { n.destKey = key; n.post = null; this.hangUp(n); this.repath(n); }
 
       const [tx, ty] = this.post(n, dx, dy);
       const cx = n.x / TILE - .5, cy = n.y / TILE - .5;
-      if (Math.hypot(tx - cx, ty - cy) > .34) this.walk(n, dt, tx, ty);
-      else { n.walking = false; n.stuck = 0; n.evade = 0; this.settle(n, dt, dx, dy, playing); }
+      /* Arriving is closer than leaving: a settled person who is nudged half a
+         square by somebody squeezing past does not set off walking again, which
+         used to flick the walk cycle on and off where a room was busy.
+
+         And standing IN the square, having stopped getting any closer to the
+         middle of it, is arriving too. A person whose square is ringed by other
+         people is held off its centre by the very act of everyone giving each
+         other room: they were within a foot of where they were going and spent
+         the rest of lunch being pushed off it and walking back. */
+      const near = Math.hypot(tx - cx, ty - cy);
+      const onPost = Math.floor(n.x / TILE) === tx && Math.floor(n.y / TILE) === ty;
+      const there = near <= (n.walking ? .34 : .62) || (onPost && n.noProg > 1.5);
+      if (!there) this.walk(n, dt, tx, ty);
+      else {
+        if (n.walking) this.repath(n);
+        n.walking = false;
+        this.settle(n, dt, dx, dy, playing);
+      }
 
       this.chatter(n, dt, playing, talkingTo);
 
@@ -388,12 +448,35 @@ const NPCM = {
     this.hangUp(n);
     n.walking = true;
     const fx = Math.floor(n.x / TILE), fy = Math.floor(n.y / TILE);
-    /* Somebody standing in the next square is a reason to go round them, worth
-       about two and a half steps of detour. It can only ever choose between
-       tiles that are already closer than this one, so it cannot send anybody
-       backwards, in a circle, or through a wall — at worst everybody is in the
-       way and the cheapest tile is the one it would have picked anyway. */
-    const step = Nav.next(fx, fy, tx, ty, (x, y) => this.busyTiles.has(x + ',' + y) ? 2.5 : 0);
+    /* Is this walk actually getting anywhere, in STEPS LEFT TO WALK rather than
+       as the crow flies.
+
+       Two mistakes, one after the other. `stuck` counted frames in which
+       nothing moved at all, and somebody shuffling sideways round a crowded
+       break room moves perfectly well on every one of them while getting no
+       closer to anything for half a minute. Straight-line distance fixed that
+       and introduced a worse one: the way out of a room is often in the
+       opposite direction to where you are going, so anybody walking up the
+       floor to reach a door was, by that measure, going backwards, and a long
+       enough corridor would have had them abandon a perfectly good walk in the
+       middle of it. The field already knows the real answer and it is one
+       array lookup. */
+    const far = Nav.steps(fx, fy, tx, ty);
+    const d = far === null ? Math.hypot(tx - (n.x / TILE - .5), ty - (n.y / TILE - .5)) : far;
+    if (d < n.best - .1) { n.best = d; n.noProg = 0; } else n.noProg += dt;
+    /* Which tile to cross to, decided ONCE per tile entered and then held.
+       Somebody standing in the next square is a reason to go round them, worth
+       about two and a half steps of detour — but the people in the way move,
+       and re-asking every frame meant the answer changed under a walker
+       mid-stride and swung them about. It can only ever choose between tiles
+       already closer than this one, so it cannot send anybody backwards, in a
+       circle, or through a wall. */
+    const from = fx + ',' + fy;
+    if (n.nextFrom !== from) {
+      n.nextFrom = from;
+      n.next = Nav.next(fx, fy, tx, ty, (x, y) => this.busyTiles.has(x + ',' + y) ? 2.5 : 0);
+    }
+    const step = n.next;
     /* No next tile means one of two things and the same answer does for both:
        the last stretch across the destination tile itself, and a destination
        the sweep never reached — somebody standing inside a desk, or a way that
@@ -415,6 +498,15 @@ const NPCM = {
        just do it while making progress. */
     if (vx * gx + vy * gy < .2) { vx = vx * .35 + gx * .9; vy = vy * .35 + gy * .9; }
     const l2 = Math.hypot(vx, vy) || 1; vx /= l2; vy /= l2;
+    /* Turn towards it rather than snapping to it. Everything above — the next
+       tile, who is in the way, which side to squeeze past — can change between
+       one frame and the next, and applied raw that is a person twitching. A
+       fifth of a second of turn takes all of it out and costs about a fifth of
+       a tile of accuracy, which no wall is close enough to mind. */
+    const turn = 1 - Math.pow(.004, dt);
+    n.hx += (vx - n.hx) * turn; n.hy += (vy - n.hy) * turn;
+    const hl = Math.hypot(n.hx, n.hy) || 1;
+    vx = n.hx / hl; vy = n.hy / hl;
 
     const sp = n.speed * (n.callOut ? n.callOut.haste : 1) * dt;
     const mx = vx * sp, my = vy * sp;
@@ -431,10 +523,10 @@ const NPCM = {
     if (wx || wy) {
       n.stuck = 0;
       n.step += Math.hypot(wx, wy) / TILE * 2.6;
-      /* Which way they are facing. The emoji never needed this — a sprite
-         does, and it has to be set from the step actually taken rather than
-         the direction wanted, or someone squeezing past a desk moonwalks. */
-      n.dir = Sprites.dirOf(wx, wy);
+      /* Which way they are facing, from the held heading rather than from the
+         last frame's step: the step is a fraction of a pixel and squeezing past
+         a desk makes it point sideways for a moment, which used to turn them. */
+      n.dir = this.face(n, n.hx, n.hy);
     } else {
       n.stuck += dt;
       /* Blocked by a person rather than a wall — the walls are already routed
@@ -444,30 +536,62 @@ const NPCM = {
         const s = chance(.5) ? 1 : -1;
         n.evadeX = -vy * s; n.evadeY = vx * s; n.evade = .6;
       }
-      /* Blocked, and near enough. Stop here — the last two tiles of a walk
-         across a full break room are people, not floor, and standing where you
-         got to is what a person does. The tile they are on becomes the spot
-         they have claimed, so nobody walks into it either. */
-      if (n.stuck > 1.5) {
-        const hx = Math.floor(n.x / TILE), hy = Math.floor(n.y / TILE);
-        const free = !this.list.some(o => o !== n && o.post && o.post[0] === hx && o.post[1] === hy);
-        if (free && Math.hypot(tx - hx, ty - hy) <= 1.6 && !World.isSolid(hx, hy)) {
-          n.post = [hx, hy]; n.stuck = 0; n.evade = 0; return;
-        }
-      }
-      /* Still nowhere, and not near enough to shrug it off: give the spot up
-         and take another. Somebody else has usually taken the good one, and a
-         person who ends up standing a bit further along is both what happens in
-         a queue for a kettle and the thing that unjams the queue. */
-      if (n.stuck > 3) { n.post = null; n.stuck = 0; n.evade = 0; return; }
-      /* The old safety valve, kept, and now genuinely a last resort: twelve
-         seconds of getting nowhere, and only where nobody can watch it happen.
-         It used to fire after four seconds in plain view, which is how Priya
-         came to teleport across the break room in front of people. */
-      if (n.stuck > 12 && !Cam.visible(n.x, n.y)) {
-        n.x = (tx + .5) * TILE; n.y = (ty + .5) * TILE; n.stuck = 0; n.evade = 0;
-      }
     }
+    /* And whether or not this frame moved them, has the walk as a whole given
+       up on itself. */
+    if (n.noProg > 2.5) this.giveUp(n, tx, ty, d);
+  },
+  /* A walk that has stopped getting anywhere.
+
+     Near enough: somebody two squares from where they were going, held up by
+     people, has arrived as far as anyone watching is concerned. They take the
+     square they are standing on — which is what a person does — and it becomes
+     theirs, so nobody walks into it either.
+
+     Not near enough: give the square up and take another, remembering the one
+     just abandoned so the same jam is not chosen again a second later.
+
+     And still nothing, out of sight: the last resort, which is the teleport
+     this always had and which almost never fires now. */
+  giveUp(n, tx, ty, d) {
+    /* "Near enough" is the room, not a radius. Somebody who has got into the
+       break room and cannot cross it because the break room is full of people
+       is not stuck — they are in the break room, which is where they were
+       going, and they should stand still and be in it. Measuring this in tiles
+       instead was what kept the last few arrivals walking into backs for the
+       whole of lunch. */
+    const hx = Math.floor(n.x / TILE), hy = Math.floor(n.y / TILE);
+    if (d <= 3 || World.zoneAt(hx, hy) === World.zoneAt(tx, ty)) {   /* d is steps left */
+      const spot = this.freeSpotNear(n);
+      if (spot) { n.post = spot; this.repath(n); return; }
+    }
+    if (n.noProg > 6) {
+      n.gaveUp = n.post ? n.post.join(',') : null;
+      n.post = null; this.repath(n);
+      return;
+    }
+    if (n.noProg > 14 && !Cam.visible(n.x, n.y)) {
+      n.x = (tx + .5) * TILE; n.y = (ty + .5) * TILE; this.repath(n);
+    }
+  },
+  /* Forget everything about the walk in progress: where it was going, how well
+     it was going, and which way it was leaning. Called whenever the target
+     changes under it. */
+  repath(n) {
+    n.best = 1e9; n.noProg = 0; n.stuck = 0; n.evade = 0; n.next = null; n.nextFrom = '';
+  },
+  /* The nearest square to somebody that they can stand on and nobody has
+     claimed — theirs first, then the ring around it. */
+  freeSpotNear(n) {
+    const hx = Math.floor(n.x / TILE), hy = Math.floor(n.y / TILE);
+    const ring = [[0, 0], [0, 1], [1, 0], [-1, 0], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]];
+    for (const [ox, oy] of ring) {
+      const x = hx + ox, y = hy + oy;
+      if (World.isSolid(x, y) || this.inDoorway(x, y)) continue;
+      if (this.list.some(o => o !== n && o.post && o.post[0] === x && o.post[1] === y)) continue;
+      return [x, y];
+    }
+    return null;
   },
   /* Lean away from anybody standing too close. Not collision — that is canGo —
      but the reason two people walking the same corridor drift apart instead of
@@ -520,21 +644,47 @@ const NPCM = {
        attention: the person they are talking to, whatever they just looked up
        at, the thing they came over here for, and failing all of that the room. */
     const partner = n.chat && this.get(n.chat.with);
-    if (partner) n.dir = Sprites.dirOf(partner.x - n.x, partner.y - n.y);
+    if (partner) n.dir = this.face(n, partner.x - n.x, partner.y - n.y);
     /* The manager is standing over them. Whatever they were looking at, they
        are now looking at their screen. */
     else if (n.dest === 'desk' && this.lookBusy(n)) n.dir = 0;
-    else if (n.lookT > 0 && n.lookAt) n.dir = Sprites.dirOf(n.lookAt.x - n.x, n.lookAt.y - n.y);
+    else if (n.lookT > 0 && n.lookAt) n.dir = this.face(n, n.lookAt.x - n.x, n.lookAt.y - n.y);
     else if (n.dest === 'desk') n.dir = 0;    /* the screen is on the far side of the desk */
-    else if (n.post && (n.post[0] !== dx || n.post[1] !== dy)) n.dir = Sprites.dirOf(dx - n.post[0], dy - n.post[1]);
+    else if (n.post && (n.post[0] !== dx || n.post[1] !== dy)) n.dir = this.face(n, dx - n.post[0], dy - n.post[1]);
 
     /* Standing somewhere is not standing on one tile for four hours. The
-       restless shift along the counter now and then; the still stay still. */
+       restless shift along the counter now and then; the still stay still.
+
+       A step, not a decision: this used to drop the claimed square and ask for
+       a new one from scratch, which in a full room could hand somebody a spot
+       on the far side of everybody and send them back into the scrum they had
+       just got out of. Shuffling is a square you can see from where you are. */
     n.idleT -= dt;
     if (n.idleT <= 0) {
       n.idleT = rnd(7, 20);
-      if (!n.chat && n.dest !== 'desk' && chance(n.t.restless * .55)) n.post = null;
+      if (!n.chat && n.dest !== 'desk' && chance(n.t.restless * .55)) {
+        const spot = this.shuffleSpot(n, dx, dy);
+        if (spot) { n.post = spot; this.repath(n); }
+      }
     }
+  },
+  /* One square over: free, unclaimed, next to where they already are, and still
+     within reach of the thing they came for. Anything further is not a shuffle,
+     it is a journey, and a room full of people is no place for one. */
+  shuffleSpot(n, dx, dy) {
+    const hx = Math.floor(n.x / TILE), hy = Math.floor(n.y / TILE);
+    const f = Nav.field(dx, dy);
+    const out = [];
+    for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+      if (!ox && !oy) continue;
+      const x = hx + ox, y = hy + oy;
+      if (World.isSolid(x, y) || this.inDoorway(x, y)) continue;
+      if (Math.max(Math.abs(x - dx), Math.abs(y - dy)) > 3) continue;
+      if (f && Nav.at(f, x, y) < 0) continue;
+      if (this.list.some(o => o !== n && o.post && o.post[0] === x && o.post[1] === y)) continue;
+      out.push([x, y]);
+    }
+    return out.length ? pick(out) : null;
   },
   /* Two people standing near each other for long enough start talking, in their
      own words — the one-liners each person already has. The pair is one
