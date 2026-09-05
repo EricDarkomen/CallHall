@@ -613,6 +613,38 @@ const Acts = {
        { t: 'Leave it for somebody who needs it.', to: null }]);
   },
 
+  /* --- THE HIGH STREET --- */
+  nailedIt() {
+    insp('💅', 'Nailed It', 'Open till six', [
+      'A nail bar with a name the owner clearly enjoyed choosing, and a laminated price list that has not changed since it opened.',
+      'Half the fourth floor gets their lunch-break gel done in here. The other half pretends not to know that.'],
+      [{ t: 'Go in. (20 min.)', to: null, do() {
+          G.minutes += 20; Player.mod({ patience: 6, energy: -2 });
+          UI.toast('💅', 'Twenty minutes, and a colour you will not remember choosing.');
+        } },
+       { t: 'Not today.', to: null }]);
+  },
+  shopSign() {
+    insp('🪧', 'The sign above Nailed It', 'Weathered', [
+      'A painted board, faded enough that the name reads better on the awning below it than up here.',
+      'Underneath, in smaller letters nobody repaints: EST. LAST TUESDAY. Terry says it is a joke. Terry says that about several things that are not jokes.']);
+  },
+  bench2() {
+    insp('🪑', 'Another bench', 'Also donated', [
+      'A second bench, further along, with a plaque in the same hand as the first one. IN MEMORY OF DOREEN, WHO ALSO LIKED IT HERE.',
+      'Either Doreen liked it here twice as much as one plaque could hold, or somebody on the committee could not remember commissioning the first one.'],
+      [{ t: 'Sit with Doreen again.', to: null, do() {
+          G.minutes += 5; Player.mod({ patience: 6, energy: 2 });
+          UI.toast('🪑', 'Five minutes. It is a slightly better view than the other bench, which is either the point or a coincidence.');
+        } },
+       { t: 'One Doreen bench was enough.', to: null }]);
+  },
+  highStreetBin() {
+    insp('🗑️', 'Bin, High Street', 'Council', [
+      'A council bin outside Nailed It, mostly cotton pads and the little foil pouches nail varnish remover comes in.',
+      'Nobody from the fourth floor has ever admitted to using this one either.']);
+  },
+
   /* --- MEETING ROOM 2 --- */
   meetTable() {
     if (G.flags.briefingToday && !G.flags.allhandsBeaten) {
