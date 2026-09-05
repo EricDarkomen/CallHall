@@ -29,9 +29,12 @@ const ZONES = {
   /* Outdoors. Lighter than anything inside the building, because they are lit
      by the sky rather than by a strip light — see LEVELS.outside, which is the
      one level the renderer does not put a ceiling on. Both are breeze block at
-     the boundary: out here that is a car park wall rather than a plant room. */
-  forecourt: { name: 'The Forecourt',   floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block' },
-  street:    { name: 'Bellhaven Road',  floor: '#42454c', alt: '#3d4046', wall: '#2e3137', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block' }
+     the boundary: out here that is a car park wall rather than a plant room.
+     `tile`/`wtile` are the one flagstone and the one brick from art/sprites/
+     town.png — the same swatch reused apart by each zone's own floor/wall
+     colour, exactly as the office's rooms already share world.png's kit. */
+  forecourt: { name: 'The Forecourt',   floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
+  street:    { name: 'Bellhaven Road',  floor: '#42454c', alt: '#3d4046', wall: '#2e3137', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' }
 };
 
 /* How each kind of object is furnished, keyed by `kind`.
@@ -146,6 +149,12 @@ const FURN = {
      the road rather than a partition. */
   car: { size: 40 }, bench: { size: 30 }, barrier: { size: 26 },
   puddle: { size: 22 }, shop: { mount: 'wall', size: 27 },
+  /* Real kit art, same town.png as the ground and the wall it stands
+     against. A wheelie bin is not the world atlas's `obj.bin` — that one is
+     the small kitchen-sized pedal bin every indoor room already uses, and
+     doubling it up outdoors would put the same object in two sizes on
+     screen at once. */
+  lamp: { size: 34, sprite: 'obj.lamppost' },
 };
 
 const ROOM_DEFS = [

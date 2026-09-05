@@ -402,15 +402,26 @@ const LEVELS = {
       A({ x: 30, y: 4, e: '📦', name: 'Pallets, delivery bay', kind: 'box', solid: true, use: 'pallets' });
       /* The one thing out here that the fourth floor also has, which is the
          joke: it is the same bin and the same people are standing at it. */
-      A({ x: 16, y: 4, e: '🚬', name: 'The bin everybody stands at', kind: 'bin', solid: false, use: 'smokingSpot' });
+      A({ x: 16, y: 4, e: '🚬', name: 'The bin everybody stands at', kind: 'bin', solid: false, use: 'smokingSpot',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      /* Real kit lampposts, flanking the car park rather than standing in the
+         one lane cars actually use. */
+      A({ x: 8, y: 4, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 28, y: 9, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
 
       /* ---- THE ROAD ---- */
       /* On the last row of the road with the wall below it, not standing on the
          wall itself: a wall-mounted thing needs a floor tile to stand on and a
          wall to hang against, and the south face is the far side of the road. */
+      /* Stays emoji: the kit's wall art is drawn face-on and only reads right
+         against a north wall (see render.js's `edgeOn`) — Greggs sits on the
+         SOUTH wall, the far side of the road, so a mounted sprite here would
+         silently fall back to the emoji anyway. Kit art is not automatically
+         an upgrade; there is just no wall in this level it would work on yet. */
       A({ x: 10, y: 22, e: '🥐', name: 'Greggs', kind: 'shop', solid: true, use: 'greggs' });
       A({ x: 28, y: 20, e: '🚏', name: 'The bus stop', kind: 'sign', solid: true, use: 'busStop' });
-      A({ x: 24, y: 22, e: '🗑️', name: 'The council bin', kind: 'bin', solid: false, use: 'streetBin' });
+      A({ x: 24, y: 22, e: '🗑️', name: 'The council bin', kind: 'bin', solid: false, use: 'streetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 14, y: 20, e: '🪑', name: 'The bench', kind: 'bench', solid: true, use: 'bench' });
       A({ x: 26, y: 16, e: '🐦', name: 'A pigeon, possibly the same one', kind: 'pigeon', solid: false, use: 'pigeon' });
     }
