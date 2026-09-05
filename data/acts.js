@@ -597,6 +597,11 @@ const Acts = {
       'A council bin, emptied on Thursdays, full by Tuesday.',
       'On top of it, balanced with some care, a takeaway cup from the coffee machine on the fourth floor. Somebody carried it all the way down here rather than use the bin by the lift, and there is no explanation for that which is not slightly sad.']);
   },
+  lamppost() {
+    insp('💡', 'Lamppost', 'Council-maintained', [
+      'A council lamppost, one of a matching pair, both working — which the fourth floor’s own lighting has not managed in a decade of maintenance tickets.',
+      'A faded sticker near the base advertises a covers band that split up before this lamppost was installed.']);
+  },
   bench() {
     insp('🪑', 'The bench', 'Donated', [
       'A bench with a small brass plaque. The plaque says: IN MEMORY OF DOREEN, WHO LIKED IT HERE.',

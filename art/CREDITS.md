@@ -46,6 +46,14 @@ or by the Liberated Pixel Cup.
 
 ## Assets used
 
+### `Bin`
+
+- **Used for:** obj.wheeliebin
+- **Sheets:** town
+- **Authors:** Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Eliza Wyatt.
+
 ### `Body 01 - Feminine, Thin`
 
 - **Used for:** body
@@ -61,6 +69,14 @@ or by the Liberated Pixel Cup.
 - **Authors:** Stephen Challener (Redshrike), Durrani, Eliza Wyatt (DeathsDarling), BenCreating
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Originally the Feminine, Thin body by Stephen Challener. Altered by Eliza Wyatt. Edits and recolors by Eliza Wyatt.
+
+### `Brick Wall A`
+
+- **Used for:** wall.brick
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Extracted from Brick Wall Block Edging, by Lanea Zimmerman. Reconfigured and recolored by Eliza Wyatt.
 
 ### `Facial Hair 06 - Trimmed Beard`
 
@@ -109,6 +125,14 @@ or by the Liberated Pixel Cup.
 - **Authors:** see Credits.txt
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** No per-asset entry; covered by the repository's Credits.txt, which licenses the whole pack OGA-BY 3.0.
+
+### `Lighting, Outdoors`
+
+- **Used for:** obj.lamppost
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt. Inactive version added by Eliza Wyatt.
 
 ### `Medium 01 - Page`
 
@@ -564,6 +588,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Original by Eliza Wyatt.
 
+### `Tile C`
+
+- **Used for:** terrain.flag
+- **Sheets:** town
+- **Authors:** Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Eliza Wyatt
+
 ### `toilets.png`
 
 - **Used for:** Public Toilet Tileset
@@ -572,3 +604,11 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** CC-BY-SA 3.0, GPL 3.0 — used here under CC-BY-SA 3.0
 - **Notes:** Original by Matthew Nash. Many parts based upon the LPC base assets.
 - **Provenance:** Attribution and licence reported by the project owner from https://opengameart.org/content/public-toilet-tileset; not independently verifiable from this build, which cannot reach that page. Re-check before relying on it.
+
+### `Window Awnings A`
+
+- **Used for:** shop.awning
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt.
