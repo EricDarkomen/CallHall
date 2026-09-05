@@ -45,6 +45,11 @@ const Combat = {
        giving away, how much of you has got through, and which lines they have
        already heard from you today. */
     E.rap = 0; E.used = {}; E.wear = {}; E.matched = 0; E.landed = false;
+    /* How hard they came in, and how many turns running you have answered a
+       question they were not asking. Both drive `agg`, which is otherwise a
+       constant per caller and made every call the same shape whatever you did
+       in it — see play(). */
+    E.base = E.agg; E.miss = 0;
     this.shiftNeed(E, true);
     G.state = 'combat'; $('#combat').classList.add('on');
     $('#cbTitle').textContent = E.boss ? 'ENCOUNTER · ' + BOSSES[E.boss].title : 'Incoming call · queue position ' + ri(1, 9);
@@ -76,9 +81,32 @@ const Combat = {
     };
     return bias[E.caller] || ['heard', 'answer', 'speed', 'respect'];
   },
+  /* What follows what. A call has a shape — they want to be heard, and then
+     once they have been they want the actual answer, and then they want their
+     afternoon back — and a want rolled fresh from the same bag every turn had
+     no shape at all: it was four sides of a die, and the tell might as well
+     have been random noise you learned to ignore.
+
+     The follow-on is still filtered through the caller's own bias, so the
+     technical caller never suddenly wants a hug and the bereaved one is never
+     asked to hurry up. It is what the caller could want next, in the order a
+     person would want it. */
+  NEXT: {
+    heard:   ['answer', 'answer', 'respect', 'heard'],
+    answer:  ['speed', 'respect', 'answer', 'heard'],
+    speed:   ['answer', 'respect', 'speed', 'heard'],
+    respect: ['answer', 'heard', 'speed', 'respect']
+  },
   shiftNeed(E, force) {
     const pool = this.needBias(E);
-    let n = pick(pool);
+    let n;
+    /* Most of the time the next want follows from the last one; the rest of the
+       time it is whatever this caller leans towards, which keeps them from
+       becoming a sequence you can recite. */
+    if (!force && E.need && chance(.65)) {
+      const on = this.NEXT[E.need].filter(x => pool.includes(x));
+      n = on.length ? pick(on) : pick(pool);
+    } else n = pick(pool);
     /* Never repeat the same need twice running unless the caller is one of the
        single-minded ones — two identical turns reads as the tell being broken. */
     for (let i = 0; i < 3 && n === E.need && !force; i++) n = pick(pool);
@@ -114,8 +142,12 @@ const Combat = {
        answer" is the same information as need:'answer' and reads like a person. */
     const tellBox = $('#cbTell');
     if (E.tell && NEEDS[E.need]) {
+      /* "still" when they have been asking for the same thing for two turns and
+         not getting it. The tell already changed wording; this says it is the
+         same want underneath, which is the difference between a caller being
+         random and a caller being ignored. */
       tellBox.innerHTML = NEEDS[E.need].e + ' <span class="tt">' + esc(E.tell) + '</span> '
-        + '<span class="tw">· wants ' + esc(NEEDS[E.need].n) + '</span>';
+        + '<span class="tw">· ' + (E.miss >= 2 ? 'still wants ' : 'wants ') + esc(NEEDS[E.need].n) + '</span>';
     } else tellBox.innerHTML = '';
 
     const box = $('#cbMoves'); box.innerHTML = '';
@@ -184,10 +216,20 @@ const Combat = {
         E.matched++; E.lastMatch = true;
         note = ' — that was what they wanted.';
         FX.float(P.x, P.y - 34, '🤝 rapport', '#b48cff');
+        /* Somebody who is being understood calms down, and stays calmer for
+           the rest of the call than they started it. Never all the way: they
+           still rang up about something. */
+        E.miss = 0;
+        E.agg = Math.max(E.base * .78, E.agg - E.base * .08);
       } else if (serves.length) {
         r.dmg *= 0.65;
         E.rap = Math.max(0, E.rap - 8);
         note = ' — not what they were after.';
+        /* And somebody being answered off the point gets louder about it. Two
+           turns of grace first, because one misread is a guess and everybody
+           gets one. */
+        E.miss++;
+        if (E.miss >= 2) E.agg = Math.min(E.base * 1.5, E.agg + E.base * .13);
       }
     }
     E.frus -= r.dmg;
@@ -222,8 +264,11 @@ const Combat = {
     E.frus += E.boss ? 3 : 1.5;
     /* They move on. Getting it right settles that need and they raise the next
        one; getting it wrong mostly leaves them asking for the same thing again,
-       which is the call telling you to read the tell rather than the buttons. */
-    if (E.lastMatch || chance(.3)) this.shiftNeed(E);
+       which is the call telling you to read the tell rather than the buttons.
+       And once you have missed it twice they stop changing the subject at all:
+       a person who is not being heard says the same thing again, in different
+       words, until somebody hears it. */
+    if (E.lastMatch || (E.miss < 2 && chance(.3))) this.shiftNeed(E);
     else E.tell = pick(TELLS[E.need] || TELLS.heard);
     /* Staleness fades while you are talking about something else. */
     for (const k in E.wear) { E.wear[k] *= 0.62; if (E.wear[k] < 0.2) delete E.wear[k]; }

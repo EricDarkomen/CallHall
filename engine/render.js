@@ -1638,7 +1638,7 @@ const R = {
     const ang = Math.atan2(wy - P.y, wx - P.x);
     const rad = Math.min(96, Math.min(Cam.w, Cam.h) * .3);
     const ax = px + Math.cos(ang) * rad, ay = py + Math.sin(ang) * rad;
-    const steps = Math.round(Math.hypot(wx - P.x, wy - P.y) / TILE);
+    const steps = Guide.steps();
     const pulse = .78 + Math.sin(this.t * 3) * .18;
     c.save();
     c.globalAlpha = pulse;
