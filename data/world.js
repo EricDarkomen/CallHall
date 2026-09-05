@@ -155,6 +155,9 @@ const FURN = {
      doubling it up outdoors would put the same object in two sizes on
      screen at once. */
   lamp: { size: 34, sprite: 'obj.lamppost' },
+  /* A hanging board, for a shopfront that finally has a wall to hang it on —
+     see LEVELS.outside's High Street room. */
+  shopsign: { mount: 'wall', size: 24, sprite: 'sign.board' },
 };
 
 const ROOM_DEFS = [

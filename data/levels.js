@@ -374,11 +374,19 @@ const LEVELS = {
      fire escape looks down on this car park. */
   outside: {
     name: 'Outside',
-    w: 40, h: 26,
+    w: 64, h: 26,
     indoors: false,
     rooms: [
       { z: 'forecourt', r: [3, 3, 36, 13] },
-      { z: 'street', r: [3, 14, 36, 22] }
+      { z: 'street', r: [3, 14, 36, 22] },
+      /* The High Street: contiguous with the road, not with the forecourt —
+         forecourt stops at x=36, so row 13 above this one is never claimed by
+         any room and comes out solid by default (see World.build()). That is
+         a real north wall, the one kind of wall the kit's shopfront art
+         actually reads against (see render.js's `edgeOn`), and Greggs never
+         got one: it stands on the map's south edge instead, which is why it
+         is still an emoji. */
+      { z: 'street', r: [37, 14, 60, 22] }
     ],
     doors: [],
     /* In front of the doors, facing away from them. */
@@ -424,6 +432,19 @@ const LEVELS = {
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 14, y: 20, e: '🪑', name: 'The bench', kind: 'bench', solid: true, use: 'bench' });
       A({ x: 26, y: 16, e: '🐦', name: 'A pigeon, possibly the same one', kind: 'pigeon', solid: false, use: 'pigeon' });
+
+      /* ---- THE HIGH STREET ---- */
+      /* On row 14, the one row in the whole level with a real wall behind it
+         rather than the map's own edge — see the room comment above. First
+         thing this level has ever hung on a wall and had it actually draw. */
+      A({ x: 44, y: 14, e: '💅', name: 'Nailed It', kind: 'shop', solid: true, use: 'nailedIt',
+        furn: { sprite: 'shop.awning', size: 34 } });
+      A({ x: 46, y: 14, e: '🪧', name: 'The sign above Nailed It', kind: 'shopsign', solid: true, use: 'shopSign' });
+      A({ x: 40, y: 18, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 58, y: 18, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 52, y: 20, e: '🪑', name: 'Another bench', kind: 'bench', solid: true, use: 'bench2' });
+      A({ x: 56, y: 22, e: '🗑️', name: 'Bin, High Street', kind: 'bin', solid: false, use: 'highStreetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
     }
   }
 };
