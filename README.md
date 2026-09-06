@@ -42,23 +42,35 @@ the right instructions.
 
 ## Outside
 
-Press `E` on the way out and you are in the car park, which is a real place with
-real streets round it: Bellhaven Road along the front of the building, Aldergate
-Rise, Fenn Street and Cargate Lane round one block of shops. Four sides, so it is
-a loop, so there is somewhere to drive to and a way back.
+Press `E` on the way out and you are in the car park, and Bellhaven is a town.
+
+Six streets on a grid: Bellhaven Road along the front of the building, becoming
+the High Street once it reaches the shops; Fenn Street through the middle;
+Corven Way along the bottom by the railway; and Aldergate Rise, Cargate Lane and
+Marlow Street crossing all three. Nine junctions, four blocks of buildings, the
+office car park at one end and the retail park at the other — which is the only
+piece of tarmac out there wide enough to find out what a car does sideways.
+
+A grid rather than a circuit, deliberately. A loop is a lap: you go round it and
+you have seen it. A grid is a choice at every junction and two ways round to
+everywhere.
 
 The pool car is in the car park and the key has been in it since 2019. Press `E`
 on it and get in. It steers like a car rather than like a person — the front
 wheels only turn it while it is moving, the back end goes where it was already
 going, and reversing out of a bay is its own small event. Everything else parked
-in that car park is somebody's, and locked, and will say so.
+out there is somebody's, and locked, and will say so.
 
-There is traffic. Four cars go round the block on the correct side of the road,
-brake for corners, queue behind each other, stop for anybody on foot, and sound
-the horn when they have been waiting a while. They are not scenery: drive into
-one and both of you will know about it.
+There is traffic. Nine of them, including a learner and the 41A, running four
+circuits through the same nine junctions on the correct side of the road. They
+brake for corners, queue behind each other, give way to each other where their
+circuits cross, stop for anybody on foot, and sound the horn when they have been
+waiting a while. They are not scenery: drive into one and both of you will know
+about it.
 
-Three achievements are out there, and one of them is parking straight.
+There is a drive-thru on Corven Way. It will not serve you on foot.
+
+Five achievements are out there. One of them is parking straight.
 
 The roads are the kit's — the tarmac, the paving, the drains and the awnings are
 all Liberated Pixel Cup art, fetched and licence-checked by the sprite build like
@@ -131,7 +143,12 @@ it always was.
 | --- | --- |
 | `surfaces:` | Rectangles of `SURFACES` (data/world.js) painted over the rooms. What a tile is MADE of, where that differs from what its room is made of: a street is one zone with one name and a carriageway down the middle. `R.kerbs()` derives the kerb from wherever two of them meet. |
 | `paint:` | The markings. `dash`, `line`, `yellow`, `zebra`, `bays`, `text`, all in tiles, all drawn by `R.roadPaint()` rather than cropped — a marking is position-dependent and a tile is not. |
-| `cars:` | What is parked, and what is driving. A car is not furniture: it is at a pixel, at an angle, at a speed, so it lives here and in `engine/cars.js` rather than in `furnish()`. `model:` names an entry in `CARS`; `drive: true` lets you in; `route:` makes it traffic. |
+| `cars:` | What is parked, and what is driving. A car is not furniture: it is at a pixel, at an angle, at a speed, so it lives here and in `engine/cars.js` rather than in `furnish()`. `model:` names an entry in `CARS`; `body:`/`roof:` repaint that model for one car; `drive: true` lets you in; `route:` makes it traffic. |
+
+Two flags on a furnishing are read by the engine and are worth knowing about:
+`sprite:` names a rect in the atlas to draw instead of the emoji, and `fromCar:`
+means the thing is meant to be reached without getting out — which is all a
+drive-thru is, and all the next one will have to be.
 
 The editor has no tools for any of the three and carries all three through
 untouched, which is the next best thing — see `Doc.surfaces`.

@@ -7,12 +7,25 @@ const Interact = {
       if (this.target || this._label) { this.target = null; this.kind = null; this._label = null; $('#prompt').classList.remove('on'); }
       return;
     }
-    /* From a driving seat there is exactly one thing to interact with and it
-       is the door handle. Tested before anything else, and before the reach:
-       a car stopped beside a lamppost still offers the way out of itself. */
+    /* From a driving seat there is almost always exactly one thing to interact
+       with and it is the door handle. Tested before anything else, and before
+       the reach: a car stopped beside a lamppost still offers the way out of
+       itself.
+       The exception is anything furnished `fromCar` — a drive-thru window, and
+       whatever else somebody points at a lane one day. Those are the things
+       you are meant to reach WITHOUT getting out, so while one is alongside it
+       takes the key off the door. Measured from the car rather than from the
+       player, which are the same point while driving but only by accident. */
     if (Cars.driving) {
-      this.target = Cars.driving; this.kind = 'car';
-      const label = 'Get out of ' + Cars.driving.name;
+      const car = Cars.driving;
+      let win = null, wd = TILE * 2.1;
+      for (const o of World.objects) {
+        if (!o.fdef || !o.fdef.fromCar) continue;
+        const d = Math.hypot((o.x + .5) * TILE - car.x, (o.y + .5) * TILE - car.y);
+        if (d < wd) { wd = d; win = o; }
+      }
+      this.target = win || car; this.kind = win ? 'obj' : 'car';
+      const label = win ? 'Use ' + win.name : 'Get out of ' + car.name;
       if (label !== this._label) {
         this._label = label;
         const el = $('#prompt');

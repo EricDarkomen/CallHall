@@ -35,8 +35,12 @@ const Cars = {
      looks like a car, is not in World.cars, and cannot be got out of. */
   driving: null,
   /* Which streets have been driven through since getting in. Emptied on the
-     way in, so the achievement is a lap rather than a lifetime. */
+     way in, so the achievements below are a drive rather than a lifetime.
+     Zone ids, because a zone out here IS a street — see the note above ZONES
+     in data/world.js. */
   seen: null,
+  LAP: ['street', 'aldergate', 'fenn', 'cargate'],
+  GRID: ['street', 'high', 'aldergate', 'cargate', 'marlow', 'fenn', 'corven'],
   /* Held down to sound the horn, and how long it has been held — one press is
      a note, leaning on it is leaning on it. */
   horn: false, hornT: 0,
@@ -121,7 +125,13 @@ const Cars = {
       const z = World.zoneAt(Math.floor(P.x / TILE), Math.floor(P.y / TILE));
       if (z && this.seen) {
         this.seen.add(z);
-        if (['street', 'aldergate', 'fenn', 'cargate'].every(k => this.seen.has(k))) Ach.get('a_lap');
+        /* Two of these, and they are not the same shape. A LAP is the original
+           block: four streets, back where you started. The GRID is every
+           street on the map, which cannot be done as one circuit and has to be
+           driven as a route somebody worked out. Both are emptied by getting
+           in rather than kept for ever, so each is a drive and not a diary. */
+        if (this.LAP.every(k => this.seen.has(k))) Ach.get('a_lap');
+        if (this.GRID.every(k => this.seen.has(k))) Ach.get('a_grid');
       }
       if (Sfx.on) Sfx.engine(true, Math.abs(this.driving.fwd) / this.driving.def.top);
       this.hornT = this.horn ? this.hornT + dt : 0;

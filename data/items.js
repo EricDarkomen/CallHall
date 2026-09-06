@@ -244,6 +244,8 @@ const ACHS = {
   a_drive:   { n: 'Vehicle 1 Of 1', e: '🚗', d: 'Get into the pool car. The key has been in it since 2019.' },
   a_lap:     { n: 'Round The Block', e: '🛣️', d: 'Drive all four sides of it — Bellhaven, Aldergate, Fenn, Cargate — without going back inside.' },
   a_parked:  { n: 'Between The Lines', e: '🅿️', d: 'Put the pool car back in a bay. Straight.' },
+  a_drivethru:{ n: 'No Pedestrian Service', e: '☕', d: 'Get served at the window on Corven Way without getting out.' },
+  a_grid:    { n: 'Knowing The Back Way', e: '🗺️', d: 'Drive every street in Bellhaven, in one go, without getting out.' },
   /* ---- the arcade ----
      Handed out by minigames/*.js, which each name theirs literally so the
      reward editor's "can this be earned at all" check can see the call. */
