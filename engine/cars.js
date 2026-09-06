@@ -23,7 +23,12 @@
 
    TRAFFIC. A car with a `route:` drives itself round it for ever, keeping
    left, slowing for corners and stopping for whatever is in front of it —
-   which is usually the player, parked across both lanes, having got out.
+   which is usually the player, parked across both lanes, having got out. It
+   also reads the tarmac under its own route, so it steers away from a kerb
+   rather than up one, reverses out of the things a route cannot know about,
+   gives way to the right where two of them want the same junction, and goes
+   round anything parked that is never going to move. See the note above
+   steerTraffic().
 
    What is deliberately NOT here: anybody gets hurt. A car in this game stops
    for a person, always, whoever is driving it. The comedy out there is a
@@ -70,7 +75,19 @@ const Cars = {
         a: this.heading(c.face),
         /* Brake lights, so they can be lit by braking, by traffic slowing for
            a corner and by a collision, without three places drawing them. */
-        braking: false, stopped: 0, honkT: 0
+        braking: false, stopped: 0, honkT: 0,
+        /* What a driver is in the middle of. All nothing here, so a parked car
+           carries the same fields as a moving one and steerTraffic() never has
+           to test whether a car has been driven yet: how long it has been
+           stuck with nothing in front of it, how long it has been off the
+           road, how long it has left of a reverse, how many shunts it has had
+           at the same thing, and how long it has left of going round something
+           and on which side. See the note above steerTraffic(). */
+        stuck: 0, lost: 0, back: 0, shunt: 0, pull: 0, pullSide: 1, rerouted: false,
+        /* What is holding it up, published for the car behind: the give-way
+           rule is the only thing out there that needs to know what somebody
+           ELSE can see. */
+        blockedBy: null, wheel: 0
       };
       if (c.route && c.route.length > 1) {
         car.route = c.route.map(p => ({ x: p[0] * TILE, y: p[1] * TILE }));
@@ -260,11 +277,38 @@ const Cars = {
     let vx = c * car.fwd - s * car.lat, vy = s * car.fwd + c * car.lat;
     if (!vx && !vy) { car.stopped += dt; return; }
 
+    /* What it was doing on the way in. Kept, because everything below is about
+       what happened to it and by then there is no speed left to judge it by. */
+    const was = car.fwd, x0 = car.x, y0 = car.y;
+    let hit = 0;                       /* 0 clear, 1 along something, 2 into it */
     const nx = car.x + vx * dt, ny = car.y + vy * dt;
     if (!this.hits(car, nx, ny)) { car.x = nx; car.y = ny; }
-    else if (!this.hits(car, nx, car.y)) { car.x = nx; this.scrape(car, 0.55); }
-    else if (!this.hits(car, car.x, ny)) { car.y = ny; this.scrape(car, 0.55); }
-    else this.prang(car);
+    else if (!this.hits(car, nx, car.y)) { car.x = nx; hit = 1; }
+    else if (!this.hits(car, car.x, ny)) { car.y = ny; hit = 1; }
+    else hit = 2;
+
+    /* Back out of the movement it ACTUALLY MADE into the body frame, so that
+       next frame's heading change slides the car instead of teleporting its
+       momentum. This is the whole of the handling model: everything above
+       decides where the nose points, and this decides how much the rest of it
+       agrees.
+       Actually made, and not what it asked for. That distinction used to be
+       missing — this line read `vx * c + vy * s`, the velocity it WANTED —
+       and it was quietly the worst thing in this file. A refused move put the
+       speed it was refused at straight back into car.fwd, so a car held
+       against a wall was a car doing thirty that was not going anywhere: it
+       never read as stopped, the scrape and the prang below never took a penny
+       off it, prang() fired at full speed every frame for as long as you leant
+       on the throttle, and the traffic could not tell being wedged against a
+       kerb from waiting behind a bus. Everything downstream of this is better
+       for it, and the whole of the recovery logic in steerTraffic() depends on
+       it being true. */
+    const ax = (car.x - x0) / dt, ay = (car.y - y0) / dt;
+    car.fwd = ax * c + ay * s;
+    car.lat = -ax * s + ay * c;
+    if (hit === 1) this.scrape(car, 0.8, was);
+    else if (hit === 2) this.prang(car, was);
+    car.stopped = Math.abs(car.fwd) < 4 ? car.stopped + dt : 0;
 
     /* WEDGED. Everything above can only refuse a move, and refusing every move
        is exactly what a car inside something gets: hit a wall at an angle where
@@ -282,14 +326,6 @@ const Cars = {
       const m = Math.hypot(out[0], out[1]) || 1, step = Math.min(m, TILE * 3 * dt);
       car.x += out[0] / m * step; car.y += out[1] / m * step;
     }
-
-    /* Back out of world velocity into the body frame, so that next frame's
-       heading change slides the car instead of teleporting its momentum. This
-       is the whole of the handling model: everything above decides where the
-       nose points, and this decides how much the rest of it agrees. */
-    car.fwd = vx * c + vy * s;
-    car.lat = -vx * s + vy * c;
-    car.stopped = Math.abs(car.fwd) < 4 ? car.stopped + dt : 0;
 
     /* Rubber, off the back wheels, when the back end is going somewhere the
        front end did not ask it to. Only the car being driven leaves any: four
@@ -312,15 +348,17 @@ const Cars = {
 
   /* Along something rather than into it. Costs speed and makes a noise; no
      dent, because a scrape down a wall is not an event. */
-  scrape(car, keep) {
-    if (Math.abs(car.fwd) > 40 && car === this.driving) { FX.shake(2); Sfx.scrape(); }
+  scrape(car, keep, was) {
+    if (Math.abs(was) > 40 && car === this.driving) { FX.shake(2); Sfx.scrape(); }
     car.fwd *= keep; car.lat *= 0.2;
   },
-  /* Into something. The speed it was doing decides whether this is a nudge or
-     the sort of thing that gets mentioned at a team meeting. */
-  prang(car) {
-    const v = Math.abs(car.fwd);
-    car.fwd = -car.fwd * 0.18; car.lat = 0;
+  /* Into something. The speed it WAS doing decides whether this is a nudge or
+     the sort of thing that gets mentioned at a team meeting — passed in, since
+     by the time this is called the car has already been stopped dead by the
+     thing it hit and its own speed would say every collision was a nudge. */
+  prang(car, was) {
+    const v = Math.abs(was);
+    car.fwd = -was * 0.18; car.lat = 0;
     if (v < 26) return;
     if (car === this.driving) {
       FX.shake(Math.min(9, v / 22));
@@ -333,32 +371,115 @@ const Cars = {
   },
 
   /* ---- traffic ----
-     Follow the route, keep left because the route was written on the left, and
-     stop for whatever is in front. There is no give-way logic and no lane
-     changing: this is four cars going round a block so that the block has
-     something going round it, not a simulation of Bellhaven at half five. */
+     A car with a `route:` drives itself round it for ever. Four things, in
+     this order, and the order is the design: keep to the lane, keep off the
+     pavement, stop for what is in front, and get yourself out of it when the
+     first three have already gone wrong.
+
+     THE LANE. Pure pursuit, as it always was: aim at a point a car's length or
+     two further down the route rather than at the corner itself, turn towards
+     it, and start slowing for the corner while still on the straight. The
+     target is taken from the car's PROJECTION onto the lane rather than from
+     the car, which is what quietly steers a shoved car back onto its line
+     without anything having to notice it was shoved.
+
+     THE PAVEMENT, which is new, and is the whole reason this section has
+     grown. The old version had no idea where the road was. A route is a line
+     somebody drew down a lane and nothing in here ever read the tarmac under
+     it — so a car knocked off its line by the player parked across it, by
+     another car creeping at a junction, or by the depenetration that stops a
+     wedge being permanent, went back to steering at its target from wherever
+     it had been left, and frequently that was the footway. There it stayed:
+     it could only ever go FORWARDS, forwards was a shop front, and it sat
+     against the window with its wheels turned for the rest of the day.
+     Beached, which is the right word, and there were three of them at once
+     outside the Greggs.
+
+     So a driver now knows three things it did not:
+
+       WHERE THE ROAD IS. World.surf already says which tiles are tarmac. That
+       was art — the road surface, and the kerb R.kerbs() derives wherever it
+       meets paving — and it turns out to be the map the drivers needed. Each
+       one probes ahead of its own front wings and steers away from a kerb
+       before it mounts one, which is what a driver does and is very much
+       cheaper than getting a car off a pavement afterwards.
+
+       WHEN IT IS STUCK, which is not the same as being held up. Sitting still
+       with a bus in front of you is traffic. Sitting still with NOTHING in
+       front of you is a car against something the route does not know about.
+       A second of that and it reverses — off the throttle, tail swung back
+       towards its own lane, reverse lights on, exactly the shunt everybody has
+       done in a supermarket car park — and then has another go.
+
+       WHICH LEG IT IS ACTUALLY ON. A car shoved a street and a half used to
+       steer for the leg it was on when it was shoved, straight across
+       everything in between. Now, after a few seconds off the road, it looks
+       at its whole route and takes the leg it is nearest and pointing along —
+       the difference between a driver who is lost and one who is on the wrong
+       road and knows it.
+
+     AND ONE FLOURISH, because a queue behind something that is never going to
+     move is not traffic either: after a few seconds behind a STATIONARY car,
+     and only where the offside is clear road it actually fits in, it pulls out
+     and goes round. It will not do that for a person. Nothing in this file
+     ever does anything about a person except stop for them. */
+
+  /* Is this pixel road? The surfaces are declared for the renderer's benefit
+     and they are the only description of the road network anybody has written
+     down; reading one costs an array lookup and gives every driver out there
+     the one fact they were missing. */
+  onRoad(x, y) {
+    return World.surfAt(Math.floor(x / TILE), Math.floor(y / TILE)) === 'tarmac';
+  },
+  /* Is this car's route drawn on road AT ALL? Asked once per car and
+     remembered. Nothing above should start second-guessing a route on a level
+     that declares no surfaces: every probe would come back "off the road",
+     every car would spend the day reversing, and a level that declares none is
+     supposed to be exactly the level it always was. */
+  routeIsRoad(car) {
+    if (car.tarmac === undefined) car.tarmac = car.route.every(p => this.onRoad(p.x, p.y));
+    return car.tarmac;
+  },
+
   steerTraffic(car, dt) {
     const d = car.def, R = car.route, n = R.length;
-    /* Aim at a point a couple of car lengths further down the route rather
-       than at the next corner. Chasing the corner itself is what makes a car
-       arrive at it still pointing straight and then swing wide across the
-       oncoming lane — aiming ahead of yourself is how it is actually done, on
-       a route and in a car. */
+    if (car.honkT > 0) car.honkT = Math.max(0, car.honkT - dt);
+
+    /* Where it is on its route: how far along this leg, measured along the leg
+       rather than as the crow flies, so being pushed a foot off the lane does
+       not read as progress or as going backwards. */
     const from = R[car.leg], to = R[(car.leg + 1) % n];
     const sx = to.x - from.x, sy = to.y - from.y, len = Math.hypot(sx, sy) || 1;
-    /* How far along this leg it has got, measured along the leg rather than as
-       the crow flies, so being pushed a foot off the lane does not read as
-       progress or as going backwards. */
-    let t = ((car.x - from.x) * sx + (car.y - from.y) * sy) / (len * len);
+    const ux = sx / len, uy = sy / len;
+    let t = ((car.x - from.x) * ux + (car.y - from.y) * uy) / len;
     if (t >= 1) { car.leg = (car.leg + 1) % n; return; }
     t = Math.max(0, t);
 
-    /* How far ahead to aim. Short, and shorter still when it has slowed down:
-       a long look-ahead is smooth on a motorway and cuts the corner by two
-       tiles at a crossroads, which out here means turning through the oncoming
-       lane. Because the speed below falls as the corner comes up, and this
-       falls with the speed, the car tightens its own line into a junction. */
-    let ahead = TILE * 1.15 + car.fwd * 0.3;
+    /* Off the road, on a route that is a road. Not an emergency on its own —
+       half a wheel over a kerb at a junction is a Tuesday — but a car that has
+       been off it for a few seconds is a car whose idea of which leg it is on
+       is no longer worth anything. */
+    const road = this.routeIsRoad(car);
+    const astray = road && !this.onRoad(car.x, car.y);
+    car.lost = astray ? car.lost + dt : 0;
+    if (!astray) car.rerouted = false;
+    else if (car.lost > 2.5 && !car.rerouted) { car.rerouted = true; this.relocate(car); return; }
+    /* Half a minute of it, and it has not been shoved off its lane — it has
+       been shoved somewhere a lane cannot get it back from. See rejoin(). */
+    else if (car.lost > 30 && this.rejoin(car)) return;
+
+    /* Reversing out of something. Owns the car until its timer runs out. */
+    if (car.back > 0) { this.shuntBack(car, dt, from, ux, uy, t * len); return; }
+
+    /* ---- where to aim ----
+       How far ahead: short, and shorter still when it has slowed down. A long
+       look-ahead is smooth on a motorway and cuts the corner by two tiles at a
+       crossroads, which out here means turning through the oncoming lane.
+       Because the speed below falls as the corner comes up and this falls with
+       the speed, the car tightens its own line into a junction. Shorter again
+       when it is off the road, because it has a kerb to come back over and
+       wants to be turning towards it now rather than in a moment. */
+    let ahead = astray ? TILE * 0.9 : TILE * 1.15 + car.fwd * 0.3;
     let li = car.leg, lt = t, tx = to.x, ty = to.y;
     for (let guard = 0; guard <= n; guard++) {
       const f = R[li], g = R[(li + 1) % n];
@@ -367,47 +488,247 @@ const Cars = {
       if (ahead <= rem) { const u = lt + ahead / L; tx = f.x + dx * u; ty = f.y + dy * u; break; }
       ahead -= rem; li = (li + 1) % n; lt = 0;
     }
+    /* Out and round something parked. The target is shifted a lane sideways
+       for as long as the manoeuvre lasts and then let go of, so the car steers
+       out, goes past and comes back to its own line by itself. It is not given
+       a new route and it does not need one. */
+    if (car.pull > 0) {
+      car.pull -= dt;
+      tx += -uy * car.pullSide * TILE * 1.6;
+      ty += ux * car.pullSide * TILE * 1.6;
+    }
 
     /* Turn towards it, by the shortest way round. */
     let err = Math.atan2(ty - car.y, tx - car.x) - car.a;
     while (err > Math.PI) err -= Math.PI * 2;
     while (err < -Math.PI) err += Math.PI * 2;
-    car.a += clamp(err * 2.6, -d.turn, d.turn) * dt;
-    car.wheel = clamp(err * 1.6, -1, 1);
 
-    /* How fast it wants to go: its own cruise, less the harder it is having to
-       turn, and nothing at all if there is something in the way. Because the
-       target is ahead of the car, the corner starts slowing it down while it
-       is still on the straight — which is what braking for a corner is. */
+    /* ---- the kerb ----
+       Two probes, off either front wing and a stopping distance in front of
+       them. One on the road and one off it is a kerb coming up on that side,
+       and the answer is a nudge away from it — before it is mounted, which is
+       the entire point, because a car that has already mounted one needs the
+       whole recovery below and a car that has not needs nine degrees of
+       steering.
+       A corner is not a kerb: at a junction the road opens out on both sides
+       and both probes agree, and where they do not — the inside of a tight
+       left-hander — the turn itself is the bigger number and must win. So this
+       is faded out as the steering error grows, and only ever trims. */
+    const c = Math.cos(car.a), s = Math.sin(car.a);
+    let bias = 0, noseOff = false;
+    if (road && !astray) {
+      const look = d.len * 0.5 + Math.max(TILE * 0.7, car.fwd * 0.4);
+      const px = car.x + c * look, py = car.y + s * look;
+      const k = d.wid * 0.5 + 6;
+      const rOK = this.onRoad(px - s * k, py + c * k);
+      const lOK = this.onRoad(px + s * k, py - c * k);
+      noseOff = !this.onRoad(px, py);
+      if (rOK !== lOK) bias = (rOK ? 0.55 : -0.55) * (1 - Math.min(1, Math.abs(err) / 0.85));
+    }
+    car.a += clamp((err + bias) * 2.6, -d.turn, d.turn) * dt;
+    car.wheel = clamp((err + bias) * 1.6, -1, 1);
+
+    /* ---- how fast ----
+       Its own cruise, less the harder it is having to turn, and nothing at all
+       if there is something in the way. */
     let want = car.cruise * (1 - Math.min(0.74, Math.abs(err) * 1.5));
-    /* And slow for the corner before it is turning at all, because the corner
-       is a fact about the road rather than about the steering wheel. */
+    /* Slow for the corner before it is turning at all, because the corner is a
+       fact about the road rather than about the steering wheel. */
     if ((1 - t) * len < TILE * 3.5) want = Math.min(want, car.cruise * 0.5);
-    if (this.aheadBlocked(car)) { want = 0; car.braking = true; }
-    else car.braking = false;
-    /* Nobody waits for ever. Two cars that arrive at a junction together each
-       see the other in the way and both stop, and without this they would
-       still be there at five. After a few seconds they creep — slowly enough
-       that nudging the thing in front is silent (see prang()) and at different
-       moments, because their timers started at different moments, which is all
-       it takes for one of them to get through and the jam to clear. */
-    if (car.stopped > 4) want = Math.max(want, 20);
+    /* A kerb straight ahead, or a wheel already over one. Walking pace, on the
+       grounds that everything that goes wrong out here goes wrong at speed. */
+    if (noseOff) want = Math.min(want, car.cruise * 0.42);
+    if (astray) want = Math.min(want, 52);
+
+    const block = this.blocker(car);
+    /* What is holding THIS car up, for the car behind to read next frame — see
+       the give-way rule below. A person is not recorded: nobody negotiates
+       priority with somebody on a crossing. */
+    car.blockedBy = (block && block !== 'person') ? block : null;
+    car.braking = !!block;
+    if (block) want = 0;
+
+    if (block && block !== 'person') {
+      /* NOBODY WAITS FOR EVER, and the reason two cars can wait for ever is
+         that each of them can see the other in the way. The rule for that is
+         the one on the sign: give way to the right. Each car publishes what is
+         blocking it, so a deadlock is something this car can recognise — and
+         in a deadlock the one with the other on its LEFT goes first. Nose to
+         nose, where neither is to the other's right, the ids decide, because
+         something has to and a coin lands differently every frame.
+         The old timer race is kept underneath it as a backstop: whatever else
+         is true, after four seconds behind a car somebody creeps, slowly
+         enough that nudging the thing in front is silent (see prang()). */
+      const v = -(block.x - car.x) * s + (block.y - car.y) * c;
+      const deadlock = block.blockedBy === car;
+      const mine = deadlock && (Math.abs(v) > TILE * 0.6 ? v < 0 : car.id < block.id);
+      if (car.stopped > (mine ? 1.6 : 4)) want = Math.max(want, 20);
+      /* And round it, if it is parked rather than queueing and the offside is
+         genuinely clear. Committed to for a few seconds: a pull-out
+         reconsidered every frame is a car twitching at a kerb. */
+      if (car.pull <= 0 && Math.abs(block.fwd) < 6 && car.stopped > 3.4) {
+        const side = this.roomToPass(car, block);
+        if (side) { car.pull = 3.2; car.pullSide = side; }
+      }
+      if (car.pull > 0) want = Math.max(want, 34);
+    }
+
+    /* ---- stuck ----
+       Which is not being held up: there is nothing in front of it, it is
+       asking to go, and it is not going. That can only be something the route
+       does not know about — a kerb, a bollard, the corner of a bus shelter —
+       and the answer to all of them is the same one a person would use, which
+       is reverse and try again. Counted up and down rather than latched, so a
+       car inching through a tight junction never triggers it.
+       Three shunts against the same thing is not a manoeuvre, it is a driver
+       who came off the road somewhere else entirely, so the third one re-reads
+       the route as well. */
+    if (!block && want > 12 && Math.abs(car.fwd) < 8) car.stuck += dt;
+    else car.stuck = Math.max(0, car.stuck - dt * 2);
+    if (car.stuck > 1.1) {
+      car.stuck = 0; car.pull = 0;
+      car.back = 1.0 + (car.shunt % 3) * 0.35;
+      if (++car.shunt % 3 === 0) this.relocate(car);
+      return;
+    }
 
     if (want > car.fwd) car.fwd = Math.min(want, car.fwd + d.acc * dt);
     else car.fwd = Math.max(want, car.fwd - d.acc * 2.2 * dt);
-    if (car.fwd < 1.5) car.fwd = 0;
+    if (car.fwd < 1.5 && car.fwd > -1.5) car.fwd = 0;
 
     /* Held up for long enough to have an opinion about it. Once, quietly, and
        then it waits like everybody else. */
     if (car.braking && car.stopped > 2.4 && !car.honkT) { Sfx.horn(); car.honkT = 6; }
-    if (car.honkT > 0) car.honkT = Math.max(0, car.honkT - dt);
   },
-  /* Is there something in the next couple of car lengths — a car, or a person
-     on foot who has walked out into the road. Distance scales with speed, so a
-     car doing thirty starts braking further back than one crawling. */
-  aheadBlocked(car) {
+
+  /* Reversing out of it. Not a special case for kerbs but the manoeuvre any
+     driver uses when forwards has stopped being a direction: off the throttle,
+     back the better part of a car's length, tail swung towards where the lane
+     is. The reverse lights come on for nothing, because the renderer has lit
+     the back pair below four miles an hour backwards since the day it was
+     written.
+     Aiming the TAIL is the trick. The heading it wants is the opposite of the
+     way it is about to travel, so steering at a point on its own lane BEHIND
+     it swings the nose off whatever it is against and leaves the car pointing
+     down its own lane when it stops — which is a three-point turn done in two,
+     and is why it usually only takes one go. */
+  shuntBack(car, dt, from, ux, uy, along) {
+    const d = car.def;
+    car.back -= dt;
+    car.braking = false;
+    /* Something behind it, and it stops. The rule at the top of this file is
+       about people and it does not stop being about people in reverse. */
+    if (this.blocker(car, -1)) { car.back = 0; car.fwd = 0; return; }
+    const b = TILE * 1.6;
+    const gx = from.x + ux * (along - b), gy = from.y + uy * (along - b);
+    let err = Math.atan2(car.y - gy, car.x - gx) - car.a;
+    while (err > Math.PI) err -= Math.PI * 2;
+    while (err < -Math.PI) err += Math.PI * 2;
+    car.a += clamp(err * 1.6, -d.turn, d.turn) * dt;
+    car.wheel = clamp(-err, -1, 1);
+    car.fwd = Math.max(-d.top * 0.15, car.fwd - d.acc * 1.2 * dt);
+  },
+
+  /* Which leg of its own route is it actually nearest? Perpendicular distance
+     to each leg, clamped to the ends so a car level with the middle of one is
+     not judged by how far it is from that leg's corner.
+     With one condition that is the whole value of the function: a leg it would
+     have to turn round to drive is not the leg it is on, however near it
+     looks. The two carriageways of a street are eight feet apart and point in
+     opposite directions, and a car that picks the wrong one of them rejoins
+     the traffic head-on — which is a worse outcome than the pavement it is
+     being got off. */
+  relocate(car) {
+    const R = car.route, n = R.length;
+    let best = car.leg, bd = Infinity;
+    for (let i = 0; i < n; i++) {
+      const f = R[i], g = R[(i + 1) % n];
+      const dx = g.x - f.x, dy = g.y - f.y, L2 = dx * dx + dy * dy || 1;
+      const u = clamp(((car.x - f.x) * dx + (car.y - f.y) * dy) / L2, 0, 1);
+      const px = f.x + dx * u, py = f.y + dy * u;
+      const facing = Math.cos(Math.atan2(dy, dx) - car.a);
+      const dist = Math.hypot(car.x - px, car.y - py) + (facing < 0 ? TILE * 8 : 0);
+      if (dist < bd) { bd = dist; best = i; }
+    }
+    /* `lost` is deliberately NOT reset. It is the clock on this whole spell off
+       the road, and rejoin() below is the end of it — a car that re-read its
+       route every few seconds and started the clock again each time would
+       shunt against the same wall until the building fell down. */
+    car.leg = best; car.shunt = 0;
+  },
+
+  /* THE LAST RESORT, and the only thing in this file that moves a car rather
+     than driving one. A car can be left somewhere no route will get it back
+     from: shoved through a gap, round a corner, and up onto a footway with a
+     block of shops between it and every leg it owns. It is not stuck — it is
+     driving, slowly, steering for its lane like a sensible car — but what it
+     is driving round is a pedestrian precinct and it is never going to arrive.
+     So after half a minute of that it gives up and rejoins its route at the
+     nearest point on it that it fits, facing the right way, AND ONLY WHERE
+     NOBODY IS LOOKING. Off camera that is a car that was not there when you
+     looked, which is what every car you are not looking at is; on camera it is
+     a car vanishing, which is a bug. Until it is off camera it keeps driving,
+     so the worst this can ever look like from inside the game is a lost
+     driver — and the worst it can look like from outside is a car that got
+     itself back on the road while you were somewhere else. */
+  rejoin(car) {
+    if (typeof Cam !== 'undefined' && Cam.visible && Cam.visible(car.x, car.y)) return false;
+    const R = car.route, n = R.length;
+    const f = R[car.leg], g = R[(car.leg + 1) % n];
+    const dx = g.x - f.x, dy = g.y - f.y, L = Math.hypot(dx, dy) || 1;
+    const u = clamp(((car.x - f.x) * dx + (car.y - f.y) * dy) / (L * L), 0, 1);
+    /* Pointed along the leg BEFORE anything is asked about fitting: carFits
+       tests the box at the angle the car is holding, and the angle it is
+       holding is whatever it was doing on the pavement. */
+    const held = car.a;
+    car.a = Math.atan2(dy, dx);
+    for (const shift of [0, -TILE * 3, TILE * 3, -TILE * 6, TILE * 6]) {
+      const uu = clamp(u + shift / L, 0, 1);
+      const px = f.x + dx * uu, py = f.y + dy * uu;
+      if (!Collide.carFits(car, px, py)) continue;
+      car.x = px; car.y = py; car.fwd = 0; car.lat = 0;
+      car.lost = 0; car.stuck = 0; car.back = 0; car.shunt = 0; car.pull = 0;
+      car.rerouted = false;
+      return true;
+    }
+    /* Its own lane occupied along its whole length is a lane with the traffic
+       on it. It goes back to driving and asks again next frame. */
+    car.a = held;
+    return false;
+  },
+
+  /* Is there room to go round the thing in front? Where the car would BE
+     halfway past it — a car's length beyond, a body's width to the side — and
+     both questions asked of that spot: is it road, and does the car fit in it.
+     An offside that is clear tarmac with a lamppost in it is not room, and
+     neither is one that is somebody's front garden. The offside first, because
+     that is the side you overtake on in a country that drives on the left, and
+     the nearside only if the offside will not have it. */
+  roomToPass(car, block) {
     const c = Math.cos(car.a), s = Math.sin(car.a);
-    const reach = car.def.len * 0.55 + Math.max(TILE, car.fwd * 0.75);
+    const u = car.def.len * 0.5 + block.def.len * 0.9;
+    for (const side of [1, -1]) {
+      const k = side * (car.def.wid * 0.5 + block.def.wid * 0.5 + 8);
+      const px = car.x + c * u - s * k, py = car.y + s * u + c * k;
+      if (this.routeIsRoad(car) && !this.onRoad(px, py)) continue;
+      if (!Collide.carFits(car, px, py)) continue;
+      return side;
+    }
+    return 0;
+  },
+
+  /* What is in the next couple of car lengths — the car it is queueing behind,
+     the string 'person' for anybody on foot, or null. Distance scales with
+     speed, so a car doing thirty starts braking further back than one
+     crawling. `dir` is -1 to ask the same question of what is behind it, which
+     is what reversing needs and is the same geometry backwards.
+     It returns the blocker rather than a yes or no because the answer decides
+     three different things: whether to brake, whether this is a deadlock worth
+     applying a priority rule to, and whether the thing in front is parked and
+     worth going round. */
+  blocker(car, dir) {
+    const c = Math.cos(car.a) * (dir || 1), s = Math.sin(car.a) * (dir || 1);
+    const reach = car.def.len * 0.55 + Math.max(TILE, Math.abs(car.fwd) * 0.75);
     const px = car.x + c * reach, py = car.y + s * reach;
     for (const other of this.list()) {
       if (other === car) continue;
@@ -423,18 +744,23 @@ const Cars = {
       if (u < 0 || u > reach + other.def.len / 2) continue;
       const rel = other.a - car.a;
       const side = Math.abs(Math.cos(rel)) * other.def.wid / 2 + Math.abs(Math.sin(rel)) * other.def.len / 2;
-      if (Math.abs(v) < car.def.wid / 2 + side + 2) return true;
+      if (Math.abs(v) < car.def.wid / 2 + side + 2) return other;
     }
     /* A person is not a bollard: it stops, and it stops early. This is the
-       only rule in this file that is about anything other than geometry. */
-    if (!this.driving && Math.hypot(P.x - px, P.y - py) < TILE * 1.15) return true;
-    for (const n of NPCM.list) if (Math.hypot(n.x - px, n.y - py) < TILE) return true;
+       only rule in this file that is about anything other than geometry, and
+       it is the only one with no way round it — a car will go round a parked
+       car and it will never go round somebody on a crossing. */
+    if (!this.driving && Math.hypot(P.x - px, P.y - py) < TILE * 1.15) return 'person';
+    for (const nn of NPCM.list) if (Math.hypot(nn.x - px, nn.y - py) < TILE) return 'person';
     /* And the people on the street, who are the reason the crossings work. The
        rule was written before there were any pedestrians to apply it to; this
        is the line that finally gives it somebody to stop for. */
-    for (const p of Peds.list()) if (Math.hypot(p.x - px, p.y - py) < TILE * 1.15) return true;
-    return false;
+    for (const p of Peds.list()) if (Math.hypot(p.x - px, p.y - py) < TILE * 1.15) return 'person';
+    return null;
   },
+  /* Kept as the question everybody outside this file asks, and the one the
+     give-way lines in data/levels.js point at. */
+  aheadBlocked(car) { return !!this.blocker(car); },
 
   /* ---- getting in and out ---- */
 

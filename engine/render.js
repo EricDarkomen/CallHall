@@ -415,7 +415,8 @@ const R = {
        dash   a broken white line from a to b — a centre line
        line   a solid one — a give way, a stop line
        yellow a double yellow along a kerb, from a to b
-       zebra  a crossing filling r; the bars run the way the traffic does
+       zebra  a crossing filling r; the bars run the way the traffic does and
+              repeat across it, which is the way you walk over them
        bays   r divided into two-tile parking bays, open on the side named
        text   words painted on the road at `at`, turned by `turn` quarter turns
 
@@ -476,11 +477,16 @@ const R = {
         if (!near(px, py, px + w, py + h)) continue;
         c.save();
         c.fillStyle = 'rgba(232,234,228,.6)';
-        /* The bars run WITH the traffic, so they are laid across whichever of
-           the two the crossing is narrower in — which for a crossing is always
-           the direction you walk. */
-        if (h >= w) { for (let x = px + 5; x + 13 <= px + w; x += 26) c.fillRect(x, py, 13, h); }
-        else { for (let y = py + 5; y + 13 <= py + h; y += 26) c.fillRect(px, y, w, 13); }
+        /* The bars run WITH the traffic and REPEAT across it: you walk over
+           them one at a time and you drive along the length of one. So each
+           bar is laid along the crossing's SHORT side — which is the way the
+           road runs, a crossing being a few tiles of road and the whole width
+           of it — and they are spaced out along the long one.
+           This was the other way round for a year and it is the sort of thing
+           you cannot unsee once somebody says it: the stripes were at ninety
+           degrees to every zebra crossing in the country. */
+        if (h >= w) { for (let y = py + 5; y + 13 <= py + h; y += 26) c.fillRect(px, y, w, 13); }
+        else { for (let x = px + 5; x + 13 <= px + w; x += 26) c.fillRect(x, py, 13, h); }
         c.restore();
         continue;
       }
