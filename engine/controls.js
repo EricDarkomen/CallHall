@@ -10,7 +10,7 @@ const Hand = {
     document.body.classList.toggle('southpaw', !!this.left);
     document.body.classList.toggle('dpad-controls', this.pad === 'dpad');
     /* Switching styles mid-drag would otherwise leave the old one held down. */
-    Stick.release();
+    releaseSticks();
     Keys.up = Keys.down = Keys.left = Keys.right = 0;
   },
   /* "bottom left" / "bottom right", for instructions that name a corner. */
@@ -27,8 +27,21 @@ const Hand = {
    and everything after the press is bound to window rather than the zone,
    because a thumb slides off a 132px element and the controls are hidden
    outright when a conversation opens — an element listener misses the release
-   and leaves you walking for the rest of the shift. */
-const Stick = {
+   and leaves you walking for the rest of the shift.
+
+   THERE ARE TWO OF THEM. One in each bottom corner: the left one walks you
+   about and steers, and the right one — which only exists behind a wheel — is
+   the throttle. That is not decoration. With one stick, steering a car means
+   pushing the thumb sideways, which takes the forward component out of the
+   same vector, which slows the car down, which takes the bite out of the
+   steering, so the harder you ask it to turn the less it turns. Two sticks is
+   the whole fix: one thumb decides how fast and the other decides where, and
+   neither can undo the other.
+
+   Hence a maker rather than an object literal. Everything below is per-stick
+   state and there is now more than one stick. */
+function makeStick(ids) {
+  return {
   id: null, x: 0, y: 0, mag: 0, ox: 0, oy: 0,
   /* Travel to full deflection, in CSS pixels. Re-measured off the elements at
      each press: landscape shrinks them, and "full push" has to mean the knob
@@ -37,7 +50,7 @@ const Stick = {
   DEAD: 0.16,   /* fraction of R that is a resting thumb rather than an input */
   el: null, knob: null, zone: null,
   init() {
-    this.el = $('#stick'); this.knob = $('#stickKnob'); this.zone = $('#stickZone');
+    this.el = $(ids.el); this.knob = $(ids.knob); this.zone = $(ids.zone);
     if (!this.zone) return;
     this.zone.addEventListener('pointerdown', e => this.grab(e));
     /* Bound once, on the window, for the reasons in the comment above. */
@@ -89,4 +102,19 @@ const Stick = {
     this.knob.style.transform = '';
   },
   get on() { return this.id !== null && this.mag > 0; }
-};
+  };
+}
+
+/* The left one: walking, and steering. The right one: the throttle, and
+   nothing else — it is hidden by CSS unless you are driving, so nothing on
+   foot can grab it and nothing on foot reads it. */
+const Stick = makeStick({ el: '#stick', knob: '#stickKnob', zone: '#stickZone' });
+const Throttle = makeStick({ el: '#throttle', knob: '#throttleKnob', zone: '#throttleZone' });
+
+/* Let go of both. Every place that drops the controls — a panel opening, the
+   tab going away, a level swapping, getting into a car — wants both of them,
+   and naming them one at a time is how one of them gets left held down. */
+function releaseSticks() {
+  Stick.release();
+  Throttle.release();
+}

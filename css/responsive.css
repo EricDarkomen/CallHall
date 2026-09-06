@@ -380,6 +380,16 @@
   .dpad .u{left:40px;top:0}.dpad .d{left:40px;top:80px}.dpad .l{left:0;top:40px}.dpad .r{left:80px;top:40px}
   #touchE{width:62px;height:62px;bottom:calc(14px + env(safe-area-inset-bottom))}
   #touchMenu{width:44px;height:44px;bottom:calc(84px + env(safe-area-inset-bottom))}
+  /* The throttle shrinks and moves with everything else, and its catchment is
+     the mirror image of the movement one — the two of them split the bottom
+     edge and neither reaches the middle. */
+  #throttleZone{width:min(46%,300px);height:min(80%,140px)}
+  body.driving #stickZone{width:min(46%,300px)}
+  #throttle,#throttleHint{width:108px;height:108px;bottom:calc(16px + env(safe-area-inset-bottom));
+    right:calc(92px + env(safe-area-inset-right))}
+  body.southpaw #throttle,body.southpaw #throttleHint{right:auto;left:calc(92px + env(safe-area-inset-left))}
+  #throttleKnob{width:50px;height:50px;margin:-25px 0 0 -25px}
+  #throttleHint{font-size:8px;padding:7px 0}
   #hudBottom{bottom:calc(140px + env(safe-area-inset-bottom))}
   /* The notification band needs no landscape special case any more: the bar is
      one bar in both orientations, so "under the HUD" is a place that exists on

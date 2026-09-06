@@ -222,6 +222,13 @@
       <div id="stickZone">
         <div class="stick" id="stick"><div id="stickKnob"></div></div>
       </div>
+      <!-- The throttle. Only on screen while you are driving, and listed
+           before the buttons so that the buttons paint over it and a thumb
+           landing on E gets E rather than the stick underneath it. -->
+      <div id="throttleZone">
+        <div class="stick" id="throttle"><div id="throttleKnob"></div></div>
+        <div id="throttleHint" aria-hidden="true"><span>GO</span><span>BRAKE</span></div>
+      </div>
       <div class="dpad">
         <button class="u" data-dir="up">▲</button><button class="l" data-dir="left">◀</button>
         <button class="r" data-dir="right">▶</button><button class="d" data-dir="down">▼</button>

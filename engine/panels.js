@@ -29,7 +29,11 @@ const Interact = {
       if (label !== this._label) {
         this._label = label;
         const el = $('#prompt');
-        el.innerHTML = '<span class="kbd">E</span> &nbsp;' + esc(label);
+        /* The chip names the control you actually have. On a phone that
+           button says OUT while you are driving (see Cars.showControls), and
+           a prompt telling you to press a key that is not on screen is a
+           prompt telling you nothing. */
+        el.innerHTML = '<span class="kbd">' + (TOUCH && !win ? 'OUT' : 'E') + '</span> &nbsp;' + esc(label);
         el.classList.add('on'); el.classList.remove('urgent');
       }
       return;
@@ -325,10 +329,14 @@ const Panels = {
       '<p class="idesc" style="font-size:13px;font-style:normal;line-height:1.7">' +
       (TOUCH
         ? (Hand.pad === 'dpad' ? 'Pad' : 'Stick') + ', bottom ' + Hand.padSide() + ' — move &nbsp; <span class="kbd">E</span> — interact<br>' +
+          'Driving: ' + (Hand.pad === 'dpad'
+            ? 'the pad steers with left and right and drives with up and down'
+            : 'the ' + Hand.padSide() + ' stick steers, the amber one on the ' + Hand.btnSide() + ' is the throttle')
+            + ' &nbsp; <span class="kbd">OUT</span> — get out<br>' +
           'Tap the conversation box — advance dialogue &nbsp; tap a reply — choose it<br>' +
           'Tap a move — call actions &nbsp; <span class="kbd">☰</span> — jobs, inventory, skills, chat, email, profile, achievements<br>' +
           'The shift saves itself, and <span class="kbd">☰</span> · Menu has Save and Load.'
-        : '<span class="kbd">W A S D</span> / arrows — move &nbsp; <span class="kbd">E</span> — interact &nbsp; <span class="kbd">Space</span> — advance dialogue<br>' +
+        : '<span class="kbd">W A S D</span> / arrows — move, and drive &nbsp; <span class="kbd">E</span> — interact, and get out &nbsp; <span class="kbd">H</span> — horn &nbsp; <span class="kbd">Space</span> — advance dialogue<br>' +
           '<span class="kbd">↑ ↓</span> then <span class="kbd">Enter</span>, or <span class="kbd">1–9</span> — dialogue choices &nbsp; <span class="kbd">1–9</span> — call actions<br>' +
           '<span class="kbd">J</span> jobs &nbsp; <span class="kbd">I</span> inventory &nbsp; <span class="kbd">K</span> skills &nbsp; <span class="kbd">C</span> chat &nbsp; <span class="kbd">M</span> email &nbsp; <span class="kbd">P</span> profile &nbsp; <span class="kbd">L</span> achievements<br>' +
           '<span class="kbd">Esc</span> menu &nbsp; <span class="kbd">F5</span> quick save &nbsp; <span class="kbd">F9</span> quick load') + '</p>';

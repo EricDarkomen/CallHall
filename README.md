@@ -25,7 +25,8 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 | ---------- | ------------------------------- | ------------------------------ |
 | Move       | `W A S D` or arrows             | thumb down anywhere bottom-left |
 | Interact   | `E`                             | `E` button                     |
-| Drive      | `W` go · `S` brake, then reverse · `A D` steer · `H` horn | push the stick forward, pull it back, lean it |
+| Drive      | `W` go · `S` brake, then reverse · `A D` steer · `H` horn | **two sticks**: left steers, right is the throttle |
+| Get out    | `E`                             | `OUT`                          |
 | Dialogue   | `Space`, `1`–`9` to choose      | tap the box, tap a reply       |
 | Panels     | `J I K C M P L`, `Esc` for menu | `☰`                            |
 | Save/load  | `F5` / `F9`                     | `☰` · Menu                     |
@@ -36,6 +37,15 @@ direction rather than four, and how far you push it is how fast you walk. A
 four-way d-pad is available instead, and the whole layout mirrors for
 left-handers — both are in `☰ · Menu`, along with a fullscreen toggle. Starting
 a shift asks for fullscreen on its own.
+
+Get in a car and a **second stick** appears in the other corner, in amber: the
+left one steers and the right one is the throttle — push it up to go, pull it
+down to brake and then reverse. One stick could not do both. Steering meant
+pushing sideways, pushing sideways took the forward component out of the same
+vector, and less speed means less steering bite — so the harder you asked it to
+turn, the less it turned. Two thumbs, two jobs, neither able to undo the other.
+The button you have been pressing all along stays exactly where it is and says
+`OUT`.
 
 The game saves itself, and detects touch devices to show the right controls and
 the right instructions.
