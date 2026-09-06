@@ -62,7 +62,11 @@ const Nav = {
       if (x >= 0 && y >= 0 && x < MAPW && y < MAPH) m[y * MAPW + +x] = 2; }
     this.mask = m;
     /* Only the routes that account for people. The compass's own field ignores
-       them by definition, so there is nothing in it to go stale. */
+       them by definition, so there is nothing in it to go stale. Measured at
+       about ten rebuilds a second and a third of a millisecond a frame on a
+       floor of twenty people, which is cheaper than being clever about it: a
+       version of this that kept stale routes and refreshed a couple per frame
+       was no faster and answered with yesterday's traffic. */
     for (const k of [...this.fields.keys()]) if (k[0] !== 'p') this.fields.delete(k);
   },
   /* World.build() assigns a NEW solid[] every time, so identity is the whole
@@ -195,6 +199,7 @@ const NPCM = {
      run on. NOT G.minutes: an event that adds eleven minutes to the shift would
      end an evacuation before anybody had stood up. */
   now: 0, busyTiles: new Set(), stillTiles: new Map(), boss: null, lastEvent: null, dynAt: 0, stillFor: 0,
+  pvx: 0, pvy: 0,
   spawn() {
     this.all = NPCS.map(def => {
       const t = this.traits(def);
@@ -226,7 +231,7 @@ const NPCM = {
         errand: null,
         /* Standing somewhere on purpose, rather than merely being near it. */
         parked: false, waitDoor: 0, holdWant: null, holdFor: 0, lastAim: 'desk', retry: 0,
-        queued: 0, waitingFor: null, wayBack: null, wayFor: 0
+        queued: 0, waitingFor: null, wayBack: null, wayFor: 0, squeeze: 0
       };
     });
     this.enter(World.level);
@@ -428,7 +433,11 @@ const NPCM = {
       if (o === n) continue;
       if (Math.floor(o.x / TILE) === x && Math.floor(o.y / TILE) === y) return false;
     }
-    if (G.state === 'play' && Math.floor(P.x / TILE) === x && Math.floor(P.y / TILE) === y) return false;
+    /* You in the doorway stop it being free — unless this is somebody who has
+       already waited for you and is edging past, which is the one case where
+       two people are in a doorway on purpose. */
+    if (!(n.squeeze > 0) && G.state === 'play'
+      && Math.floor(P.x / TILE) === x && Math.floor(P.y / TILE) === y) return false;
     const cx = (x + .5) * TILE, cy = (y + .5) * TILE;
     const mine = Math.hypot(cx - n.x, cy - n.y);
     for (const o of this.list) {
@@ -575,8 +584,14 @@ const NPCM = {
     for (const n of this.list) if (!n.walking) slow.push(Math.floor(n.x / TILE) + ',' + Math.floor(n.y / TILE));
     if (G.state === 'play') {
       this.stillFor = P.moving ? 0 : this.stillFor + dt;
-      /* Not the instant you stop — you stop for a moment all the time. */
-      if (this.stillFor > .7) block.push(Math.floor(P.x / TILE) + ',' + Math.floor(P.y / TILE));
+      const k = Math.floor(P.x / TILE) + ',' + Math.floor(P.y / TILE);
+      /* Standing still you are worth going a long way round; walking you are
+         worth going round the way a colleague is, because you will probably not
+         be there by the time they arrive. Being in the map ONLY when stopped
+         was why somebody walking towards you would keep coming until they were
+         nose to nose with you: while you were moving there was nothing in the
+         map to go round. */
+      if (this.stillFor > .35) block.push(k); else slow.push(k);
     } else this.stillFor = 0;
     Nav.setDynamic(block.join('|') + '#' + slow.join('|'), block, slow);
   },
@@ -590,6 +605,11 @@ const NPCM = {
   },
   update(dt) {
     this.now += dt;
+    /* Which way you are going, so somebody can tell being walked into from
+       being walked past. */
+    this.pvx = P.x - (this.pxWas === undefined ? P.x : this.pxWas);
+    this.pvy = P.y - (this.pyWas === undefined ? P.y : this.pyWas);
+    this.pxWas = P.x; this.pyWas = P.y;
     this.watchFloor();
     this.dynamics();
     /* Where everybody who is standing still is standing, once per frame, as
@@ -620,6 +640,14 @@ const NPCM = {
       if (n.sayT > 0) n.sayT -= dt;
       if (n.lookT > 0) n.lookT -= dt;
       if (n.chatCool > 0) n.chatCool -= dt;
+      /* Edging past you lasts until they are past you. Ticking it down on a
+         timer meant the squeeze expired the instant it started working: they
+         inched forward, that counted as movement, the wait reset, and the whole
+         negotiation began again — about a fiftieth of a square at a time. */
+      if (n.squeeze > 0) {
+        if (G.state === 'play' && Math.hypot(P.x - n.x, P.y - n.y) < TILE * 1.3) n.squeeze = 1.2;
+        else n.squeeze -= dt;
+      }
 
       if (talkingTo && n.id === talkingTo) {
         /* Being spoken to. They stop, they break off whatever they were saying
@@ -721,6 +749,13 @@ const NPCM = {
        already closer than this one, so it cannot send anybody backwards, in a
        circle, or through a wall. */
     const from = fx + ',' + fy;
+    /* Decided once per square entered and then held. Re-asking when somebody
+       walks into the chosen square sounds obviously right and is not: the
+       routes already price people standing still, so the answer would flip
+       between "the square beside you looks better from here" and "this one
+       looks better from there" — and in a crowded room, where the chosen square
+       is somebody else half the time, it cost a third of the floor their lunch.
+       The map does the going-round; this only has to follow it. */
     if (n.nextFrom !== from) {
       n.nextFrom = from;
       /* The second term is a lane. Twenty people walking the same corridor to
@@ -730,6 +765,16 @@ const NPCM = {
          and worth well under a step, breaks that tie differently for each of
          them: the same crowd fans out across the width of the corridor and
          reads as people going the same way rather than a queue of one file. */
+      /* Both terms are worth less than a single step, deliberately. The routes
+         themselves now price people standing still — six squares for a
+         colleague, fourteen for you — and that is a global cost every square
+         agrees on. A big LOCAL penalty on top of it fights the route: with you
+         on the one square into the break room, the square beside you looked
+         cheaper from here and the route looked cheaper from there, and somebody
+         crossed between the two for the rest of the afternoon. So: a nudge to
+         step around somebody where it costs nothing, a per-person dislike of
+         particular squares so a crowd fans out across a corridor, and no
+         opinion strong enough to argue with the map. */
       n.next = Nav.next(fx, fy, tx, ty, (x, y) =>
         (this.busyTiles.has(x + ',' + y) ? 2.5 : 0) + (this.hash(n.id + ':' + x + ',' + y) % 64) / 100);
     }
@@ -775,8 +820,18 @@ const NPCM = {
       this.repath(n); n.walking = false;
       return;
     }
+    /* Waiting for YOU, and it has gone on long enough: they are going to edge
+       past. Set outside the branch below and refreshed while you are still
+       there, because once the wait is spent they stop taking that branch at all
+       — and a squeeze that expires the moment it is needed is a person walking
+       up to you, deciding to get past, and then not. */
+    if (who === P && n.queued > 2) n.squeeze = 1.2;
     if (who && this.holdOn(n, who)) {
-      n.queued += dt; n.walking = false; n.waitDoor = .2;
+      /* Counted every frame. It used to set the quarter-second hold below as
+         well, which returns before this line — so waiting for twenty seconds
+         put about one and a half on the clock, nobody ever reached the point of
+         edging past, and a person in a doorway was a wall after all. */
+      n.queued += dt; n.walking = false;
       n.waitingFor = who === P ? 'player' : who.id;
       n.dir = this.face(n, (step[0] + .5) * TILE - n.x, (step[1] + .5) * TILE - n.y);
       /* If it is you in the way, they look at you. It is the only way to tell
@@ -852,7 +907,10 @@ const NPCM = {
     }
     const wx = n.x - was.x, wy = n.y - was.y;
     if (wx || wy) {
-      n.stuck = 0; n.queued = 0;
+      n.stuck = 0;
+      /* Not while edging past somebody: the whole point is that it takes a few
+         steps and they are not starting the wait again for each one. */
+      if (!(n.squeeze > 0)) n.queued = 0;
       n.step += Math.hypot(wx, wy) / TILE * 2.6;
       /* Which way they are facing, from the held heading rather than from the
          last frame's step: the step is a fraction of a pixel and squeezing past
@@ -929,7 +987,16 @@ const NPCM = {
 
      They keep the new square. Where they stand is not the point; that they are
      in the break room is. */
+  /* Sitting down, as the renderer means it: stopped on a chair. */
+  seated(n) {
+    return !n.walking && !!Sprites.seatedAt(Math.floor(n.x / TILE), Math.floor(n.y / TILE));
+  },
   makeWay(n, playing) {
+    /* Nobody stands up for you. They are sitting down — at a break table, in
+       the meeting room, in the Good Chair — and a chair is not in anybody's
+       way: you walk round it, as you would. Getting up because somebody came
+       near was the single least human thing on this floor. */
+    if (this.seated(n)) return;
     /* And back again, once whoever it was has gone past. Stepping aside has to
        be a step aside: without the way back they take the new square as theirs,
        get asked again by the next person, take another, and by the end of lunch
@@ -946,7 +1013,13 @@ const NPCM = {
     }
     if (this.now < n.wayFor) return;
     let asked = this.list.some(o => o.waitingFor === n.id);
-    if (!asked && playing && P.moving && Math.hypot(P.x - n.x, P.y - n.y) < TILE * .95) asked = true;
+    /* And for you, only when you are actually walking INTO them rather than
+       past them or round them: near, moving, and moving towards. Standing next
+       to somebody is not a request for them to move. */
+    if (!asked && playing && P.moving) {
+      const dx = n.x - P.x, dy = n.y - P.y, d = Math.hypot(dx, dy);
+      if (d < TILE * .8 && (this.pvx * dx + this.pvy * dy) > 0) asked = true;
+    }
     if (!asked) return;
     const spot = this.freeSpotNear(n, true);
     if (spot) {
@@ -970,13 +1043,15 @@ const NPCM = {
      then squeeze past them. They are not going anywhere at all, and a colleague
      standing between you and the kettle is not a reason to give up on tea. */
   holdOn(n, who) {
-    /* You: indefinitely. You are a person, you are going somewhere, and walking
-       into your back will not make you go there faster. If it turns out you are
-       not going anywhere, the twenty seconds above ends it.
+    /* Two and a half seconds for anybody, and then edge past them.
 
-       A colleague: two and a half seconds, and then squeeze past, whether they
-       are waiting for somebody themselves or standing at their spot for the
-       rest of the afternoon.
+       It used to be "wait for the player indefinitely", on the grounds that you
+       are going somewhere and walking into your back will not help. True, and
+       it made three squares of the building — a doorway and the square either
+       side of it — into a wall whenever you stood on one, because two people
+       cannot be in a one-square gap at once. Nobody would put up with that in a
+       corridor; they wait a moment, and then they edge past you, and everybody
+       pretends not to notice. See `squeeze` in canGo.
 
        That second rule started out cleverer — wait for as long as they are
        waiting for somebody who is not you, because a queue clears from the
@@ -986,7 +1061,29 @@ const NPCM = {
        mouth for the rest of lunch being immaculately polite. A bounded wait
        cannot deadlock however many people are in the knot, and two and a half
        seconds is still long enough that an ordinary queue never reaches it. */
-    return who === P || n.queued < 2.5;
+    /* You: a couple of seconds, then edge past — see `squeeze` in canGo.
+       A colleague: six, which is long enough that a queue always clears from
+       the front before anybody in it gives up, and short enough that a ring of
+       people politely waiting for each other cannot last. Bounded, because no
+       pairwise politeness rule can see a ring of nine. */
+    if (who === P) {
+      /* ONE person edges past you after a couple of seconds. A QUEUE waits.
+         Somebody getting on with their day squeezes by and you barely notice;
+         twelve people doing it one after another is a scrum going through you,
+         and the difference between the two is whether anybody is queueing
+         behind them. The head of a queue holds the line — and the twenty
+         seconds that drops an errand drains it if you stay put. */
+      return this.list.some(o => o !== n && o.waitingFor === n.id) || n.queued < 2.5;
+    }
+    /* Behind somebody who is themselves waiting, this is a queue and queues
+       clear from the front, so hold the line. Behind somebody who has simply
+       stopped somewhere, two and a half seconds and then go round them.
+
+       Neither is unbounded. A ring of people politely waiting for each other
+       cannot be seen by any rule that only looks at one pair, so the long wait
+       is long rather than infinite, and the twenty seconds that drops the
+       errand entirely sits behind it as a backstop. */
+    return n.queued < (who.waitingFor ? 25 : 2.5);
   },
   /* Nowhere to go for the moment. Stand somewhere out of the way — not in a
      doorway, not on top of anybody — and try again in a few seconds.
@@ -1051,7 +1148,10 @@ const NPCM = {
       const w = (R - d) / R;
       sx += dx / d * w; sy += dy / d * w;
     }
-    if (G.state === 'play') {
+    /* Somebody edging past you in a doorway has decided to be close to you.
+       Leaning away from you at the same time is the two halves of one person
+       disagreeing, and the lean wins, so they hover at arm's length for ever. */
+    if (G.state === 'play' && !(n.squeeze > 0)) {
       const dx = n.x - P.x, dy = n.y - P.y, d = Math.hypot(dx, dy);
       /* You get more room than a colleague does. You are the one being walked
          around, and being clipped by somebody on their way to the printer is
@@ -1111,7 +1211,7 @@ const NPCM = {
          about every three seconds somewhere in the room — not a room of people,
          a room of fidgeting. */
       n.idleT = rnd(14, 40);
-      if (!n.chat && n.dest !== 'desk' && chance(n.t.restless * .35)) {
+      if (!n.chat && n.dest !== 'desk' && !this.seated(n) && chance(n.t.restless * .35)) {
         const spot = this.shuffleSpot(n, dx, dy);
         if (spot) { n.post = spot; this.repath(n); }
       }
@@ -1203,8 +1303,19 @@ const NPCM = {
        can never move apart again, and the pair stand there for the rest of the
        shift. Being allowed out of an overlap is what unsticks it. */
     if (G.state === 'play') {
+      /* How much room you get. Normally rather more than a colleague, because
+         being clipped by somebody on their way to the printer reads as the game
+         shoving you. But somebody who has waited for you in a doorway and got
+         nowhere gets to breathe in and edge past instead — which is what a
+         person does, and is the difference between a doorway and a wall. */
       const d = Math.hypot(nx - P.x, ny - P.y);
-      if (d < TILE * .55 && d <= Math.hypot(n.x - P.x, n.y - P.y)) return false;
+      /* Squeezing has to actually get past, and "no step that fails to increase
+         the distance" cannot: crossing a doorway somebody is standing in means
+         getting closer before getting further away, so at anything but a
+         shoulder's width they stop at arm's length and stay there for ever.
+         A fifth of a square is a shoulder's width. */
+      const room = n.squeeze > 0 ? TILE * .18 : TILE * .55;
+      if (d < room && d <= Math.hypot(n.x - P.x, n.y - P.y)) return false;
     }
     for (const o of this.list) {
       if (o === n) continue;
