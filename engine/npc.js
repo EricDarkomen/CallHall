@@ -428,6 +428,26 @@ const NPCM = {
      otherwise both find it empty on the same frame and both step in; the one
      nearer has it, and a tie goes to whoever's name says so, so both of them
      reach the same answer without either having to ask. */
+  /* WHICH WAY THE DOOR IS GOING is deliberately not a thing this knows.
+
+     The obvious fix for two crowds meeting in one doorway is a turnstile: the
+     first person through claims the direction, everybody going that way follows
+     them, the other side waits, and the door turns over after a run of five so
+     nobody starves. It was written, and it was measured against the jam it was
+     meant to fix — twelve people shuttling both ways through a single door for
+     three minutes, twenty runs of it, which is tools/doorjam.mjs — and it made
+     things WORSE, by a quarter: 430 crossings without it, 295 with, and the
+     longer the run of five the worse it got. A reserved door is an idle door:
+     the moment the flow it is holding for stalls on itself — and a crowd at a
+     doorway stalls constantly — the reserve is a shut door with nobody in it
+     and somebody the other side who could have walked through.
+
+     What actually clears the jam is not deciding whose turn it is. It is that
+     the person IN the doorway is nobody's obstacle to be waited out: whoever is
+     stood on the square they are coming out onto steps aside, they never wait
+     long from inside a doorway themselves, and if the room beyond is solid
+     people they turn sideways and edge out. All three are below, and none of
+     them has to count anybody. */
   doorClear(n, x, y) {
     for (const o of this.list) {
       if (o === n) continue;
@@ -826,6 +846,53 @@ const NPCM = {
        — and a squeeze that expires the moment it is needed is a person walking
        up to you, deciding to get past, and then not. */
     if (who === P && n.queued > 2) n.squeeze = 1.2;
+    /* AND YOU ARE THE ONE IN THE DOORWAY.
+
+       Then you cannot wait, whoever is in front of you and however good their
+       reason: everybody on both sides of the wall is behind you, and the one
+       thing that has to happen is that the door stops having a person in it.
+       Colleagues get out of the way first — makeWay is asked the moment
+       somebody waits on their square — but a break room with twenty people in
+       it is a room where there is nowhere for the person by the door to step
+       to, and the answer to that cannot be for the door to stay corked for the
+       rest of lunch.
+
+       So: the same breathing-in they do to get past you, a beat sooner. It is
+       what somebody actually does coming out of a doorway into a busy room —
+       they turn sideways and go — and it is the only move that always exists.
+       See `squeeze` in canGo. */
+    if (who && who !== P && n.queued > 1.5 && this.inDoorway(fx, fy)) n.squeeze = 1.2;
+    /* HEAD-ON AT THE DOOR: SOMEBODY IS IN IT AND YOU ARE STANDING ON THE
+       SQUARE THEY ARE COMING OUT ONTO.
+
+       This is the jam, and waiting is what causes it. Nobody's destination is
+       ever a doorway — post() and every fallback that hands out a square refuse
+       to give one — so a colleague in a doorway is a colleague trying to get
+       out of one, and when the way out is the square you are queueing on, the
+       two of you are a cork: they cannot leave the door, so the door never
+       clears, so nobody behind either of you moves. Both of you waiting
+       politely is exactly how it lasts until the end of the break.
+
+       So step out of the mouth of the door and try again in a few seconds. It
+       is what people do at a door somebody is coming through, and it costs the
+       walk nothing — the square was never theirs, it was on the way to one.
+
+       The second half is the same thing where they have given up and stopped in
+       the doorway rather than aiming at you. A moment first, because a doorway
+       is somewhere people pause for a frame on their way through, and a
+       corridor that scatters every time somebody hesitates is not a corridor.
+
+       Not from inside a doorway yourself — backing out of one door into another
+       helps nobody, and the pair of them can sort it out with the squeeze
+       above. */
+    if (step && this.inDoorway(step[0], step[1]) && !this.inDoorway(fx, fy)) {
+      const o = this.list.find(o => o !== n && Math.floor(o.x / TILE) === step[0]
+        && Math.floor(o.y / TILE) === step[1]);
+      if (o && ((o.next && o.next[0] === fx && o.next[1] === fy) || (o === who && n.queued > .8))) {
+        n.queued = 0;
+        return this.waitOut(n, true);
+      }
+    }
     if (who && this.holdOn(n, who)) {
       /* Counted every frame. It used to set the quarter-second hold below as
          well, which returns before this line — so waiting for twenty seconds
@@ -1083,6 +1150,16 @@ const NPCM = {
        cannot be seen by any rule that only looks at one pair, so the long wait
        is long rather than infinite, and the twenty seconds that drops the
        errand entirely sits behind it as a backstop. */
+    /* Never long from inside the doorway itself. The queue behind the person in
+       front of you is one queue; the two queues behind YOU are both of them,
+       and they are not moving until you are out of the door. */
+    if (this.inDoorway(Math.floor(n.x / TILE), Math.floor(n.y / TILE))) return n.queued < 1.5;
+    /* Unless it is YOU they are waiting for. Two people waiting for each other
+       is not a queue with a front to clear, it is a face-off, and the long wait
+       turns it into half a minute of nothing. The pair is all this can see —
+       a ring of nine is still the bounded wait's problem — but a pair at a
+       doorway is the one that happens every lunchtime. */
+    if (who.waitingFor === n.id) return n.queued < 2.5;
     return n.queued < (who.waitingFor ? 25 : 2.5);
   },
   /* Nowhere to go for the moment. Stand somewhere out of the way — not in a
@@ -1092,10 +1169,12 @@ const NPCM = {
      standing in the break room door. It is also just what people do: you get to
      the corridor, you see the door is blocked, and you wait, near it, until it
      is not. */
-  waitOut(n) {
+  waitOut(n, clear) {
     n.walking = false;
     if (!n.parked) {
-      const spot = this.freeSpotNear(n);
+      /* `clear` means the square they are on is the problem — they are in the
+         way of a door — so anywhere but here. */
+      const spot = this.freeSpotNear(n, clear);
       if (spot) { n.post = spot; n.parked = true; this.repath(n); n.parked = true; }
     }
     n.retry = this.now + rnd(1.5, 4);
@@ -1324,8 +1403,13 @@ const NPCM = {
          standing a tile apart leave a gap of exactly one tile, and at half a
          tile each nobody can ever pass between them — the break room fills up
          with a wall of colleagues and everyone still in the corridor stays
-         there. Turning sideways to get past somebody is a thing people do. */
-      if (d < TILE * .42 && d <= Math.hypot(n.x - o.x, n.y - o.y)) return false;
+         there. Turning sideways to get past somebody is a thing people do.
+
+         And tighter again for somebody edging out of a doorway, for the same
+         reason it is tighter for somebody edging past you: a shoulder's width
+         is the difference between a busy room you can get into and a room whose
+         doorway has a person wedged in it. */
+      if (d < (n.squeeze > 0 ? TILE * .24 : TILE * .42) && d <= Math.hypot(n.x - o.x, n.y - o.y)) return false;
     }
     return true;
   },
