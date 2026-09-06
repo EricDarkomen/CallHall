@@ -204,7 +204,7 @@ const Levels = {
 
       P.x = at[0] * TILE; P.y = at[1] * TILE;
       P.vx = P.vy = 0; P.moving = false;
-      Stick.release && Stick.release();
+      releaseSticks();
       /* You cannot drive through a door, so arriving anywhere is arriving on
          foot. Belt and braces — nothing can currently change level from behind
          a wheel — but a driver still holding a car on a level that is no longer

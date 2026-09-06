@@ -115,6 +115,7 @@ const Cars = {
       this.move(car, dt);
     }
     this.sync();
+    this.showControls();
     if (this.driving) {
       /* The player IS the car while they are in it. Everything that follows
          the player — the camera, the minimap dot, the street name, the save —
@@ -146,6 +147,22 @@ const Cars = {
   sync() {
     const set = World.carTiles || (World.carTiles = new Set());
     set.clear();
+    /* The ground the player is standing on, which no car may claim.
+       Without this, getting out was a trap. The collision box is 19px across
+       and a tile is 32, so standing beside a car your box reaches into the
+       tile the car is on — and a tile a car is on is solid, so every direction
+       is blocked, and a walking step is 1.8px, which is smaller than the
+       overlap, so no number of steps ever gets you out of it. You could not
+       move again for the rest of the shift.
+       Stated as a rule rather than patched at the door: a car never takes the
+       ground out from under somebody who is already standing on it. You got
+       out of it, or it drove into you, and either way you are allowed to walk
+       away from it. It cannot help you walk INTO one — those tiles are solid
+       until you are already on them, which you cannot be. */
+    const pr = TILE * .3;
+    const ptx0 = Math.floor((P.x - pr) / TILE), ptx1 = Math.floor((P.x + pr) / TILE);
+    const pty0 = Math.floor((P.y - pr) / TILE), pty1 = Math.floor((P.y + pr) / TILE);
+    const underfoot = (tx, ty) => tx >= ptx0 && tx <= ptx1 && ty >= pty0 && ty <= pty1;
     for (const car of this.list()) {
       /* Not the car you are in. Walking out of your own car would otherwise be
          walking out into a solid tile, which puts you back where you started
@@ -164,7 +181,9 @@ const Cars = {
          makes a parked car a tile wider than it looks. */
       const tx0 = Math.floor((x0 + 5) / TILE), tx1 = Math.floor((x1 - 5) / TILE);
       const ty0 = Math.floor((y0 + 5) / TILE), ty1 = Math.floor((y1 - 5) / TILE);
-      for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) set.add(tx + ',' + ty);
+      for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+        if (!underfoot(tx, ty)) set.add(tx + ',' + ty);
+      }
     }
   },
 
@@ -176,10 +195,18 @@ const Cars = {
   drive(car, dt) {
     const d = car.def;
     let th = Keys.up - Keys.down, st = Keys.right - Keys.left;
-    /* The stick wins while it is held, exactly as it does on foot: push
-       forward to go, pull back to brake and then reverse, lean it to steer.
-       Its y is positive downwards and forward is up, hence the sign. */
-    if (Stick.on) { th = -Stick.y; st = clamp(Stick.x * 1.4, -1, 1); }
+    /* ONE THUMB PER JOB. The left stick steers and only steers — its x, and
+       nothing else — and the right one is the throttle: push it up to go, pull
+       it down to brake and then reverse. Its y is positive downwards and
+       forward is up, hence the sign.
+       This used to be one stick doing both, and it could not work: steering
+       meant pushing sideways, pushing sideways took the forward component out
+       of the same vector, less speed meant less bite (see the taper below), so
+       the harder you asked it to turn the less it turned. Either stick alone
+       still does its own half, and the keys still do both, so nothing that
+       worked before has stopped working. */
+    if (Stick.on) st = clamp(Stick.x * 1.5, -1, 1);
+    if (Throttle.on) th = clamp(-Throttle.y * 1.3, -1, 1);
 
     car.braking = false;
     if (th > 0.05) car.fwd += d.acc * th * dt;
@@ -200,11 +227,16 @@ const Cars = {
 
     /* Steering does nothing at a standstill, because it does nothing at a
        standstill: the front wheels turn, and turning them turns the car only
-       if the car is going somewhere. Full lock by about a fifth of top speed,
-       and reversed when reversing, which is the whole of why parking is
-       harder than driving. */
-    const bite = Math.min(1, Math.abs(car.fwd) / (d.top * 0.2));
-    if (st) car.a += st * d.turn * dt * bite * (car.fwd < 0 ? -1 : 1);
+       if the car is going somewhere. Full lock by about a seventh of top speed
+       — low enough that manoeuvring in a bay is steering rather than shunting
+       — and reversed when reversing, which is the whole of why parking is
+       harder than driving.
+       And a little LESS lock the faster it is going, which is the opposite of
+       what this used to do and is what a car does: full lock at seventy is not
+       a turn, it is an incident. */
+    const bite = Math.min(1, Math.abs(car.fwd) / (d.top * 0.14));
+    const settled = 1 - 0.32 * Math.min(1, Math.abs(car.fwd) / d.top);
+    if (st) car.a += st * d.turn * dt * bite * settled * (car.fwd < 0 ? -1 : 1);
     /* Where the front wheels are pointing, for the renderer. Eased rather than
        snapped, because a wheel that reaches full lock in one frame reads as a
        glitch and a wheel that takes a fifth of a second reads as steering. */
@@ -425,17 +457,37 @@ const Cars = {
     }
     return best;
   },
+  /* Which controls are on screen. The whole of the difference between walking
+     and driving, as far as the phone is concerned: a second stick appears in
+     the other corner for the throttle, and the button that has always been
+     there says what it does now instead of which key it is. Called from both
+     ends of getting in and out so there is one place that can be wrong. */
+  showControls() {
+    const on = !!this.driving;
+    /* Idempotent, because update() calls it every frame. That is deliberate:
+       there are three other places that can drop `driving` — a level swapping
+       out from under it, a cache eviction, a save being loaded — and a control
+       layout that is only corrected by the two polite exits is a layout that
+       eventually shows a throttle to somebody on foot. Checked against the
+       last value so the common case is one comparison and no DOM. */
+    if (this._shown === on) return;
+    this._shown = on;
+    document.body.classList.toggle('driving', on);
+    const e = $('#touchE');
+    if (e) e.textContent = on ? 'OUT' : 'E';
+  },
   take(car) {
     if (!car || !car.canDrive || this.driving) return false;
     this.driving = car;
     this.seen = new Set();
     car.fwd = car.lat = 0;
     Keys.up = Keys.down = Keys.left = Keys.right = 0;
-    Stick.release && Stick.release();
+    releaseSticks();
+    this.showControls();
     Sfx.door();
     Ach.get('a_drive');
     UI.toast('🚗', TOUCH
-      ? 'Push the stick forward to go, back to brake and then reverse. Tap <span class="kbd">E</span> to get out.'
+      ? 'Two sticks: the <b>left</b> one steers, the <b>amber</b> one on the right is the throttle — push it up to go, pull it down to brake and then reverse. Tap <span class="kbd">OUT</span> to get out.'
       : '<span class="kbd">W</span> to go, <span class="kbd">S</span> to brake and then reverse, <span class="kbd">A</span>/<span class="kbd">D</span> to steer. <span class="kbd">H</span> is the horn. <span class="kbd">E</span> to get out.');
     return true;
   },
@@ -452,18 +504,33 @@ const Cars = {
       return false;
     }
     const c = Math.cos(car.a), s = Math.sin(car.a);
-    const spots = [[-4, -car.def.wid - 8], [-4, car.def.wid + 8], [-car.def.len - 6, 0], [car.def.len * 0.6, 0]];
+    const d = car.def;
+    /* Both doors first, then further out on both sides, then the back, then
+       the front. Ordered by where a person would actually get out, and gone
+       through until one of them FITS — which is the whole point of testing it
+       with the same box the walking does rather than with the one tile the
+       middle of them lands in. A spot whose centre is clear but whose elbow is
+       in a wing mirror is not a spot. */
+    const spots = [];
+    for (const r of [d.wid / 2 + 20, d.wid / 2 + 38]) spots.push([-6, -r], [-6, r]);
+    for (const r of [d.wid / 2 + 20, d.wid / 2 + 38]) spots.push([d.len * 0.3, -r], [d.len * 0.3, r], [-d.len * 0.3, -r], [-d.len * 0.3, r]);
+    spots.push([-d.len / 2 - 20, 0], [d.len / 2 + 20, 0], [-d.len / 2 - 38, 0], [d.len / 2 + 38, 0]);
     let put = null;
     for (const [u, v] of spots) {
       const px = car.x + u * c - v * s, py = car.y + u * s + v * c;
-      if (!World.isSolid(Math.floor(px / TILE), Math.floor(py / TILE))) { put = [px, py]; break; }
+      if (playerFits(px, py)) { put = [px, py]; break; }
     }
+    /* Nowhere at all — wedged between a wall and another car. You still get
+       out, standing where the car is, and the rule in sync() above is what
+       makes that recoverable rather than the same trap by another route. */
     car.fwd = car.lat = 0;
     this.driving = null;
     this.parked(car);
     if (put) { P.x = put[0]; P.y = put[1]; }
     P.dir = 2; P.moving = false;
     Keys.up = Keys.down = Keys.left = Keys.right = 0;
+    releaseSticks();
+    this.showControls();
     Sfx.door();
     if (Sfx.engine) Sfx.engine(false);
     /* Now that nobody is in it, it is a solid object again — this frame,
@@ -477,6 +544,8 @@ const Cars = {
     if (!this.driving) return;
     this.driving.fwd = this.driving.lat = 0;
     this.driving = null;
+    releaseSticks();
+    this.showControls();
     if (Sfx.engine) Sfx.engine(false);
   },
   /* Did that count as parking it? Asked of the paint rather than of a list of

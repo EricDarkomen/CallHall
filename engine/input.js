@@ -90,7 +90,7 @@ function bindInput() {
     if (e.code === 'KeyH') Cars.horn = false;
     if (KEYMAP[e.code]) Keys[KEYMAP[e.code]] = 0;
   });
-  addEventListener('blur', () => { Keys.up = Keys.down = Keys.left = Keys.right = 0; Cars.horn = false; Stick.release(); });
+  addEventListener('blur', () => { Keys.up = Keys.down = Keys.left = Keys.right = 0; Cars.horn = false; releaseSticks(); });
 
   /* Leaving the tab should not cost you the shift: stop the clock, drop the
      held keys, and hush the hold music until you come back. */
@@ -98,7 +98,7 @@ function bindInput() {
     if (document.hidden) {
       Game.paused = true;
       Keys.up = Keys.down = Keys.left = Keys.right = 0;
-      Stick.release();
+      releaseSticks();
       Sfx.holdMusic(false);
       if (Sfx.ctx && Sfx.ctx.state === 'running') Sfx.ctx.suspend().catch(() => {});
     } else {
@@ -215,7 +215,7 @@ function bindInput() {
        if it throws on some browser this file has never met, that must cost you
        the stick and not E, ☰ and the d-pad along with it — which is what
        happens when it is wired first and takes the rest of the block down. */
-    try { Stick.init(); } catch (err) {
+    try { Stick.init(); Throttle.init(); } catch (err) {
       console.warn('thumbstick unavailable, falling back to the d-pad', err);
       Hand.pad = 'dpad'; Hand.apply();
     }
@@ -223,12 +223,29 @@ function bindInput() {
 }
 
 /* ---------------- Movement ---------------- */
+
+/* Does the player's own collision box fit here? Its own function because two
+   things need to agree about it: walking, which asks it of every step, and
+   getting out of a car, which asks it of every candidate doorstep. They used
+   to disagree — getting out tested the one tile the middle of you landed in,
+   which is not the same question, and the answer being wrong put you down half
+   inside a car with every direction blocked and a step too small to escape it.
+   One box, one answer, both callers.
+
+   The box is shallower at the top than at the bottom: you stand *in* the tile
+   you are on, and your head may overlap the one above. */
+function playerFits(nx, ny) {
+  const r = TILE * .3, head = r * .46;
+  const pts = [[nx - r, ny - r + head], [nx + r, ny - r + head], [nx - r, ny + r], [nx + r, ny + r]];
+  return !pts.some(([px, py]) => World.isSolid(Math.floor(px / TILE), Math.floor(py / TILE)));
+}
+
 function movePlayer(dt) {
   /* Anything that takes the world away — a conversation, a panel, a call —
      also takes the controls off the screen, so a stick still being held is a
      stick whose finger has nothing under it. Let go of it here rather than in
      each of the four things that can open. */
-  if (G.state !== 'play') { P.moving = false; if (Stick.id !== null) Stick.release(); return; }
+  if (G.state !== 'play') { P.moving = false; if (Stick.id !== null || Throttle.id !== null) releaseSticks(); return; }
   /* Behind a wheel the same keys and the same thumb mean something else
      entirely, and Cars owns them — including moving P to wherever the car has
      got to, which is what keeps the camera, the minimap and the street names
@@ -252,13 +269,8 @@ function movePlayer(dt) {
     P.bob += dt * 9;
     if (!P._stepT || (P._stepT -= dt) <= 0) { P._stepT = .34; if (Sfx.on) Sfx.step(); }
   }
-  const r = TILE * .3;
   const free = (nx, ny) => {
-    /* The box is shallower at the top than at the bottom: you stand *in* the
-       tile you are on, and your head may overlap the one above. */
-    const head = r * .46;
-    const pts = [[nx - r, ny - r + head], [nx + r, ny - r + head], [nx - r, ny + r], [nx + r, ny + r]];
-    if (pts.some(([px, py]) => World.isSolid(Math.floor(px / TILE), Math.floor(py / TILE)))) return false;
+    if (!playerFits(nx, ny)) return false;
     /* If somebody has ended up standing on you, you can still walk out of them —
        a move is only blocked when it would not increase the separation. */
     return !NPCM.list.some(n => {
