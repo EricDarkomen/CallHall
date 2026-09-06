@@ -104,6 +104,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `art/sprites/*.png` | The character, world and street art. Third-party, separately licensed. |
 | `art/sprites/manifest.js` | Generated: the rectangles that describe those PNGs. |
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
+| `scripts/release.sh` | Checks the build and moves the version string. Run it before you ship. |
 | `editor.html`, `editor/` | A level editor. Not the game, and never published. |
 
 They are plain scripts rather than ES modules on purpose. A module is fetched,
@@ -162,6 +163,58 @@ drive-thru is, and all the next one will have to be.
 
 The editor has no tools for any of the three and carries all three through
 untouched, which is the next best thing — see `Doc.surfaces`.
+
+### What collides with what
+
+`engine/collide.js` is the one place that answers "can this be here", and it
+answers it with three shapes rather than with the tile grid.
+
+**Feet** decide where you can stand: a small box on the ground, tested against
+walls (which really are tiles) and against other things' *footprints*, which are
+the size of the thing that is drawn and not of the square it stands in. A
+lamppost is a post you can walk a trolley round; a poster is flat against the
+wall and you can walk along in front of it. `ground` in `FURN` is the override,
+in fractions of a tile, and the default is still the whole tile — opt-in kind by
+kind, so nothing that was walkable stopped being walkable.
+
+**Bodies** decide what you can touch: a capsule, with a radius that also comes
+from the drawn size, and the reach for an event is measured surface to surface.
+That is why a copier is reachable from a step further back than a mug. Which one
+you get is still ranked by distance between tile centres, because a size-aware
+ranking hands every tie to the biggest thing in the room.
+
+**Depenetration** is the rule the old system did not have. Anything already
+inside anything else is told the shortest way out and shuffles that way. Being
+stuck is a state the collision system has to end, not one it is allowed to
+enforce — which is what a car wedged against a wall at an angle used to be,
+permanently, because every candidate move was refused including the ones going
+the right way.
+
+`World.isSolid` is untouched and still thinks in whole tiles. That is on
+purpose: it is what colleagues' pathfinding, the waypoint checks and the
+editor's flood fill ask, and a route planned on tiles is still a route a walker
+can follow, because the fine shape is always inside the coarse one.
+
+### Shipping
+
+```sh
+./scripts/release.sh --check     # parse every script, check the atlas, change nothing
+./scripts/release.sh --commit    # ...then move the version string and commit it
+```
+
+Every script and stylesheet is loaded with a `?v=` on it, and that string is the
+only thing between a player and a cached copy of last week's game. Moving it is
+the one thing a release has to do that nothing else does — ship without moving
+it and a returning browser serves whichever of the old files it still happens to
+have, which is not all of them and not none of them: a new engine reading an old
+level, for ten minutes, silently. One string for the whole release, deliberately,
+because a per-file hash is what would let a browser hold a mixed set in the first
+place.
+
+It also parses every shipped script, refuses if the sprite atlas or `CREDITS.md`
+is stale, and refuses if a page references a file that is not there. It does not
+publish: the public repository is built from this one and its remote is not
+recorded here.
 
 ## The level editor
 

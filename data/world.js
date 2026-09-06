@@ -124,7 +124,18 @@ const CARS = {
 
    An object may overrule its kind with its own `furn:`, merged over this and
    cached as o.fdef. That is the point, not a loophole: no rule keyed on `kind`
-   can know which fire extinguisher is propping the fire door open. */
+   can know which fire extinguisher is propping the fire door open.
+
+   `ground` is how much FLOOR a solid one of these actually takes up, in
+   fractions of a tile — [width] or [width, depth] — and it is read by
+   engine/collide.js and by nothing else. Everything gets a footprint the size
+   it is DRAWN rather than the whole square it stands in, worked out from
+   `size`; this is the override for the ones whose drawn size lies about their
+   feet. A lamppost is three metres of nothing on top of a post you could get a
+   shopping trolley past, and for a year it took the same square out of the
+   pavement as a skip. Nothing here is ever bigger than a whole tile: every
+   footprint is a subset of what the tile model already claimed, so this can
+   only ever open the world up, never close a route. */
 const FURN = {
   /* On the wall. Sizes vary because a fire extinguisher and a picture window
      are not the same object at all. */
@@ -187,14 +198,15 @@ const FURN = {
   printer: { size: 24, sprite: 'obj.printer' },
   cooler: { size: 24, sprite: 'obj.cooler' },
   fridge: { size: 29, sprite: 'obj.fridge' },
-  bin: { size: 20, sprite: 'obj.bin' },
+  /* Smaller than the square it stands in, everywhere in the game. */
+  bin: { size: 20, sprite: 'obj.bin', ground: [0.62] },
   coffee: { size: 20, sprite: 'obj.coffee' },
   pc: { size: 20, sprite: 'obj.laptop' },
   /* The desk phone stays emoji: the kit's is a rotary phone, and ☎️ reads as a
      desk phone at a glance. Kit art is not automatically an upgrade — but pick
      a cell before writing an asset off. The planter was dismissed here on
      column 0 (a wooden trough); column 4 is a spider plant in a pot. */
-  plant: { size: 24, sprite: 'obj.planter' },
+  plant: { size: 24, sprite: 'obj.planter', ground: [0.62] },
   vend: { size: 31, sprite: 'obj.vend' },
   box: { size: 22, sprite: 'obj.boxes' },
   cupboard: { size: 26, sprite: 'obj.cabinet' },
@@ -226,14 +238,22 @@ const FURN = {
      at a pixel rather than on a tile, and it lives in a level's `cars:` list
      and in engine/cars.js. What was three emoji standing in a car park is now
      three cars parked in one. */
-  bench: { size: 30 }, barrier: { size: 26 },
+  /* A bench is longer than it is deep, and a barrier is a pole across a gap:
+     both are things you get round the end of rather than square blocks. */
+  bench: { size: 30, ground: [0.86, 0.4] }, barrier: { size: 26, ground: [0.8, 0.34] },
   puddle: { size: 22 }, shop: { mount: 'wall', size: 27 },
+  /* Redeclared from the wall-mounted block at the top of this table, and only
+     to add a footprint: a sign with a wall behind it hangs on the wall, and a
+     sign with nothing behind it — a bus stop, a car park sign — stands on a
+     post, and the post is the only part of it on the floor. */
+  sign: { mount: 'wall', size: 18, art: 'sign', ground: [0.36] },
   /* Real kit art, same town.png as the ground and the wall it stands
      against. A wheelie bin is not the world atlas's `obj.bin` — that one is
      the small kitchen-sized pedal bin every indoor room already uses, and
      doubling it up outdoors would put the same object in two sizes on
      screen at once. */
-  lamp: { size: 34, sprite: 'obj.lamppost' },
+  /* A post. Three metres of it, and you could walk a trolley round it. */
+  lamp: { size: 34, sprite: 'obj.lamppost', ground: [0.34] },
   /* A hanging board, for a shopfront that finally has a wall to hang it on —
      see LEVELS.outside's High Street room. */
   shopsign: { mount: 'wall', size: 24, sprite: 'sign.board' },
@@ -244,7 +264,7 @@ const FURN = {
   /* Its own kind rather than another `trolley`: this table is a literal and
      the last key wins, so reusing the name would quietly turn the fourth
      floor's tea trolley into a supermarket one. */
-  shoptrolley: { size: 26, sprite: 'obj.shoptrolley' },
+  shoptrolley: { size: 26, sprite: 'obj.shoptrolley', ground: [0.7, 0.5] },
   /* `fromCar` is read by Interact.scan and by nothing else: it means this is a
      thing you are meant to reach WITHOUT getting out, so while you are driving
      it takes the E key off the door handle. One flag rather than the engine

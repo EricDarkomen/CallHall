@@ -23,7 +23,12 @@ const Doc = {
      order, and a stale `wallSide` or `fdef` would be a lie the moment anything
      moved. */
   DERIVED: ['id', 'wob', 'fdef', 'mount', 'art', 'noEmoji', 'wallSide',
-    'onTable', 'onTop', 'onCounter'],
+    'onTable', 'onTop', 'onCounter',
+    /* The cached collision footprint. Worked out from `fdef` and `wallSide`,
+       both of which are already on this list and for the same reason: it is an
+       answer, not a fact about the object, and an answer written back into
+       data/levels.js is one that cannot be corrected. */
+    '_foot'],
 
   id: null,
   name: '', w: 0, h: 0, indoors: true, hub: false,
