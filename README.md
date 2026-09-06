@@ -73,10 +73,22 @@ out there is somebody's, and locked, and will say so.
 
 There is traffic. Nine of them, including a learner and the 41A, running four
 circuits through the same nine junctions on the correct side of the road. They
-brake for corners, queue behind each other, give way to each other where their
-circuits cross, stop for anybody on foot, and sound the horn when they have been
-waiting a while. They are not scenery: drive into one and both of you will know
-about it.
+brake for corners, queue behind each other, stop for anybody on foot, and sound
+the horn when they have been waiting a while. They are not scenery: drive into
+one and both of you will know about it.
+
+They also know where the road is, which sounds like the least a driver could do
+and took a while to arrive. A route is a line somebody drew down a lane, and a
+car shoved off that line — by you, mostly — used to go on steering for its
+target from wherever it had been left, which was frequently the pavement, and on
+the pavement it stayed, because forwards was a shop front and forwards was the
+only direction it had. So they read the tarmac now: they steer away from a kerb
+rather than up one, they reverse out of the things a route cannot know about,
+they work out which leg of their route they are actually nearest before driving
+back to it, and where two of them want the same junction the one with the other
+on its right gives way. And after a few seconds behind something parked that is
+plainly never going to move, one of them will pull out and go round it. Not for
+a person: nothing out there ever does anything about a person except stop.
 
 There are people, too. Eight of them, walking circuits of the pavements: up the
 parade and over the zebra by the Greggs, along Fenn Street in a hi-vis, a trolley

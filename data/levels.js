@@ -499,7 +499,8 @@ const LEVELS = {
       { p: 'dash', a: [105, 42], b: [105, 50] },
       /* GIVE WAY. Every mouth where a north–south street meets one of the two
          long roads — twelve of them, which is what a grid costs. The traffic
-         does actually yield at these; see aheadBlocked() in engine/cars.js. */
+         does actually yield at these, and to the right where two of them want
+         the junction at once; see steerTraffic() in engine/cars.js. */
       { p: 'line', a: [8, 22], b: [14, 22] },
       { p: 'line', a: [8, 33.9], b: [14, 33.9] },
       { p: 'line', a: [8, 40.1], b: [14, 40.1] },
