@@ -266,6 +266,23 @@ const Cars = {
     else if (!this.hits(car, car.x, ny)) { car.y = ny; this.scrape(car, 0.55); }
     else this.prang(car);
 
+    /* WEDGED. Everything above can only refuse a move, and refusing every move
+       is exactly what a car inside something gets: hit a wall at an angle where
+       neither axis on its own clears it, or have another car creep into you,
+       and every candidate is rejected — including the ones going the right way.
+       It could not be driven again. Ever.
+       So ask which way is OUT and shuffle that way. Not a special case for
+       walls or for cars but the same depenetration everything that moves in
+       this game now gets (see Collide.pushOut, and the same three lines at the
+       end of movePlayer): being stuck is a state the collision system has to
+       end, not one it is allowed to enforce. Slowly, so that leaning on a wall
+       is a car resting against a wall rather than a car being pushed off it. */
+    const out = Collide.carPush(car);
+    if (out) {
+      const m = Math.hypot(out[0], out[1]) || 1, step = Math.min(m, TILE * 3 * dt);
+      car.x += out[0] / m * step; car.y += out[1] / m * step;
+    }
+
     /* Back out of world velocity into the body frame, so that next frame's
        heading change slides the car instead of teleporting its momentum. This
        is the whole of the handling model: everything above decides where the
@@ -291,35 +308,7 @@ const Cars = {
   /* A wall, a lamppost, a wheelie bin or another car, at this position. Six
      points rather than four: a car is nearly two tiles long and two corners on
      the same side can straddle a bollard between them. */
-  hits(car, x, y) {
-    const d = car.def, c = Math.cos(car.a), s = Math.sin(car.a);
-    const hl = d.len / 2 - 2, hw = d.wid / 2 - 2;
-    for (const [u, v] of [[hl, hw], [hl, -hw], [-hl, hw], [-hl, -hw], [0, hw], [0, -hw]]) {
-      const px = x + u * c - v * s, py = y + u * s + v * c;
-      if (this.blocked(Math.floor(px / TILE), Math.floor(py / TILE))) return true;
-    }
-    for (const other of this.list()) {
-      if (other === car) continue;
-      /* The other car in this one's own frame, tested against a box the size
-         of both of them. An approximation — two cars meeting corner to corner
-         at forty-five degrees stop a few pixels early — and the difference is
-         invisible next to how wrong it looks when they overlap. */
-      const dx = other.x - x, dy = other.y - y;
-      const u = dx * c + dy * s, v = -dx * s + dy * c;
-      const ol = (d.len + other.def.len) / 2 - 6, ow = (d.wid + other.def.wid) / 2 - 4;
-      if (Math.abs(u) < ol * 0.78 && Math.abs(v) < ow * 0.86) return true;
-    }
-    return false;
-  },
-  /* World.isSolid without the cars in it. A car must not collide with its own
-     entry in World.carTiles, and the cars are already tested above, properly,
-     as boxes rather than as the tiles they happen to cover. */
-  blocked(tx, ty) {
-    if (tx < 0 || ty < 0 || tx >= MAPW || ty >= MAPH) return true;
-    if (World.solid[ty][tx]) return true;
-    if (World.blocked && World.blocked.has(tx + ',' + ty)) return true;
-    return World.at(tx, ty).some(o => o.solid);
-  },
+  hits(car, x, y) { return !Collide.carFits(car, x, y); },
 
   /* Along something rather than into it. Costs speed and makes a noise; no
      dent, because a scrape down a wall is not an event. */
@@ -515,10 +504,21 @@ const Cars = {
     for (const r of [d.wid / 2 + 20, d.wid / 2 + 38]) spots.push([-6, -r], [-6, r]);
     for (const r of [d.wid / 2 + 20, d.wid / 2 + 38]) spots.push([d.len * 0.3, -r], [d.len * 0.3, r], [-d.len * 0.3, -r], [-d.len * 0.3, r]);
     spots.push([-d.len / 2 - 20, 0], [d.len / 2 + 20, 0], [-d.len / 2 - 38, 0], [d.len / 2 + 38, 0]);
-    let put = null;
+    /* Best rather than first. A spot that FITS can still be a slot between the
+       car and a trolley with one way out of it; a spot you can step away from
+       in three directions is a pavement. Scored by how many ways out it has,
+       with the order above as the tie-break, so the driver's door still wins
+       when both are equally open. */
+    let put = null, best = -1;
     for (const [u, v] of spots) {
       const px = car.x + u * c - v * s, py = car.y + u * s + v * c;
-      if (playerFits(px, py)) { put = [px, py]; break; }
+      if (!playerFits(px, py)) continue;
+      let room = 0;
+      for (const [ax, ay] of [[14, 0], [-14, 0], [0, 14], [0, -14]]) {
+        if (playerFits(px + ax, py + ay)) room++;
+      }
+      if (room > best) { best = room; put = [px, py]; }
+      if (best === 4) break;
     }
     /* Nowhere at all — wedged between a wall and another car. You still get
        out, standing where the car is, and the rule in sync() above is what

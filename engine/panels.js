@@ -43,15 +43,36 @@ const Interact = {
     /* Objects sit on integer tiles and the reach is about one tile, so only the
        3×3 neighbourhood can ever match — no need to measure all 230 of them. */
     const ptx = Math.floor(P.x / TILE), pty = Math.floor(P.y / TILE);
-    /* A thing on a table beats the table, as a person beats their chair: same
+    /* TWO QUESTIONS, and they are not the same question, which is the whole of
+       why this is two lines rather than one.
+
+       CAN I REACH IT is surface to surface: the gap between your body and the
+       thing's, each of them as big as it is drawn (see Collide.reach()). That
+       is why a copier can be reached from a step further back than a mug can,
+       and it is the same capsule that any physical event between two things
+       standing on a floor would use. Never tighter than the old whole-tile
+       reach for anything, so nothing that could be pressed has stopped being
+       pressable.
+
+       WHICH ONE is still the distance between tile centres, unchanged — and it
+       has to be, for two reasons. A size-aware ranking hands every tie to the
+       biggest thing in the neighbourhood, which quietly made the stationery
+       cupboard unpressable because the copier next to it is bigger. And this
+       number is compared against `nd` below, which is a distance between
+       centres; ranking one in surface gaps and the other in centres is not a
+       comparison at all.
+
+       A thing on a table beats the table, as a person beats their chair: same
        tile means the same distance to the pixel, and the tie went to whichever
        was pushed first — the table. You were offered the formica. */
+    const SURFACE = TILE * 0.6;
     const dist = o => Math.hypot((o.x + .5) * TILE - P.x, (o.y + .5) * TILE - P.y)
       - (o.onTable ? 1 : 0);
     for (let ty = pty - 1; ty <= pty + 1; ty++) {
       for (let tx = ptx - 1; tx <= ptx + 1; tx++) {
         const here = World.at(tx, ty);
         for (let i = 0; i < here.length; i++) {
+          if (Collide.reach(here[i]) > SURFACE) continue;
           const d = dist(here[i]);
           if (d < od) { od = d; bestObj = here[i]; }
         }

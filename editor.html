@@ -10,7 +10,7 @@
      it. scripts/release.sh stages what each page in PUBLIC_PAGES declares, and
      fails the release outright if index.html ever loads a line of editor/. -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%BA%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="editor/editor.css?v=a8f62af">
+<link rel="stylesheet" href="editor/editor.css?v=0c0476b">
 </head>
 <body>
 
@@ -218,75 +218,76 @@
      the real data through the real builder and previews it with the real
      renderer, so what you see here is what the player gets. It deliberately
      does NOT load engine/boot.js — that starts a shift. -->
-<script src="art/sprites/manifest.js?v=a8f62af"></script>
-<script src="data/world.js?v=a8f62af"></script>
-<script src="data/levels.js?v=a8f62af"></script>
-<script src="data/npcs.js?v=a8f62af"></script>
-<script src="data/items.js?v=a8f62af"></script>
-<script src="data/callers.js?v=a8f62af"></script>
-<script src="data/office.js?v=a8f62af"></script>
-<script src="data/acts.js?v=a8f62af"></script>
-<script src="engine/core.js?v=a8f62af"></script>
-<script src="engine/controls.js?v=a8f62af"></script>
-<script src="engine/audio.js?v=a8f62af"></script>
-<script src="engine/state.js?v=a8f62af"></script>
-<script src="engine/world.js?v=a8f62af"></script>
-<script src="engine/levels.js?v=a8f62af"></script>
-<script src="engine/ui.js?v=a8f62af"></script>
-<script src="engine/progress.js?v=a8f62af"></script>
-<script src="engine/office.js?v=a8f62af"></script>
-<script src="engine/dialogue.js?v=a8f62af"></script>
-<script src="engine/combat.js?v=a8f62af"></script>
-<script src="engine/npc.js?v=a8f62af"></script>
-<script src="engine/sprites.js?v=a8f62af"></script>
-<script src="engine/cars.js?v=a8f62af"></script>
-<script src="engine/render.js?v=a8f62af"></script>
-<script src="engine/panels.js?v=a8f62af"></script>
-<script src="engine/menus.js?v=a8f62af"></script>
-<script src="engine/arcade.js?v=a8f62af"></script>
+<script src="art/sprites/manifest.js?v=0c0476b"></script>
+<script src="data/world.js?v=0c0476b"></script>
+<script src="data/levels.js?v=0c0476b"></script>
+<script src="data/npcs.js?v=0c0476b"></script>
+<script src="data/items.js?v=0c0476b"></script>
+<script src="data/callers.js?v=0c0476b"></script>
+<script src="data/office.js?v=0c0476b"></script>
+<script src="data/acts.js?v=0c0476b"></script>
+<script src="engine/core.js?v=0c0476b"></script>
+<script src="engine/controls.js?v=0c0476b"></script>
+<script src="engine/audio.js?v=0c0476b"></script>
+<script src="engine/state.js?v=0c0476b"></script>
+<script src="engine/world.js?v=0c0476b"></script>
+<script src="engine/collide.js?v=0c0476b"></script>
+<script src="engine/levels.js?v=0c0476b"></script>
+<script src="engine/ui.js?v=0c0476b"></script>
+<script src="engine/progress.js?v=0c0476b"></script>
+<script src="engine/office.js?v=0c0476b"></script>
+<script src="engine/dialogue.js?v=0c0476b"></script>
+<script src="engine/combat.js?v=0c0476b"></script>
+<script src="engine/npc.js?v=0c0476b"></script>
+<script src="engine/sprites.js?v=0c0476b"></script>
+<script src="engine/cars.js?v=0c0476b"></script>
+<script src="engine/render.js?v=0c0476b"></script>
+<script src="engine/panels.js?v=0c0476b"></script>
+<script src="engine/menus.js?v=0c0476b"></script>
+<script src="engine/arcade.js?v=0c0476b"></script>
 <!-- The minigame library. The editor never runs one; it loads them because
      the whole-project checks read their source — a reward() that hands out an
      achievement is a call site, and one this page cannot see is one it would
      report as unearnable writing. -->
-<script src="minigames/holdmusic.js?v=a8f62af"></script>
-<script src="minigames/inbox.js?v=a8f62af"></script>
-<script src="minigames/patch.js?v=a8f62af"></script>
-<script src="engine/input.js?v=a8f62af"></script>
+<script src="minigames/holdmusic.js?v=0c0476b"></script>
+<script src="minigames/inbox.js?v=0c0476b"></script>
+<script src="minigames/patch.js?v=0c0476b"></script>
+<script src="engine/input.js?v=0c0476b"></script>
 
 <!-- The editor itself. -->
-<script src="editor/ask.js?v=a8f62af"></script>
-<script src="editor/pop.js?v=a8f62af"></script>
-<script src="editor/hist.js?v=a8f62af"></script>
-<script src="editor/writing.js?v=a8f62af"></script>
-<script src="editor/doc.js?v=a8f62af"></script>
-<script src="editor/validate.js?v=a8f62af"></script>
-<script src="editor/jobs.js?v=a8f62af"></script>
-<script src="editor/talk.js?v=a8f62af"></script>
-<script src="editor/things.js?v=a8f62af"></script>
-<script src="editor/zones.js?v=a8f62af"></script>
-<script src="editor/office.js?v=a8f62af"></script>
-<script src="editor/prog.js?v=a8f62af"></script>
-<script src="editor/calls.js?v=a8f62af"></script>
-<script src="editor/art.js?v=a8f62af"></script>
-<script src="editor/games.js?v=a8f62af"></script>
-<script src="editor/emit.js?v=a8f62af"></script>
-<script src="editor/mode.js?v=a8f62af"></script>
-<script src="editor/project.js?v=a8f62af"></script>
-<script src="editor/keep.js?v=a8f62af"></script>
-<script src="editor/publish.js?v=a8f62af"></script>
-<script src="editor/apply.js?v=a8f62af"></script>
-<script src="editor/view.js?v=a8f62af"></script>
-<script src="editor/tools.js?v=a8f62af"></script>
-<script src="editor/panels.js?v=a8f62af"></script>
-<script src="editor/jobsui.js?v=a8f62af"></script>
-<script src="editor/talkui.js?v=a8f62af"></script>
-<script src="editor/thingsui.js?v=a8f62af"></script>
-<script src="editor/zonesui.js?v=a8f62af"></script>
-<script src="editor/officeui.js?v=a8f62af"></script>
-<script src="editor/progui.js?v=a8f62af"></script>
-<script src="editor/callsui.js?v=a8f62af"></script>
-<script src="editor/artui.js?v=a8f62af"></script>
-<script src="editor/gamesui.js?v=a8f62af"></script>
-<script src="editor/boot.js?v=a8f62af"></script>
+<script src="editor/ask.js?v=0c0476b"></script>
+<script src="editor/pop.js?v=0c0476b"></script>
+<script src="editor/hist.js?v=0c0476b"></script>
+<script src="editor/writing.js?v=0c0476b"></script>
+<script src="editor/doc.js?v=0c0476b"></script>
+<script src="editor/validate.js?v=0c0476b"></script>
+<script src="editor/jobs.js?v=0c0476b"></script>
+<script src="editor/talk.js?v=0c0476b"></script>
+<script src="editor/things.js?v=0c0476b"></script>
+<script src="editor/zones.js?v=0c0476b"></script>
+<script src="editor/office.js?v=0c0476b"></script>
+<script src="editor/prog.js?v=0c0476b"></script>
+<script src="editor/calls.js?v=0c0476b"></script>
+<script src="editor/art.js?v=0c0476b"></script>
+<script src="editor/games.js?v=0c0476b"></script>
+<script src="editor/emit.js?v=0c0476b"></script>
+<script src="editor/mode.js?v=0c0476b"></script>
+<script src="editor/project.js?v=0c0476b"></script>
+<script src="editor/keep.js?v=0c0476b"></script>
+<script src="editor/publish.js?v=0c0476b"></script>
+<script src="editor/apply.js?v=0c0476b"></script>
+<script src="editor/view.js?v=0c0476b"></script>
+<script src="editor/tools.js?v=0c0476b"></script>
+<script src="editor/panels.js?v=0c0476b"></script>
+<script src="editor/jobsui.js?v=0c0476b"></script>
+<script src="editor/talkui.js?v=0c0476b"></script>
+<script src="editor/thingsui.js?v=0c0476b"></script>
+<script src="editor/zonesui.js?v=0c0476b"></script>
+<script src="editor/officeui.js?v=0c0476b"></script>
+<script src="editor/progui.js?v=0c0476b"></script>
+<script src="editor/callsui.js?v=0c0476b"></script>
+<script src="editor/artui.js?v=0c0476b"></script>
+<script src="editor/gamesui.js?v=0c0476b"></script>
+<script src="editor/boot.js?v=0c0476b"></script>
 </body>
 </html>

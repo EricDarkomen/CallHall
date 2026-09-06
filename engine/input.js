@@ -224,21 +224,19 @@ function bindInput() {
 
 /* ---------------- Movement ---------------- */
 
-/* Does the player's own collision box fit here? Its own function because two
-   things need to agree about it: walking, which asks it of every step, and
-   getting out of a car, which asks it of every candidate doorstep. They used
+/* Can the player's feet be here? Its own function because three things need to
+   agree about it: walking, which asks it of every step; getting out of a car,
+   which asks it of every candidate doorstep; and the unstick below. They used
    to disagree — getting out tested the one tile the middle of you landed in,
    which is not the same question, and the answer being wrong put you down half
    inside a car with every direction blocked and a step too small to escape it.
-   One box, one answer, both callers.
+   One shape, one answer, every caller.
 
-   The box is shallower at the top than at the bottom: you stand *in* the tile
-   you are on, and your head may overlap the one above. */
-function playerFits(nx, ny) {
-  const r = TILE * .3, head = r * .46;
-  const pts = [[nx - r, ny - r + head], [nx + r, ny - r + head], [nx - r, ny + r], [nx + r, ny + r]];
-  return !pts.some(([px, py]) => World.isSolid(Math.floor(px / TILE), Math.floor(py / TILE)));
-}
+   The shape itself, and what counts as being in the way, is engine/collide.js:
+   a small box on the GROUND against walls, worktops, the drawn size of the
+   furniture and the actual boxes of the cars — rather than against whole tiles,
+   which is what used to make a bin the size of a phone box. */
+function playerFits(nx, ny) { return Collide.walk(nx, ny); }
 
 function movePlayer(dt) {
   /* Anything that takes the world away — a conversation, a panel, a call —
@@ -285,6 +283,15 @@ function movePlayer(dt) {
   const was = { x: P.x, y: P.y };
   if (dx && free(P.x + dx * sp, P.y)) P.x += dx * sp;
   if (dy && free(P.x, P.y + dy * sp)) P.y += dy * sp;
+  /* And if you are inside something anyway — a car parked on you, a door shut
+     through you, whatever went wrong — the collision system's job is to get
+     you out of it rather than to hold you there. Eased rather than snapped, so
+     it reads as being nudged clear and not as being teleported. */
+  const out = Collide.unstick(P.x, P.y);
+  if (out) {
+    const m = Math.hypot(out[0], out[1]) || 1, step = Math.min(m, TILE * 2.4 * dt);
+    P.x += out[0] / m * step; P.y += out[1] / m * step;
+  }
   P.step = (P.step || 0) + Math.hypot(P.x - was.x, P.y - was.y) / TILE * 2.6;
   P.x = clamp(P.x, 20, MAPW * TILE - 20); P.y = clamp(P.y, 20, MAPH * TILE - 20);
 
