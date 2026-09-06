@@ -364,87 +364,270 @@ const LEVELS = {
   },
 
   /* ---- OUTSIDE --------------------------------------------------------
-     The forecourt and the road, which is the only level with a sky over it.
+     The forecourt and the streets, which is the only level with a sky over it.
      `indoors: false` is what the renderer reads: no strip lights, daylight
      rather than a ceiling, and the dark beyond the walls painted as sky.
 
      It exists because three separate acts already promised it — the way out
      talks about daylight and a bus stop, the Greggs has been a shop you could
      buy from without ever being a place you could stand, and the view off the
-     fire escape looks down on this car park. */
+     fire escape looks down on this car park.
+
+     THE SHAPE OF IT. Four streets round one block: Bellhaven Road along the
+     top, Aldergate Rise down the west side, Fenn Street along the bottom,
+     Cargate Lane back up the east. A loop, deliberately — the point of a car
+     is somewhere to drive it to and back from, and a road that stops at the
+     edge of the map is a corridor. The block in the middle (x 16–57, y 24–31)
+     is claimed by no room at all and so comes out solid, which is what a
+     terrace of buildings is from above: you cannot go in, and there is nothing
+     in there to go into.
+
+     Every street is two things at once — a carriageway with a pavement either
+     side of it — and a zone can only be one of them, so the zone is the PLACE
+     (its name, which is what UI.zone announces as you cross into it) and
+     `surfaces:` lays the tarmac over the middle of it. That is also why the
+     rooms are listed in the order they are: they are painted in sequence and
+     the later one wins, so the road zones claim their own junctions back off
+     the streets they cross. */
   outside: {
     name: 'Outside',
-    w: 64, h: 26,
+    w: 88, h: 44,
     indoors: false,
     rooms: [
-      { z: 'forecourt', r: [3, 3, 36, 13] },
-      { z: 'street', r: [3, 14, 36, 22] },
-      /* The High Street: contiguous with the road, not with the forecourt —
-         forecourt stops at x=36, so row 13 above this one is never claimed by
-         any room and comes out solid by default (see World.build()). That is
-         a real north wall, the one kind of wall the kit's shopfront art
-         actually reads against (see render.js's `edgeOn`), and Greggs never
-         got one: it stands on the map's south edge instead, which is why it
-         is still an emoji. */
-      { z: 'street', r: [37, 14, 60, 22] }
+      /* The car park, and the one gap in its wall. Row 13 is claimed by
+         nothing for its whole length except this, so the car park has a real
+         wall along the road with a single way through it — which is what makes
+         driving out of it an act rather than a drift. */
+      { z: 'forecourt', r: [3, 3, 40, 12] },
+      { z: 'forecourt', r: [34, 13, 37, 13] },
+      /* Bellhaven Road, and then the same road under a different name once it
+         reaches the shops, because that is what happens to roads. Pavement,
+         carriageway and pavement, all of it one zone. */
+      { z: 'street', r: [2, 14, 41, 23] },
+      { z: 'high', r: [42, 14, 85, 23] },
+      /* The three sides of the block. Each is pavement–carriageway–pavement
+         the same way round, and each meets the two it joins inside the other's
+         rectangle, so there is no corner that is nobody's. */
+      { z: 'aldergate', r: [6, 24, 15, 31] },
+      { z: 'cargate', r: [58, 24, 67, 31] },
+      { z: 'fenn', r: [6, 32, 67, 41] }
+    ],
+    /* What the ground is MADE of, over the top of what it is. Everything out
+       here is paving slabs by default; these are the bits that are not.
+       See SURFACES in data/world.js, and R.kerbs(), which draws the kerb along
+       every edge one of these meets ordinary ground on. */
+    surfaces: [
+      { s: 'tarmac', r: [3, 3, 40, 12] },
+      /* The exit, carried across the pavement rather than stopping at it: a
+         vehicle crossover is tarmac all the way to the carriageway, and the
+         kerb is dropped for it. Draw the pavement through here instead and
+         the game paints a six-inch kerb across the road you drive out of. */
+      { s: 'tarmac', r: [34, 13, 37, 15] },
+      { s: 'tarmac', r: [2, 16, 85, 21] },
+      { s: 'tarmac', r: [8, 22, 13, 39] },
+      { s: 'tarmac', r: [60, 22, 65, 39] },
+      { s: 'tarmac', r: [8, 34, 65, 39] }
+    ],
+    /* The paint. Position-dependent, so none of it is a tile — see the note in
+       tools/sheets/town.mjs about why the atlas has one road surface in it and
+       no markings at all. R.roadPaint() draws these; the vocabulary is six
+       words wide and is documented there.
+
+       All of it laid out lane by lane, because the lanes are real: traffic
+       drives on the left out here, the routes in `cars:` below are written for
+       the correct side, and a centre line down the wrong place would make
+       every one of them look like a mistake. */
+    paint: [
+      /* Bellhaven and the High Street: one centre line, broken at each of the
+         two junctions rather than run straight through them. */
+      { p: 'dash', a: [2, 19], b: [8, 19] },
+      /* Broken again either side of the crossing: a centre line painted
+         through a zebra is the one marking error you can see from a moving
+         car. */
+      { p: 'dash', a: [14, 19], b: [30, 19] },
+      { p: 'dash', a: [34, 19], b: [60, 19] },
+      { p: 'dash', a: [66, 19], b: [86, 19] },
+      /* The side streets, and the bottom of the block. Six-tile carriageways
+         throughout, so every centre line is three tiles in from either kerb. */
+      { p: 'dash', a: [11, 24], b: [11, 32] },
+      { p: 'dash', a: [63, 24], b: [63, 32] },
+      { p: 'dash', a: [14, 37], b: [60, 37] },
+      /* Give way where the side streets meet the main road, and where they
+         meet Fenn Street at the bottom. */
+      { p: 'line', a: [8, 22], b: [14, 22] },
+      { p: 'line', a: [60, 22], b: [66, 22] },
+      { p: 'line', a: [8, 33.9], b: [14, 33.9] },
+      { p: 'line', a: [60, 33.9], b: [66, 33.9] },
+      /* No parking outside the shops, which is where everybody parks. */
+      { p: 'yellow', a: [42, 16.2], b: [86, 16.2] },
+      /* The crossing between the bus stop and the Greggs, which is the busiest
+         four metres in Bellhaven. */
+      { p: 'zebra', r: [30, 16, 33, 21] },
+      /* Twenty-two spaces, and the writing has said twenty-two for months.
+         Seven, then the walkway to the doors, then four; eleven along the
+         south wall. The `open` side is the one you drive in from. */
+      { p: 'bays', r: [5, 3, 18, 5], open: 's' },
+      { p: 'bays', r: [23, 3, 30, 5], open: 's' },
+      { p: 'bays', r: [5, 10, 26, 12], open: 'n' },
+      { p: 'text', at: [20.5, 7.2], s: 'KEEP CLEAR' },
+      { p: 'text', at: [35.5, 11], s: 'SLOW', turn: 1 }
     ],
     doors: [],
-    /* In front of the doors, facing away from them. */
-    entries: { doors: [19.5, 4.5] },
+    /* In the walkway between the two banks of bays, facing away from the
+       doors. Not in a bay: you come out of a building on foot. */
+    entries: { doors: [20.5, 4.5] },
     links: [{ via: 'frontDoors', to: 'office', entry: 'lobby' }],
+    /* The cars. Parked ones sit in bays and are scenery you can walk round and
+       bump into; two of them are worth pressing E on and exactly one of them
+       will let you in. The last four have a `route` instead of a bay, which is
+       the whole of what makes them traffic — see engine/cars.js.
+
+       Positions are in TILES and may be fractional, like `entries` above, and
+       for the same reason: this file is data and loads before engine/core.js
+       declares TILE. A bay is two tiles wide, so a car centred on a bay is
+       centred on a whole number. */
+    cars: [
+      { x: 8, y: 4.1, face: 'n', model: 'hatch', name: 'A hatchback', use: 'someHatchback' },
+      { x: 12, y: 4.1, face: 'n', model: 'estate', name: 'An estate car with a roof box', use: 'roofBox' },
+      { x: 16, y: 4.1, face: 'n', model: 'pool', name: 'The pool car', use: 'poolCar', drive: true },
+      /* x=18 is Nigel's, and it is empty. That is the joke and it only works
+         if nothing is parked in it. */
+      { x: 26, y: 4.1, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      /* On the line, across two of them, at the one time of day when the car
+         park is full. Nobody has ever seen it arrive. */
+      { x: 11, y: 11, face: 's', model: 'van', name: 'The contractor’s van', use: 'contractorVan' },
+      { x: 20, y: 11, face: 's', model: 'saloon', name: 'A green saloon', use: 'someoneElsesCar' },
+      { x: 24, y: 11, face: 's', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      /* In the street, on the double yellows, outside the nail bar. He has
+         parked here every day since somebody keyed it in the space with his
+         name painted on it. */
+      /* Two wheels up on the pavement outside the nail bar, which is why the
+         lane past it is clear and the footway is not. Deliberate, on both
+         counts: it keeps the traffic moving, and it is a more accurate
+         portrait of the man than parking neatly would be. */
+      { x: 44, y: 15.7, face: 'w', model: 'estate', body: '#9ba1a8', roof: '#7c828a',
+        name: 'A silver estate, half on the pavement', use: 'nigelsCar' },
+      /* Traffic. Two round the block one way on the left-hand lanes, two round
+         it the other way on the others — so what goes past the Greggs is not
+         obviously the same car four times, and so that the loop has something
+         in it to be overtaken by. `leg`/`along` are where each one starts:
+         which side of the block, and how far along it. */
+      { model: 'saloon', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 150, leg: 0, along: 8,
+        route: [[9.5, 20.5], [64.5, 20.5], [64.5, 37.5], [9.5, 37.5]] },
+      { model: 'taxi', name: 'A taxi, passing', use: 'passingCar', traffic: true, cruise: 165, leg: 2, along: 14,
+        route: [[9.5, 20.5], [64.5, 20.5], [64.5, 37.5], [9.5, 37.5]] },
+      { model: 'small', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 140, leg: 0, along: 20,
+        route: [[61.5, 17.5], [12.5, 17.5], [12.5, 35.5], [61.5, 35.5]] },
+      { model: 'van', name: 'A delivery van, passing', use: 'passingCar', traffic: true, cruise: 120, leg: 2, along: 30,
+        route: [[61.5, 17.5], [12.5, 17.5], [12.5, 35.5], [61.5, 35.5]] }
+    ],
     furnish() {
       const A = o => this.add(o);
       /* The way back in. Scenery on the boundary wall, exactly like the way out
          is on the fourth floor: you press E on it, you do not walk through it.
          Two tiles, so the doorway art reads as double doors. */
-      A({ x: 19, y: 2, e: '🚪', name: 'The way back in', kind: 'exit', solid: false, use: 'frontDoors' });
       A({ x: 20, y: 2, e: '🚪', name: 'The way back in', kind: 'exit', solid: false, use: 'frontDoors' });
+      A({ x: 21, y: 2, e: '🚪', name: 'The way back in', kind: 'exit', solid: false, use: 'frontDoors' });
 
       /* ---- THE CAR PARK ---- */
-      A({ x: 6, y: 6, e: '🚗', name: 'The car park', kind: 'car', solid: true, use: 'carPark' });
-      A({ x: 9, y: 6, e: '🚙', name: 'The car park', kind: 'car', solid: true, use: 'carPark' });
-      A({ x: 12, y: 6, e: '🚐', name: 'The car park', kind: 'car', solid: true, use: 'carPark' });
-      A({ x: 5, y: 9, e: '🪧', name: 'RESERVED — N. GRIMSHAW', kind: 'sign', solid: true, use: 'nigelSpace' });
-      A({ x: 35, y: 8, e: '🚧', name: 'The barrier', kind: 'barrier', solid: true, use: 'barrier' });
-      A({ x: 25, y: 7, e: '💧', name: 'The permanent puddle', kind: 'puddle', solid: false, use: 'puddle' });
-      A({ x: 30, y: 4, e: '📦', name: 'Pallets, delivery bay', kind: 'box', solid: true, use: 'pallets' });
+      /* At the head of the last bay before the walkway, which is the one
+         nearest the door, which is the whole of what the sign is about. */
+      A({ x: 18, y: 3, e: '🪧', name: 'RESERVED — N. GRIMSHAW', kind: 'sign', solid: true, use: 'nigelSpace' });
+      A({ x: 37, y: 13, e: '🚧', name: 'The barrier', kind: 'barrier', solid: true, use: 'barrier' });
+      /* On a post beside the way out, which is where a car park's own sign
+         goes and where somebody driving out will read it. Nothing hangs it on
+         a wall: all four neighbours are open tarmac. */
+      A({ x: 33, y: 11, e: '🪧', name: 'The car park', kind: 'sign', solid: true, use: 'carPark' });
+      A({ x: 28, y: 8, e: '💧', name: 'The permanent puddle', kind: 'puddle', solid: false, use: 'puddle' });
+      A({ x: 35, y: 4, e: '📦', name: 'Pallets, delivery bay', kind: 'box', solid: true, use: 'pallets' });
       /* The one thing out here that the fourth floor also has, which is the
-         joke: it is the same bin and the same people are standing at it. */
-      A({ x: 16, y: 4, e: '🚬', name: 'The bin everybody stands at', kind: 'bin', solid: false, use: 'smokingSpot',
+         joke: it is the same bin and the same people are standing at it. In the
+         walkway rather than in a bay, because the walkway is the bit of a car
+         park people are allowed to stand in. */
+      A({ x: 22, y: 4, e: '🚬', name: 'The bin everybody stands at', kind: 'bin', solid: false, use: 'smokingSpot',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
-      /* Real kit lampposts, flanking the car park rather than standing in the
-         one lane cars actually use. */
-      A({ x: 8, y: 4, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
-      A({ x: 28, y: 9, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      /* Real kit lampposts, at the ends of the aisle rather than standing in
+         the one lane cars actually use. */
+      A({ x: 3, y: 7, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 40, y: 7, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 31, y: 9, e: '🕳️', name: 'The drain in the car park', kind: 'drain', solid: false, use: 'carParkDrain' });
+      A({ x: 30, y: 6, e: '🛒', name: 'The trolley', kind: 'shoptrolley', solid: true, use: 'trolley' });
 
-      /* ---- THE ROAD ---- */
-      /* On the last row of the road with the wall below it, not standing on the
-         wall itself: a wall-mounted thing needs a floor tile to stand on and a
-         wall to hang against, and the south face is the far side of the road. */
-      /* Stays emoji: the kit's wall art is drawn face-on and only reads right
-         against a north wall (see render.js's `edgeOn`) — Greggs sits on the
-         SOUTH wall, the far side of the road, so a mounted sprite here would
-         silently fall back to the emoji anyway. Kit art is not automatically
-         an upgrade; there is just no wall in this level it would work on yet. */
-      A({ x: 10, y: 22, e: '🥐', name: 'Greggs', kind: 'shop', solid: true, use: 'greggs' });
-      A({ x: 28, y: 20, e: '🚏', name: 'The bus stop', kind: 'sign', solid: true, use: 'busStop' });
-      A({ x: 24, y: 22, e: '🗑️', name: 'The council bin', kind: 'bin', solid: false, use: 'streetBin',
+      /* ---- BELLHAVEN ROAD ---- */
+      /* On the pavement at the kerb, where a bus stop is. It has no wall
+         behind it to hang on, so it stands on its own post — which is what a
+         bus stop does. */
+      A({ x: 26, y: 15, e: '🚏', name: 'The bus stop', kind: 'sign', solid: true, use: 'busStop' });
+      A({ x: 24, y: 15, e: '🪑', name: 'The bench', kind: 'bench', solid: true, use: 'bench' });
+      A({ x: 40, y: 15, e: '🗑️', name: 'The council bin', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
-      A({ x: 14, y: 20, e: '🪑', name: 'The bench', kind: 'bench', solid: true, use: 'bench' });
-      A({ x: 26, y: 16, e: '🐦', name: 'A pigeon, possibly the same one', kind: 'pigeon', solid: false, use: 'pigeon' });
+      A({ x: 29, y: 14, e: '🐦', name: 'A pigeon, possibly the same one', kind: 'pigeon', solid: false, use: 'pigeon' });
+      A({ x: 12, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 38, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 20, y: 16, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      A({ x: 52, y: 21, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      /* Stays emoji, and this is still the reason: the kit's wall art is drawn
+         face-on and only reads right against a north wall (see render.js's
+         `edgeOn`). Greggs is on the SOUTH side of the road, backing onto the
+         block, so a mounted sprite here would silently fall back to the emoji
+         anyway. Kit art is not automatically an upgrade; there is still no
+         wall on this side of the road that it would work on. */
+      A({ x: 31, y: 23, e: '🥐', name: 'Greggs', kind: 'shop', solid: true, use: 'greggs' });
+      A({ x: 22, y: 23, e: '🏧', name: 'The cashpoint', kind: 'screen', solid: true, use: 'cashpoint' });
+      A({ x: 40, y: 23, e: '🖍️', name: 'The hoarding', kind: 'poster', solid: true, use: 'hoarding' });
 
-      /* ---- THE HIGH STREET ---- */
-      /* On row 14, the one row in the whole level with a real wall behind it
-         rather than the map's own edge — see the room comment above. First
-         thing this level has ever hung on a wall and had it actually draw. */
-      A({ x: 44, y: 14, e: '💅', name: 'Nailed It', kind: 'shop', solid: true, use: 'nailedIt',
-        furn: { sprite: 'shop.awning', size: 34 } });
-      A({ x: 46, y: 14, e: '🪧', name: 'The sign above Nailed It', kind: 'shopsign', solid: true, use: 'shopSign' });
-      A({ x: 40, y: 18, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
-      A({ x: 58, y: 18, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
-      A({ x: 52, y: 20, e: '🪑', name: 'Another bench', kind: 'bench', solid: true, use: 'bench2' });
-      A({ x: 56, y: 22, e: '🗑️', name: 'Bin, High Street', kind: 'bin', solid: false, use: 'highStreetBin',
+      /* ---- THE HIGH STREET ----
+         Row 14, backing onto the parade: the one long wall in this level that
+         the kit's shopfront art is drawn to be seen against. */
+      A({ x: 46, y: 14, e: '💅', name: 'Nailed It', kind: 'shop', solid: true, use: 'nailedIt',
+        furn: { sprite: 'shop.awning' } });
+      A({ x: 48, y: 14, e: '🪧', name: 'The sign above Nailed It', kind: 'shopsign', solid: true, use: 'shopSign' });
+      A({ x: 54, y: 14, e: '🎰', name: 'Bellhaven Bookmakers', kind: 'shop', solid: true, use: 'bookies',
+        furn: { sprite: 'shop.awning.amber' } });
+      A({ x: 60, y: 14, e: '🧦', name: 'The charity shop', kind: 'shop', solid: true, use: 'charityShop' });
+      A({ x: 66, y: 14, e: '💨', name: 'Vapour Trail', kind: 'shop', solid: true, use: 'vapeShop' });
+      A({ x: 72, y: 14, e: '🚧', name: 'The unit that is always being refitted', kind: 'shop', solid: true, use: 'refit',
+        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 78, y: 14, e: '🪧', name: 'TO LET', kind: 'shopsign', solid: true, use: 'toLet' });
+      A({ x: 56, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 76, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 62, y: 15, e: '🗑️', name: 'Bin, High Street', kind: 'bin', solid: false, use: 'highStreetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 70, y: 22, e: '🪑', name: 'Another bench', kind: 'bench', solid: true, use: 'bench2' });
+
+      /* ---- ALDERGATE RISE ----
+         The west side of the block. Nothing has a front door on it, which is
+         what makes it the side everything gets put out on. */
+      A({ x: 15, y: 26, e: '♻️', name: 'The bottle bank', kind: 'box', solid: true, use: 'bottleBank' });
+      A({ x: 15, y: 29, e: '🖍️', name: 'The wall on Aldergate Rise', kind: 'graf', solid: true, use: 'aldergateWall' });
+      A({ x: 7, y: 27, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 6, y: 30, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'trolley' });
+
+      /* ---- FENN STREET ----
+         The units along the back of the block, on the one other north wall out
+         here — so these are shopfronts that actually draw as shopfronts. */
+      A({ x: 20, y: 32, e: '🛞', name: 'Bellhaven Tyre & Exhaust', kind: 'shop', solid: true, use: 'tyres',
+        furn: { sprite: 'shop.awning.amber' } });
+      A({ x: 30, y: 32, e: '🏋️', name: 'Unit 6', kind: 'shop', solid: true, use: 'unitSix' });
+      A({ x: 40, y: 32, e: '🧼', name: 'The hand car wash', kind: 'shop', solid: true, use: 'carWash',
+        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 50, y: 32, e: '🥪', name: 'The sandwich van’s pitch', kind: 'sign', solid: true, use: 'sandwichVan' });
+      A({ x: 16, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 36, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 58, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 44, y: 41, e: '🚧', name: 'The fence round the yard', kind: 'barrier', solid: true, use: 'yardFence' });
+      A({ x: 26, y: 41, e: '🐦', name: 'Gulls', kind: 'pigeon', solid: false, use: 'gulls' });
+
+      /* ---- CARGATE LANE ----
+         The back of the parade: bins, a fire door and the smell of a bakery
+         from the wrong side of it. */
+      A({ x: 58, y: 26, e: '🗑️', name: 'The bins behind the Greggs', kind: 'bin', solid: true, use: 'greggsBins',
+        furn: { sprite: 'obj.wheeliebin', size: 30 } });
+      A({ x: 58, y: 28, e: '🗑️', name: 'The bins behind the Greggs', kind: 'bin', solid: true, use: 'greggsBins',
+        furn: { sprite: 'obj.wheeliebin', size: 30 } });
+      A({ x: 58, y: 30, e: '📦', name: 'Flattened boxes', kind: 'box', solid: true, use: 'flatBoxes' });
+      A({ x: 67, y: 27, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 60, y: 24, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
     }
   }
 };

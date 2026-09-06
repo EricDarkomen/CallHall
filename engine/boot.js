@@ -15,6 +15,11 @@ const Game = {
        all saying "I completely understand" is a photograph, not an office. */
     if (G.state === 'play' || G.state === 'dialogue' || G.state === 'panel' || G.state === 'cut') NPCM.update(dt);
     movePlayer(dt);
+    /* After the walk and before the camera. A car that is being driven IS the
+       player as far as everything downstream is concerned — Cars.update writes
+       P.x and P.y — so it has to have moved before Cam.follow reads them, or
+       the camera is permanently one frame behind the thing it is following. */
+    Cars.update(dt);
     Cut.tick(dt);
     /* The opening owns the camera while it is running — it is looking at the
        building rather than following somebody standing still in reception. */

@@ -46,8 +46,14 @@ const Levels = {
      Swapping levels is assigning this list across, which is why it has to be
      complete: anything left off is silently retained from the previous level,
      and a stale `desks` draws the fourth floor's workstations on the road. */
-  FIELDS: ['def', 'level', 'solid', 'zone', 'seed', 'ao', 'objects', 'byTile',
-    'doorways', 'openings', 'desks', 'worktops', 'tables', 'counters', 'blocked'],
+  FIELDS: ['def', 'level', 'solid', 'zone', 'seed', 'surf', 'ao', 'objects', 'byTile',
+    'doorways', 'openings', 'desks', 'worktops', 'tables', 'counters', 'blocked',
+    /* The cars are the map's, not the driver's: leave the pool car in the
+       middle of Fenn Street, walk into the building and come back out, and it
+       is still in the middle of Fenn Street. `carTiles` travels with them for
+       the same reason `blocked` does — it is what the level's own collision
+       reads, and a stale one from the last level is a set of invisible cars. */
+    'cars', 'carTiles'],
 
   /* Object fields that a level's own state may change after it is built, and
      that therefore have to survive being evicted and rebuilt. Everything else
@@ -199,6 +205,12 @@ const Levels = {
       P.x = at[0] * TILE; P.y = at[1] * TILE;
       P.vx = P.vy = 0; P.moving = false;
       Stick.release && Stick.release();
+      /* You cannot drive through a door, so arriving anywhere is arriving on
+         foot. Belt and braces — nothing can currently change level from behind
+         a wheel — but a driver still holding a car on a level that is no longer
+         loaded is the kind of state that only shows itself as the camera
+         following something that is not there. */
+      if (typeof Cars !== 'undefined') Cars.getOutQuietly();
 
       /* Presence: who is standing on this level, which phones can be heard
          ringing, and a minimap that is of this map rather than the last one. */

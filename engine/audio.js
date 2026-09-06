@@ -68,6 +68,46 @@ const Sfx = {
   notify() { this.tone(988, 0.08, 'sine', 0.28); this.tone(1319, 0.12, 'sine', 0.24, 0.07); },
   bad() { this.tone(200, 0.2, 'sawtooth', 0.28); this.tone(150, 0.3, 'sawtooth', 0.24, 0.12); },
   cash() { this.tone(1200, 0.05, 'square', 0.2); this.tone(1600, 0.08, 'square', 0.18, 0.05); },
+  /* ---- the car ----
+     An engine is the one sound in this game that is HELD rather than struck,
+     so it is the one that owns a node instead of making one and letting it
+     stop. Two oscillators a fifth apart through a lowpass, quiet enough to sit
+     under everything: the point of it is that you notice when it stops. */
+  engine(on, rev) {
+    if (!this.ctx) return;
+    /* Turning the sound off mid-drive has to stop a note that is already
+       playing, which is the one thing a held sound needs that a struck one
+       does not — hence the test here rather than at the top. */
+    if (!on || !this.on) {
+      if (this.eng) { try { this.eng.g.gain.cancelScheduledValues(this.ctx.currentTime); this.eng.g.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.08); this.eng.o.stop(this.ctx.currentTime + 0.4); this.eng.o2.stop(this.ctx.currentTime + 0.4); } catch (e) { /* already gone */ } this.eng = null; }
+      return;
+    }
+    if (!this.eng) {
+      const o = this.ctx.createOscillator(), o2 = this.ctx.createOscillator();
+      const g = this.ctx.createGain(), f = this.ctx.createBiquadFilter();
+      o.type = 'sawtooth'; o2.type = 'square';
+      f.type = 'lowpass'; f.frequency.value = 520;
+      g.gain.value = 0.0001;
+      o.connect(f); o2.connect(f); f.connect(g); g.connect(this.master);
+      o.start(); o2.start();
+      this.eng = { o, o2, g, f };
+      g.gain.setTargetAtTime(0.05, this.ctx.currentTime, 0.15);
+    }
+    /* Idle at the bottom, and never quite in tune with itself — a flat drone
+       reads as a fridge rather than as an engine. */
+    const t = this.ctx.currentTime, r = clamp(rev || 0, 0, 1);
+    this.eng.o.frequency.setTargetAtTime(52 + r * 104, t, 0.09);
+    this.eng.o2.frequency.setTargetAtTime(78 + r * 157, t, 0.09);
+    this.eng.f.frequency.setTargetAtTime(420 + r * 900, t, 0.12);
+    this.eng.g.gain.setTargetAtTime(0.035 + r * 0.045, t, 0.12);
+  },
+  horn() { this.tone(392, 0.3, 'sawtooth', 0.16); this.tone(330, 0.3, 'sawtooth', 0.14, 0.01); },
+  thud(force) {
+    const v = clamp(force || 0.5, 0.1, 1);
+    this.noise(0.14 + v * 0.1, 0.16 + v * 0.24);
+    this.tone(70 + v * 40, 0.16, 'square', 0.1 + v * 0.16, 0, -30);
+  },
+  scrape() { this.noise(0.1, 0.07); },
   /* Hold music: a MIDI keyboard demo of Greensleeves, played by a machine
      that has never been outdoors. */
   holdMusic(start) {

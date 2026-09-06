@@ -25,6 +25,7 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 | ---------- | ------------------------------- | ------------------------------ |
 | Move       | `W A S D` or arrows             | thumb down anywhere bottom-left |
 | Interact   | `E`                             | `E` button                     |
+| Drive      | `W` go · `S` brake, then reverse · `A D` steer · `H` horn | push the stick forward, pull it back, lean it |
 | Dialogue   | `Space`, `1`–`9` to choose      | tap the box, tap a reply       |
 | Panels     | `J I K C M P L`, `Esc` for menu | `☰`                            |
 | Save/load  | `F5` / `F9`                     | `☰` · Menu                     |
@@ -39,6 +40,34 @@ a shift asks for fullscreen on its own.
 The game saves itself, and detects touch devices to show the right controls and
 the right instructions.
 
+## Outside
+
+Press `E` on the way out and you are in the car park, which is a real place with
+real streets round it: Bellhaven Road along the front of the building, Aldergate
+Rise, Fenn Street and Cargate Lane round one block of shops. Four sides, so it is
+a loop, so there is somewhere to drive to and a way back.
+
+The pool car is in the car park and the key has been in it since 2019. Press `E`
+on it and get in. It steers like a car rather than like a person — the front
+wheels only turn it while it is moving, the back end goes where it was already
+going, and reversing out of a bay is its own small event. Everything else parked
+in that car park is somebody's, and locked, and will say so.
+
+There is traffic. Four cars go round the block on the correct side of the road,
+brake for corners, queue behind each other, stop for anybody on foot, and sound
+the horn when they have been waiting a while. They are not scenery: drive into
+one and both of you will know about it.
+
+Three achievements are out there, and one of them is parking straight.
+
+The roads are the kit's — the tarmac, the paving, the drains and the awnings are
+all Liberated Pixel Cup art, fetched and licence-checked by the sprite build like
+everything else. The cars are not, and could not be: the set this game pins is
+mediaeval-through-Victorian and the only wheeled things in the whole repository
+are a wheelchair and a shopping trolley. They are drawn by the renderer instead,
+which is also what lets one turn through any angle rather than through the eight
+a sprite sheet would give it.
+
 ## Repository layout
 
 This is the **private** repository: full history and staging. The public repo is
@@ -49,8 +78,8 @@ The game is `index.html` — the engine — plus the files it loads:
 
 | | |
 | --- | --- |
-| `data/*.js` | The content: people and dialogue, items, callers, the office, and what happens when you press E. |
-| `art/sprites/*.png` | The character and world art. Third-party, separately licensed. |
+| `data/*.js` | The content: people and dialogue, items, callers, the office, the streets, and what happens when you press E. |
+| `art/sprites/*.png` | The character, world and street art. Third-party, separately licensed. |
 | `art/sprites/manifest.js` | Generated: the rectangles that describe those PNGs. |
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
 | `editor.html`, `editor/` | A level editor. Not the game, and never published. |
@@ -90,6 +119,22 @@ adding an entry to one of these files — never hand-editing `manifest.js` or
 `CREDITS.md`, both of which this regenerates and would just overwrite.
 Picking the crop rect is still a human job: never take one off a contact
 sheet without tiling it a few times over to check for a seam.
+
+### What a level may declare
+
+A level in `data/levels.js` is its size, its rooms, its doors, its arrival
+points and the links out of it. Three more tables exist for the streets, and
+they are all optional — a level that declares none of them is exactly the level
+it always was.
+
+| | |
+| --- | --- |
+| `surfaces:` | Rectangles of `SURFACES` (data/world.js) painted over the rooms. What a tile is MADE of, where that differs from what its room is made of: a street is one zone with one name and a carriageway down the middle. `R.kerbs()` derives the kerb from wherever two of them meet. |
+| `paint:` | The markings. `dash`, `line`, `yellow`, `zebra`, `bays`, `text`, all in tiles, all drawn by `R.roadPaint()` rather than cropped — a marking is position-dependent and a tile is not. |
+| `cars:` | What is parked, and what is driving. A car is not furniture: it is at a pixel, at an angle, at a speed, so it lives here and in `engine/cars.js` rather than in `furnish()`. `model:` names an entry in `CARS`; `drive: true` lets you in; `route:` makes it traffic. |
+
+The editor has no tools for any of the three and carries all three through
+untouched, which is the next best thing — see `Doc.surfaces`.
 
 ## The level editor
 
@@ -162,7 +207,8 @@ Two parts, because there are two kinds of thing here. See [LICENSE](LICENSE).
 licensed [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) —
 share and link it freely, but not commercially and not modified.
 
-**The character sprites** are not ours. They are pixel art from the
+**The sprites** — the people, the office kit, the road surface, the pavement,
+the awnings — are not ours. They are pixel art from the
 [Liberated Pixel Cup](https://lpc.opengameart.org/) community, used under
 [OGA-BY 3.0](https://static.opengameart.org/OGA-BY-3.0.txt) and **modified**
 (composited, recoloured, cropped). Artists and sources are listed in

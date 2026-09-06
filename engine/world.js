@@ -16,26 +16,47 @@ const World = {
      reads these — Phones does, because a phone only rings where there are
      phones to ring. */
   level: null, def: null,
-  solid: null, zone: null, seed: null, objects: [], byTile: new Map(),
+  solid: null, zone: null, seed: null, surf: null, objects: [], byTile: new Map(),
   build(def) {
     this.def = def; this.level = def.id;
     /* The live dimensions of the map, which is what MAPW/MAPH mean. Set before
        anything below reads them: every loop in this file is bounded by them. */
     MAPW = def.w; MAPH = def.h;
-    this.solid = []; this.zone = []; this.seed = []; this.objects = []; this.byTile = new Map();
+    this.solid = []; this.zone = []; this.seed = []; this.surf = []; this.objects = []; this.byTile = new Map();
     /* Everything derived. Reset rather than left over, or a level with no desks
        in it draws the previous level's desks on its floor. */
     this.desks = []; this.worktops = []; this.tables = []; this.doorways = [];
     this.openings = new Set();
     this.blocked = new Set();
+    /* Which tiles a car is standing on. Filled by Cars.sync() every frame while
+       the game is running and left empty everywhere else — see isSolid(), and
+       the note there about why a car is not built into the map. */
+    this.carTiles = new Set();
     for (let y = 0; y < MAPH; y++) {
-      this.solid[y] = []; this.zone[y] = []; this.seed[y] = [];
-      for (let x = 0; x < MAPW; x++) { this.solid[y][x] = 1; this.zone[y][x] = null; this.seed[y][x] = Math.random(); }
+      this.solid[y] = []; this.zone[y] = []; this.seed[y] = []; this.surf[y] = [];
+      for (let x = 0; x < MAPW; x++) { this.solid[y][x] = 1; this.zone[y][x] = null; this.seed[y][x] = Math.random(); this.surf[y][x] = null; }
     }
     (def.rooms || []).forEach(rm => {
       const [x1, y1, x2, y2] = rm.r;
       for (let y = y1; y <= y2; y++) for (let x = x1; x <= x2; x++) { this.solid[y][x] = 0; this.zone[y][x] = rm.z; }
     });
+    /* What the ground is MADE of, where that differs from what its room is made
+       of — the tarmac over the middle of a street, laid on after the rooms
+       because it crosses them. Art and nothing else: it is not consulted by
+       isSolid(), it does not open or close a tile, and a level that declares
+       none is exactly the level it always was. */
+    (def.surfaces || []).forEach(sf => {
+      const [x1, y1, x2, y2] = sf.r;
+      for (let y = Math.max(0, y1); y <= Math.min(MAPH - 1, y2); y++)
+        for (let x = Math.max(0, x1); x <= Math.min(MAPW - 1, x2); x++) this.surf[y][x] = sf.s;
+    });
+    /* The cars, if this level has any. Built here rather than in furnish()
+       because a car is not an object on a tile: it is at a pixel, at an angle,
+       possibly moving, and possibly with the player inside it. Cars.build turns
+       the catalogue's tile positions into that; on a page that never loaded
+       engine/cars.js — the editor's, before it was taught about them — the
+       level simply has no cars in it and everything else works. */
+    this.cars = (typeof Cars !== 'undefined' && def.cars) ? Cars.build(def.cars) : [];
     (def.doors || []).forEach(d => {
       this.solid[d.y][d.x] = 0;
       /* Whether this door is a HOLE CUT IN A WALL or a leaf standing on floor a
@@ -241,7 +262,25 @@ const World = {
        out of World.solid on purpose: solid means wall, and these are waist
        height. */
     if (this.blocked && this.blocked.has(tx + ',' + ty)) return true;
+    /* Whatever a car is standing on this instant. Here rather than baked into
+       the map at build time, because a car moves and the map does not: this is
+       the one question every walker already asks — the player, a colleague on
+       an errand, the pathfinder behind them — so putting the answer here is
+       what makes a parked car something you go round instead of through,
+       without any of them learning what a car is.
+       It is also why it is a live set filled by Cars.sync() rather than
+       something build() writes: the editor builds levels too, and a car parked
+       across the only gap in a wall is not a fault in the FLOOR PLAN, which is
+       what the editor's connectivity check is asking about. */
+    if (this.carTiles && this.carTiles.has(tx + ',' + ty)) return true;
     return this.at(tx, ty).some(o => o.solid);
+  },
+  /* What this tile is made of, which is not always what its room is made of.
+     Null means "whatever the zone says", which is every tile of every level
+     that does not declare a surface. */
+  surfAt(tx, ty) {
+    if (!this.surf || tx < 0 || ty < 0 || tx >= MAPW || ty >= MAPH) return null;
+    return this.surf[ty][tx];
   },
   zoneAt(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= MAPW || ty >= MAPH) return null;

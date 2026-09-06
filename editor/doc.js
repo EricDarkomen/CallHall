@@ -29,6 +29,14 @@ const Doc = {
   name: '', w: 0, h: 0, indoors: true, hub: false,
   rooms: [], doors: [], counters: [], entries: {}, links: [],
   objects: [], desks: [],
+  /* CARRIED, NOT EDITED. Three tables a level may declare that this editor has
+     no tools for: what the ground is made of, the paint on it, and the cars
+     parked on it. They are cloned in on load, handed back to the builder so
+     the preview is the real level, and written out again by Emit — because the
+     one thing worse than not being able to edit something is quietly deleting
+     it on the way past. Give one of them a tab one day and it comes out of
+     this comment and into the file proper. */
+  surfaces: [], paint: [], cars: [],
   /* The NPC schedule waypoints from data/world.js. Global rather than per-level
      because the schedules are: WP is one table and the colleagues who walk it
      all work on the hub, so that is the level it is edited on. Empty everywhere
@@ -63,6 +71,9 @@ const Doc = {
     this.counters = clone(def.counters || []);
     this.entries = clone(def.entries || {});
     this.links = clone(def.links || []);
+    this.surfaces = clone(def.surfaces || []);
+    this.paint = clone(def.paint || []);
+    this.cars = clone(def.cars || []);
 
     /* World.build() adds one object per door BEFORE calling furnish(), so the
        furniture is everything after them. Those door objects are regenerated
@@ -113,6 +124,7 @@ const Doc = {
       indoors: this.indoors, hub: this.hub,
       rooms: this.rooms, doors: this.doors, counters: this.counters,
       entries: this.entries, links: this.links,
+      surfaces: this.surfaces, paint: this.paint, cars: this.cars,
       furnish() {
         objects.forEach(o => {
           const c = clone(o);
@@ -152,6 +164,7 @@ const Doc = {
       name: this.name, w: this.w, h: this.h, indoors: this.indoors, hub: this.hub,
       rooms: this.rooms, doors: this.doors, counters: this.counters,
       entries: this.entries, links: this.links,
+      surfaces: this.surfaces, paint: this.paint, cars: this.cars,
       objects: this.objects, desks: this.desks, waypoints: this.waypoints
     });
   },

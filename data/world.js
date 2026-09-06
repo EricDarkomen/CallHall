@@ -28,13 +28,76 @@ const ZONES = {
   secret:   { name: '████████',         floor: '#1d2230', alt: '#191d29', wall: '#0d1017', tint: '#b48cff', surf: 'concrete', wsurf: 'block'  },
   /* Outdoors. Lighter than anything inside the building, because they are lit
      by the sky rather than by a strip light — see LEVELS.outside, which is the
-     one level the renderer does not put a ceiling on. Both are breeze block at
-     the boundary: out here that is a car park wall rather than a plant room.
-     `tile`/`wtile` are the one flagstone and the one brick from art/sprites/
-     town.png — the same swatch reused apart by each zone's own floor/wall
-     colour, exactly as the office's rooms already share world.png's kit. */
+     one level the renderer does not put a ceiling on. All of them are breeze
+     block at the boundary: out here that is a car park wall rather than a
+     plant room.
+
+     A zone out here is a PLACE, not a material. Every one of them is paving
+     slabs by default — `tile` is the one flagstone from art/sprites/town.png,
+     reused exactly as the office's rooms share world.png's kit — and the
+     carriageway running through the middle of each is laid over the top of it
+     by SURFACES below, because a road and the pavement beside it are one
+     street with one name and two surfaces, and a zone can only carry one of
+     those two facts.
+
+     That is also why there are five of them for what used to be one: the zone
+     name is what UI.zone() puts on screen as you cross into it, so a street
+     with its own name has to be its own zone. Driving the loop announces each
+     road as you turn into it, which is the entire reason the loop is a loop. */
   forecourt: { name: 'The Forecourt',   floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
-  street:    { name: 'Bellhaven Road',  floor: '#42454c', alt: '#3d4046', wall: '#2e3137', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' }
+  street:    { name: 'Bellhaven Road',  floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
+  high:      { name: 'The High Street', floor: '#4b4f57', alt: '#464a50', wall: '#35393f', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
+  aldergate: { name: 'Aldergate Rise',  floor: '#484c54', alt: '#43474d', wall: '#32363c', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
+  cargate:   { name: 'Cargate Lane',    floor: '#474b53', alt: '#42464c', wall: '#31353b', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
+  fenn:      { name: 'Fenn Street',     floor: '#464a52', alt: '#41454b', wall: '#30343a', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' }
+};
+
+/* What a tile is MADE of, where that is not what its zone is made of. A level
+   declares rectangles of these in `surfaces:` and World.build() paints them
+   into World.surf; R.floorTile() reads one in preference to the zone's own
+   floor, and R.kerbs() draws a kerb along every edge where one meets ground of
+   a different surface. Nothing else knows: the zone still says where you are,
+   the room still says what is walkable, and a tile with no surface over it is
+   exactly what it always was.
+
+   `floor` and `alt` are TINTS, not colours — the kit tile is multiplied
+   through them, same as a zone's are, so the number written here is lighter
+   than what ends up on screen and is picked by looking at the result. `map` is
+   the one colour that is a colour: the minimap paints flat rectangles with no
+   texture to tint, so it needs to be told. */
+const SURFACES = {
+  /* Roads and the car park. Cold, dark and unpatterned, which is what makes
+     the paving beside it read as paving and the white lines read as paint. */
+  tarmac: { tile: 'terrain.tarmac', floor: '#a6acb5', alt: '#a0a6af', map: '#2c2f38' }
+};
+
+/* The cars. One entry per model, keyed by `model` on a car in a level's own
+   `cars:` list — the same arrangement as FURN below, and for the same reason:
+   what a hatchback IS belongs in one place, and which hatchback is parked in
+   bay 9 belongs to the level.
+
+     len/wid   the body, in pixels. A person is 58px tall on the same floor.
+     top       top speed, px/s. Walking is TILE * 3.45, which is 110.
+     acc       how briskly it gets there, px/s².
+     grip      how much it refuses to slide sideways, per second. Lower slides.
+     turn      radians/s at speed, before the speed taper in Cars.drive().
+     body/roof/trim   its colours. Everything else is drawn from these.
+
+   Handling numbers, not personality: a car that is slow because it is a
+   twenty-year-old pool car is slow HERE, in one number, and reads as itself
+   without anything in engine/cars.js knowing which car it is. */
+const CARS = {
+  /* The pool car. The only one in the county with a magnetic door sign that
+     has slid, and the only one in this car park you are allowed to move. */
+  pool:  { len: 56, wid: 27, top: 232, acc: 150, grip: 5.5, turn: 2.5, body: '#b9bec4', roof: '#8d949c', trim: '#33383e' },
+  hatch: { len: 52, wid: 26, top: 265, acc: 190, grip: 6.2, turn: 2.9, body: '#7d2f34', roof: '#5e2327', trim: '#2b2f33' },
+  estate:{ len: 62, wid: 28, top: 245, acc: 160, grip: 5.2, turn: 2.3, body: '#2f4a6b', roof: '#243a54', trim: '#2b2f33' },
+  van:   { len: 70, wid: 30, top: 210, acc: 120, grip: 4.4, turn: 2.0, body: '#d8d5cc', roof: '#c2bfb5', trim: '#3a3a38' },
+  /* Traffic. Three ordinary cars in three ordinary colours, so that what goes
+     past the Greggs is not obviously the same car four times. */
+  saloon:{ len: 56, wid: 27, top: 220, acc: 150, grip: 5.5, turn: 2.4, body: '#3f5a44', roof: '#31462f', trim: '#2b2f33' },
+  taxi:  { len: 56, wid: 27, top: 230, acc: 165, grip: 5.5, turn: 2.5, body: '#c9a227', roof: '#a8871f', trim: '#2b2f33' },
+  small: { len: 46, wid: 25, top: 250, acc: 200, grip: 6.5, turn: 3.1, body: '#5a5f8a', roof: '#464a6b', trim: '#2b2f33' }
 };
 
 /* How each kind of object is furnished, keyed by `kind`.
@@ -143,11 +206,15 @@ const FURN = {
      picture, so it keeps its mount and takes a sprite like the mirror does. */
   tv: { mount: 'wall', size: 25, sprite: 'wall.tv' },
 
-  /* Outdoors. A car is the largest object in the game and has to read as one
-     next to a 58px person; a puddle is flat and lies under everything. The
-     shopfront hangs on the wall opposite, which out here is the far side of
-     the road rather than a partition. */
-  car: { size: 40 }, bench: { size: 30 }, barrier: { size: 26 },
+  /* Outdoors. A puddle is flat and lies under everything; the shopfront hangs
+     on the wall behind it, which out here is the front of the parade rather
+     than a partition.
+     There is no `car` here any more and that is the point: a car is not
+     furniture. It has a heading, a speed and somebody in it, it is on the map
+     at a pixel rather than on a tile, and it lives in a level's `cars:` list
+     and in engine/cars.js. What was three emoji standing in a car park is now
+     three cars parked in one. */
+  bench: { size: 30 }, barrier: { size: 26 },
   puddle: { size: 22 }, shop: { mount: 'wall', size: 27 },
   /* Real kit art, same town.png as the ground and the wall it stands
      against. A wheelie bin is not the world atlas's `obj.bin` — that one is
@@ -158,6 +225,14 @@ const FURN = {
   /* A hanging board, for a shopfront that finally has a wall to hang it on —
      see LEVELS.outside's High Street room. */
   shopsign: { mount: 'wall', size: 24, sprite: 'sign.board' },
+  /* A gully in the kerb. Flat, walkable, driveable, and drawn UNDER the
+     kerb line rather than over it — R.kerbs() runs after the floor and before
+     anything that stands on it, which is where a drain belongs. */
+  drain: { size: 20, sprite: 'obj.drain' },
+  /* Its own kind rather than another `trolley`: this table is a literal and
+     the last key wins, so reusing the name would quietly turn the fourth
+     floor's tea trolley into a supermarket one. */
+  shoptrolley: { size: 26, sprite: 'obj.shoptrolley' },
 };
 
 const ROOM_DEFS = [

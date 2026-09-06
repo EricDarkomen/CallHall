@@ -7,6 +7,20 @@ const Interact = {
       if (this.target || this._label) { this.target = null; this.kind = null; this._label = null; $('#prompt').classList.remove('on'); }
       return;
     }
+    /* From a driving seat there is exactly one thing to interact with and it
+       is the door handle. Tested before anything else, and before the reach:
+       a car stopped beside a lamppost still offers the way out of itself. */
+    if (Cars.driving) {
+      this.target = Cars.driving; this.kind = 'car';
+      const label = 'Get out of ' + Cars.driving.name;
+      if (label !== this._label) {
+        this._label = label;
+        const el = $('#prompt');
+        el.innerHTML = '<span class="kbd">E</span> &nbsp;' + esc(label);
+        el.classList.add('on'); el.classList.remove('urgent');
+      }
+      return;
+    }
     const REACH = TILE * 1.05;
     let bestObj = null, od = REACH;
     /* Objects sit on integer tiles and the reach is about one tile, so only the
@@ -39,9 +53,17 @@ const Interact = {
     let best = null, kind = null;
     if (bestNpc && (!bestObj || nd <= od + PERSON_BIAS)) { best = bestNpc; kind = 'npc'; }
     else if (bestObj) { best = bestObj; kind = 'obj'; }
+    /* And a car, which is neither. It is not on a tile and so cannot be in
+       byTile, and it is nobody's furniture — so it is a third question rather
+       than a special case inside the first two. It loses every tie: a car
+       parked over a drain should still offer you the drain, and a colleague
+       standing beside one is still a colleague. */
+    const car = Cars.near(P.x, P.y);
+    if (car && !best) { best = car; kind = 'car'; }
     this.target = best; this.kind = kind;
     const label = !best ? null
       : kind === 'npc' ? 'Talk to ' + best.name
+      : kind === 'car' ? 'Look at ' + best.name
       : best.ringing ? 'ANSWER — ' + best.name
       : (best.kind === 'chair' || best.use === 'playerDesk') ? 'Use ' + best.name
       : 'Inspect ' + best.name;
@@ -57,6 +79,18 @@ const Interact = {
   go() {
     if (G.state !== 'play' || !this.target) return;
     if (this.kind === 'npc') { Sfx.select(); Dialogue.openNPC(this.target); return; }
+    /* From inside, E is the door. From outside it is whatever the car's own
+       `use` says, exactly as it is for a filing cabinet — which is what lets
+       one car offer to be got into and the next six explain why they will not
+       be, in data/acts.js, where the writing lives. */
+    if (this.kind === 'car') {
+      if (Cars.driving) { Cars.getOut(); return; }
+      const car = this.target;
+      const fn = Acts[car.use] || Acts.parkedCar;
+      Sfx.blip();
+      try { fn(car); } catch (e) { console.warn(e); Acts.parkedCar(car); }
+      return;
+    }
     const o = this.target;
     if (o.ringing) { Sfx.select(); Phones.answer(o); return; }
     const fn = Acts[o.use] || Acts.generic;
