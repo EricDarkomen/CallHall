@@ -57,6 +57,10 @@ const World = {
        engine/cars.js — the editor's, before it was taught about them — the
        level simply has no cars in it and everything else works. */
     this.cars = (typeof Cars !== 'undefined' && def.cars) ? Cars.build(def.cars) : [];
+    /* And the people on the street, which are the same kind of thing as the
+       cars and for the same reason: at a pixel, walking, and not the twenty
+       colleagues in NPCM — see engine/peds.js. */
+    this.peds = (typeof Peds !== 'undefined' && def.peds) ? Peds.build(def.peds) : [];
     (def.doors || []).forEach(d => {
       this.solid[d.y][d.x] = 0;
       /* Whether this door is a HOLE CUT IN A WALL or a leaf standing on floor a

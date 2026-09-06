@@ -271,10 +271,15 @@ function movePlayer(dt) {
     if (!playerFits(nx, ny)) return false;
     /* If somebody has ended up standing on you, you can still walk out of them —
        a move is only blocked when it would not increase the separation. */
-    return !NPCM.list.some(n => {
-      const d = Math.hypot(n.x - nx, n.y - ny);
-      return d < TILE * .5 && d <= Math.hypot(n.x - P.x, n.y - P.y);
-    });
+    /* People are soft: you cannot walk through one, but if somebody has ended
+       up standing on you the move is only blocked when it would not increase
+       the separation. Both lists, because a stranger on the pavement is as
+       much a person to bump into as a colleague at a printer. */
+    const near = o => {
+      const d = Math.hypot(o.x - nx, o.y - ny);
+      return d < TILE * .5 && d <= Math.hypot(o.x - P.x, o.y - P.y);
+    };
+    return !NPCM.list.some(near) && !Peds.list().some(near);
   };
   /* The walk cycle is advanced by ground covered rather than by a clock, so
      the feet keep up with the floor at any speed and nobody scurries. A

@@ -136,7 +136,7 @@ const Cars = {
       }
       if (Sfx.on) Sfx.engine(true, Math.abs(this.driving.fwd) / this.driving.def.top);
       this.hornT = this.horn ? this.hornT + dt : 0;
-      if (this.horn && this.hornT < dt * 1.5) Sfx.horn();
+      if (this.horn && this.hornT < dt * 1.5) { Sfx.horn(); Peds.honk(P.x, P.y); }
     } else if (Sfx.engine) Sfx.engine(false);
   },
 
@@ -429,6 +429,10 @@ const Cars = {
        only rule in this file that is about anything other than geometry. */
     if (!this.driving && Math.hypot(P.x - px, P.y - py) < TILE * 1.15) return true;
     for (const n of NPCM.list) if (Math.hypot(n.x - px, n.y - py) < TILE) return true;
+    /* And the people on the street, who are the reason the crossings work. The
+       rule was written before there were any pedestrians to apply it to; this
+       is the line that finally gives it somebody to stop for. */
+    for (const p of Peds.list()) if (Math.hypot(p.x - px, p.y - py) < TILE * 1.15) return true;
     return false;
   },
 

@@ -645,6 +645,68 @@ const Acts = {
       'Nobody from the fourth floor has ever admitted to using this one either.']);
   },
 
+  /* --- THE PEOPLE ON THE STREET ---
+     Strangers, and written as strangers: one exchange, no follow-up, nothing
+     remembered on either side. Half of them work in this building on a floor
+     you have never been to, which is the honest answer to why they look
+     faintly familiar — there is one set of composited character rows in the
+     atlas and they all borrow from it. See engine/peds.js. */
+  passerby(ped) {
+    insp('🧑', ped.name, 'Passing', [
+      pick(['They nod. You nod. Nobody breaks stride. This is the whole of it and it was correct.',
+        'A half-smile of the kind exchanged by two people who have decided, separately and at the same moment, not to have a conversation.',
+        'You have seen them in the lift. They have seen you in the lift. Neither of you will ever mention the lift.'])]);
+  },
+  pedGreggs(ped) {
+    insp('🥐', ped.name, 'Eleven twenty', [
+      'A bag held level with both hands, the way you carry something that is still hot through a wind.',
+      pick(['“Don’t.” They are smiling. They keep walking.',
+        'They catch you looking at the bag. They shift it fractionally away. Fair enough.',
+        '“There’s a queue,” they say, in the tone of somebody reporting from a front line.'])]);
+  },
+  pedPhone(ped) {
+    insp('📱', ped.name, 'On a call', [
+      pick(['“…no, no, I’m outside now. I can talk. I’m outside.”',
+        '“…so I said, if that’s the process, that’s the process. And he went quiet.”',
+        '“…yeah. Yeah. No. Yeah.”']),
+      'They half-raise a hand at you: the universal signal for *I am on a call, I have seen you, I am sorry, please do not*.']);
+  },
+  pedSmokers(ped) {
+    insp('🚬', ped.name, 'Not going back in yet', [
+      'Nobody out here is smoking. Two people are standing near a bin holding phones, having a conversation that is not being minuted.',
+      'You know this manoeuvre. You have performed this manoeuvre. On the fourth floor it is performed at a bin exactly like this one, four storeys up and forty feet to the left.']);
+  },
+  pedHiVis(ped) {
+    insp('🦺', ped.name, 'Between jobs', [
+      'High-vis, a lanyard on a retractable reel, and the walk of somebody who has to be somewhere at a particular time and will be.',
+      'They give you the nod that one person in a lanyard gives another. It is not much. It is more than the fourth floor manages most mornings.']);
+  },
+  pedTrolley(ped) {
+    insp('🛒', ped.name, 'Retail park', [
+      'Pushing a trolley along the pavement, away from the retail park, with the wholly untroubled air of somebody who intends to bring it back.',
+      'This is how it starts. This is exactly how every trolley on this map started.']);
+  },
+  pedDog(ped) {
+    insp('🐕', ped.name, 'Corven Way', [
+      'A dog of no identifiable make, entirely delighted, towing a woman who has clearly had this argument before and lost it years ago.',
+      'The dog looks at you. You are, for four seconds, the most interesting thing that has ever happened on Corven Way.'],
+      [{ t: 'Say hello to the dog.', to: null, do() {
+          Player.mod({ patience: 6 });
+          UI.toast('🐕', 'The dog is thrilled. The woman says “he’s alright, he’s alright”, which is a thing people say about dogs who are, in fact, alright. You go back to work slightly better.');
+        } },
+       { t: 'You have a shift.', to: null }]);
+  },
+  pedCommuter(ped) {
+    insp('🚶', ped.name, 'Parked on Aldergate', [
+      'Walking in from the direction of Aldergate Rise at twenty past, at the pace of somebody who has parked where they always park and knows exactly how long it takes.',
+      'Twenty-two spaces, forty staff. This is the other thirty-eight.']);
+  },
+  pedStopped(ped) {
+    insp('🧍', ped.name, 'Stopped', [
+      'A man who has stopped outside the bookmakers, for no reason that is visible from here, and shows no sign of starting again.',
+      'He is not waiting for anybody. He is not looking at anything. He has simply stopped, in the middle of a Tuesday, on a pavement, and there is something about it that is either very sad or the single wisest thing anybody has done in this postcode today.']);
+  },
+
   /* --- THE CARS ---
      A car is not furniture and does not come through Interact's object path —
      it has its own list, its own `use`, and Interact.go() looks it up here by

@@ -20,6 +20,7 @@ const Game = {
        P.x and P.y — so it has to have moved before Cam.follow reads them, or
        the camera is permanently one frame behind the thing it is following. */
     Cars.update(dt);
+    Peds.update(dt);
     Cut.tick(dt);
     /* The opening owns the camera while it is running — it is looking at the
        building rather than following somebody standing still in reception. */

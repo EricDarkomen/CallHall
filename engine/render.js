@@ -1673,6 +1673,9 @@ const R = {
        this list rather than drawn in a pass of their own: walk behind a parked
        car and you are behind it, walk in front and you are in front of it. */
     (World.cars || []).forEach(car => { if (Cam.visible(car.x, car.y)) drawables.push({ y: car.y, kind: 'car', car }); });
+    /* The people on the street, sorted with everybody else for the same reason
+       the cars are: walk behind one and you are behind them. */
+    (World.peds || []).forEach(p => { if (Cam.visible(p.x, p.y)) drawables.push({ y: p.y, kind: 'ped', p }); });
     /* Not while you are in one. You are the car — drawing you as well puts a
        person standing on the roof of the thing they are driving. */
     if (!Cars.driving) drawables.push({ y: P.y, kind: 'player' });
@@ -1682,6 +1685,26 @@ const R = {
     drawables.forEach(d => {
       if (d.kind === 'counter') {
         this.counter(d.t);
+      } else if (d.kind === 'ped') {
+        const p = d.p;
+        if (this.veilAt(Math.floor(p.x / TILE), Math.floor(p.y / TILE)) <= 0) return;
+        this.shadow(p.x, p.y + 13, 12, 5);
+        if (hi === p) {
+          const box = Sprites.box(p.sprite, p.x, p.y);
+          c.save(); c.strokeStyle = 'rgba(255,179,71,.9)'; c.lineWidth = 2;
+          c.shadowColor = '#ffb347'; c.shadowBlur = 14;
+          c.beginPath(); c.roundRect(box.x - 2, box.y - 2, box.w + 4, box.h + 4, 8); c.stroke();
+          c.restore();
+        }
+        if (Sprites.has(p.sprite)) {
+          const f = p.walking ? Sprites.frame(p.sprite, this.animate, p.step)
+            : this.animate ? Sprites.breath(p.sprite) : 0;
+          Sprites.draw(c, p.sprite, p.dir ?? 2, f, p.x, p.y);
+        } else this.emoji('🧑', p.x, p.y, 28);
+        /* No name over a stranger. That label is how you tell one of the twenty
+           colleagues from another, and a street of floating names would say
+           these are twenty more people to get to know. They are not. */
+        if (p.sayT > 0) this.bubble(p.x, p.y - 34, p.say, Math.min(1, p.sayT));
       } else if (d.kind === 'car') {
         this.car(d.car);
         if (hi === d.car && !Cars.driving) {
