@@ -626,6 +626,68 @@ const LEVELS = {
       { model: 'bus', name: 'The 41A', use: 'theBus', traffic: true, cruise: 128, leg: 0, along: 40,
         route: [[9.5, 17.5], [106.5, 17.5], [106.5, 56.5], [9.5, 56.5]] }
     ],
+    /* THE PEOPLE. Not the twenty colleagues — those are NPCM's, they are all
+       upstairs, and they have schedules and opinions. These are strangers, and
+       they exist because a town with nine cars and nobody in it is a car park
+       with shops painted on it. See engine/peds.js.
+
+       A route is a loop of pavement, in tiles, and a third number on a point is
+       how many seconds to stand there — looking in a window, waiting for
+       somebody, reading a phone. Never on tarmac: the traffic gives way to
+       people, so somebody who stopped in a live lane would hold up Bellhaven
+       Road until five, and the rule that stops that is in Peds.walk().
+
+       Where a route crosses a carriageway it does it AT A CROSSING, because
+       that is where the paint is and because the cars are already written to
+       stop for anybody in front of them. That rule was in engine/cars.js before
+       there was a single pedestrian to apply it to; this is what finally gives
+       it somebody to stop for. */
+    peds: [
+      /* Routes are rectangles: two runs along a pavement and two crossings of
+         the road between them. Where there is a zebra the crossing is ON it —
+         that is what the paint is for and a street where nobody uses it is a
+         street with decoration rather than markings. Where there is not, the
+         crossing is a straight line across at a point clear of a junction,
+         because that is what people do and because crossing a carriageway at
+         an angle puts somebody in a live lane for twice as long.
+
+         The one rule that is not negotiable: no leg runs ALONG a road. Three
+         of these did in the first draft — up the middle of Cargate, down
+         Marlow, and a diagonal across the High Street — which looks exactly
+         like what it is, a person who has not noticed the road. */
+
+      /* The High Street: up the parade, over the zebra by the Greggs, back
+         along the south side, and over again at the far end. The one anybody
+         watching the street for thirty seconds will see do a full circuit. */
+      { name: 'Somebody with a Greggs bag', use: 'pedGreggs', sprite: 'bev', speed: 1.05, leg: 0, along: 6,
+        route: [[31.5, 14.6], [44, 14.6, 4], [58, 14.6], [58, 22.6], [44, 22.6], [31.5, 22.6, 3], [31.5, 14.6]] },
+      /* East of Cargate, where there is no zebra, so he crosses straight over
+         at each end — well clear of both junctions, which is the difference
+         between jaywalking and walking into a car. */
+      { name: 'A man on the phone', use: 'pedPhone', sprite: 'colin', speed: 1.25, leg: 3, along: 6,
+        route: [[68, 14.6], [80, 14.6], [92, 14.6, 5], [92, 22.6], [80, 22.6], [68, 22.6, 2]] },
+      /* Outside the office, doing the thing everybody does outside an office. */
+      { name: 'Two people not going back in yet', use: 'pedSmokers', sprite: 'gary', speed: 0.8, leg: 0, along: 2,
+        route: [[24, 14.6, 9], [20, 14.6, 7], [16, 14.6, 5]] },
+      /* Fenn Street, past the units and the car wash, over the zebra at the
+         east end and straight across at the west. Stops short of Cargate. */
+      { name: 'Somebody in a hi-vis', use: 'pedHiVis', sprite: 'tomasz', speed: 1.3, leg: 0, along: 14,
+        route: [[18, 33.4], [45.5, 33.4, 3], [45.5, 40.6], [18, 40.6, 2]] },
+      /* Corven Way and the retail park, which is where the trolleys come from. */
+      { name: 'Somebody pushing a trolley', use: 'pedTrolley', sprite: 'marjorie', speed: 0.85, leg: 0, along: 4,
+        route: [[26, 51.4], [40, 51.4, 4], [56, 51.4], [56, 58.6], [40, 58.6], [26, 58.6, 3]] },
+      /* The east end of Corven, over its zebra, out to the retail park and
+         back. Turns short of Marlow Road rather than walking down it. */
+      { name: 'A woman with a dog', use: 'pedDog', sprite: 'sarah', speed: 1.2, leg: 0, along: 8,
+        route: [[77.5, 51.4], [98, 51.4, 3], [98, 58.6], [77.5, 58.6, 4]] },
+      /* Aldergate Rise, where the overflow parks and walks round. Both sides
+         of it, so the crossings are the two ends rather than the middle. */
+      { name: 'Somebody walking in from Aldergate', use: 'pedCommuter', sprite: 'mo', speed: 1.35, leg: 0, along: 5,
+        route: [[6.6, 44], [6.6, 30], [6.6, 22.6], [14.6, 22.6], [14.6, 30], [14.6, 44, 3]] },
+      /* And one who is simply not moving very fast, outside the bookmakers. */
+      { name: 'A man who has stopped', use: 'pedStopped', sprite: 'terry', speed: 0.7, leg: 0, along: 1,
+        route: [[54, 14.6, 12], [50, 14.6, 8]] }
+    ],
     furnish() {
       const A = o => this.add(o);
       /* The way back in. Scenery on the boundary wall, exactly like the way out
@@ -706,7 +768,11 @@ const LEVELS = {
       A({ x: 15, y: 26, e: '♻️', name: 'The bottle bank', kind: 'box', solid: true, use: 'bottleBank' });
       A({ x: 15, y: 29, e: '🖍️', name: 'The wall on Aldergate Rise', kind: 'graf', solid: true, use: 'aldergateWall' });
       A({ x: 7, y: 27, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
-      A({ x: 6, y: 30, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'trolley' });
+      /* Against the kerb rather than against the wall. The west pavement here
+         is two tiles wide and this used to stand on the inner one, which left
+         nothing for anybody walking up it to get past on and put every
+         pedestrian who tried into the road. */
+      A({ x: 7, y: 30, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'trolley' });
 
       /* ---- FENN STREET ----
          The units along the back of the block, on the one other north wall out

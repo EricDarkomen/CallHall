@@ -91,16 +91,21 @@ const Interact = {
     let best = null, kind = null;
     if (bestNpc && (!bestObj || nd <= od + PERSON_BIAS)) { best = bestNpc; kind = 'npc'; }
     else if (bestObj) { best = bestObj; kind = 'obj'; }
-    /* And a car, which is neither. It is not on a tile and so cannot be in
-       byTile, and it is nobody's furniture — so it is a third question rather
-       than a special case inside the first two. It loses every tie: a car
-       parked over a drain should still offer you the drain, and a colleague
-       standing beside one is still a colleague. */
+    /* And the two things that are neither furniture nor colleagues: somebody
+       walking past, and a car. Neither is on a tile, so neither can be in
+       byTile, and both are a further question rather than a special case
+       inside the first two. Both lose every tie — a car parked over a drain
+       should still offer you the drain, and a colleague standing beside one is
+       still a colleague — and between themselves the person wins, because a
+       person does. */
+    const ped = Peds.near(P.x, P.y);
+    if (ped && !best) { best = ped; kind = 'ped'; }
     const car = Cars.near(P.x, P.y);
     if (car && !best) { best = car; kind = 'car'; }
     this.target = best; this.kind = kind;
     const label = !best ? null
       : kind === 'npc' ? 'Talk to ' + best.name
+      : kind === 'ped' ? 'Talk to ' + best.name
       : kind === 'car' ? 'Look at ' + best.name
       : best.ringing ? 'ANSWER — ' + best.name
       : (best.kind === 'chair' || best.use === 'playerDesk') ? 'Use ' + best.name
@@ -121,6 +126,13 @@ const Interact = {
        `use` says, exactly as it is for a filing cabinet — which is what lets
        one car offer to be got into and the next six explain why they will not
        be, in data/acts.js, where the writing lives. */
+    if (this.kind === 'ped') {
+      const ped = this.target;
+      const fn = Acts[ped.use] || Acts.passerby;
+      Sfx.select();
+      try { fn(ped); } catch (e) { console.warn(e); Acts.passerby(ped); }
+      return;
+    }
     if (this.kind === 'car') {
       if (Cars.driving) { Cars.getOut(); return; }
       const car = this.target;

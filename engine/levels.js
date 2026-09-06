@@ -53,7 +53,7 @@ const Levels = {
        is still in the middle of Fenn Street. `carTiles` travels with them for
        the same reason `blocked` does — it is what the level's own collision
        reads, and a stale one from the last level is a set of invisible cars. */
-    'cars', 'carTiles'],
+    'cars', 'carTiles', 'peds'],
 
   /* Object fields that a level's own state may change after it is built, and
      that therefore have to survive being evicted and rebuilt. Everything else

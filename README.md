@@ -78,6 +78,17 @@ circuits cross, stop for anybody on foot, and sound the horn when they have been
 waiting a while. They are not scenery: drive into one and both of you will know
 about it.
 
+There are people, too. Eight of them, walking circuits of the pavements: up the
+parade and over the zebra by the Greggs, along Fenn Street in a hi-vis, a trolley
+back to the retail park, a dog on Corven Way, and two outside the office who are
+not going back in yet. They cross at the crossings, go round a lamppost rather
+than into it, and have no schedule, no memory and no name of their own — they are
+somebody with a Greggs bag. Press `E` and you get a stranger's half-sentence.
+Sound the horn at one and you get the entire British response to being honked at.
+
+They are also the other half of the traffic rule. Cars have always stopped for
+anybody on foot; until there was somebody on foot, that only ever applied to you.
+
 There is a drive-thru on Corven Way. It will not serve you on foot.
 
 Five achievements are out there. One of them is parking straight.
@@ -146,7 +157,7 @@ sheet without tiling it a few times over to check for a seam.
 ### What a level may declare
 
 A level in `data/levels.js` is its size, its rooms, its doors, its arrival
-points and the links out of it. Three more tables exist for the streets, and
+points and the links out of it. Four more tables exist for the streets, and
 they are all optional — a level that declares none of them is exactly the level
 it always was.
 
@@ -155,13 +166,14 @@ it always was.
 | `surfaces:` | Rectangles of `SURFACES` (data/world.js) painted over the rooms. What a tile is MADE of, where that differs from what its room is made of: a street is one zone with one name and a carriageway down the middle. `R.kerbs()` derives the kerb from wherever two of them meet. |
 | `paint:` | The markings. `dash`, `line`, `yellow`, `zebra`, `bays`, `text`, all in tiles, all drawn by `R.roadPaint()` rather than cropped — a marking is position-dependent and a tile is not. |
 | `cars:` | What is parked, and what is driving. A car is not furniture: it is at a pixel, at an angle, at a speed, so it lives here and in `engine/cars.js` rather than in `furnish()`. `model:` names an entry in `CARS`; `body:`/`roof:` repaint that model for one car; `drive: true` lets you in; `route:` makes it traffic. |
+| `peds:` | Who is walking about. Same shape as a traffic car and for the same reason — a pixel, a route, a speed — and deliberately not the machinery in `engine/npc.js`, which is twenty colleagues with schedules and a grudge about a doorway. A route is `[x, y]` waypoints in tiles, with an optional third number to stand there for that many seconds. See `engine/peds.js`. |
 
 Two flags on a furnishing are read by the engine and are worth knowing about:
 `sprite:` names a rect in the atlas to draw instead of the emoji, and `fromCar:`
 means the thing is meant to be reached without getting out — which is all a
 drive-thru is, and all the next one will have to be.
 
-The editor has no tools for any of the three and carries all three through
+The editor has no tools for any of the four and carries all four through
 untouched, which is the next best thing — see `Doc.surfaces`.
 
 ### What collides with what

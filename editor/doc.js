@@ -41,7 +41,7 @@ const Doc = {
      one thing worse than not being able to edit something is quietly deleting
      it on the way past. Give one of them a tab one day and it comes out of
      this comment and into the file proper. */
-  surfaces: [], paint: [], cars: [],
+  surfaces: [], paint: [], cars: [], peds: [],
   /* The NPC schedule waypoints from data/world.js. Global rather than per-level
      because the schedules are: WP is one table and the colleagues who walk it
      all work on the hub, so that is the level it is edited on. Empty everywhere
@@ -79,6 +79,7 @@ const Doc = {
     this.surfaces = clone(def.surfaces || []);
     this.paint = clone(def.paint || []);
     this.cars = clone(def.cars || []);
+    this.peds = clone(def.peds || []);
 
     /* World.build() adds one object per door BEFORE calling furnish(), so the
        furniture is everything after them. Those door objects are regenerated
@@ -129,7 +130,7 @@ const Doc = {
       indoors: this.indoors, hub: this.hub,
       rooms: this.rooms, doors: this.doors, counters: this.counters,
       entries: this.entries, links: this.links,
-      surfaces: this.surfaces, paint: this.paint, cars: this.cars,
+      surfaces: this.surfaces, paint: this.paint, cars: this.cars, peds: this.peds,
       furnish() {
         objects.forEach(o => {
           const c = clone(o);
@@ -169,7 +170,7 @@ const Doc = {
       name: this.name, w: this.w, h: this.h, indoors: this.indoors, hub: this.hub,
       rooms: this.rooms, doors: this.doors, counters: this.counters,
       entries: this.entries, links: this.links,
-      surfaces: this.surfaces, paint: this.paint, cars: this.cars,
+      surfaces: this.surfaces, paint: this.paint, cars: this.cars, peds: this.peds,
       objects: this.objects, desks: this.desks, waypoints: this.waypoints
     });
   },
