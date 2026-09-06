@@ -814,6 +814,193 @@ const Acts = {
       'Somebody in one of these shops does this properly every single evening and nobody has ever thanked them for it. You are, at this moment, the only person who has ever stood here and noticed.']);
   },
 
+  /* --- THE HIGH STREET, EAST END --- */
+  thePub() {
+    insp('🍺', 'The Bellhaven Arms', 'Open 12–11, quiz Tuesdays', [
+      'Etched glass, a carpet that has seen things, and a chalkboard outside offering a pie and a pint for the price of a pie and a pint in 2014.',
+      'Nobody from the fourth floor drinks here at lunchtime, which everybody has agreed on without it ever having been discussed, and which is broken about twice a year, spectacularly.'],
+      [{ t: 'One, quickly. (25 min.)', to: null, do() {
+          G.minutes += 25; Player.mod({ patience: 10, energy: -4, money: -4.60 });
+          P.stats.bullshit += 1;
+          UI.toast('🍺', 'Twenty-five minutes and £4.60. You go back up in the lift rehearsing a sentence about the traffic.');
+        } },
+       { t: 'It is twenty past ten.', to: null }]);
+  },
+  pubSign() {
+    insp('🪧', 'The pub sign', 'Repainted 2003', [
+      'A hanging sign showing a coat of arms nobody in Bellhaven has ever been entitled to, with a motto underneath in a Latin that is not Latin.',
+      'It swings. It is the only thing on this street that makes a noise nobody minds.']);
+  },
+  launderette() {
+    insp('🧺', 'The launderette', 'Service washes · 8 till 7', [
+      'Eight machines, four dryers, a bench, and a woman who has run it for nineteen years and knows more about this street than the council does.',
+      'Terry brings the tea towels from the fourth floor here twice a year. He has never claimed it back and has never mentioned it, and this is the entirety of the building’s cleaning contract.']);
+  },
+  postOffice() {
+    insp('📮', 'The post office', 'Counter closes 1–2', [
+      'A counter at the back of a shop that also sells greetings cards, stationery and, for reasons lost to everyone, kites.',
+      'The queue is four people long at any hour of any day. It is the same four people in the sense that it is always four people; it is never the same four people.']);
+  },
+  kebab() {
+    insp('🌯', 'Bellhaven Kebab', 'Open till 3am, obviously', [
+      'Shut. It is nine in the morning and this is a building that has never once been open at nine in the morning.',
+      'The Christmas party ended here in 2019, 2021 and 2022. There is a photograph on the fourth floor of Nigel in this doorway that has never been explained and never will be.']);
+  },
+  phoneBox() {
+    insp('📞', 'The phone box', 'Adopted', [
+      'A red phone box with no phone in it. On the door, a laminated notice: THIS BOX HAS BEEN ADOPTED BY THE COMMUNITY.',
+      'Inside is a defibrillator and a shelf of paperbacks. It is the single most useful object in this postcode and it used to be a telephone.']);
+  },
+  bench3() {
+    insp('🪑', 'The third bench', 'No plaque', [
+      'A third bench, this one with the screw holes where a plaque used to be and no plaque.',
+      'Nobody knows whose it was. Somebody took it, or somebody took it back.']);
+  },
+
+  /* --- FENN STREET, EAST --- */
+  club() {
+    insp('🎱', 'The Working Men’s Club', 'Members and signed-in guests', [
+      'Two snooker tables, a function room, and a committee that has been the same six people since before the building you work in was built.',
+      'It is where the leaving dos happen, because it is the only room in Bellhaven that holds forty people and does not charge for it.']);
+  },
+  tanning() {
+    insp('🌞', 'Sunseekers', 'Sunbeds · nails · spray', [
+      'A shopfront in a colour not otherwise found in this town, offering three services of which the second is also available forty feet away on the High Street.',
+      'The two proprietors are civil about this in the way that two people are civil about something for eleven years.']);
+  },
+  cashAndCarry() {
+    insp('📦', 'The cash and carry', 'Trade only', [
+      'TRADE ONLY, on the door, under a sign advertising catering-size everything to a street with four caterers on it.',
+      'The biscuits for the fourth floor come from here. Nobody has a trade card. Terry has a trade card.']);
+  },
+
+  /* --- MARLOW STREET --- */
+  multiStorey() {
+    insp('🅿️', 'The multi-storey', 'Closed', [
+      'Four floors of car park with a chain across the ramp and a notice about structural survey works that is dated and is not recent.',
+      'It has been closed for two years. Every single parking problem in this town, including the twenty-two spaces, is downstream of this chain.']);
+  },
+  marlowWall() {
+    insp('🖍️', 'The wall on Marlow Street', 'Unpainted', [
+      'The only wall in Bellhaven nobody has bothered to paint over, which has made it the one everybody writes on.',
+      pick(['Halfway up, in silver, beautifully done and completely illegible.',
+        'At head height: a phone number, a name, and an opinion about the name.',
+        'In small biro at the bottom, out of everybody’s way: “i was here at 4am and it was alright”.'])]);
+  },
+  marlowBins() {
+    insp('♻️', 'The bins on Marlow Street', 'Trade waste', [
+      'Six trade bins in a row, each with a different company’s lock on it, and one with the lid tied down with rope.',
+      'A fox has worked out which of the six is the kebab shop’s. The fox is not here now. The fox has been here.']);
+  },
+
+  /* --- CORVEN WAY --- */
+  superstore() {
+    insp('🛒', 'The superstore', 'Open 7 till 10', [
+      'The reason the retail park exists and the reason Corven Way has traffic on it at all.',
+      'Everybody on the fourth floor shops here and everybody on the fourth floor describes it as “the big one”, which is how you can tell who is local: local people call it by the name of the shop that was here before it.'],
+      [{ t: 'Do a shop. (18 min.)', to: null, do() {
+          G.minutes += 18; Player.mod({ energy: 3, money: -12.40 });
+          UI.toast('🛒', 'Eighteen minutes and £12.40, of which £9 was things you did not come in for. This is the correct outcome and everybody achieves it.');
+        } },
+       { t: 'Not on work time.', to: null }]);
+  },
+  screwfix() {
+    insp('🔩', 'Screw & Fix', 'Trade counter', [
+      'A shop with nothing in it: a counter, a catalogue, and a warehouse behind a door that men in vans speak to through a screen.',
+      'Facilities order everything for the building from here. The ergonomic chairs did not come from here. Nothing that has ever been announced in a wellbeing email came from here, and everything that has ever actually been fixed did.']);
+  },
+  petStore() {
+    insp('🐕', 'The pet superstore', 'Dogs welcome', [
+      'An enormous shed containing an aisle of dog food longer than the fourth floor’s main office.',
+      'Bev’s dog has been here. Bev’s dog is, by common consent, the best thing anybody on the fourth floor has ever brought into a conversation.']);
+  },
+  retailSign() {
+    insp('🪧', 'BELLHAVEN RETAIL PARK', 'Units 1–6 · 3 hours free', [
+      'A totem sign listing six units of which four are let, one is the superstore and one has been THIS UNIT AVAILABLE since it was built.',
+      'THREE HOURS FREE PARKING, in letters twice the size of anything else, which is the actual product this entire development sells.']);
+  },
+  carpets() {
+    insp('🧶', 'The carpet warehouse', 'CLOSING DOWN', [
+      'CLOSING DOWN SALE, in the window, in the same vinyl letters, faded to a different colour from the rest of the window.',
+      'It has been closing down since 2017. Somewhere in there is a business model and nobody has ever worked out what it is.']);
+  },
+  driveThru(o) {
+    if (!Cars.driving) {
+      return insp('☕', 'The drive-thru', 'Vehicles only', [
+        'A window, a speaker post, and a painted lane running past both of them.',
+        'A laminated sign on the window says NO PEDESTRIAN SERVICE AT THIS WINDOW, and under it, in biro, on a Post-it: “sorry — insurance”.',
+        'The person inside gives you a look that contains no malice at all and absolutely no coffee.']);
+    }
+    if (G.flags.driveThruToday) {
+      return insp('☕', 'The drive-thru', 'You have been already', [
+        'The same person. The same window. A flicker of recognition that neither of you acknowledges.',
+        'You could go round again. You are not going to go round again.']);
+    }
+    insp('☕', 'The drive-thru', 'Two cars ahead of you', [
+      'You pull up level with the window. The speaker post is nine feet behind you and you have already gone past it, which is what everybody does and what the lane is shaped to make everybody do.',
+      'It comes out of the window in a cardboard tray with a lid that is not on properly.'],
+      [{ t: 'Order it. (£3.10)', to: null, do() {
+          if (P.money < 3.10) { Sfx.deny(); UI.toast('☕', 'You are 30p short. You drive on, and everybody in the queue behind you watches you do it.'); return; }
+          G.flags.driveThruToday = true;
+          G.minutes += 6; Player.mod({ money: -3.10, energy: 8, patience: 6 });
+          count('coffee'); Ach.get('a_drivethru');
+          UI.toast('☕', 'Six minutes and £3.10. It is better than the fourth floor’s and you will never say so out loud.');
+        } },
+       { t: 'Drive on. You have a coffee machine.', to: null, do() {
+          UI.toast('☕', 'You drive on. You do have a coffee machine. That is not the same thing and you know it is not the same thing.');
+        } }]);
+  },
+  railway() {
+    insp('🚃', 'The railway', 'Behind the fence', [
+      'Palisade fencing, a bank of buddleia, and two tracks. Every eleven minutes something goes through at a speed that suggests it has considered Bellhaven and decided against.',
+      'The last train that stopped here stopped in 1967. The platform is still there under the brambles and the sign is still on it, and everybody in this town can tell you that and nobody can tell you why they know it.']);
+  },
+  subway() {
+    insp('🕳️', 'The subway', 'Pedestrian underpass', [
+      'A tiled underpass beneath the railway, lit, dry, and swept — which is not what anybody expects and is why everybody mentions it.',
+      'There is a mural in there of the town as it was, painted by a school in 1998. Two of the children in the mural work in your building.']);
+  },
+  corvenWall() {
+    insp('🖍️', 'The wall on Corven Way', 'Retaining', [
+      'The railway’s retaining wall, blue engineering brick, forty feet of it, and it will outlast every building on this map.',
+      'Somebody has painted BELLHAVEN across it in three-foot letters, correctly spelled, evenly spaced, and level. It took planning. Nobody has ever removed it and nobody is going to.']);
+  },
+
+  /* --- THE RETAIL PARK --- */
+  trolleyBay() {
+    insp('🛒', 'The trolley bay', 'Please return your trolley', [
+      'A steel corral with a sign asking that trolleys be returned to it, and eleven trolleys in it, which is a hit rate this town should be prouder of than it is.']);
+  },
+  recycling() {
+    insp('♻️', 'The recycling point', 'Glass · cans · textiles', [
+      'Four banks and a clothing bin, on a square of tarmac that is swept about as often as it is filled, which is not the same interval.',
+      'The textile bank has a hand-written sign asking for no more duvets. There are three duvets beside it.']);
+  },
+  retailRules() {
+    insp('🪧', 'The retail park sign', '3 hours max · ANPR in operation', [
+      'THREE HOURS MAXIMUM STAY. ANPR IN OPERATION. PARKING CHARGE NOTICES ISSUED.',
+      'Under it, smaller: THIS CAR PARK IS PRIVATE LAND. Under that, in a different font entirely, as though added later by somebody who had lost an argument: CUSTOMERS ONLY.'],
+      [{ t: 'Note the three hours.', to: null, do() {
+          UI.toast('🅿️', 'Three hours. You are on a shift. You will be back upstairs in twenty minutes and you will still think about this at half four.');
+        } },
+       { t: 'It is a car park.', to: null }]);
+  },
+  waitingVan() {
+    insp('🚐', 'A van, waiting', 'Engine off, been here a while', [
+      'A van in the aisle rather than in a bay, facing the way out, with a man in it eating a sandwich and looking at nothing.',
+      'This is the middle of his day and he is entitled to it, and the fact that you can tell that from thirty feet away is the only genuinely restful thing on this entire map.']);
+  },
+  learner() {
+    insp('🚗', 'A driving school car', 'Please allow', [
+      'Roof sign, dual controls, and two people in it having the calmest and most stressful conversation available to humans.',
+      'It is doing thirty-eight in a forty, which is entirely within its rights, and there are four cars behind it, which is entirely predictable.']);
+  },
+  theBus() {
+    insp('🚌', 'The 41A', 'Does not stop here', [
+      'The 41A, going past the bus stop at the speed of something that has no intention of stopping at it, because the 41A does not stop here.',
+      'This is written down nowhere at the stop. It is written down here, on this bus, on the front of it, on a screen, going past at twenty-eight miles an hour.']);
+  },
+
   /* --- MEETING ROOM 2 --- */
   meetTable() {
     if (G.flags.briefingToday && !G.flags.allhandsBeaten) {

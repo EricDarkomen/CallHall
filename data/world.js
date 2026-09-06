@@ -40,16 +40,22 @@ const ZONES = {
      street with one name and two surfaces, and a zone can only carry one of
      those two facts.
 
-     That is also why there are five of them for what used to be one: the zone
-     name is what UI.zone() puts on screen as you cross into it, so a street
-     with its own name has to be its own zone. Driving the loop announces each
-     road as you turn into it, which is the entire reason the loop is a loop. */
+     That is also why there is one of them per street: the zone name is what
+     UI.zone() puts on screen as you cross into it, so a street with its own
+     name has to be its own zone. Driving the network announces each road as
+     you turn into it, which is the entire reason the network is a network. */
   forecourt: { name: 'The Forecourt',   floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
   street:    { name: 'Bellhaven Road',  floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
   high:      { name: 'The High Street', floor: '#4b4f57', alt: '#464a50', wall: '#35393f', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
   aldergate: { name: 'Aldergate Rise',  floor: '#484c54', alt: '#43474d', wall: '#32363c', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
   cargate:   { name: 'Cargate Lane',    floor: '#474b53', alt: '#42464c', wall: '#31353b', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
-  fenn:      { name: 'Fenn Street',     floor: '#464a52', alt: '#41454b', wall: '#30343a', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' }
+  marlow:    { name: 'Marlow Street',   floor: '#494d55', alt: '#44484e', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
+  fenn:      { name: 'Fenn Street',     floor: '#464a52', alt: '#41454b', wall: '#30343a', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
+  corven:    { name: 'Corven Way',      floor: '#454951', alt: '#40444a', wall: '#2f3339', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
+  /* Not a street: a walled car park with one way in, like the forecourt at the
+     other end of town, and the only place out here big enough to find out what
+     the pool car does above thirty. */
+  retail:    { name: 'Bellhaven Retail Park', floor: '#484c53', alt: '#43474e', wall: '#32363c', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' }
 };
 
 /* What a tile is MADE of, where that is not what its zone is made of. A level
@@ -93,11 +99,17 @@ const CARS = {
   hatch: { len: 52, wid: 26, top: 265, acc: 190, grip: 6.2, turn: 2.9, body: '#7d2f34', roof: '#5e2327', trim: '#2b2f33' },
   estate:{ len: 62, wid: 28, top: 245, acc: 160, grip: 5.2, turn: 2.3, body: '#2f4a6b', roof: '#243a54', trim: '#2b2f33' },
   van:   { len: 70, wid: 30, top: 210, acc: 120, grip: 4.4, turn: 2.0, body: '#d8d5cc', roof: '#c2bfb5', trim: '#3a3a38' },
-  /* Traffic. Three ordinary cars in three ordinary colours, so that what goes
-     past the Greggs is not obviously the same car four times. */
+  /* Traffic. Ordinary cars in ordinary colours, so that what goes past the
+     Greggs is not obviously the same car eight times. */
   saloon:{ len: 56, wid: 27, top: 220, acc: 150, grip: 5.5, turn: 2.4, body: '#3f5a44', roof: '#31462f', trim: '#2b2f33' },
   taxi:  { len: 56, wid: 27, top: 230, acc: 165, grip: 5.5, turn: 2.5, body: '#c9a227', roof: '#a8871f', trim: '#2b2f33' },
-  small: { len: 46, wid: 25, top: 250, acc: 200, grip: 6.5, turn: 3.1, body: '#5a5f8a', roof: '#464a6b', trim: '#2b2f33' }
+  small: { len: 46, wid: 25, top: 250, acc: 200, grip: 6.5, turn: 3.1, body: '#5a5f8a', roof: '#464a6b', trim: '#2b2f33' },
+  /* The 41A. Long enough that it has to slow right down for a corner and take
+     the whole width of the junction to get round one, which is the point of
+     having one on the network at all — and it does not stop at the bus stop,
+     which is the thing the bus stop has said about the 41A since long before
+     there was a road for it to not stop on. */
+  bus:   { len: 96, wid: 32, top: 175, acc: 95, grip: 3.6, turn: 1.9, body: '#8d3a3f', roof: '#f0ece2', trim: '#2b2f33' }
 };
 
 /* How each kind of object is furnished, keyed by `kind`.
@@ -233,6 +245,12 @@ const FURN = {
      the last key wins, so reusing the name would quietly turn the fourth
      floor's tea trolley into a supermarket one. */
   shoptrolley: { size: 26, sprite: 'obj.shoptrolley' },
+  /* `fromCar` is read by Interact.scan and by nothing else: it means this is a
+     thing you are meant to reach WITHOUT getting out, so while you are driving
+     it takes the E key off the door handle. One flag rather than the engine
+     learning what a drive-thru is, so the next one — a car wash, a barrier
+     with an intercom — is a furnishing and not a special case. */
+  drivethru: { mount: 'wall', size: 26, art: 'sign', fromCar: true },
 };
 
 const ROOM_DEFS = [

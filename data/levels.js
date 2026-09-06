@@ -373,14 +373,24 @@ const LEVELS = {
      buy from without ever being a place you could stand, and the view off the
      fire escape looks down on this car park.
 
-     THE SHAPE OF IT. Four streets round one block: Bellhaven Road along the
-     top, Aldergate Rise down the west side, Fenn Street along the bottom,
-     Cargate Lane back up the east. A loop, deliberately — the point of a car
-     is somewhere to drive it to and back from, and a road that stops at the
-     edge of the map is a corridor. The block in the middle (x 16–57, y 24–31)
-     is claimed by no room at all and so comes out solid, which is what a
-     terrace of buildings is from above: you cannot go in, and there is nothing
-     in there to go into.
+     THE SHAPE OF IT. A grid: three streets running east–west — Bellhaven Road
+     and the High Street along the top, Fenn Street through the middle, Corven
+     Way along the bottom — crossed by three running north–south: Aldergate
+     Rise, Cargate Lane and Marlow Street. Six roads, nine junctions, and four
+     blocks of buildings in the holes between them.
+
+     A grid rather than one loop, deliberately, and the reason is the driving.
+     A single circuit is a lap: you go round it and you have seen it. A grid is
+     a choice at every junction, two ways round to everywhere, and somewhere to
+     be overtaken — and it is what lets four lots of traffic run four different
+     circuits through the same nine junctions and have to give way to each
+     other at them.
+
+     The blocks are claimed by no room at all and so come out solid, which is
+     what a terrace of buildings is from above: you cannot go in, and there is
+     nothing in there to go into. The exception is the retail park, which is a
+     walled car park with one way in off Fenn Street — the only place out here
+     with room to find out what the pool car does above thirty.
 
      Every street is two things at once — a carriageway with a pavement either
      side of it — and a zone can only be one of them, so the zone is the PLACE
@@ -391,7 +401,7 @@ const LEVELS = {
      the streets they cross. */
   outside: {
     name: 'Outside',
-    w: 88, h: 44,
+    w: 114, h: 62,
     indoors: false,
     rooms: [
       /* The car park, and the one gap in its wall. Row 13 is claimed by
@@ -404,13 +414,25 @@ const LEVELS = {
          reaches the shops, because that is what happens to roads. Pavement,
          carriageway and pavement, all of it one zone. */
       { z: 'street', r: [2, 14, 41, 23] },
-      { z: 'high', r: [42, 14, 85, 23] },
-      /* The three sides of the block. Each is pavement–carriageway–pavement
-         the same way round, and each meets the two it joins inside the other's
-         rectangle, so there is no corner that is nobody's. */
+      { z: 'high', r: [42, 14, 111, 23] },
+      /* The three north–south streets, each in two pieces: the stretch between
+         Bellhaven and Fenn, and the stretch between Fenn and Corven. Two rects
+         rather than one because the retail park's wall runs across between
+         them, and a street that owned that row would own the wall as well. */
       { z: 'aldergate', r: [6, 24, 15, 31] },
+      { z: 'aldergate', r: [6, 42, 15, 49] },
       { z: 'cargate', r: [58, 24, 67, 31] },
-      { z: 'fenn', r: [6, 32, 67, 41] }
+      { z: 'cargate', r: [58, 42, 67, 49] },
+      { z: 'marlow', r: [100, 24, 109, 31] },
+      { z: 'marlow', r: [100, 42, 109, 49] },
+      /* The two long ones. Listed after the north–south streets so they lose
+         the junctions to them — every crossing belongs to the street it is
+         named after on the sign, and the sign is on the corner. */
+      { z: 'fenn', r: [6, 32, 109, 41] },
+      { z: 'corven', r: [6, 50, 109, 59] },
+      /* And the car park, with its one gap, exactly as the forecourt has. */
+      { z: 'retail', r: [18, 43, 55, 48] },
+      { z: 'retail', r: [34, 42, 37, 42] }
     ],
     /* What the ground is MADE of, over the top of what it is. Everything out
        here is paving slabs by default; these are the bits that are not.
@@ -423,10 +445,25 @@ const LEVELS = {
          kerb is dropped for it. Draw the pavement through here instead and
          the game paints a six-inch kerb across the road you drive out of. */
       { s: 'tarmac', r: [34, 13, 37, 15] },
-      { s: 'tarmac', r: [2, 16, 85, 21] },
-      { s: 'tarmac', r: [8, 22, 13, 39] },
-      { s: 'tarmac', r: [60, 22, 65, 39] },
-      { s: 'tarmac', r: [8, 34, 65, 39] }
+      { s: 'tarmac', r: [2, 16, 111, 21] },
+      /* Each north–south carriageway in ONE rectangle running the whole height
+         of the map, straight through every pavement band it crosses. Stop one
+         at a junction and the game lays a kerb across the road, for the same
+         reason the crossover above needs carrying through the footway. */
+      { s: 'tarmac', r: [8, 22, 13, 57] },
+      { s: 'tarmac', r: [60, 22, 65, 57] },
+      { s: 'tarmac', r: [102, 22, 107, 57] },
+      { s: 'tarmac', r: [8, 34, 107, 39] },
+      { s: 'tarmac', r: [8, 52, 107, 57] },
+      /* The retail park and the way into it. */
+      { s: 'tarmac', r: [34, 42, 37, 42] },
+      { s: 'tarmac', r: [18, 43, 55, 48] },
+      /* The drive-thru's own lane, carried across the footway to the window so
+         that a car can pull level with it — which is the whole of what a
+         drive-thru is, and without it the window is two tiles further away
+         than anybody can reach from a driving seat. The kerb drops itself:
+         R.kerbs() finds no boundary where the tarmac runs through. */
+      { s: 'tarmac', r: [82, 50, 87, 51] }
     ],
     /* The paint. Position-dependent, so none of it is a tile — see the note in
        tools/sheets/town.mjs about why the atlas has one road surface in it and
@@ -438,39 +475,69 @@ const LEVELS = {
        the correct side, and a centre line down the wrong place would make
        every one of them look like a mistake. */
     paint: [
-      /* Bellhaven and the High Street: one centre line, broken at each of the
-         two junctions rather than run straight through them. */
+      /* THE CENTRE LINES. One per carriageway, broken at every junction and at
+         every crossing rather than run straight through them — a centre line
+         painted through a zebra or across a side road is the one marking error
+         you can see from a moving car. Six-tile carriageways throughout, so
+         each of these is three tiles in from either kerb. */
       { p: 'dash', a: [2, 19], b: [8, 19] },
-      /* Broken again either side of the crossing: a centre line painted
-         through a zebra is the one marking error you can see from a moving
-         car. */
       { p: 'dash', a: [14, 19], b: [30, 19] },
       { p: 'dash', a: [34, 19], b: [60, 19] },
-      { p: 'dash', a: [66, 19], b: [86, 19] },
-      /* The side streets, and the bottom of the block. Six-tile carriageways
-         throughout, so every centre line is three tiles in from either kerb. */
+      { p: 'dash', a: [66, 19], b: [102, 19] },
+      { p: 'dash', a: [108, 19], b: [112, 19] },
+      { p: 'dash', a: [14, 37], b: [44, 37] },
+      { p: 'dash', a: [48, 37], b: [60, 37] },
+      { p: 'dash', a: [66, 37], b: [102, 37] },
+      { p: 'dash', a: [14, 55], b: [60, 55] },
+      { p: 'dash', a: [66, 55], b: [76, 55] },
+      { p: 'dash', a: [80, 55], b: [102, 55] },
       { p: 'dash', a: [11, 24], b: [11, 32] },
+      { p: 'dash', a: [11, 42], b: [11, 50] },
       { p: 'dash', a: [63, 24], b: [63, 32] },
-      { p: 'dash', a: [14, 37], b: [60, 37] },
-      /* Give way where the side streets meet the main road, and where they
-         meet Fenn Street at the bottom. */
+      { p: 'dash', a: [63, 42], b: [63, 50] },
+      { p: 'dash', a: [105, 24], b: [105, 32] },
+      { p: 'dash', a: [105, 42], b: [105, 50] },
+      /* GIVE WAY. Every mouth where a north–south street meets one of the two
+         long roads — twelve of them, which is what a grid costs. The traffic
+         does actually yield at these; see aheadBlocked() in engine/cars.js. */
       { p: 'line', a: [8, 22], b: [14, 22] },
-      { p: 'line', a: [60, 22], b: [66, 22] },
       { p: 'line', a: [8, 33.9], b: [14, 33.9] },
+      { p: 'line', a: [8, 40.1], b: [14, 40.1] },
+      { p: 'line', a: [8, 51.9], b: [14, 51.9] },
+      { p: 'line', a: [60, 22], b: [66, 22] },
       { p: 'line', a: [60, 33.9], b: [66, 33.9] },
+      { p: 'line', a: [60, 40.1], b: [66, 40.1] },
+      { p: 'line', a: [60, 51.9], b: [66, 51.9] },
+      { p: 'line', a: [102, 22], b: [108, 22] },
+      { p: 'line', a: [102, 33.9], b: [108, 33.9] },
+      { p: 'line', a: [102, 40.1], b: [108, 40.1] },
+      { p: 'line', a: [102, 51.9], b: [108, 51.9] },
       /* No parking outside the shops, which is where everybody parks. */
-      { p: 'yellow', a: [42, 16.2], b: [86, 16.2] },
-      /* The crossing between the bus stop and the Greggs, which is the busiest
-         four metres in Bellhaven. */
+      { p: 'yellow', a: [42, 16.2], b: [112, 16.2] },
+      /* Three crossings, each of them where people actually cross: between the
+         bus stop and the Greggs, outside the units on Fenn Street, and by the
+         drive-thru on Corven Way, which is the only one anybody uses correctly
+         because the other side of it is a bin. */
       { p: 'zebra', r: [30, 16, 33, 21] },
-      /* Twenty-two spaces, and the writing has said twenty-two for months.
-         Seven, then the walkway to the doors, then four; eleven along the
-         south wall. The `open` side is the one you drive in from. */
+      { p: 'zebra', r: [44, 34, 47, 39] },
+      { p: 'zebra', r: [76, 52, 79, 57] },
+      /* Twenty-two spaces at the office, and the writing has said twenty-two
+         for months. Seven, then the walkway to the doors, then four; eleven
+         along the south wall. The `open` side is the one you drive in from. */
       { p: 'bays', r: [5, 3, 18, 5], open: 's' },
       { p: 'bays', r: [23, 3, 30, 5], open: 's' },
       { p: 'bays', r: [5, 10, 26, 12], open: 'n' },
+      /* And fifteen at the retail park, in two banks along the back wall with
+         the lane you come in through between them and the whole rest of it
+         left as aisle. That is what a retail park is, and it is also the only
+         piece of open tarmac on this map wide enough to get a car properly
+         sideways on. */
+      { p: 'bays', r: [19, 43, 32, 45], open: 's' },
+      { p: 'bays', r: [39, 43, 54, 45], open: 's' },
       { p: 'text', at: [20.5, 7.2], s: 'KEEP CLEAR' },
-      { p: 'text', at: [35.5, 11], s: 'SLOW', turn: 1 }
+      { p: 'text', at: [35.5, 11], s: 'SLOW', turn: 1 },
+      { p: 'text', at: [36.5, 47.4], s: 'MAX 5 MPH' },
+      { p: 'text', at: [86, 53.4], s: 'SLOW' }
     ],
     doors: [],
     /* In the walkway between the two banks of bays, facing away from the
@@ -498,28 +565,66 @@ const LEVELS = {
       { x: 11, y: 11, face: 's', model: 'van', name: 'The contractor’s van', use: 'contractorVan' },
       { x: 20, y: 11, face: 's', model: 'saloon', name: 'A green saloon', use: 'someoneElsesCar' },
       { x: 24, y: 11, face: 's', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
-      /* In the street, on the double yellows, outside the nail bar. He has
-         parked here every day since somebody keyed it in the space with his
-         name painted on it. */
       /* Two wheels up on the pavement outside the nail bar, which is why the
          lane past it is clear and the footway is not. Deliberate, on both
          counts: it keeps the traffic moving, and it is a more accurate
-         portrait of the man than parking neatly would be. */
-      { x: 44, y: 15.7, face: 'w', model: 'estate', body: '#9ba1a8', roof: '#7c828a',
+         portrait of the man than parking neatly would be. Facing east because
+         the north kerb is the eastbound side — see the lane table below. */
+      { x: 44, y: 15.7, face: 'e', model: 'estate', body: '#9ba1a8', roof: '#7c828a',
         name: 'A silver estate, half on the pavement', use: 'nigelsCar' },
-      /* Traffic. Two round the block one way on the left-hand lanes, two round
-         it the other way on the others — so what goes past the Greggs is not
-         obviously the same car four times, and so that the loop has something
-         in it to be overtaken by. `leg`/`along` are where each one starts:
-         which side of the block, and how far along it. */
+      /* ---- the retail park ----
+         Four in the bays and one across two of them, because that is a retail
+         park car park at any hour of any day. */
+      { x: 22, y: 44.2, face: 'n', model: 'hatch', body: '#2f4a3a', roof: '#25392d', name: 'A green hatchback', use: 'someoneElsesCar' },
+      { x: 28, y: 44.2, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      { x: 42, y: 44.2, face: 'n', model: 'estate', body: '#6d6f74', roof: '#54565a', name: 'A grey estate', use: 'someoneElsesCar' },
+      { x: 48, y: 44.2, face: 'n', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'someoneElsesCar' },
+      { x: 48, y: 47.6, face: 'w', model: 'van', name: 'A van, waiting', use: 'waitingVan' },
+
+      /* ---- TRAFFIC ----
+         WHICH SIDE OF THE ROAD. Face east and north is on your left, so the
+         eastbound carriageway is the northern one; face west and it is the
+         southern one; northbound keeps to the west lane and southbound to the
+         east. Every route below is written to that table and the paint above
+         agrees with it, which between them are the only two things making this
+         look like a country rather than a car park.
+
+           eastbound   Bellhaven y 17.5   Fenn y 35.5   Corven y 53.5
+           westbound   Bellhaven y 20.5   Fenn y 38.5   Corven y 56.5
+           northbound  Aldergate x 9.5    Cargate x 61.5   Marlow x 103.5
+           southbound  Aldergate x 12.5   Cargate x 64.5   Marlow x 106.5
+
+         Four circuits through nine junctions, and they genuinely cross: the
+         west block one way, the west block the other way, the east block, and
+         a long one round the outside of the lot. Where two of them want the
+         same junction at the same moment one of them waits, which is the whole
+         reason for having four rather than one going round faster.
+         `leg`/`along` are where each starts — which side, and how far along. */
       { model: 'saloon', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 150, leg: 0, along: 8,
-        route: [[9.5, 20.5], [64.5, 20.5], [64.5, 37.5], [9.5, 37.5]] },
+        route: [[9.5, 17.5], [64.5, 17.5], [64.5, 38.5], [9.5, 38.5]] },
       { model: 'taxi', name: 'A taxi, passing', use: 'passingCar', traffic: true, cruise: 165, leg: 2, along: 14,
-        route: [[9.5, 20.5], [64.5, 20.5], [64.5, 37.5], [9.5, 37.5]] },
+        route: [[9.5, 17.5], [64.5, 17.5], [64.5, 38.5], [9.5, 38.5]] },
       { model: 'small', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 140, leg: 0, along: 20,
-        route: [[61.5, 17.5], [12.5, 17.5], [12.5, 35.5], [61.5, 35.5]] },
+        route: [[61.5, 20.5], [12.5, 20.5], [12.5, 35.5], [61.5, 35.5]] },
       { model: 'van', name: 'A delivery van, passing', use: 'passingCar', traffic: true, cruise: 120, leg: 2, along: 30,
-        route: [[61.5, 17.5], [12.5, 17.5], [12.5, 35.5], [61.5, 35.5]] }
+        route: [[61.5, 20.5], [12.5, 20.5], [12.5, 35.5], [61.5, 35.5]] },
+      /* The east block. */
+      { model: 'hatch', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 155, leg: 0, along: 12,
+        route: [[61.5, 17.5], [106.5, 17.5], [106.5, 38.5], [61.5, 38.5]] },
+      { model: 'saloon', body: '#2f3d5a', roof: '#25304a', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 135, leg: 2, along: 20,
+        route: [[61.5, 17.5], [106.5, 17.5], [106.5, 38.5], [61.5, 38.5]] },
+      /* The long way round: Fenn Street, Marlow, Corven Way, Aldergate. */
+      { model: 'small', body: '#7a5f2f', roof: '#5e4924', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 145, leg: 1, along: 6,
+        route: [[9.5, 35.5], [106.5, 35.5], [106.5, 56.5], [9.5, 56.5]] },
+      /* Learner. Doing thirty-eight in a forty and entirely within its rights,
+         and the reason there is ever a queue on Corven Way. */
+      { model: 'small', body: '#d8d5cc', roof: '#c2bfb5', name: 'A driving school car', use: 'learner', traffic: true, cruise: 78, leg: 3, along: 22,
+        route: [[9.5, 35.5], [106.5, 35.5], [106.5, 56.5], [9.5, 56.5]] },
+      /* The 41A, which does not stop at the bus stop. That is not an oversight
+         and never has been: it is the first thing the bus stop's own sign has
+         said about it since long before there was a road here to not stop on. */
+      { model: 'bus', name: 'The 41A', use: 'theBus', traffic: true, cruise: 128, leg: 0, along: 40,
+        route: [[9.5, 17.5], [106.5, 17.5], [106.5, 56.5], [9.5, 56.5]] }
     ],
     furnish() {
       const A = o => this.add(o);
@@ -615,7 +720,6 @@ const LEVELS = {
       A({ x: 16, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 36, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 58, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
-      A({ x: 44, y: 41, e: '🚧', name: 'The fence round the yard', kind: 'barrier', solid: true, use: 'yardFence' });
       A({ x: 26, y: 41, e: '🐦', name: 'Gulls', kind: 'pigeon', solid: false, use: 'gulls' });
 
       /* ---- CARGATE LANE ----
@@ -628,6 +732,95 @@ const LEVELS = {
       A({ x: 58, y: 30, e: '📦', name: 'Flattened boxes', kind: 'box', solid: true, use: 'flatBoxes' });
       A({ x: 67, y: 27, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 60, y: 24, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+
+      /* ---- THE HIGH STREET, EAST END ----
+         Past the last of the shops the parade keeps going, because a high
+         street does. Same north wall the rest of it hangs on. */
+      A({ x: 86, y: 14, e: '🍺', name: 'The Bellhaven Arms', kind: 'shop', solid: true, use: 'thePub',
+        furn: { sprite: 'shop.awning.amber' } });
+      A({ x: 88, y: 14, e: '🪧', name: 'The pub sign', kind: 'shopsign', solid: true, use: 'pubSign' });
+      A({ x: 92, y: 14, e: '🧺', name: 'The launderette', kind: 'shop', solid: true, use: 'launderette' });
+      A({ x: 98, y: 14, e: '📮', name: 'The post office', kind: 'shop', solid: true, use: 'postOffice',
+        furn: { sprite: 'shop.awning' } });
+      A({ x: 104, y: 14, e: '🌯', name: 'Bellhaven Kebab', kind: 'shop', solid: true, use: 'kebab',
+        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 109, y: 14, e: '📞', name: 'The phone box', kind: 'booth', solid: true, use: 'phoneBox' });
+      A({ x: 90, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 100, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 95, y: 15, e: '🗑️', name: 'Bin, High Street', kind: 'bin', solid: false, use: 'highStreetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 90, y: 22, e: '🪑', name: 'The third bench', kind: 'bench', solid: true, use: 'bench3' });
+      A({ x: 96, y: 16, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+
+      /* ---- FENN STREET, EAST OF CARGATE ----
+         The second block's back, which is where its bins and its fire doors
+         are, and — because the rent is lower on a back street — three of the
+         four businesses on it. */
+      A({ x: 72, y: 32, e: '🎱', name: 'The Working Men’s Club', kind: 'shop', solid: true, use: 'club',
+        furn: { sprite: 'shop.awning' } });
+      A({ x: 82, y: 32, e: '🌞', name: 'Sunseekers', kind: 'shop', solid: true, use: 'tanning' });
+      A({ x: 92, y: 32, e: '📦', name: 'The cash and carry', kind: 'shop', solid: true, use: 'cashAndCarry',
+        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 78, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 96, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 86, y: 33, e: '🗑️', name: 'Bin, Fenn Street', kind: 'bin', solid: false, use: 'streetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 80, y: 41, e: '🚧', name: 'The fence round the yard', kind: 'barrier', solid: true, use: 'yardFence' });
+      A({ x: 68, y: 41, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'trolley' });
+
+      /* ---- MARLOW STREET ----
+         The far side of the second block. Nobody who works on the fourth floor
+         has any business on it, which is exactly why the ones who cannot get a
+         space leave the car here and walk. */
+      A({ x: 100, y: 26, e: '🅿️', name: 'The multi-storey', kind: 'sign', solid: true, use: 'multiStorey' });
+      A({ x: 101, y: 29, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 109, y: 28, e: '🖍️', name: 'The wall on Marlow Street', kind: 'graf', solid: true, use: 'marlowWall' });
+      A({ x: 100, y: 45, e: '♻️', name: 'The bins on Marlow Street', kind: 'box', solid: true, use: 'marlowBins' });
+      A({ x: 108, y: 46, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 106, y: 22, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+
+      /* ---- CORVEN WAY ----
+         The bottom of the town and the bottom of the market: everything down
+         here is a shed with a sign on it, and the railway is behind the fence
+         on the other side. The parade backs onto the retail park's own wall,
+         which is the one long north wall the shopfront art has down here. */
+      A({ x: 24, y: 50, e: '🛒', name: 'The superstore', kind: 'shop', solid: true, use: 'superstore',
+        furn: { sprite: 'shop.awning' } });
+      A({ x: 34, y: 50, e: '🔩', name: 'Screw & Fix', kind: 'shop', solid: true, use: 'screwfix',
+        furn: { sprite: 'shop.awning.amber' } });
+      A({ x: 44, y: 50, e: '🐕', name: 'The pet superstore', kind: 'shop', solid: true, use: 'petStore',
+        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 52, y: 50, e: '🪧', name: 'BELLHAVEN RETAIL PARK', kind: 'shopsign', solid: true, use: 'retailSign' });
+      A({ x: 74, y: 50, e: '🧶', name: 'The carpet warehouse', kind: 'shop', solid: true, use: 'carpets',
+        furn: { sprite: 'shop.awning' } });
+      /* The one thing out here you are meant to reach WITHOUT getting out —
+         see `fromCar` in data/world.js and Interact.scan. Press E at the
+         window from behind the wheel and it serves you; walk up to it on foot
+         and it will tell you what it thinks of that. */
+      A({ x: 84, y: 50, e: '☕', name: 'The drive-thru', kind: 'drivethru', solid: true, use: 'driveThru' });
+      A({ x: 30, y: 51, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 56, y: 51, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 92, y: 51, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 68, y: 51, e: '🗑️', name: 'Bin, Corven Way', kind: 'bin', solid: false, use: 'streetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 26, y: 52, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      A({ x: 96, y: 57, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      A({ x: 40, y: 59, e: '🚃', name: 'The railway', kind: 'view', solid: true, use: 'railway' });
+      A({ x: 70, y: 59, e: '🕳️', name: 'The subway', kind: 'sign', solid: true, use: 'subway' });
+      A({ x: 20, y: 59, e: '🖍️', name: 'The wall on Corven Way', kind: 'graf', solid: true, use: 'corvenWall' });
+      A({ x: 88, y: 59, e: '🐦', name: 'More gulls', kind: 'pigeon', solid: false, use: 'gulls' });
+
+      /* ---- THE RETAIL PARK ----
+         Fifteen spaces, a lane down the middle and more tarmac than anywhere
+         else on the map. Everything solid in here is at the ends of the aisle
+         rather than in it: the whole point of the place is the space. */
+      A({ x: 19, y: 47, e: '🛒', name: 'The trolley bay', kind: 'shoptrolley', solid: true, use: 'trolleyBay' });
+      A({ x: 54, y: 47, e: '🛒', name: 'The trolley bay', kind: 'shoptrolley', solid: true, use: 'trolleyBay' });
+      A({ x: 30, y: 48, e: '🛒', name: 'A trolley, at large', kind: 'shoptrolley', solid: true, use: 'trolley' });
+      A({ x: 52, y: 48, e: '♻️', name: 'The recycling point', kind: 'box', solid: true, use: 'recycling' });
+      A({ x: 18, y: 46, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 55, y: 46, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 44, y: 42, e: '🪧', name: 'The retail park sign', kind: 'sign', solid: true, use: 'retailRules' });
     }
   }
 };
