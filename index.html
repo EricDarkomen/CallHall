@@ -29,28 +29,64 @@
 <link rel="stylesheet" href="css/controls.css?v=5861cd4">
 <link rel="stylesheet" href="css/arcade.css?v=5861cd4">
 <link rel="stylesheet" href="css/cutscene.css?v=5861cd4">
+<link rel="stylesheet" href="css/title.css?v=5861cd4">
 <link rel="stylesheet" href="css/responsive.css?v=5861cd4">
 </head>
 <body>
 <div id="app">
 
-  <!-- ============ TITLE ============ -->
+  <!-- ============ TITLE ============
+       A wallboard. Every call centre has one bolted above the desks — how many
+       people are holding, how long the oldest one has been holding, how many of
+       you are free — and it is the first thing you see when you walk in. So the
+       title screen is one, and it is live: stand here reading it and the queue
+       grows, because nobody is answering it. Behind it, the switchboard those
+       calls are routing across. See engine/title.js and css/title.css. -->
   <section id="titleScreen" class="screen on">
+    <canvas id="titleFx" aria-hidden="true"></canvas>
+    <div id="titleGrade" aria-hidden="true"></div>
+    <div id="titleFlicker" aria-hidden="true"></div>
+
     <div class="hero">
-      <span class="phone-icon" aria-hidden="true">📞</span>
-      <div class="badge">CALLHALL Services plc · Induction Simulation v4.7 · approved version: 4.6</div>
+      <div class="hero-strip">
+        <span class="hero-live"><i aria-hidden="true"></i>On the floor</span>
+        <span>CALLHALL Services plc · Fourth floor</span>
+        <span>Induction simulation <b>v4.7</b> · approved version 4.6</span>
+      </div>
+
+      <span class="phone-icon" aria-hidden="true">📞<i class="ring-1"></i><i class="ring-2"></i></span>
       <h1 class="title-line1">CALL OF DUTY:</h1>
       <h1 class="title-line2">CUSTOMER SERVICE</h1>
+      <div class="title-rule" aria-hidden="true"></div>
       <p class="tagline">“Every call is an opportunity.”<small>Nobody has ever said what for.</small></p>
-      <div class="title-menu">
+
+      <div class="title-menu" id="titleMenu">
         <button class="btn primary" id="btnNew">Start your first shift</button>
         <button class="btn" id="btnLoad">Load saved shift</button>
         <button class="btn" id="btnHelp">How to play</button>
       </div>
+
+      <!-- The numbers are a joke that keeps score, and they are read out as one
+           thing or not at all: a screen reader announcing a counter that ticks
+           every four seconds would talk over the menu for as long as anybody
+           stayed on this screen. -->
+      <div class="board" aria-hidden="true">
+        <div class="board-head"><span>Live · fourth floor</span><span><b>08:57</b></span></div>
+        <div class="board-cells">
+          <div class="cell"><span class="cell-n" id="boardWaiting">3</span><span class="cell-l">Calls waiting</span></div>
+          <div class="cell"><span class="cell-n" id="boardHeld">0:37</span><span class="cell-l">Longest wait</span></div>
+          <div class="cell"><span class="cell-n" id="boardAgents">1</span><span class="cell-l">Agents available</span></div>
+        </div>
+        <div class="board-note" id="boardNote">Service level: acceptable</div>
+      </div>
     </div>
-    <div class="legal">CALLHALL SERVICES · “Your call is important to us and will be answered in the order in which it stopped mattering.” · Calls may be recorded for training and for quiet mockery.
-      <span class="copyright">© 2026 Grant van Zyl · a work of fiction · <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license noopener" target="_blank">CC BY-NC-ND 4.0</a>
-        · character art by <a href="art/CREDITS.md" rel="noopener" target="_blank">LPC contributors</a>, <a href="https://static.opengameart.org/OGA-BY-3.0.txt" rel="license noopener" target="_blank">OGA-BY 3.0</a>, modified</span></div>
+
+    <div id="titleFoot">
+      <!-- The noticeboard by the lift, moving. Filled in by Title.ticker(). -->
+      <div class="ticker" aria-hidden="true"><div class="ticker-run" id="tickerRun"></div></div>
+      <div class="legal">© 2026 Grant van Zyl · a work of fiction · <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license noopener" target="_blank">CC BY-NC-ND 4.0</a>
+        <span class="copyright">character art by <a href="art/CREDITS.md" rel="noopener" target="_blank">LPC contributors</a>, <a href="https://static.opengameart.org/OGA-BY-3.0.txt" rel="license noopener" target="_blank">OGA-BY 3.0</a>, modified</span></div>
+    </div>
   </section>
 
   <!-- ============ NAME ============ -->
@@ -364,6 +400,7 @@
 <script src="engine/menus.js?v=5861cd4"></script>
 <script src="engine/arcade.js?v=5861cd4"></script>
 <script src="engine/look.js?v=5861cd4"></script>
+<script src="engine/title.js?v=5861cd4"></script>
 <script src="engine/input.js?v=5861cd4"></script>
 <!-- The minigame library. Separate files on purpose: each is a whole game
      that knows only the interface in engine/arcade.js, and a fourth is a new

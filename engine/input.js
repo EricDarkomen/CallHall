@@ -24,10 +24,20 @@ function bindInput() {
        KEYMAP, for the same reason Dialogue is tested before everything. Escape
        is the arcade's own; it never reaches the settings panel from here. */
     if (Arcade.on) { e.preventDefault(); Arcade.key({ code: e.code, down: true }); return; }
+    /* The title screen owns the movement keys too, and has to be tested before
+       the KEYMAP for it — W/S and the arrows walk the menu there, and there is
+       nobody on the fourth floor to walk. It used to be mouse-only: three
+       buttons and one key, Enter, which always started a new shift whatever the
+       save file said. */
+    if (G.state === 'title') {
+      const k = KEYMAP[e.code];
+      if (k === 'up' || k === 'left') { e.preventDefault(); Title.move(-1); return; }
+      if (k === 'down' || k === 'right') { e.preventDefault(); Title.move(1); return; }
+      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); Title.activate(); return; }
+    }
     if (KEYMAP[e.code]) { Keys[KEYMAP[e.code]] = 1; e.preventDefault(); return; }
     if (e.code === 'Space' || e.code === 'Enter') {
       e.preventDefault();
-      if (G.state === 'title') { Boot.newGame(); return; }
       if (G.state === 'name') { Boot.acceptName(); return; }
       /* The creator takes Enter/Space as "that will do" — the same as every
          other screen between the title and the shift. Without it a keyboard

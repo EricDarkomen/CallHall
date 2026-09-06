@@ -102,26 +102,11 @@ button{font-family:inherit;color:inherit}
 .screen.on{display:flex;animation:fadeIn .45s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-#titleScreen .hero{max-width:820px}
-.title-line1{font-family:var(--mono);font-size:clamp(28px,7vw,64px);font-weight:700;letter-spacing:.02em;
-  line-height:.95;color:var(--text);text-shadow:0 0 32px rgba(77,163,255,.25)}
-.title-line2{font-family:var(--mono);font-size:clamp(20px,5vw,44px);color:var(--hold);letter-spacing:.06em;line-height:1.05}
-.tagline{margin-top:18px;font-size:clamp(14px,2.4vw,19px);color:var(--text)}
-.tagline small{display:block;color:var(--dim);font-size:13px;margin-top:6px;font-style:italic}
-.title-menu{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:28px}
-.phone-icon{font-size:56px;display:block;margin-bottom:10px;animation:ringle 3.2s ease-in-out infinite}
-@keyframes ringle{0%,86%,100%{transform:rotate(0)}88%{transform:rotate(-12deg)}90%{transform:rotate(12deg)}
-  92%{transform:rotate(-10deg)}94%{transform:rotate(10deg)}96%{transform:rotate(0)}}
-/* Decorative only — it must never be able to swallow a tap meant for the menu
-   buttons it floats over on a short screen. */
-.legal{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));left:0;right:0;
-  font-family:var(--mono);font-size:10px;color:#5a6782;pointer-events:none;
-  letter-spacing:.08em;padding:0 16px}
-.legal .copyright{display:block;margin-top:5px;color:#6b7a96}
-/* The block stays click-through so it cannot steal a tap from the menu; the
-   licence link is the one thing in it that has to remain clickable. */
-.legal a{color:inherit;pointer-events:auto;text-decoration:underline;text-underline-offset:2px}
-.legal a:hover{color:var(--brand)}
+/* The title screen has a stylesheet of its own — css/title.css. What was
+   here was the static version of it: a heading, a tagline, three buttons and
+   a footer. The elements it styled are still called .hero, .title-line1 and
+   .legal, so leaving it in place would have meant two files quietly
+   disagreeing about the same screen. */
 
 #nameScreen .sign{width:min(520px,94vw);padding:0 0 22px}
 #nameInput{width:calc(100% - 44px);margin:18px 22px 6px;background:#0b0f16;border:1px solid var(--line);

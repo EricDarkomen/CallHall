@@ -101,6 +101,47 @@ are a wheelchair and a shopping trolley. They are drawn by the renderer instead,
 which is also what lets one turn through any angle rather than through the eight
 a sprite sheet would give it.
 
+## The wallboard
+
+Every call centre has one bolted above the desks: how many people are holding,
+how long the oldest one has been holding, and how many of you are free to do
+anything about it. It is the first thing you see when you walk in. So the title
+screen is one.
+
+It is live. Three calls are holding at 08:57 and one colleague is free, and
+neither of those numbers is going to improve while you stand there reading them:
+the queue grows on its own because nobody is answering it, the oldest call ages
+in real time because it is a clock, and the count of people available goes to
+nought within about ten seconds and mostly stays there. The service level
+underneath degrades to match, and eventually stops being measured. Sitting on
+the menu is the joke, and pressing **Start** is the punchline.
+
+Behind it is the switchboard those calls are crossing — a drifting grid of
+extensions with pulses routing over it, each one running a few hops and landing
+on somebody's phone. The busier the board says it is, the more of them are in
+the air, so the backdrop is the queue, drawn. Along the bottom, the noticeboard
+by the lift, moving.
+
+It is a menu you can walk now, which it never was: `W`/`S` or the arrows move
+between the three buttons, `Enter` takes the one that is marked, and the marker
+starts on whatever the buttons themselves say the default is — **Continue** with
+a shift in progress, **Start** without one. Before this, the keyboard could do
+exactly one thing to this screen, which was start a new shift over the top of
+your save and then ask whether you had meant to.
+
+Turn motion off — `Esc · Settings`, or the operating system's own
+reduced-motion setting, which the game respects by default — and the drift, the
+routing, the ringing handset, the failing strip light and the ticker all stop.
+The board stops with them, holding the numbers it opened on. Nothing on this
+screen is conveyed by movement alone, which is the test it has to pass. The
+setting is read whenever the screen appears, so it is in force from the first
+frame rather than switched off after you have already seen it move.
+
+It lives in `css/title.css` and `engine/title.js`, and it animates on the
+page's one loop rather than a `requestAnimationFrame` of its own — same `dt`,
+same clamp, same stop when the tab goes away — for the same reason the arcade
+cabinets do.
+
 ## Repository layout
 
 This is the **private** repository: full history and staging. The public repo is
@@ -115,6 +156,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `art/sprites/*.png` | The character, world and street art. Third-party, separately licensed. |
 | `art/sprites/manifest.js` | Generated: the rectangles that describe those PNGs. |
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
+| `engine/title.js`, `css/title.css` | The title screen: the wallboard, the switchboard behind it, and the menu. |
 | `scripts/release.sh` | Checks the build and moves the version string. Run it before you ship. |
 | `editor.html`, `editor/` | A level editor. Not the game, and never published. |
 

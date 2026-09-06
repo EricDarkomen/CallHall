@@ -402,13 +402,33 @@
    Flow from the top so the screen can scroll, and put the footer back in line. */
 @media(max-height:560px){
   .screen{justify-content:flex-start}
-  .phone-icon{font-size:34px;margin-bottom:4px;animation:none}
+  .hero-strip{margin-bottom:10px}
+  .phone-icon{font-size:34px;margin-bottom:6px;animation:none}
+  /* The rings are keyed to a shake that is no longer happening. */
+  .phone-icon i{display:none}
   .title-line1{font-size:clamp(24px,5.5vw,40px)}
   .title-line2{font-size:clamp(18px,4vw,30px)}
+  .title-rule{margin-top:10px}
   .tagline{margin-top:10px}
   .tagline small{margin-top:3px}
   .title-menu{margin-top:14px}
-  .legal{position:static;margin-top:16px;padding-bottom:0}
+  .title-menu .btn{padding:9px 16px 9px 26px;font-size:14px}
+  .board{margin-top:14px}
+  .cell{padding:8px 6px 9px}
+  .cell-n{font-size:clamp(20px,4.4vw,26px)}
+  /* The foot comes off the bottom edge and joins the flow, so the ticker and
+     the small print sit under the menu rather than on top of it. */
+  #titleFoot{position:static;width:100%;margin-top:16px}
+}
+/* Narrow: three columns of tabular numbers is the one part of the board that
+   does not want to be squeezed, so the labels are what gives. */
+@media(max-width:400px){
+  .hero-strip{font-size:9px;letter-spacing:.14em;gap:5px 10px}
+  .board-cells{grid-template-columns:repeat(3,1fr)}
+  .cell{padding:10px 3px 11px}
+  .cell-l{font-size:8px;letter-spacing:.1em}
+  .board-head,.board-note{font-size:9px;letter-spacing:.14em;padding:7px 10px}
+  .title-menu .btn{width:min(320px,100%)}
 }
 
 /* ============================================================
