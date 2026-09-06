@@ -9,6 +9,10 @@ const Game = {
   tick(dt) {
     if (this.paused) return;
     FX.update(dt);
+    /* The title screen animates on this loop rather than one of its own, for
+       the same reason the arcade does — same dt, same 50ms clamp, same stop
+       when the tab goes away. It is a no-op the moment the screen is not up. */
+    Title.tick(dt);
     Dialogue.tick(dt);
     /* 'cut' is in here because the opening draws the real building behind it:
        a floor of people frozen mid-step under a caption about forty of them
@@ -62,6 +66,7 @@ const Game = {
     requestAnimationFrame(Game.loop);
   },
   begin() {
+    Title.hide();
     $('#titleScreen').classList.remove('on');
     $('#nameScreen').classList.remove('on');
     $('#lookScreen').classList.remove('on');
@@ -407,6 +412,7 @@ const Boot = {
     Track.init();
     Settings.load();
     Player.init('Trainee'); UI.hud();
+    Title.init();
     $('#btnNew').onclick = () => { this.goFullscreen(); this.newGame(); };
     $('#btnLoad').onclick = () => { this.goFullscreen(); this.load(); };
     $('#btnHelp').onclick = () => this.help();
@@ -421,6 +427,10 @@ const Boot = {
     $('#btnLookGo').onclick = () => { this.goFullscreen(); Look.accept(); };
     $('#nameInput').addEventListener('keydown', e => { if (e.code === 'Enter') this.acceptName(); e.stopPropagation(); });
     this.refreshLoadButton();
+    /* After refreshLoadButton, which is what decides where the selection starts:
+       with a shift in progress the default answer is Continue, without one it is
+       Start, and Title.sync reads that off the button rather than knowing it. */
+    Title.show();
     if (trial) Trial.begin(trial);
     requestAnimationFrame(Game.loop);
   },
@@ -448,6 +458,7 @@ const Boot = {
     if (Save.has() && !confirm('There is a saved shift in this browser. Starting a new one will overwrite it. Continue?')) return;
     Sfx.select();
     G.state = 'name';
+    Title.hide();
     $('#titleScreen').classList.remove('on');
     $('#nameScreen').classList.add('on');
     setTimeout(() => $('#nameInput').focus(), 120);
@@ -468,6 +479,7 @@ const Boot = {
       b.disabled = true; b.textContent = 'No saved shift';
       b.title = 'Nothing saved in this browser yet.';
       b.classList.remove('primary'); n.classList.add('primary');
+      Title.sync();
       return;
     }
     b.disabled = false;
@@ -477,14 +489,16 @@ const Boot = {
        is the one that throws work away, so it should not look like the default. */
     b.classList.add('primary'); n.classList.remove('primary');
     n.textContent = 'Start a new shift';
+    Title.sync();
   },
   load() {
     if (!Save.has()) { Sfx.deny(); return; }
     Sfx.init();
+    Title.hide();
     $('#titleScreen').classList.remove('on');
     $('#game').classList.add('on');
     R.resize();
-    if (!Save.read()) { $('#game').classList.remove('on'); $('#titleScreen').classList.add('on'); return; }
+    if (!Save.read()) { $('#game').classList.remove('on'); $('#titleScreen').classList.add('on'); Title.show(); return; }
     G.state = 'play'; Cam.snap();
     /* the objective survives in the save but lives in the DOM, so put it back */
     UI.objective(G.objective || 'Answer phones. Survive until 17:00.');
@@ -498,6 +512,7 @@ const Boot = {
      laminated sign this always was, scrolling, because it is very long. */
   help() {
     G.state = 'cut';
+    Title.hide();
     $('#titleScreen').classList.remove('on');
     const el = $('#cutscene');
     el.className = 'screen plain on';
@@ -521,7 +536,7 @@ const Boot = {
       '<b>J</b> jobs · <b>I</b> inventory · <b>K</b> skills · <b>C</b> office chat · <b>M</b> email · <b>P</b> profile · <b>L</b> achievements · <b>Esc</b> menu and settings.<br><br>' +
       'The shift runs 09:00 to 17:00. Survive it. Then do it again, because that is the actual game and it is also the actual job.<br><br>' +
       '<i>This document is Rev. 7. Rev. 6 is the version in the folder on your desk. The differences are not marked.</i>';
-    el.onclick = () => { el.onclick = null; el.classList.remove('on'); $('#titleScreen').classList.add('on'); G.state = 'title'; };
+    el.onclick = () => { el.onclick = null; el.classList.remove('on'); $('#titleScreen').classList.add('on'); Title.show(); G.state = 'title'; };
   }
 };
 addEventListener('DOMContentLoaded', () => Boot.init());

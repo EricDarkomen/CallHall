@@ -21,36 +21,72 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9E%3C/text%3E%3C/svg%3E">
 <title>Call of Duty: Customer Service — CALLHALL SERVICES</title>
-<link rel="stylesheet" href="css/base.css?v=5861cd4">
-<link rel="stylesheet" href="css/hud.css?v=5861cd4">
-<link rel="stylesheet" href="css/dialogue.css?v=5861cd4">
-<link rel="stylesheet" href="css/combat.css?v=5861cd4">
-<link rel="stylesheet" href="css/panels.css?v=5861cd4">
-<link rel="stylesheet" href="css/controls.css?v=5861cd4">
-<link rel="stylesheet" href="css/arcade.css?v=5861cd4">
-<link rel="stylesheet" href="css/cutscene.css?v=5861cd4">
-<link rel="stylesheet" href="css/responsive.css?v=5861cd4">
+<link rel="stylesheet" href="css/base.css?v=3427db8">
+<link rel="stylesheet" href="css/hud.css?v=3427db8">
+<link rel="stylesheet" href="css/dialogue.css?v=3427db8">
+<link rel="stylesheet" href="css/combat.css?v=3427db8">
+<link rel="stylesheet" href="css/panels.css?v=3427db8">
+<link rel="stylesheet" href="css/controls.css?v=3427db8">
+<link rel="stylesheet" href="css/arcade.css?v=3427db8">
+<link rel="stylesheet" href="css/cutscene.css?v=3427db8">
+<link rel="stylesheet" href="css/title.css?v=3427db8">
+<link rel="stylesheet" href="css/responsive.css?v=3427db8">
 </head>
 <body>
 <div id="app">
 
-  <!-- ============ TITLE ============ -->
+  <!-- ============ TITLE ============
+       A wallboard. Every call centre has one bolted above the desks — how many
+       people are holding, how long the oldest one has been holding, how many of
+       you are free — and it is the first thing you see when you walk in. So the
+       title screen is one, and it is live: stand here reading it and the queue
+       grows, because nobody is answering it. Behind it, the switchboard those
+       calls are routing across. See engine/title.js and css/title.css. -->
   <section id="titleScreen" class="screen on">
+    <canvas id="titleFx" aria-hidden="true"></canvas>
+    <div id="titleGrade" aria-hidden="true"></div>
+    <div id="titleFlicker" aria-hidden="true"></div>
+
     <div class="hero">
-      <span class="phone-icon" aria-hidden="true">📞</span>
-      <div class="badge">CALLHALL Services plc · Induction Simulation v4.7 · approved version: 4.6</div>
+      <div class="hero-strip">
+        <span class="hero-live"><i aria-hidden="true"></i>On the floor</span>
+        <span>CALLHALL Services plc · Fourth floor</span>
+        <span>Induction simulation <b>v4.7</b> · approved version 4.6</span>
+      </div>
+
+      <span class="phone-icon" aria-hidden="true">📞<i class="ring-1"></i><i class="ring-2"></i></span>
       <h1 class="title-line1">CALL OF DUTY:</h1>
       <h1 class="title-line2">CUSTOMER SERVICE</h1>
+      <div class="title-rule" aria-hidden="true"></div>
       <p class="tagline">“Every call is an opportunity.”<small>Nobody has ever said what for.</small></p>
-      <div class="title-menu">
+
+      <div class="title-menu" id="titleMenu">
         <button class="btn primary" id="btnNew">Start your first shift</button>
         <button class="btn" id="btnLoad">Load saved shift</button>
         <button class="btn" id="btnHelp">How to play</button>
       </div>
+
+      <!-- The numbers are a joke that keeps score, and they are read out as one
+           thing or not at all: a screen reader announcing a counter that ticks
+           every four seconds would talk over the menu for as long as anybody
+           stayed on this screen. -->
+      <div class="board" aria-hidden="true">
+        <div class="board-head"><span>Live · fourth floor</span><span><b>08:57</b></span></div>
+        <div class="board-cells">
+          <div class="cell"><span class="cell-n" id="boardWaiting">3</span><span class="cell-l">Calls waiting</span></div>
+          <div class="cell"><span class="cell-n" id="boardHeld">0:37</span><span class="cell-l">Longest wait</span></div>
+          <div class="cell"><span class="cell-n" id="boardAgents">1</span><span class="cell-l">Agents available</span></div>
+        </div>
+        <div class="board-note" id="boardNote">Service level: acceptable</div>
+      </div>
     </div>
-    <div class="legal">CALLHALL SERVICES · “Your call is important to us and will be answered in the order in which it stopped mattering.” · Calls may be recorded for training and for quiet mockery.
-      <span class="copyright">© 2026 Grant van Zyl · a work of fiction · <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license noopener" target="_blank">CC BY-NC-ND 4.0</a>
-        · character art by <a href="art/CREDITS.md" rel="noopener" target="_blank">LPC contributors</a>, <a href="https://static.opengameart.org/OGA-BY-3.0.txt" rel="license noopener" target="_blank">OGA-BY 3.0</a>, modified</span></div>
+
+    <div id="titleFoot">
+      <!-- The noticeboard by the lift, moving. Filled in by Title.ticker(). -->
+      <div class="ticker" aria-hidden="true"><div class="ticker-run" id="tickerRun"></div></div>
+      <div class="legal">© 2026 Grant van Zyl · a work of fiction · <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license noopener" target="_blank">CC BY-NC-ND 4.0</a>
+        <span class="copyright">character art by <a href="art/CREDITS.md" rel="noopener" target="_blank">LPC contributors</a>, <a href="https://static.opengameart.org/OGA-BY-3.0.txt" rel="license noopener" target="_blank">OGA-BY 3.0</a>, modified</span></div>
+    </div>
   </section>
 
   <!-- ============ NAME ============ -->
@@ -335,42 +371,43 @@
      modules: a module is fetched, and a fetch is what file:// forbids — this
      way the game still opens straight off disk. Their top-level consts land in
      the global lexical scope, which the engine below reads by bare name. -->
-<script src="art/sprites/manifest.js?v=5861cd4"></script>
-<script src="data/world.js?v=5861cd4"></script>
-<script src="data/levels.js?v=5861cd4"></script>
-<script src="data/npcs.js?v=5861cd4"></script>
-<script src="data/items.js?v=5861cd4"></script>
-<script src="data/callers.js?v=5861cd4"></script>
-<script src="data/office.js?v=5861cd4"></script>
-<script src="data/acts.js?v=5861cd4"></script>
-<script src="engine/core.js?v=5861cd4"></script>
-<script src="engine/controls.js?v=5861cd4"></script>
-<script src="engine/audio.js?v=5861cd4"></script>
-<script src="engine/state.js?v=5861cd4"></script>
-<script src="engine/world.js?v=5861cd4"></script>
-<script src="engine/collide.js?v=5861cd4"></script>
-<script src="engine/levels.js?v=5861cd4"></script>
-<script src="engine/ui.js?v=5861cd4"></script>
-<script src="engine/progress.js?v=5861cd4"></script>
-<script src="engine/office.js?v=5861cd4"></script>
-<script src="engine/dialogue.js?v=5861cd4"></script>
-<script src="engine/combat.js?v=5861cd4"></script>
-<script src="engine/npc.js?v=5861cd4"></script>
-<script src="engine/sprites.js?v=5861cd4"></script>
-<script src="engine/cars.js?v=5861cd4"></script>
-<script src="engine/peds.js?v=5861cd4"></script>
-<script src="engine/render.js?v=5861cd4"></script>
-<script src="engine/panels.js?v=5861cd4"></script>
-<script src="engine/menus.js?v=5861cd4"></script>
-<script src="engine/arcade.js?v=5861cd4"></script>
-<script src="engine/look.js?v=5861cd4"></script>
-<script src="engine/input.js?v=5861cd4"></script>
+<script src="art/sprites/manifest.js?v=3427db8"></script>
+<script src="data/world.js?v=3427db8"></script>
+<script src="data/levels.js?v=3427db8"></script>
+<script src="data/npcs.js?v=3427db8"></script>
+<script src="data/items.js?v=3427db8"></script>
+<script src="data/callers.js?v=3427db8"></script>
+<script src="data/office.js?v=3427db8"></script>
+<script src="data/acts.js?v=3427db8"></script>
+<script src="engine/core.js?v=3427db8"></script>
+<script src="engine/controls.js?v=3427db8"></script>
+<script src="engine/audio.js?v=3427db8"></script>
+<script src="engine/state.js?v=3427db8"></script>
+<script src="engine/world.js?v=3427db8"></script>
+<script src="engine/collide.js?v=3427db8"></script>
+<script src="engine/levels.js?v=3427db8"></script>
+<script src="engine/ui.js?v=3427db8"></script>
+<script src="engine/progress.js?v=3427db8"></script>
+<script src="engine/office.js?v=3427db8"></script>
+<script src="engine/dialogue.js?v=3427db8"></script>
+<script src="engine/combat.js?v=3427db8"></script>
+<script src="engine/npc.js?v=3427db8"></script>
+<script src="engine/sprites.js?v=3427db8"></script>
+<script src="engine/cars.js?v=3427db8"></script>
+<script src="engine/peds.js?v=3427db8"></script>
+<script src="engine/render.js?v=3427db8"></script>
+<script src="engine/panels.js?v=3427db8"></script>
+<script src="engine/menus.js?v=3427db8"></script>
+<script src="engine/arcade.js?v=3427db8"></script>
+<script src="engine/look.js?v=3427db8"></script>
+<script src="engine/title.js?v=3427db8"></script>
+<script src="engine/input.js?v=3427db8"></script>
 <!-- The minigame library. Separate files on purpose: each is a whole game
      that knows only the interface in engine/arcade.js, and a fourth is a new
      file here rather than a change to anything above it. -->
-<script src="minigames/holdmusic.js?v=5861cd4"></script>
-<script src="minigames/inbox.js?v=5861cd4"></script>
-<script src="minigames/patch.js?v=5861cd4"></script>
-<script src="engine/boot.js?v=5861cd4"></script>
+<script src="minigames/holdmusic.js?v=3427db8"></script>
+<script src="minigames/inbox.js?v=3427db8"></script>
+<script src="minigames/patch.js?v=3427db8"></script>
+<script src="engine/boot.js?v=3427db8"></script>
 </body>
 </html>

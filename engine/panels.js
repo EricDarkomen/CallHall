@@ -347,7 +347,7 @@ const Panels = {
       '<div class="setting"><div class="sl">Volume</div><button class="btn small" data-act="vol">' + Math.round(Sfx.volume * 100) + '%</button></div>' +
       '<div class="h2">Display &amp; accessibility</div>' +
       '<div class="setting"><div class="sl">Animation<div class="sd">Bobbing, blinking, ringing.</div></div><button class="btn small" data-act="anim" aria-pressed="' + !!R.animate + '">' + t(R.animate) + '</button></div>' +
-      '<div class="setting"><div class="sl">Reduced motion<div class="sd">Disables screen shake and particles. Follows your system setting by default.</div></div><button class="btn small" data-act="motion" aria-pressed="' + !FX.motion + '">' + t(!FX.motion) + '</button></div>' +
+      '<div class="setting"><div class="sl">Reduced motion<div class="sd">Stills the title screen, and disables screen shake and particles in the game. Follows your system setting by default.</div></div><button class="btn small" data-act="motion" aria-pressed="' + !FX.motion + '">' + t(!FX.motion) + '</button></div>' +
       '<div class="setting"><div class="sl">Emoji size</div><button class="btn small" data-act="emoji">' + Math.round(R.emojiScale * 100) + '%</button></div>' +
       '<div class="setting"><div class="sl">Text speed<div class="sd">How fast dialogue types itself out.</div></div><button class="btn small" data-act="speed">' + (Dialogue.speed >= 999 ? 'Instant' : Dialogue.speed >= 140 ? 'Fast' : Dialogue.speed >= 60 ? 'Normal' : 'Slow') + '</button></div>' +
       '<div class="h2">Controls</div>' +
