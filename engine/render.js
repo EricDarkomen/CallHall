@@ -137,24 +137,37 @@ const R = {
     this._tiles.set(key, cv);
     return cv;
   },
-  floorTile(z, v) {
+  floorTile(z, v, s) {
     /* The kit's floor, multiplied through the zone's colour: straight from the
        atlas each material is one flat colour and thirteen rooms become one room
        thirteen times. Baked once, so the tint is free per frame. Never pick a
        floor cell off a contact sheet — most are edge pieces; tile a candidate
-       with tools/tiled.mjs and look for a seam. */
-    const kit = ZONES[z] && ZONES[z].tile;
+       and look for a seam.
+
+       `s` is a SURFACE, from World.surf — what this particular tile is made of
+       where that differs from what its room is made of. It is looked at first
+       and it wins outright: a street is one zone with one name, and the tarmac
+       down the middle of it is not a second street. */
+    const S = s && SURFACES[s];
+    const kit = S ? S.tile : ZONES[z] && ZONES[z].tile;
+    const floor = S ? S.floor : ZONES[z] && ZONES[z].floor;
+    const alt = S ? S.alt : ZONES[z] && ZONES[z].alt;
     if (Tiles.has(kit)) {
-      return this._bake('k' + z + v + kit, (g, N) => {
+      return this._bake('k' + (S ? 's' + s : z) + v + kit, (g, N) => {
         const r = Tiles.rects[kit], src = Tiles.imgFor(kit);
         g.imageSmoothingEnabled = false;
         g.drawImage(src, r[0], r[1], r[2], r[3], 0, 0, N, N);
         g.globalCompositeOperation = 'multiply';
-        g.fillStyle = this.shade(v ? ZONES[z].floor : ZONES[z].alt, .55);
+        g.fillStyle = this.shade(v ? floor : alt, .55);
         g.fillRect(0, 0, N, N);
         g.globalCompositeOperation = 'source-over';
-        g.fillStyle = 'rgba(0,0,0,.10)';
-        g.fillRect(0, 0, N, 1); g.fillRect(0, 0, 1, N);
+        /* The seam along the top and left of a tile is what makes a floor read
+           as laid rather than as wallpaper. A road has no seams in it — it was
+           poured, not laid — so the surface that says so does without. */
+        if (!S) {
+          g.fillStyle = 'rgba(0,0,0,.10)';
+          g.fillRect(0, 0, N, 1); g.fillRect(0, 0, 1, N);
+        }
       });
     }
     return this._bake('f' + z + v, (g, N, rnd) => {
@@ -318,6 +331,287 @@ const R = {
           if (v) { g.fillStyle = 'rgba(0,0,0,.07)'; g.fillRect(rnd() * N * .5, N * .58, 12 + rnd() * 14, 3); }
       }
     });
+  },
+  /* Roofs, for the wall mass outdoors that has no floor beside it to be seen
+     from — the middle of a terrace, and everything past the edge of the map.
+     Slate: courses of tile with the joints staggered, dark enough that the
+     streets between them are obviously the lit part of the picture. Baked like
+     every other surface, so a whole block of it costs one blit a tile. */
+  roofTile(v) {
+    return this._bake('roof' + v, (g, N, rnd) => {
+      const base = v ? '#2b3038' : '#292e35';
+      g.fillStyle = base; g.fillRect(0, 0, N, N);
+      const rows = 4, h = N / rows;
+      for (let r = 0; r < rows; r++) {
+        const y = r * h, off = (r & 1) ? h : 0;
+        for (let x = -h; x < N + h; x += h * 2) {
+          g.fillStyle = 'rgba(255,255,255,' + (0.03 + rnd() * 0.035).toFixed(3) + ')';
+          g.fillRect(x + off + 1, y + 1, h * 2 - 2, h - 2);
+        }
+        g.fillStyle = 'rgba(0,0,0,.32)'; g.fillRect(0, y, N, 2);
+      }
+      /* One ridge or vent per few tiles, so a big roof is not a texture swatch
+         repeated eighty times. */
+      if (rnd() > .72) {
+        g.fillStyle = 'rgba(0,0,0,.35)';
+        g.fillRect(N * .3, N * .3, N * .3, N * .3);
+        g.fillStyle = 'rgba(255,255,255,.06)';
+        g.fillRect(N * .3, N * .3, N * .3, 3);
+      }
+    });
+  },
+  /* ---- the street ----
+     Two passes that exist only because a level declared `surfaces:` and
+     `paint:`, and that cost one bounds check on every level that did not.
+
+     The KERB is derived rather than drawn by hand: wherever a tile of one
+     surface meets walkable ground of another, there is a step between them,
+     and a step is a lit top edge and a shadow in the gutter. Doing it this way
+     means a car park somebody redraws in the editor gets its kerbs right
+     without anybody drawing one — and it is the same reason the vehicle
+     crossover at the car park exit has no kerb across it: the tarmac is
+     carried through the pavement there, so there is no boundary to find. */
+  kerbs(x0, y0, x1, y1) {
+    if (!World.surf) return;
+    const c = this.ctx;
+    const at = (x, y) => (x < 0 || y < 0 || x >= MAPW || y >= MAPH || World.solid[y][x]) ? false
+      : { s: World.surf[y][x] };
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const s = World.surf[y][x];
+      if (!s || World.solid[y][x] || !World.zone[y][x]) continue;
+      const px = x * TILE, py = y * TILE;
+      /* Only ever from the surfaced side, and between two surfaced tiles only
+         from the one whose name sorts first — otherwise every boundary is
+         drawn twice, which doubles the shadow and shows as a dark line down
+         the middle of the kerb. */
+      const edge = n => n && n.s !== s && (!n.s || s < n.s);
+      /* North and west get the kerb TOP (the pavement is up or left of here,
+         so the lit face is on that side); south and east get it likewise. The
+         gutter shadow is always inside the tarmac. */
+      if (edge(at(x, y - 1))) {
+        c.fillStyle = 'rgba(0,0,0,.30)'; c.fillRect(px, py, TILE, 3);
+        c.fillStyle = 'rgba(226,229,234,.30)'; c.fillRect(px, py - 4, TILE, 4);
+        c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(px, py - 5, TILE, 1);
+      }
+      if (edge(at(x, y + 1))) {
+        c.fillStyle = 'rgba(0,0,0,.30)'; c.fillRect(px, py + TILE - 3, TILE, 3);
+        c.fillStyle = 'rgba(226,229,234,.30)'; c.fillRect(px, py + TILE, TILE, 4);
+      }
+      if (edge(at(x - 1, y))) {
+        c.fillStyle = 'rgba(0,0,0,.30)'; c.fillRect(px, py, 3, TILE);
+        c.fillStyle = 'rgba(226,229,234,.30)'; c.fillRect(px - 4, py, 4, TILE);
+      }
+      if (edge(at(x + 1, y))) {
+        c.fillStyle = 'rgba(0,0,0,.30)'; c.fillRect(px + TILE - 3, py, 3, TILE);
+        c.fillStyle = 'rgba(226,229,234,.30)'; c.fillRect(px + TILE, py, 4, TILE);
+      }
+    }
+  },
+  /* The paint, from the level's own `paint:` list. Six words of vocabulary,
+     all of them in TILES because that is what the rest of a level is written
+     in, and all of them faded, because the last time anybody repainted
+     Bellhaven Road the building had a different name over the door.
+
+       dash   a broken white line from a to b — a centre line
+       line   a solid one — a give way, a stop line
+       yellow a double yellow along a kerb, from a to b
+       zebra  a crossing filling r; the bars run the way the traffic does
+       bays   r divided into two-tile parking bays, open on the side named
+       text   words painted on the road at `at`, turned by `turn` quarter turns
+
+     Drawn every frame rather than baked: it is a few dozen fillRects behind a
+     camera cull, which is cheaper than the bookkeeping of a second offscreen
+     canvas the size of a level that has to be thrown away whenever one is. */
+  roadPaint() {
+    const list = World.def && World.def.paint;
+    if (!list || !list.length) return;
+    const c = this.ctx;
+    const WHITE = 'rgba(228,230,222,.58)', YELLOW = 'rgba(206,172,66,.5)';
+    /* Anything wholly off-screen costs one rectangle test and nothing else. */
+    const near = (ax, ay, bx, by) => !(Math.max(ax, bx) < Cam.x - TILE || Math.min(ax, bx) > Cam.x + Cam.w + TILE
+      || Math.max(ay, by) < Cam.y - TILE || Math.min(ay, by) > Cam.y + Cam.h + TILE);
+    /* One line, solid or broken, between two points. Everything except the
+       crossing and the words is one of these. */
+    const stroke = (ax, ay, bx, by, w, colour, dash) => {
+      if (!near(ax, ay, bx, by)) return;
+      const len = Math.hypot(bx - ax, by - ay);
+      if (!len) return;
+      const ux = (bx - ax) / len, uy = (by - ay) / len;
+      c.save();
+      c.strokeStyle = colour; c.lineWidth = w; c.lineCap = 'butt';
+      if (dash) {
+        /* Laid to a pitch rather than stretched to fit: a centre line that
+           ends mid-dash is what a real one does. */
+        const on = TILE * .78, off = TILE * .95;
+        for (let d = 0; d + on <= len; d += on + off) {
+          c.beginPath();
+          c.moveTo(ax + ux * d, ay + uy * d);
+          c.lineTo(ax + ux * (d + on), ay + uy * (d + on));
+          c.stroke();
+        }
+      } else {
+        c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
+      }
+      c.restore();
+    };
+    for (const m of list) {
+      if (m.a && m.b) {
+        const ax = m.a[0] * TILE, ay = m.a[1] * TILE, bx = m.b[0] * TILE, by = m.b[1] * TILE;
+        if (m.p === 'dash') stroke(ax, ay, bx, by, 4, WHITE, true);
+        else if (m.p === 'line') stroke(ax, ay, bx, by, 5, WHITE, false);
+        else if (m.p === 'yellow') {
+          /* Two of them, three pixels apart, because one is a restriction and
+             two is a prohibition and everybody in the country knows which. */
+          const len = Math.hypot(bx - ax, by - ay) || 1;
+          const nx = -(by - ay) / len * 3, ny = (bx - ax) / len * 3;
+          stroke(ax - nx, ay - ny, bx - nx, by - ny, 2.5, YELLOW, false);
+          stroke(ax + nx, ay + ny, bx + nx, by + ny, 2.5, YELLOW, false);
+        }
+        continue;
+      }
+      if (m.p === 'zebra' && m.r) {
+        const [x1, y1, x2, y2] = m.r;
+        const px = x1 * TILE, py = y1 * TILE;
+        const w = (x2 - x1 + 1) * TILE, h = (y2 - y1 + 1) * TILE;
+        if (!near(px, py, px + w, py + h)) continue;
+        c.save();
+        c.fillStyle = 'rgba(232,234,228,.6)';
+        /* The bars run WITH the traffic, so they are laid across whichever of
+           the two the crossing is narrower in — which for a crossing is always
+           the direction you walk. */
+        if (h >= w) { for (let x = px + 5; x + 13 <= px + w; x += 26) c.fillRect(x, py, 13, h); }
+        else { for (let y = py + 5; y + 13 <= py + h; y += 26) c.fillRect(px, y, w, 13); }
+        c.restore();
+        continue;
+      }
+      if (m.p === 'bays' && m.r) {
+        const [x1, y1, x2, y2] = m.r;
+        const px = x1 * TILE, py = y1 * TILE;
+        const w = (x2 - x1 + 1) * TILE, h = (y2 - y1 + 1) * TILE;
+        if (!near(px, py, px + w, py + h)) continue;
+        /* Bays are two tiles across. The open side is the one you drive in
+           from, so the dividers run away from it and the closed end gets a
+           line along it. */
+        const acrossX = m.open === 'n' || m.open === 's';
+        c.save();
+        c.strokeStyle = WHITE; c.lineWidth = 3;
+        c.beginPath();
+        if (acrossX) {
+          for (let x = px; x <= px + w + 1; x += TILE * 2) { c.moveTo(x, py); c.lineTo(x, py + h); }
+          const cy = m.open === 's' ? py : py + h;
+          c.moveTo(px, cy); c.lineTo(px + w, cy);
+        } else {
+          for (let y = py; y <= py + h + 1; y += TILE * 2) { c.moveTo(px, y); c.lineTo(px + w, y); }
+          const cx = m.open === 'e' ? px : px + w;
+          c.moveTo(cx, py); c.lineTo(cx, py + h);
+        }
+        c.stroke(); c.restore();
+        continue;
+      }
+      if (m.p === 'text' && m.at) {
+        const px = m.at[0] * TILE, py = m.at[1] * TILE;
+        if (!near(px - 60, py - 60, px + 60, py + 60)) continue;
+        c.save();
+        c.translate(px, py);
+        if (m.turn) c.rotate((m.turn & 3) * Math.PI / 2);
+        /* Road lettering is tall and narrow because it is read at an angle
+           from a long way off, and squashing the font sideways is how it is
+           done in real life too. */
+        c.scale(0.82, 2);
+        c.font = ROAD_FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillStyle = WHITE;
+        c.fillText(m.s || '', 0, 0);
+        c.restore();
+      }
+    }
+  },
+  /* One car, drawn from above: a body, a roof with the glass either end of it,
+     four wheels with the front pair turned to wherever the steering is, and
+     the lights that say what it is doing. All of it from the four numbers and
+     three colours in its CARS entry, so a new model is an entry in a table and
+     not a new drawing.
+
+     Nothing here is a sprite, and that is not for want of looking: the kit
+     this game pins is a mediaeval-through-Victorian tile set with a wheelchair
+     and a shopping trolley in it as the only wheeled things in the whole
+     repository. A car in that style would have to be drawn, and a car that is
+     drawn may as well be drawn by the renderer, where it can turn through any
+     angle rather than the eight a sprite sheet would give it. */
+  car(car) {
+    const c = this.ctx, d = car.def;
+    const hl = d.len / 2, hw = d.wid / 2;
+    /* The shadow is the ground's, so it is offset in the WORLD (down and a
+       little right, like every other shadow in this game) and only then turned
+       to match the body. */
+    c.save();
+    c.translate(car.x + 2, car.y + 6); c.rotate(car.a);
+    c.fillStyle = 'rgba(0,0,0,.32)';
+    c.beginPath(); c.roundRect(-hl, -hw, d.len, d.wid, 9); c.fill();
+    c.restore();
+
+    c.save();
+    c.translate(car.x, car.y); c.rotate(car.a);
+
+    /* Wheels first: they are under the arches. The front pair turn, which is
+       four pixels of movement and the single thing that most makes the car
+       look like it is being driven rather than slid. */
+    c.fillStyle = '#16181c';
+    const wheel = (u, turn) => {
+      c.save(); c.translate(u, 0);
+      for (const v of [-hw - 1, hw + 1]) {
+        c.save(); c.translate(0, v); if (turn) c.rotate(turn);
+        c.beginPath(); c.roundRect(-6, -3, 12, 6, 2); c.fill();
+        c.restore();
+      }
+      c.restore();
+    };
+    wheel(hl * 0.58, (car.wheel || 0) * 0.5);
+    wheel(-hl * 0.58, 0);
+
+    /* The body. A flat fill would read as a card: the gradient across it is
+       the light coming off a curved roof, which is the only reason a car in
+       plan view looks like a car at all. */
+    const g = c.createLinearGradient(0, -hw, 0, hw);
+    g.addColorStop(0, this.shade(d.body, .16));
+    g.addColorStop(.45, d.body);
+    g.addColorStop(1, this.shade(d.body, -.28));
+    c.fillStyle = g;
+    c.beginPath(); c.roundRect(-hl, -hw, d.len, d.wid, 8); c.fill();
+    c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 1.5; c.stroke();
+
+    /* Roof and glass. The windscreen is the bigger of the two and it is at the
+       front, which is how you can tell at a glance which way a stationary car
+       is pointing — the thing GTA got right and nobody has improved on. */
+    c.fillStyle = 'rgba(30,38,50,.85)';
+    c.beginPath(); c.roundRect(hl * 0.18, -hw + 3, hl * 0.36, d.wid - 6, 3); c.fill();
+    c.beginPath(); c.roundRect(-hl * 0.72, -hw + 4, hl * 0.26, d.wid - 8, 3); c.fill();
+    c.fillStyle = this.shade(d.roof, .04);
+    c.beginPath(); c.roundRect(-hl * 0.44, -hw + 2, hl * 0.62, d.wid - 4, 4); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.10)';
+    c.fillRect(-hl * 0.44, -hw + 2, hl * 0.62, 2);
+
+    /* Somebody in it. A head, at the right-hand seat, because this is
+       Bellhaven and not Bellhaven, Ohio. */
+    if (car === Cars.driving || car.traffic) {
+      c.fillStyle = car === Cars.driving ? 'rgba(233,214,190,.95)' : 'rgba(60,66,78,.9)';
+      c.beginPath(); c.arc(-hl * 0.1, hw * 0.42, 3.4, 0, 6.3); c.fill();
+    }
+
+    /* Lights. Two at each end; the back pair come up when the brakes are on or
+       when it is reversing, which are the two times a car behind you needs to
+       know. */
+    const lit = car.braking || car.fwd < -4;
+    for (const v of [-hw + 4, hw - 4]) {
+      c.fillStyle = 'rgba(255,244,214,.85)';
+      c.beginPath(); c.roundRect(hl - 4, v - 2.5, 3, 5, 1.5); c.fill();
+      c.fillStyle = lit ? '#ff5f56' : 'rgba(150,52,48,.9)';
+      c.beginPath(); c.roundRect(-hl + 1, v - 2.5, 3, 5, 1.5); c.fill();
+    }
+    if (lit && Math.abs(car.fwd) > 20) {
+      c.fillStyle = 'rgba(255,95,86,.18)';
+      c.beginPath(); c.roundRect(-hl - 7, -hw + 2, 8, d.wid - 4, 3); c.fill();
+    }
+    c.restore();
   },
   /* Bake an out-of-focus version of the current frame into the canvas, once,
      when a full-screen overlay opens. One canvas operation instead of a CSS
@@ -1174,8 +1468,14 @@ const R = {
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       const z = World.zone[y][x];
       if (!z || World.solid[y][x]) continue;
-      c.drawImage(this.floorTile(z, (x + y) & 1), x * TILE, y * TILE, TILE, TILE);
+      c.drawImage(this.floorTile(z, (x + y) & 1, World.surf && World.surf[y][x]), x * TILE, y * TILE, TILE, TILE);
     }
+    /* The kerb, and then the paint on the road. Both go straight onto the
+       floor, before the wear and the wall shadows: a marking is painted on the
+       tarmac and everything the building does to the light happens on top of
+       it. Both cost nothing on a level with no surfaces declared. */
+    this.kerbs(x0, y0, x1, y1);
+    this.roadPaint();
 
     /* worn patches and old stains */
     c.fillStyle = 'rgba(255,255,255,.018)';
@@ -1261,7 +1561,20 @@ const R = {
          inside of the building and it is black; outdoors it is whatever is
          past the car park wall, and black there reads as a hole cut in the
          world rather than as distance. */
-      if (!anyNear) { c.fillStyle = World.indoors() ? '#080b11' : '#4a5a6b'; c.fillRect(x * TILE, y * TILE, TILE, TILE); continue; }
+      /* Indoors this is the inside of the building and it is black. Outdoors
+         it used to be a flat pale blue-grey standing for distance, which was
+         right while the only wall mass out there was one course of car park
+         wall — and became wrong the moment a level had a whole city block in
+         the middle of it, because forty tiles of flat pale grey between two
+         streets reads as a lake. It is roofs now, which is what is actually up
+         there: correct over the block, and better than a flat colour past the
+         edge of the map as well, where what you are looking at is the rest of
+         a town. */
+      if (!anyNear) {
+        if (World.indoors()) { c.fillStyle = '#080b11'; c.fillRect(x * TILE, y * TILE, TILE, TILE); }
+        else c.drawImage(this.roofTile((x * 5 + y * 3) & 1), x * TILE, y * TILE, TILE, TILE);
+        continue;
+      }
       const px = x * TILE, py = y * TILE;
       c.drawImage(this.wallTile(nz || 'main', (x * 3 + y) & 1), px, py, TILE, TILE);
       if (below) {
@@ -1356,13 +1669,30 @@ const R = {
       if (Cam.visible((t.x + t.w / 2) * TILE, wy)) drawables.push({ y: wy - 1, kind: 'counter', t });
     });
     NPCM.list.forEach(n => { if (Cam.visible(n.x, n.y)) drawables.push({ y: n.y, kind: 'npc', n }); });
-    drawables.push({ y: P.y, kind: 'player' });
+    /* Cars sort with everybody else, which is the whole reason they are in
+       this list rather than drawn in a pass of their own: walk behind a parked
+       car and you are behind it, walk in front and you are in front of it. */
+    (World.cars || []).forEach(car => { if (Cam.visible(car.x, car.y)) drawables.push({ y: car.y, kind: 'car', car }); });
+    /* Not while you are in one. You are the car — drawing you as well puts a
+       person standing on the roof of the thing they are driving. */
+    if (!Cars.driving) drawables.push({ y: P.y, kind: 'player' });
     drawables.sort((a, b) => a.y - b.y);
 
     const hi = Interact.target;
     drawables.forEach(d => {
       if (d.kind === 'counter') {
         this.counter(d.t);
+      } else if (d.kind === 'car') {
+        this.car(d.car);
+        if (hi === d.car && !Cars.driving) {
+          c.save();
+          c.strokeStyle = 'rgba(77,163,255,.9)'; c.lineWidth = 2;
+          c.shadowColor = '#4da3ff'; c.shadowBlur = 14;
+          const cw = d.car.def.len + 12, ch = d.car.def.wid + 12;
+          c.translate(d.car.x, d.car.y); c.rotate(d.car.a);
+          c.beginPath(); c.roundRect(-cw / 2, -ch / 2, cw, ch, 10); c.stroke();
+          c.restore();
+        }
       } else if (d.kind === 'obj') {
         const o = d.o;
         /* Behind a wall you are looking at the front of: don't draw it at all.
@@ -1687,7 +2017,13 @@ const R = {
     for (let y = 0; y < MAPH; y++) for (let x = 0; x < MAPW; x++) {
       const z = World.zone[y][x];
       if (!z || World.solid[y][x]) continue;
-      c.fillStyle = ZONES[z].floor; c.fillRect(x * sx, y * sy, sx + .5, sy + .5);
+      /* A surface paints itself, because a minimap of a town in which the
+         roads are the same colour as the pavements is a minimap of a car park.
+         `map` and not `floor`: a surface's floor colour is a TINT multiplied
+         through a texture, and there is no texture down here to multiply. */
+      const s = World.surf && World.surf[y][x];
+      c.fillStyle = (s && SURFACES[s] && SURFACES[s].map) || ZONES[z].floor;
+      c.fillRect(x * sx, y * sy, sx + .5, sy + .5);
     }
     this._mmBase = b;
   },
@@ -1706,6 +2042,11 @@ const R = {
       const q = this.questMark(n);
       c.fillStyle = q ? '#ff5f56' : 'rgba(180,140,255,.85)';
       c.fillRect(n.x / TILE * sx - 1, n.y / TILE * sy - 1, 2.6, 2.6);
+    });
+    (World.cars || []).forEach(car => {
+      if (car === Cars.driving) return;      /* that dot is the player's */
+      c.fillStyle = car.canDrive ? 'rgba(90,212,138,.9)' : 'rgba(200,205,215,.6)';
+      c.fillRect(car.x / TILE * sx - 1, car.y / TILE * sy - 1, 2.6, 2.6);
     });
     if (Guide.tx !== null) {
       c.fillStyle = '#5ad48a';

@@ -105,6 +105,10 @@ const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Emo
 const NAME_FONT = '600 11px ui-monospace,"Cascadia Mono",Consolas,"DejaVu Sans Mono",monospace';
 const BUBBLE_FONT = '12px "Trebuchet MS","Segoe UI",Tahoma,sans-serif';
 const FLOAT_FONT = '700 15px "Trebuchet MS","Segoe UI",Tahoma,sans-serif';
+/* Words painted on a road. Squashed sideways and stretched tall by the
+   transform that draws it — see R.roadPaint() — so the size here is the
+   letter height before that, not after. */
+const ROAD_FONT = '700 13px "Trebuchet MS","Segoe UI",Tahoma,sans-serif';
 
 /* roundRect polyfill for older browsers */
 if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {

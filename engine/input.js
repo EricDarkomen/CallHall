@@ -56,6 +56,10 @@ function bindInput() {
     }
     if (G.state !== 'play' && !Panels.on) return;
     if (e.code === 'KeyE') { if (!Panels.on) Interact.go(); return; }
+    /* The horn, and only while you are in something that has one. Held rather
+       than pressed — Cars.update sounds it once on the way down and leaves it
+       leaning on it after that. */
+    if (e.code === 'KeyH') { if (Cars.driving) Cars.horn = true; return; }
     const map = { KeyI: 'inventory', KeyJ: 'quests', KeyK: 'skills', KeyC: 'chat', KeyM: 'email', KeyP: 'stats', KeyL: 'ach' };
     if (map[e.code]) { if (Panels.on && Panels.tab === map[e.code]) Panels.close(); else Panels.open(map[e.code]); }
   });
@@ -83,9 +87,10 @@ function bindInput() {
     /* The release matters here in a way it does not elsewhere: a game asking
        a.held() gets a key that is never let go of otherwise. */
     if (Arcade.on) { Arcade.key({ code: e.code, down: false }); return; }
+    if (e.code === 'KeyH') Cars.horn = false;
     if (KEYMAP[e.code]) Keys[KEYMAP[e.code]] = 0;
   });
-  addEventListener('blur', () => { Keys.up = Keys.down = Keys.left = Keys.right = 0; Stick.release(); });
+  addEventListener('blur', () => { Keys.up = Keys.down = Keys.left = Keys.right = 0; Cars.horn = false; Stick.release(); });
 
   /* Leaving the tab should not cost you the shift: stop the clock, drop the
      held keys, and hush the hold music until you come back. */
@@ -224,6 +229,11 @@ function movePlayer(dt) {
      stick whose finger has nothing under it. Let go of it here rather than in
      each of the four things that can open. */
   if (G.state !== 'play') { P.moving = false; if (Stick.id !== null) Stick.release(); return; }
+  /* Behind a wheel the same keys and the same thumb mean something else
+     entirely, and Cars owns them — including moving P to wherever the car has
+     got to, which is what keeps the camera, the minimap and the street names
+     working without any of them knowing. */
+  if (Cars.driving) return;
   let dx = (Keys.right - Keys.left), dy = (Keys.down - Keys.up);
   if (dx && dy) { dx *= .707; dy *= .707; }
   /* The stick wins while it is held. Its vector is already a unit direction
@@ -266,13 +276,21 @@ function movePlayer(dt) {
   P.step = (P.step || 0) + Math.hypot(P.x - was.x, P.y - was.y) / TILE * 2.6;
   P.x = clamp(P.x, 20, MAPW * TILE - 20); P.y = clamp(P.y, 20, MAPH * TILE - 20);
 
+  zoneCheck();
+}
+
+/* Which room — or which street — the player is standing in, and what that is
+   worth the first time. Its own function because there are two ways to be
+   somewhere now: walking there, and driving there. One rule in one place, so
+   the fifteen for a room you have not been in cannot be awarded twice or the
+   name of a street announced only when you arrive on foot. */
+function zoneCheck() {
   const z = World.zoneAt(Math.floor(P.x / TILE), Math.floor(P.y / TILE));
-  if (z && z !== G.lastZone) {
-    G.lastZone = z; UI.zone(ZONES[z].name);
-    if (!G.discovered[z]) {
-      G.discovered[z] = true; Player.xp(15);
-      if (Object.keys(ZONES).every(k => G.discovered[k])) Ach.get('a_allthree');
-    }
-    if (z === 'main' && !G.flags.tut2) { G.flags.tut2 = true; UI.objective('Find your workstation (🖥️) and say hello to somebody.'); }
+  if (!z || z === G.lastZone) return;
+  G.lastZone = z; UI.zone(ZONES[z].name);
+  if (!G.discovered[z]) {
+    G.discovered[z] = true; Player.xp(15);
+    if (Object.keys(ZONES).every(k => G.discovered[k])) Ach.get('a_allthree');
   }
+  if (z === 'main' && !G.flags.tut2) { G.flags.tut2 = true; UI.objective('Find your workstation (🖥️) and say hello to somebody.'); }
 }

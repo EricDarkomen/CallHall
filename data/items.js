@@ -240,6 +240,10 @@ const ACHS = {
   a_biscuits: { n: 'Nobody Will Ever Know It Was You', e: '🎁', d: 'Buy the biscuits with your own money and say nothing.' },
   a_mo:      { n: 'Nobody Asks', e: '🧑‍🎓', d: 'Ask Mo whether he is actually alright, and mean it.' },
   a_poop:    { n: 'Listed Building', e: '🧻', d: 'Pay your respects to the only piece of writing in this building that outlived its author’s career.' },
+  /* ---- outside, and the pool car ---- */
+  a_drive:   { n: 'Vehicle 1 Of 1', e: '🚗', d: 'Get into the pool car. The key has been in it since 2019.' },
+  a_lap:     { n: 'Round The Block', e: '🛣️', d: 'Drive all four sides of it — Bellhaven, Aldergate, Fenn, Cargate — without going back inside.' },
+  a_parked:  { n: 'Between The Lines', e: '🅿️', d: 'Put the pool car back in a bay. Straight.' },
   /* ---- the arcade ----
      Handed out by minigames/*.js, which each name theirs literally so the
      reward editor's "can this be earned at all" check can see the call. */

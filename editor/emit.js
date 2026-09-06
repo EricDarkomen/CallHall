@@ -112,6 +112,13 @@ const Emit = {
       L.push(this.listBlock('doors', Doc.doors, i));
     }
     if (Doc.counters.length) L.push(this.listBlock('counters', Doc.counters, i));
+    /* Written back exactly as they came in. This editor cannot draw a road
+       marking or park a car, and a table it cannot edit is still a table it
+       must not lose — see the note on Doc.surfaces. Emitted here, in the
+       geometry block, because that is the half of a level that round-trips. */
+    if (Doc.surfaces && Doc.surfaces.length) L.push(this.listBlock('surfaces', Doc.surfaces, i));
+    if (Doc.paint && Doc.paint.length) L.push(this.listBlock('paint', Doc.paint, i));
+    if (Doc.cars && Doc.cars.length) L.push(this.listBlock('cars', Doc.cars, i));
 
     const ek = Object.keys(Doc.entries);
     if (ek.length === 1) {

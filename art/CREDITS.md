@@ -78,6 +78,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Extracted from Brick Wall Block Edging, by Lanea Zimmerman. Reconfigured and recolored by Eliza Wyatt.
 
+### `Drain A`
+
+- **Used for:** obj.drain
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt.
+
 ### `Facial Hair 06 - Trimmed Beard`
 
 - **Used for:** beard
@@ -93,6 +101,14 @@ or by the Liberated Pixel Cup.
 - **Authors:** see Credits.txt
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** No per-asset entry; covered by the repository's Credits.txt, which licenses the whole pack OGA-BY 3.0.
+
+### `Gritty Dirt`
+
+- **Used for:** terrain.tarmac
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt.
 
 ### `Head 01 - Feminine`
 
@@ -452,6 +468,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Original by Eliza Wyatt.
 
+### `Shopping Cart`
+
+- **Used for:** obj.shoptrolley
+- **Sheets:** town
+- **Authors:** Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Eliza Wyatt.
+
 ### `Short 01 - Buzzcut`
 
 - **Used for:** hair
@@ -607,7 +631,7 @@ or by the Liberated Pixel Cup.
 
 ### `Window Awnings A`
 
-- **Used for:** shop.awning
+- **Used for:** shop.awning, shop.awning.amber, shop.awning.green
 - **Sheets:** town
 - **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0

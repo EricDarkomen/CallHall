@@ -540,11 +540,10 @@ const Acts = {
      park, the way out talks about the bus stop, and the Greggs has been a shop
      you could buy from for months without being a place you could stand. */
   carPark() {
-    insp('🚗', 'The car park', 'Twenty-two spaces, forty staff', [
-      'Twenty-two spaces. The building has forty staff on the fourth floor alone. Nobody has ever raised this, because raising it would identify you as somebody who drives.',
-      pick(['A hatchback with a baby-on-board sign and no baby seat.',
-        'An estate car with a roof box, in August, in a car park.',
-        'A van belonging to a contractor who is not here and has not been here since March.'])]);
+    insp('🪧', 'The car park', 'Twenty-two spaces, forty staff', [
+      'STAFF PARKING ONLY. PERMIT HOLDERS. UNAUTHORISED VEHICLES MAY BE CLAMPED. There has never been a permit and there has never been a clamp.',
+      'Twenty-two spaces, painted, numbered once and never renumbered. The building has forty staff on the fourth floor alone. Nobody has ever raised this, because raising it would identify you as somebody who drives.',
+      'The spaces are taken by ten past eight. What the rest of them do is park on Aldergate Rise and walk round, and say nothing about it, for years.']);
   },
   nigelSpace() {
     insp('🪧', 'RESERVED — N. GRIMSHAW', 'The best space', [
@@ -554,7 +553,8 @@ const Acts = {
   barrier() {
     insp('🚧', 'The barrier', 'Raised since 2019', [
       'A car park barrier, raised, and rusted into the raised position.',
-      'It cost eleven thousand pounds. Terry has the remote. The remote has no battery and Terry has stopped mentioning it, on the grounds that a barrier nobody can lower is the same as a barrier nobody has.']);
+      'It cost eleven thousand pounds. Terry has the remote. The remote has no battery and Terry has stopped mentioning it, on the grounds that a barrier nobody can lower is the same as a barrier nobody has.',
+      'Which is why anything with wheels can be driven straight out of here onto Bellhaven Road, and why nobody has ever needed to ask whether they were allowed to.']);
   },
   puddle() {
     insp('💧', 'The permanent puddle', 'Independent of weather', [
@@ -643,6 +643,175 @@ const Acts = {
     insp('🗑️', 'Bin, High Street', 'Council', [
       'A council bin outside Nailed It, mostly cotton pads and the little foil pouches nail varnish remover comes in.',
       'Nobody from the fourth floor has ever admitted to using this one either.']);
+  },
+
+  /* --- THE CARS ---
+     A car is not furniture and does not come through Interact's object path —
+     it has its own list, its own `use`, and Interact.go() looks it up here by
+     the same name. Which means one of these can offer to be got into and the
+     rest can explain, at length, why they will not be. */
+  parkedCar(car) {
+    insp('🚗', car.name, 'Somebody’s', [
+      'A parked car. It is locked, and it is not yours, and both of those are the same sentence.']);
+  },
+  poolCar(car) {
+    insp('🚗', 'The pool car', 'CALLHALL Services plc · vehicle 1 of 1', [
+      'A silver estate with a magnetic door sign that slid four inches down the panel at some point in 2021 and has stayed exactly there, so that it now reads CALLHALL SERVIC across the top of the wheel arch.',
+      'The key is in the ignition. It has been in the ignition since the year the barrier broke, on the reasoning — never stated, never challenged — that nobody would take it and everybody might need it.',
+      'Inside: a milk crate of leaflets for a service that was withdrawn, a road atlas, and a paper cup from a coffee place that left the retail park in 2016.'],
+      [{ t: 'Get in.', to: null, do() { Cars.take(car); } },
+       { t: 'Leave it. You are on the phones at ten.', to: null }]);
+  },
+  someHatchback() {
+    insp('🚗', 'A hatchback', 'Baby on board', [
+      'A hatchback with a BABY ON BOARD sign in the back window and no baby seat in the car.',
+      'The sign has been there four years. Somewhere out there is a child old enough to read it.']);
+  },
+  roofBox() {
+    insp('🚙', 'An estate car with a roof box', 'In a car park. In August.', [
+      'A roof box. On an estate car. In a car park. In August. Eleven miles from the sea.',
+      'It has not been off the roof since the holiday it went on for, because getting it off is a two-person job and the other person has moved to Leeds.']);
+  },
+  someoneElsesCar(car) {
+    insp('🚗', car.name, 'Not yours', [
+      pick(['Locked. A lanyard on the passenger seat, face down, which is either modesty or shame.',
+        'Locked. A high-vis on the parcel shelf, folded, never worn.',
+        'Locked. Three parking tickets in the footwell, none of them opened.',
+        'Locked. A phone charger, an ice scraper, and forty-one pence.']),
+      'It is somebody’s. Everything in this car park is somebody’s, which is the entire reason there are twenty-two spaces and forty staff.']);
+  },
+  contractorVan() {
+    insp('🚐', 'The contractor’s van', 'Across two spaces since March', [
+      'A white van, parked across two bays at an angle that took some doing, belonging to a contractor who is not here and has not been here since March.',
+      'On the back door, in the dust, somebody has written CLEAN ME and somebody else has written NO. Both hands are neat. Neither is signed.',
+      'Terry has raised it twice. Facilities have logged it as a facilities matter and passed it to Terry.']);
+  },
+  nigelsCar() {
+    insp('🚙', 'A silver estate, half on the pavement', 'N. GRIMSHAW', [
+      'Nigel’s. Two wheels up on the footway outside the nail bar, on the double yellows, forty feet from the space with his name painted on it.',
+      'He has parked here every working day since somebody keyed the other one, which he has never been able to prove was about the space, and which he brings up in a way that makes it clear he thinks about it daily.',
+      'There is a ticket under the wiper. There is always a ticket under the wiper. It is, by any measure anybody has ever run, cheaper than the alternative.']);
+  },
+  passingCar(car) {
+    insp('🚗', car.name, 'Going round again', [
+      'A car, going past, on the road, doing what cars do.',
+      'It comes round the block again about every minute and a half. You have started to recognise it. This is what happens to people who take their break outside.']);
+  },
+
+  /* --- THE STREETS ---
+     Everything that is not the car park and not the parade. Aldergate Rise
+     down one side, Fenn Street along the bottom, Cargate Lane back up the
+     other — which between them are the reason there is a loop to drive round
+     rather than a road that stops. */
+  carParkDrain() {
+    insp('🕳️', 'The drain in the car park', 'Blocked, in a settled sort of way', [
+      'A gully in the corner of the car park, entirely blocked with grit, cigarette ends and one bottle top.',
+      'The permanent puddle is nine metres away and has never been connected to this in anybody’s mind, out loud, in eleven years.']);
+  },
+  streetDrain() {
+    insp('🕳️', 'A drain', 'Council-maintained', [
+      pick(['A road gully with a takeaway lid across half of it, which is the most work anything has done to that lid.',
+        'A road gully. Somebody’s keys went down it in 2019 and the story is still told with the wrong ending.',
+        'A road gully, freshly jetted, which is the single most competent thing in the postcode.'])]);
+  },
+  trolley() {
+    insp('🛒', 'The trolley', 'Two hundred yards from any shop that owns one', [
+      'A supermarket trolley, upright, empty, and nowhere near a supermarket.',
+      'Nobody has ever seen one being moved. They are only ever already somewhere new, like herons.'],
+      [{ t: 'Push it somewhere more sensible.', to: null, do() {
+          P.stats.chaos += .5; Player.mod({ rep: 1 });
+          UI.toast('🛒', 'You push it up against the wall, out of the way. By Thursday it will be somewhere else entirely and you will know, and be unable to prove, that it was not you.');
+        } },
+       { t: 'It has earned its place.', to: null }]);
+  },
+  cashpoint() {
+    insp('🏧', 'The cashpoint', '£1.99 per withdrawal', [
+      'The only cash machine on this stretch, on the wall between the Greggs and the shutters. It charges £1.99, which it announces on a screen after you have already put your card in.',
+      'The fourth floor uses it anyway, on the eleventh of the month, in a queue, and complains about it in a way that has become a form of small talk.']);
+  },
+  hoarding() {
+    insp('🖍️', 'The hoarding', 'A DEVELOPMENT OF 42 APARTMENTS', [
+      'A board across the front of the unit next to the Greggs, showing an artist’s impression of forty-two apartments and a landscaped square with couples walking through it carrying nothing.',
+      'The board went up in 2019. The planning notice cable-tied to the lamppost beside it expired in 2020. The unit behind it has not been touched.',
+      'Somebody has drawn a very good pigeon on the artist’s impression, standing in the landscaped square, at scale.']);
+  },
+  bookies() {
+    insp('🎰', 'Bellhaven Bookmakers', 'Open till ten', [
+      'Carpet, screens, and a man watching a race in Wolverhampton with the sound off and total concentration.',
+      'It is the warmest building on this street and the only one with chairs you can sit in without buying anything, which is a fact about the high street and not about gambling.']);
+  },
+  charityShop() {
+    insp('🧦', 'The charity shop', 'Air ambulance', [
+      'Books, a shelf of mugs, and a rail of work shirts that have all been worn to the same job.',
+      'Marjorie donated fourteen mugs here in 2016 and has bought four of them back since, twice knowingly.']);
+  },
+  vapeShop() {
+    insp('💨', 'Vapour Trail', 'Was three other things', [
+      'A vape shop that was a phone repair shop, which was a nail bar, which was a bakery that everybody still gives directions by.',
+      'The signage has been changed four times and the awning has not been changed once, so the awning is still bakery-coloured, which is how the whole street tells you what used to be here.']);
+  },
+  refit() {
+    insp('🚧', 'The unit that is always being refitted', 'Opening soon', [
+      'Boarded, papered over, with a laminated sheet in the window that says OPENING SOON and has been in that window under three different fonts.',
+      'Something is definitely happening in there. There is a skip, and there has always been a skip, and it has never once been full or empty.']);
+  },
+  toLet() {
+    insp('🪧', 'TO LET', 'Enquiries: 01– (rest obscured)', [
+      'A commercial letting board, screwed to the brick, with the agent’s number weathered off at the fourth digit.',
+      'Underneath it somebody has cable-tied a smaller board advertising the same unit through a different agent, and underneath that a third, which is either competition or a queue.']);
+  },
+  bottleBank() {
+    insp('♻️', 'The bottle bank', 'Emptied fortnightly, filled hourly', [
+      'Three banks: brown, green, and one whose label came off years ago and now takes everything.',
+      'Around them, in a neat and blameless ring, the bottles that would not fit through the hole.']);
+  },
+  aldergateWall() {
+    insp('🖍️', 'The wall on Aldergate Rise', 'Painted over four times', [
+      'The back wall of the parade, painted over so many times that the paint is the only structural element anybody would testify to.',
+      pick(['Under the last coat, still legible in the right light: BELLHAVEN 4EVA.',
+        'Under the last coat, still legible in the right light: a phone number with the last digit gone.',
+        'Under the last coat, still legible in the right light: an extremely accurate drawing of the building you work in.']),
+      'Nobody has ever tagged the front of the parade. There are rules, and they are observed.']);
+  },
+  tyres() {
+    insp('🛞', 'Bellhaven Tyre & Exhaust', 'Unit 4', [
+      'A roller shutter, a stack of part-worns, and a radio that has been on the same station since the unit opened.',
+      'They do the pool car’s MOT. They have done it eleven times. They have never once been paid on time, and they have never once mentioned it, and Terry sends them a card at Christmas.']);
+  },
+  unitSix() {
+    insp('🏋️', 'Unit 6', 'Currently a gym', [
+      'Unit 6 is a gym. Before that it was a soft play, before that a gym, before that a place that sold conservatories, and before that a gym.',
+      'The sign is always vinyl and always new. The unit is always the unit.']);
+  },
+  carWash() {
+    insp('🧼', 'The hand car wash', '£6 / £9 / £12', [
+      'Six lads, four jet washes, one length of Astroturf, and a laminated price list with three tiers that nobody has ever been offered a choice between.',
+      'The pool car has been through here twice. Both times it came out cleaner than anything else in the car park and was, within a fortnight, indistinguishable.']);
+  },
+  sandwichVan() {
+    insp('🥪', 'The sandwich van’s pitch', 'Half eleven to one', [
+      'A painted rectangle on the tarmac and a sign asking that it be kept clear between half eleven and one.',
+      'The van is not here now. When it is here, the queue is eleven people long and contains, on any given day, at least four of your colleagues who told you they had brought something in.']);
+  },
+  yardFence() {
+    insp('🚧', 'The fence round the yard', 'Herras, hired, permanent', [
+      'Temporary fencing panels round a yard, wired together, standing in concrete feet, with a hire company’s name on a plate that has faded to a shape.',
+      'The hire has been running since before anybody currently on the fourth floor was hired. Somewhere there is a direct debit that is older than your job.']);
+  },
+  gulls() {
+    insp('🐦', 'Gulls', 'Eleven miles from the sea', [
+      'Four gulls on the flat roof of the units, watching Fenn Street with the flat professional interest of a supervisor.',
+      'They are here because the Greggs is here. Everything on this street is here because the Greggs is here.']);
+  },
+  greggsBins() {
+    insp('🗑️', 'The bins behind the Greggs', 'Emptied at six', [
+      'The back of the parade: three bins, a fire door propped with a milk crate, and a smell of sausage roll that has soaked into the brick and become part of the building.',
+      'This is the loading side, the smoking side, the crying side and the phone-call side of every shop on this street, all at once, which is what a back lane is.']);
+  },
+  flatBoxes() {
+    insp('📦', 'Flattened boxes', 'Awaiting collection', [
+      'Cardboard, flattened and stacked against the wall with real care, weighted down with a brick.',
+      'Somebody in one of these shops does this properly every single evening and nobody has ever thanked them for it. You are, at this moment, the only person who has ever stood here and noticed.']);
   },
 
   /* --- MEETING ROOM 2 --- */
