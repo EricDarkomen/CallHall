@@ -40,13 +40,42 @@ const Game = {
     if (Arcade.on) Arcade.frame(dt);
     if (G.state === 'play') {
       this.acc += dt * 1000;
-      while (this.acc >= MS_PER_GAME_MIN) {
-        this.acc -= MS_PER_GAME_MIN;
+      /* A game minute is no longer one length. It is MS_PER_GAME_MIN through
+         the working day and a fraction of that once the shift is over — see
+         Sky.pace() — so the pace is read INSIDE the loop, on every minute:
+         crossing 17:00 has to speed the clock up on the very next tick and not
+         on the next frame, or the last minute of the day is charged at the
+         evening's rate and the first of the evening at the day's. */
+      let pace = Sky.pace();
+      while (this.acc >= pace) {
+        this.acc -= pace;
         G.minutes++;
-        Chat.tick(); Mail.tick(); EventSys.tick();
-        if (G.minutes % 7 === 0) Player.mod({ energy: -1 });
-        if (G.minutes % 60 === 0) Save.write(true);   /* quiet hourly autosave */
-        if (G.minutes >= DAY_END) { Report.show(); break; }
+        /* Midnight. The day changes here, in the passing of a minute, rather
+           than in a button on a report — which is the whole point: nothing
+           moves, nothing is rebuilt, and you are wherever you were standing at
+           23:59, which by then is usually the car park. */
+        if (G.minutes >= 1440) { G.minutes -= 1440; Sky.newDay(); }
+        Sky.minute();
+        /* The office only happens during office hours. Nobody messages you at
+           two in the morning, nothing goes wrong with the printer at two in the
+           morning, and you do not get tired at two in the morning — you get
+           less tired, which Sky.minute() is doing above. */
+        if (Sky.working()) {
+          Chat.tick(); Mail.tick(); EventSys.tick();
+          if (G.minutes % 7 === 0) Player.mod({ energy: -1 });
+          if (G.minutes % 60 === 0) Save.write(true);   /* quiet hourly autosave */
+        }
+        /* Five o'clock, ONCE — and outside the test above, because at exactly
+           17:00 the shift is over and Sky.working() is already false. The
+           report is a report on the shift now rather than a curtain across the
+           world: Report.next() hands the evening back instead of starting
+           tomorrow, so this needs a flag to stop it going up again on every
+           minute until midnight. Cleared by Sky.newDay() with the rest of
+           today's flags. */
+        if (G.minutes >= DAY_END && !G.flags.clockedOff) {
+          G.flags.clockedOff = true; Report.show(); break;
+        }
+        pace = Sky.pace();
       }
       UI.hud();
     }
@@ -535,6 +564,7 @@ const Boot = {
       '<b>Go everywhere.</b> Thirteen rooms, three of which are not on the floor plan — and the building is not all of it. There is a way down to the car park, and there is something under the archive. Sit on the step outside. Read the suggestion box. Look at the photograph in the archive. The building is the plot.<br><br>' +
       '<b>J</b> jobs · <b>I</b> inventory · <b>K</b> skills · <b>C</b> office chat · <b>M</b> email · <b>P</b> profile · <b>L</b> achievements · <b>Esc</b> menu and settings.<br><br>' +
       'The shift runs 09:00 to 17:00. Survive it. Then do it again, because that is the actual game and it is also the actual job.<br><br>' +
+      'The <b>day</b> does not end when the shift does. At five the phones stop and the floor goes home; the clock carries on, it gets dark, and the next one starts at nine wherever you are standing by then. Sleep is what gives you your patience back, and you only get it if you stop.<br><br>' +
       '<i>This document is Rev. 7. Rev. 6 is the version in the folder on your desk. The differences are not marked.</i>';
     el.onclick = () => { el.onclick = null; el.classList.remove('on'); $('#titleScreen').classList.add('on'); Title.show(); G.state = 'title'; };
   }

@@ -127,6 +127,70 @@ export default {
         rect: [0, 0, 32, 96],
       },
     },
+    /* THE SEASONS, and they are one crop taken four times.
+
+       Upstream ships `Terrain/terrain_<season>.png`, four sheets laid out
+       identically — the same tile is at the same pixel in all four — so a
+       single rect gives the same square of grass in spring, summer, autumn and
+       winter without anybody having to pick four crops and hope they match.
+       That is the whole reason a verge outside the building can change colour
+       between one fortnight and the next for the cost of a lookup: see
+       SURFACES.grass in data/world.js, which carries `tiles` rather than
+       `tile`, and Sky.season(), which says which one today is.
+
+       [128,64] is the middle of the plain-fill block of the autotile — not an
+       edge piece, and tiled 3x3 and looked at in all four seasons before it was
+       picked, which is the rule for anything that covers more than one square.
+       Its one tuft repeats on a 32px pitch, which is visible on a field and is
+       not, on a two-tile strip of council grass that nobody has cut. */
+    {
+      name: 'terrain.grass.spring',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Terrain/terrain_spring.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Terrain (all seasons)',
+        rect: [128, 64, 32, 32],
+      },
+    },
+    {
+      name: 'terrain.grass.summer',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Terrain/terrain_summer.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Terrain (all seasons)',
+        rect: [128, 64, 32, 32],
+      },
+    },
+    {
+      name: 'terrain.grass.autumn',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Terrain/terrain_autumn.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Terrain (all seasons)',
+        rect: [128, 64, 32, 32],
+      },
+    },
+    {
+      /* Upstream's winter grass is grass with snow ON it, which is exactly
+         right: the verge is white in January before a single flake has been
+         drawn by the weather, and the weather's own lying snow goes over the
+         top of it. */
+      name: 'terrain.grass.winter',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Terrain/terrain_winter.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Terrain (all seasons)',
+        rect: [128, 64, 32, 32],
+      },
+    },
     {
       name: 'obj.wheeliebin',
       anchor: 'floor',

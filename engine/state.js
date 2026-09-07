@@ -38,6 +38,12 @@ const G = {
      without knowing what a minigame is — and resetRun clears it, or a new
      starter arrives with somebody else's best score already on the board. */
   arcade: { best: {}, won: {}, played: 0 },
+  /* What the sky is doing: which weather, when it next reconsiders itself, how
+     wet the ground is and how much snow is lying. Plain data, so {...G} in
+     Save.write carries it without Save knowing what weather is — and so a shift
+     restored on a wet Tuesday is restored on a wet Tuesday. See engine/sky.js,
+     which owns every field in it. */
+  wx: { k: 'grey', t: 0, w: 0, l: 0, flash: 0 },
   /* Which variant the player picked on each axis of the character creator, or
      null on an axis they left empty. Plain data, so {...G} in Save.write
      carries it and a returning shift is the same person; null means they never
@@ -83,6 +89,13 @@ function resetRun() {
   G.discovered = {}; G.endings = []; G.lastZone = null; G.objective = '';
   G.track = null; G.tkShut = {}; G.tkFold = false; G.tkTitles = false;
   G.arcade = { best: {}, won: {}, played: 0 };
+  /* A new starter gets a new sky. Rolled rather than blanked, so day one has a
+     real forecast on it — and rolled AFTER G.day is back to 1, because which
+     season it is is worked out from the day and the bag it draws from is the
+     season's. */
+  G.wx = { k: 'grey', t: 0, w: 0, l: 0, flash: 0 };
+  Sky.roll(false);
+  Sky.resume();
   /* Not the face: a new shift is a new starter, and Look.open() puts the
      default back before anybody sees it. Cleared here so the previous
      character cannot haunt one that was never made. */

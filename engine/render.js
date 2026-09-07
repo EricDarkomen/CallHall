@@ -149,7 +149,11 @@ const R = {
        and it wins outright: a street is one zone with one name, and the tarmac
        down the middle of it is not a second street. */
     const S = s && SURFACES[s];
-    const kit = S ? S.tile : ZONES[z] && ZONES[z].tile;
+    /* A surface may have four tiles rather than one — see SURFACES.grass. The
+       season is part of the bake key already, because the key carries the kit
+       tile's NAME and the name is what changes, so nothing here has to be told
+       to throw anything away when the year turns. */
+    const kit = S ? (S.tiles ? S.tiles[Sky.season()] : S.tile) : ZONES[z] && ZONES[z].tile;
     const floor = S ? S.floor : ZONES[z] && ZONES[z].floor;
     const alt = S ? S.alt : ZONES[z] && ZONES[z].alt;
     if (Tiles.has(kit)) {
@@ -840,20 +844,270 @@ const R = {
   /* The outdoor counterpart of ceiling(): flat, cold and everywhere at once,
      which is exactly the difference between daylight and a strip light. One
      rectangle over the viewport rather than a grid of pools — an overcast sky
-     is the only light source in the game with no shape to it. */
+     is the only light source in the game with no shape to it.
+
+     It follows the sun now, because it is the sun. A fixed wash was fine while
+     the game had eight hours in it and every one of them was daytime; laid over
+     a car park at two in the morning it is a floodlight nobody installed. */
   daylight() {
     const c = this.ctx;
+    const up = clamp(Sky.sunPos() * 1.8 + .12, 0, 1);
+    if (up <= 0.01) return;
     c.save();
     c.globalCompositeOperation = 'lighter';
-    c.globalAlpha = .075;
+    c.globalAlpha = .075 * up;
     c.fillStyle = '#a8c4e0';
     c.fillRect(Cam.x, Cam.y, Cam.w, Cam.h);
+    c.restore();
+  },
+  /* ---------------- The sky, painted ----------------
+     Sky knows what time it is and what the weather is doing; these four draw
+     it. Everything here is over the top of a frame that was rendered exactly as
+     it always was, which is the whole design: no tile, no sprite and no piece
+     of furniture in this game knows that the sun sets.
+
+     WATER ON THE GROUND. Two things, and they are different: a wet surface is
+     darker and shinier everywhere, and a puddle is somewhere in particular.
+     The puddles are picked off World.seed, so they are in the same places every
+     time it rains and in different places on every map — a road that grows its
+     puddles somewhere new each shower reads as static, not as weather. */
+  wetGround(x0, y0, x1, y1) {
+    const w = Sky.wet(), lie = Sky.lying();
+    if (World.indoors() || (w < .04 && lie < .04)) return;
+    const c = this.ctx;
+    c.save();
+    if (w > .04) {
+      /* The sheen. Darker where it has soaked in, brighter where it has not,
+         which is one multiply and one screen and reads as tarmac in the rain. */
+      c.globalAlpha = .16 * w;
+      c.globalCompositeOperation = 'multiply';
+      c.fillStyle = '#6d7a8e';
+      c.fillRect(Cam.x, Cam.y, Cam.w, Cam.h);
+      c.globalCompositeOperation = 'source-over';
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        if (!World.zone[y][x] || World.solid[y][x]) continue;
+        const sd = World.seed[y][x];
+        if (sd < .90) continue;
+        /* Puddles gather on the road, not on the camber of a pavement — and
+           not on grass, which is the other thing World.surf can say now. */
+        const road = World.surf && World.surf[y][x] === 'tarmac';
+        const px = x * TILE, py = y * TILE;
+        c.globalAlpha = (road ? .34 : .20) * w;
+        c.fillStyle = '#2b3a4e';
+        c.beginPath();
+        c.ellipse(px + TILE * (.3 + sd * .4), py + TILE * (.35 + (1 - sd) * 3 % .4),
+          TILE * (.16 + (sd - .9) * 2.4), TILE * (.10 + (sd - .9) * 1.5), sd * 3, 0, 6.3);
+        c.fill();
+        c.globalAlpha = (road ? .16 : .10) * w;
+        c.fillStyle = '#9fc0dd';
+        c.beginPath();
+        c.ellipse(px + TILE * (.3 + sd * .4) - 2, py + TILE * (.35 + (1 - sd) * 3 % .4) - 2,
+          TILE * (.10 + (sd - .9) * 1.6), TILE * (.05 + (sd - .9) * .9), sd * 3, 0, 6.3);
+        c.fill();
+      }
+    }
+    if (lie > .04) {
+      /* Lying snow. Over the ground rather than instead of it, so the paving
+         still shows through a light fall and has gone entirely by the time it
+         has been coming down for an hour. */
+      c.globalAlpha = .80 * lie;
+      c.fillStyle = '#eef4fb';
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        if (!World.zone[y][x] || World.solid[y][x]) continue;
+        c.fillRect(x * TILE, y * TILE, TILE, TILE);
+      }
+      /* Where feet and tyres have been. The road keeps less of it than the
+         pavement, which is the only reason anybody can tell where the road is.
+         The verges keep the most of all, and get nothing taken back off them. */
+      c.globalAlpha = .35 * lie;
+      c.fillStyle = '#8f9cad';
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        if (!World.zone[y][x] || World.solid[y][x]) continue;
+        if (World.surf && World.surf[y][x] === 'tarmac') c.fillRect(x * TILE, y * TILE, TILE, TILE);
+      }
+    }
+    c.restore();
+  },
+  /* THE GRADE. One rectangle, multiplied, over everything that has been drawn
+     so far. It is last because it is the light: a person standing under a
+     streetlight and a person standing in the dark are the same sprite, and what
+     separates them is what is painted over both of them and then taken back off
+     one of them by lamps() below. */
+  skyGrade() {
+    const g = Sky.grade(World.indoors());
+    if (g.a < .004) return;
+    const c = this.ctx;
+    c.save();
+    c.globalCompositeOperation = 'multiply';
+    c.globalAlpha = g.a;
+    c.fillStyle = g.col;
+    c.fillRect(Cam.x, Cam.y, Cam.w, Cam.h);
+    c.restore();
+    /* Fog sits on top of the multiply rather than in it: it is something in the
+       air between you and the floor, so it LIFTS the blacks instead of
+       deepening them, which is the one thing that makes fog read as fog. */
+    /* — and only as much of it as there is light to catch. Fog is lit air, so
+       at noon it is a white sheet and at two in the morning it is almost
+       nothing except what the streetlights make of it. Without the daylight
+       term a foggy 02:00 came out paler than a clear 18:00, which is the one
+       reading a night should never give. */
+    const fog = Sky.kind().fog;
+    if (fog) {
+      const lit = clamp(Sky.sunPos() * 1.2 + .45, .16, 1);
+      c.save();
+      c.globalAlpha = fog * lit * (.34 + Math.sin(this.t * .12) * .03);
+      c.fillStyle = World.indoors() ? '#b6bdc7' : '#c6cdd6';
+      c.fillRect(Cam.x, Cam.y, Cam.w, Cam.h);
+      c.restore();
+    }
+    /* Lightning. A whole-frame flash, because that is what it is — and it is
+       counted down here rather than in Sky.minute() so it lasts a fifth of a
+       second of real time and not a fifth of a game minute. */
+    const st = Sky.state();
+    if (st.flash > 0) {
+      st.flash = Math.max(0, st.flash - (this.lastDt || .016));
+      c.save();
+      c.globalCompositeOperation = 'lighter';
+      c.globalAlpha = Math.min(.5, st.flash) * (World.indoors() ? .45 : 1);
+      c.fillStyle = '#dfe8ff';
+      c.fillRect(Cam.x, Cam.y, Cam.w, Cam.h);
+      c.restore();
+    }
+  },
+  /* Every lamppost on this level, found once and kept: the list only changes
+     when the map underneath does, and levelChanged() is already the place that
+     is said. */
+  lampList() {
+    if (this._lamps) return this._lamps;
+    this._lamps = (World.objects || []).filter(o =>
+      (o.fdef && o.fdef.sprite === 'obj.lamppost') || o.kind === 'lamp');
+    return this._lamps;
+  },
+  /* THE LAMPS. Drawn after the grade and with 'lighter', so they are light put
+     back rather than darkness left out — which is why a streetlight in this
+     game has a pool under it and a headlight has a cone in front of it, and why
+     neither of them does anything at all at two in the afternoon. */
+  lamps(x0, y0, x1, y1) {
+    if (World.indoors() || !Sky.lampsOn()) return;
+    const c = this.ctx;
+    /* Fog is what makes a streetlight visible as a light rather than as a lit
+       patch of pavement, so it does not dim the lamps — it does the opposite. */
+    const haze = 1 + (Sky.kind().fog || 0) * .8;
+    const night = clamp(-Sky.sunPos() * 2.2 + .35, .15, 1) * haze;
+    c.save();
+    c.globalCompositeOperation = 'lighter';
+    const pool = this.glow('rgba(255,214,150,ALPHA)', Math.round(TILE * 3.4));
+    this.lampList().forEach(o => {
+      if (o.x < x0 - 4 || o.x > x1 + 4 || o.y < y0 - 4 || o.y > y1 + 4) return;
+      /* Under the lamp, not at the base of the post: the light is at the top of
+         it and this is where it lands. The flicker is one of them in eight, the
+         same one every time, because a street where every lamp flickers is a
+         horror film and a street where none of them does is a rendering. */
+      const bad = ((o.x * 31 + o.y * 17) & 7) === 3;
+      const f = bad ? (.55 + Math.abs(Math.sin(this.t * 9.3 + o.x)) * .45) : 1;
+      /* The post is three tiles tall and anchored by its foot, so the base is
+         the bottom of the tile and the lantern is two tiles above that. The
+         pool goes on the ground at the foot and the lantern gets its own small
+         bloom — the two halves of a streetlight, and without the second one the
+         post is a dark stick standing in a bright circle. */
+      const fx = (o.x + .5) * TILE;
+      c.globalAlpha = .40 * night * f;
+      c.drawImage(pool, fx - pool.width / 2, (o.y + .85) * TILE - pool.height / 2);
+      c.globalAlpha = .26 * night * f;
+      c.fillStyle = '#ffe6b0';
+      c.beginPath(); c.arc(fx, (o.y - 1.7) * TILE, 6, 0, 6.3); c.fill();
+    });
+    /* Headlights. Only on something that is being driven — a car parked in a
+       bay with its lights on all night is a flat battery, and the pool car has
+       enough wrong with it. */
+    (World.cars || []).forEach(car => {
+      if (car !== Cars.driving && !car.traffic) return;
+      if (!Cam.visible(car.x, car.y)) return;
+      const d = car.def, hl = d.len / 2, hw = d.wid / 2;
+      c.save();
+      c.translate(car.x, car.y); c.rotate(car.a);
+      const beam = c.createLinearGradient(hl, 0, hl + TILE * 3.6, 0);
+      beam.addColorStop(0, 'rgba(255,242,214,.34)');
+      beam.addColorStop(1, 'rgba(255,242,214,0)');
+      c.fillStyle = beam;
+      c.globalAlpha = night;
+      c.beginPath();
+      c.moveTo(hl - 2, -hw + 3); c.lineTo(hl + TILE * 3.6, -hw - TILE * 1.1);
+      c.lineTo(hl + TILE * 3.6, hw + TILE * 1.1); c.lineTo(hl - 2, hw - 3);
+      c.closePath(); c.fill();
+      c.restore();
+    });
+    c.restore();
+  },
+  /* WHAT IS COMING DOWN. Screen space, after the camera transform has been
+     popped: rain falls past the camera rather than past the map, and drawing it
+     in world coordinates makes it slide sideways whenever you walk.
+
+     No particle objects. Every drop's position is a function of its index and
+     the clock, so a downpour is four hundred numbers rather than four hundred
+     allocations a second, and pausing the game stops it dead because `this.t`
+     stops. */
+  weather() {
+    const k = Sky.kind();
+    if (!k.fall || !k.rate) return;
+    /* Indoors you do not get rained on. You get a window with water running
+       down it, and that is drawn by wallArt(). */
+    if (World.indoors()) return;
+    /* And with animation off — which follows the operating system's
+       reduced-motion setting by default — nothing falls. The weather is still
+       there: it is in the light, on the ground and on the window, and all three
+       of those hold still. */
+    if (!this.animate) return;
+    const c = this.ctx, W = Cam.w, H = Cam.h, t = this.t;
+    const n = Math.round((k.fall === 'snow' ? 90 : 150) * k.rate);
+    c.save();
+    if (k.fall === 'snow') {
+      c.fillStyle = 'rgba(244,250,255,.85)';
+      for (let i = 0; i < n; i++) {
+        const sd = (i * 2654435761 % 1000) / 1000, sd2 = (i * 40503 % 977) / 977;
+        const sp = 26 + sd * 34;
+        const x = (sd * W + Math.sin(t * .7 + i) * 14 + t * 9) % (W + 40) - 20;
+        const y = (sd2 * H + t * sp) % (H + 20) - 10;
+        const r = 1.2 + sd2 * 1.6;
+        c.globalAlpha = .45 + sd * .5;
+        c.beginPath(); c.arc(x, y, r, 0, 6.3); c.fill();
+      }
+    } else {
+      /* Rain and sleet. Sleet is rain that has given up: shorter, slower,
+         paler, and it comes at you sideways because it always does. */
+      const sleet = k.fall === 'sleet';
+      const slant = sleet ? 0.42 : 0.22;
+      c.strokeStyle = sleet ? 'rgba(219,232,245,.55)' : 'rgba(178,206,235,.45)';
+      c.lineWidth = sleet ? 1.4 : 1;
+      c.beginPath();
+      for (let i = 0; i < n; i++) {
+        const sd = (i * 2654435761 % 1000) / 1000, sd2 = (i * 40503 % 977) / 977;
+        const sp = (sleet ? 430 : 700) + sd * 420;
+        const len = (sleet ? 7 : 12) + sd2 * (sleet ? 5 : 12);
+        const y = (sd2 * H + t * sp) % (H + 60) - 30;
+        const x = (sd * W + y * slant) % (W + 60) - 30;
+        c.moveTo(x, y); c.lineTo(x - len * slant, y - len);
+      }
+      c.stroke();
+      /* Where it lands. A shower with no bounce is a screensaver. */
+      if (!sleet && k.rate >= 1) {
+        c.strokeStyle = 'rgba(200,224,245,.30)';
+        c.beginPath();
+        for (let i = 0; i < Math.round(n * .22); i++) {
+          const sd = (i * 22695477 % 1000) / 1000, sd2 = (i * 69621 % 977) / 977;
+          const ph = (t * 2.4 + sd2) % 1;
+          const x = sd * W, y = sd2 * H;
+          c.moveTo(x - 3 - ph * 4, y); c.lineTo(x + 3 + ph * 4, y);
+        }
+        c.stroke();
+      }
+    }
     c.restore();
   },
   /* The map underneath has been replaced. Anything cached off its shape — the
      minimap is baked once and blitted after that — has to go, or the new level
      is played over a picture of the old one. */
-  levelChanged() { this._mmBase = null; },
+  levelChanged() { this._mmBase = null; this._lamps = null; },
   /* Desks. Thirty-two of them, and until now they were a monitor emoji and a
      phone emoji sitting on carpet with nothing underneath — which is what made
      the floor read as a spreadsheet rather than an office. Each one gets a
@@ -1360,21 +1614,46 @@ const R = {
         break;
       }
       case 'window': {
-        /* The only daylight in the building, and it keeps the time: the glass
-           goes from morning to five o'clock over the course of a shift. */
+        /* The only daylight in the building, and it keeps the time. It used to
+           keep the SHIFT'S time — a fraction from 09:00 to 17:00, which meant
+           the glass was as bright at 04:00 as it was at nine — and it asks the
+           sky now, so the one window on the fourth floor and the whole of the
+           town outside can never disagree about what it is doing out there.
+           It is also the only place indoors that shows you the weather, which
+           is exactly how much of the weather anybody at this desk sees. */
         const w = size * 1.06, h = size * .86;
-        const t = Math.max(0, Math.min(1, (G.minutes - DAY_START) / Math.max(1, DAY_END - DAY_START)));
+        const view = Sky.windowSky();
         const sky = c.createLinearGradient(0, -h / 2, 0, h / 2);
-        sky.addColorStop(0, t > .82 ? '#5a4a6b' : t < .18 ? '#7f9dc4' : '#9fc4e8');
-        sky.addColorStop(1, t > .82 ? '#c08a5a' : t < .18 ? '#c9d7e6' : '#dce9f6');
+        sky.addColorStop(0, view.top);
+        sky.addColorStop(1, view.bot);
         frame(w, h, '#cdd6e4', '#8fb4d8');
         c.fillStyle = sky; c.fillRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6);
         /* The building opposite, which is the whole view. */
         c.fillStyle = 'rgba(30,38,52,.45)';
         c.fillRect(-w / 2 + 3, h / 2 - 3 - h * .3, w - 6, h * .3);
-        c.fillStyle = 'rgba(255,214,120,' + (t > .7 ? .5 : .16) + ')';
+        c.fillStyle = 'rgba(255,214,120,' + (view.lit ? .5 : .16) + ')';
         for (let i = 0; i < 6; i++)
           c.fillRect(-w / 2 + 6 + rnd() * (w - 14), h / 2 - 4 - rnd() * h * .26, 2, 2);
+        /* Water on the glass, or snow going past it. Two lines' worth, and it
+           is the difference between a window and a picture of one. */
+        const wk = Sky.kind();
+        if (wk.fall === 'snow') {
+          c.fillStyle = 'rgba(250,253,255,.8)';
+          for (let i = 0; i < 7; i++) {
+            const fx = -w / 2 + 5 + rnd() * (w - 10);
+            const fy = -h / 2 + 4 + ((rnd() * h + this.t * 9) % (h - 8));
+            c.fillRect(fx, fy, 1.6, 1.6);
+          }
+        } else if (wk.fall) {
+          c.strokeStyle = 'rgba(210,232,250,.45)'; c.lineWidth = 1;
+          c.beginPath();
+          for (let i = 0; i < 9; i++) {
+            const fx = -w / 2 + 5 + rnd() * (w - 10);
+            const fy = -h / 2 + 4 + ((rnd() * h + this.t * (22 + rnd() * 30)) % (h - 8));
+            c.moveTo(fx, fy); c.lineTo(fx - 1, fy - 4 - rnd() * 4);
+          }
+          c.stroke();
+        }
         /* Frame: one mullion, one transom, and a sill you could put a mug on. */
         c.fillStyle = '#cdd6e4';
         c.fillRect(-1.5, -h / 2 + 3, 3, h - 6); c.fillRect(-w / 2 + 3, -2, w - 6, 3);
@@ -1536,7 +1815,7 @@ const R = {
     /* `|| 0` because one call with no dt makes t NaN forever, NaN spreads into
        every frame index derived from it, and a NaN frame index draws nothing
        and throws nothing. Tests calling R.draw() by hand must pass a dt. */
-    const c = this.ctx; this.t += dt || 0;
+    const c = this.ctx; this.t += dt || 0; this.lastDt = dt || 0;
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     c.clearRect(0, 0, Cam.w, Cam.h);
     const sx = FX.shakeAmt ? rnd(-FX.shakeAmt, FX.shakeAmt) : 0;
@@ -1560,6 +1839,11 @@ const R = {
        it. Both cost nothing on a level with no surfaces declared. */
     this.kerbs(x0, y0, x1, y1);
     this.roadPaint();
+    /* And then the weather on it. Water and lying snow are part of what the
+       ground is made of today, so they go on with the ground rather than over
+       the whole frame — a puddle a colleague walks through has to be under
+       them, and a screen-space wash never can be. */
+    this.wetGround(x0, y0, x1, y1);
 
     /* worn patches and old stains */
     c.fillStyle = 'rgba(255,255,255,.018)';
@@ -2008,6 +2292,14 @@ const R = {
       }
     });
 
+    /* THE LIGHT, over the top of everything the world is made of and under
+       everything the game says about it. The order is the whole trick: the
+       grade darkens the office, the lamps put the light back where there is a
+       lamp, and the particles and the floating numbers are drawn after both
+       because a damage number is not lit by anything. */
+    this.skyGrade();
+    this.lamps(x0, y0, x1, y1);
+
     /* particles + floats */
     FX.parts.forEach(p => {
       const a = 1 - p.t / p.life;
@@ -2024,6 +2316,9 @@ const R = {
     });
     if (Guide.on()) this.guidePin();
     c.restore();
+    /* Rain falls past the CAMERA, not past the map, so it is drawn out here
+       with everything else that lives at the edge of the screen. */
+    this.weather();
     /* The edge arrow is drawn after the camera transform is popped, because it
        lives at the edge of the screen rather than anywhere in the office. */
     if (Guide.on()) this.guideArrow();
@@ -2116,7 +2411,11 @@ const R = {
          `map` and not `floor`: a surface's floor colour is a TINT multiplied
          through a texture, and there is no texture down here to multiply. */
       const s = World.surf && World.surf[y][x];
-      c.fillStyle = (s && SURFACES[s] && SURFACES[s].map) || ZONES[z].floor;
+      const S = s && SURFACES[s];
+      /* And the seasonal ones paint themselves four ways, for the same reason
+         the tile does: a green verge on the map in January is a lie about a
+         white one. Sky.newDay() drops the baked minimap when the season turns. */
+      c.fillStyle = (S && ((S.maps && S.maps[Sky.season()]) || S.map)) || ZONES[z].floor;
       c.fillRect(x * sx, y * sy, sx + .5, sy + .5);
     }
     this._mmBase = b;

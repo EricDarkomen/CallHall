@@ -74,7 +74,24 @@ const ZONES = {
 const SURFACES = {
   /* Roads and the car park. Cold, dark and unpatterned, which is what makes
      the paving beside it read as paving and the white lines read as paint. */
-  tarmac: { tile: 'terrain.tarmac', floor: '#a6acb5', alt: '#a0a6af', map: '#2c2f38' }
+  tarmac: { tile: 'terrain.tarmac', floor: '#a6acb5', alt: '#a0a6af', map: '#2c2f38' },
+  /* Grass, and the one surface in the game that is not the same thing twice.
+     `tiles` rather than `tile`: the LPC terrain sheets ship the same square in
+     four seasons at the same pixel, so this is one crop taken four times and
+     R.floorTile() asks Sky.season() which of them today is. `maps` is the same
+     idea for the minimap, which paints flat colour and has no texture to tint.
+
+     There is not much of it — a strip behind the bays, the bit round the
+     retail park sign, the verge nobody has ever cut — and that is the point.
+     It is the only thing outside this building that knows what month it is,
+     which is roughly the correct amount of nature for a business park. */
+  grass: {
+    tiles: { spring: 'terrain.grass.spring', summer: 'terrain.grass.summer',
+             autumn: 'terrain.grass.autumn', winter: 'terrain.grass.winter' },
+    floor: '#b9c0bd', alt: '#b2b9b6',
+    maps: { spring: '#4a6a34', summer: '#3f5c2c', autumn: '#6b5a2a', winter: '#b9cdd4' },
+    map: '#4a6a34'
+  }
 };
 
 /* The cars. One entry per model, keyed by `model` on a car in a level's own

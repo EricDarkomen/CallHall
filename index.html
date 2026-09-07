@@ -207,6 +207,12 @@
         <div class="card">
           <div class="clock" id="hClock">09:00<small id="hDay">DAY 1 · MONDAY</small></div>
           <div class="money-row"><span title="Earned today">💷 <b id="hMoney">0.00</b></span><span title="Calls handled today">📞 <b id="hCalls">0</b></span></div>
+          <!-- What it is doing outside, and what month it thinks it is. One
+               line, under the clock, because both of them are the same fact:
+               the light on the floor is the time of day and the time of year
+               and the weather, and this is the only place in the building that
+               says any of it out loud. -->
+          <div class="sky" id="hSky"><span id="hSkyT">Overcast</span></div>
           <div class="queue" id="hQueue" hidden><span class="qdot" aria-hidden="true"></span><span id="hQueueT">1 call waiting</span></div>
         </div>
       </div>
@@ -383,6 +389,7 @@
 <script src="engine/controls.js?v=d7466dc"></script>
 <script src="engine/audio.js?v=d7466dc"></script>
 <script src="engine/state.js?v=d7466dc"></script>
+<script src="engine/sky.js?v=d7466dc"></script>
 <script src="engine/world.js?v=d7466dc"></script>
 <script src="engine/collide.js?v=d7466dc"></script>
 <script src="engine/levels.js?v=d7466dc"></script>
