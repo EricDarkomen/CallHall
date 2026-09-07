@@ -566,6 +566,17 @@ const Acts = {
       'Four pallets, shrink-wrapped, in the delivery bay. The label says they are for the fourth floor.',
       'The top one has been opened. Inside: the ergonomic chairs that were announced in March, in a wellbeing email, with a photograph of somebody sitting in one.']);
   },
+  assemblyPoint() {
+    insp('🪧', 'Assembly point', 'Laminated, unofficial, correct', [
+      'A sheet of A4 in a plastic wallet, cable-tied to the wall at the end of the bays. ASSEMBLY POINT, 48pt, centred, with a printed arrow underneath pointing at the tarmac you are standing on.',
+      'It is not on the fire notice upstairs. It is not on any drawing. Somebody in this building printed it, laminated it at their own expense and put it up, because the notice inside sends forty people to a car park that has been a Greggs since 2021 and somebody had to.',
+      'It has been here through two audits. Nobody has ever asked who did it, which is the only reason it is still here.'],
+      [{ t: 'Stand on the spot, briefly, for no reason.', to: null, do() {
+          Player.mod({ patience: 3 });
+          UI.toast('🪧', 'You stand on the assembly point. Nothing is on fire. It is a Tuesday. You feel, very slightly, accounted for.');
+        } },
+       { t: 'Leave it be.', to: null }]);
+  },
   smokingSpot() {
     Player.mod({ energy: 3 });
     insp('🚬', 'The bin everybody stands at', 'Five metres, allegedly', [

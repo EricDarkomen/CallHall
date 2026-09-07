@@ -707,6 +707,14 @@ const LEVELS = {
          a wall: all four neighbours are open tarmac. */
       A({ x: 33, y: 11, e: '🪧', name: 'The car park', kind: 'sign', solid: true, use: 'carPark' });
       A({ x: 28, y: 8, e: '💧', name: 'The permanent puddle', kind: 'puddle', solid: false, use: 'puddle' });
+      /* WHERE THE FLOOR STANDS WHEN THE ALARM IS NOT A TEST, and the one piece
+         of fire safety signage in this building that is true. The notice
+         upstairs still sends you to Point B, which was sold in 2021 and is a
+         Greggs; this is a laminated sheet somebody put up in the meantime, on
+         the back wall, on the only corner of the tarmac that is not a bay.
+         engine/npc.js finds the drill's assembly point by this `use` and by
+         nothing else — move it and the drill moves with it. */
+      A({ x: 31, y: 3, e: '🪧', name: 'Assembly point', kind: 'sign', solid: true, use: 'assemblyPoint' });
       A({ x: 35, y: 4, e: '📦', name: 'Pallets, delivery bay', kind: 'box', solid: true, use: 'pallets' });
       /* The one thing out here that the fourth floor also has, which is the
          joke: it is the same bin and the same people are standing at it. In the
