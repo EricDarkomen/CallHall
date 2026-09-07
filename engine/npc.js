@@ -763,10 +763,17 @@ const NPCM = {
        looking at, which is the entire point of a floor that empties. */
     for (const n of this.all) {
       const k = n.drill;
-      if (!k || n.id === talkingTo) continue;
+      if (!k) continue;
+      /* Whoever you are talking to stays where they are — but the clock does
+         not stop for a conversation. They change phase with everybody else and
+         set off the moment you have finished, rather than being the one person
+         left standing in a car park because you said hello to them at the
+         wrong moment. */
+      const busy = n.id === talkingTo;
       if (k.phase === 'out') {
         /* Stood down before they even got out of the door. */
         if (over) { n.drill = null; n.callOut = null; continue; }
+        if (busy) continue;
         if (n.level !== World.level) {
           /* Their floor is not the one on screen, so nobody watches them cross
              it — but somebody may well be watching the door at the other end.
@@ -781,7 +788,7 @@ const NPCM = {
         n.callOut = { tile: d.out, until: this.now + 2, haste: d.haste };
         if (reached(n, d.out)) { this.stepThrough(n, d.to, k.spot); k.phase = 'at'; moved = true; }
       } else if (k.phase === 'at') {
-        n.callOut = { tile: k.spot, until: this.now + 2, haste: 1 };
+        if (!busy) n.callOut = { tile: k.spot, until: this.now + 2, haste: 1 };
         /* Going back in is given a deadline the way going out is not. Somebody
            who never made it out simply stands down where they are and the day
            carries on; somebody who never makes it back IN is a colleague left
@@ -791,6 +798,7 @@ const NPCM = {
            not watch people arrive at their own desks. */
         if (over) { k.phase = 'in'; k.since = this.now; k.by = this.now + 45; }
       } else {
+        if (busy) continue;
         if (n.level !== World.level) {
           /* The same courtesy in reverse: if the floor is what is on screen,
              they come back IN through the lobby doors, one at a time, and walk

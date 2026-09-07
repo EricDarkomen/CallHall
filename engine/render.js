@@ -1188,10 +1188,16 @@ const R = {
   },
   /* The same question for anything that stands on a tile rather than being an
      object — a colleague, mostly. NPCs are drawn in the sorted pass like the
-     furniture and were just as visible through the wall in front of them. The
-     PLAYER is deliberately never asked: the extension fades so you can see your
-     own avatar when you cross, and veiling it would undo the thing the fade is
-     for. */
+     furniture and were just as visible through the wall in front of them.
+
+     What the ANSWER means differs, though, and that is the whole of the note
+     on colleague() below: a person is taller than the course that hides them,
+     so 0 here means "clip them at the top of it", not "drop them". Furniture
+     is shorter than the course, so for furniture the two are the same thing.
+
+     The PLAYER is deliberately never asked: the extension fades so you can see
+     your own avatar when you cross, and veiling it would undo the thing the
+     fade is for. */
   veilAt(x, y) {
     const wy = y + 1;
     if (wy + 1 >= MAPH || !World.solid[wy] || !World.solid[wy][x]) return 1;
@@ -1202,6 +1208,78 @@ const R = {
     return Math.max(0, Math.min(1, (1 - Math.max(.15, Math.min(1, rel + .35))) * 2.2));
   },
 
+  /* ONE COLLEAGUE, drawn where they are standing. Its own method because the
+     wall clip in draw() draws them twice — once above the top of the wall
+     course and once behind it — and both halves have to be the same person:
+     the same seat, the same frame of the same walk, the same name under them.
+     Everything that hangs off somebody (shadow, ring, quest mark, name,
+     bubble) is in here for that reason, and clips with them. */
+  colleague(n, hi) {
+    const c = this.ctx;
+    const sprite = Sprites.has(n.id);
+    /* Stopped on a chair means seated, facing north — every desk chair has
+       its desk there. `at` is where they are DRAWN, and everything hanging
+       off a person (shadow, ring, name, quest mark, bubble) moves with it.
+       Interaction deliberately still uses n.x/n.y: reach should not change
+       because somebody sat down. */
+    const seat = sprite && !n.walking
+      ? Sprites.seatedAt(Math.floor(n.x / TILE), Math.floor(n.y / TILE)) : null;
+    const at = seat ? Sprites.seatPos(seat) : { x: n.x, y: n.y };
+    this.shadow(at.x, at.y + 13, 12, 5);
+    /* The LPC walk cycle carries its own vertical movement, so the bob is
+       only for the emoji fallback — doubling them reads as a limp. */
+    const bob = sprite ? 0
+      : n.walking && this.animate ? Math.abs(Math.sin(n.bob * 2)) * 3.5 : Math.sin(n.bob * .5) * 1;
+    const box = Sprites.box(n.id, at.x, at.y);
+    if (hi === n) {
+      c.save(); c.strokeStyle = 'rgba(255,179,71,.9)'; c.lineWidth = 2; c.shadowColor = '#ffb347'; c.shadowBlur = 14;
+      c.beginPath(); c.roundRect(box.x - 2, box.y - 2, box.w + 4, box.h + 4, 8); c.stroke(); c.restore();
+    }
+    if (!this.cinema && this.questMark(n)) this.emoji('❗', at.x + 13, box.y - 4, 15);
+    if (sprite) {
+      /* Standing colleagues breathe. Walking ones do not need it — the
+         walk cycle already moves them — and a seated one is holding a
+         pose on purpose. Off entirely when Animation is off. */
+      const nf = seat ? Sprites.sit(n.id)
+        : n.walking ? Sprites.frame(n.id, this.animate, n.step)
+        : this.animate ? Sprites.breath(n.id) : 0;
+      const nlift = seat && this.animate ? Sprites.breathLift(n.id) : 0;
+      Sprites.draw(c, n.id, seat ? 0 : n.dir ?? 2, nf, at.x, at.y - nlift);
+    } else this.emoji(n.face, at.x, at.y - bob, 29);
+    /* NB: canvas font strings cannot contain CSS custom properties — an
+       invalid string is ignored and the previous (emoji-sized) font sticks. */
+    if (!this.cinema) {
+      c.font = NAME_FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.7)';
+      c.strokeText(n.name, at.x, at.y + 26);
+      c.fillStyle = n.def.colour ? n.def.colour : 'rgba(223,230,242,.82)';
+      c.fillText(n.name, at.x, at.y + 26);
+    }
+    if (n.sayT > 0) this.bubble(at.x, at.y - 34, n.say, Math.min(1, n.sayT));
+  },
+  /* One person on the street. Split out for the same reason colleague() is:
+     the wall clip draws them twice and both halves have to be the same
+     stranger. */
+  stranger(p, hi) {
+    const c = this.ctx;
+    this.shadow(p.x, p.y + 13, 12, 5);
+    if (hi === p) {
+      const box = Sprites.box(p.sprite, p.x, p.y);
+      c.save(); c.strokeStyle = 'rgba(255,179,71,.9)'; c.lineWidth = 2;
+      c.shadowColor = '#ffb347'; c.shadowBlur = 14;
+      c.beginPath(); c.roundRect(box.x - 2, box.y - 2, box.w + 4, box.h + 4, 8); c.stroke();
+      c.restore();
+    }
+    if (Sprites.has(p.sprite)) {
+      const f = p.walking ? Sprites.frame(p.sprite, this.animate, p.step)
+        : this.animate ? Sprites.breath(p.sprite) : 0;
+      Sprites.draw(c, p.sprite, p.dir ?? 2, f, p.x, p.y);
+    } else this.emoji('🧑', p.x, p.y, 28);
+    /* No name over a stranger. That label is how you tell one of the twenty
+       colleagues from another, and a street of floating names would say these
+       are twenty more people to get to know. They are not. */
+    if (p.sayT > 0) this.bubble(p.x, p.y - 34, p.say, Math.min(1, p.sayT));
+  },
   /* ---- The drawn things ----
      At 29px the candidate emoji are four near-identical rounded rectangles, and
      some things have none at all. Each is seeded off its own id, so the same
@@ -1692,25 +1770,21 @@ const R = {
       if (d.kind === 'counter') {
         this.counter(d.t);
       } else if (d.kind === 'ped') {
-        const p = d.p;
-        if (this.veilAt(Math.floor(p.x / TILE), Math.floor(p.y / TILE)) <= 0) return;
-        this.shadow(p.x, p.y + 13, 12, 5);
-        if (hi === p) {
-          const box = Sprites.box(p.sprite, p.x, p.y);
-          c.save(); c.strokeStyle = 'rgba(255,179,71,.9)'; c.lineWidth = 2;
-          c.shadowColor = '#ffb347'; c.shadowBlur = 14;
-          c.beginPath(); c.roundRect(box.x - 2, box.y - 2, box.w + 4, box.h + 4, 8); c.stroke();
-          c.restore();
+        /* Somebody on the street, behind the same two-course wall and clipped
+           by it the same way — the car park has one along the road and the
+           retail park has one across the back, and a stranger blinking out on
+           the pavement behind either of them is the same fault as a colleague
+           doing it in the corridor. */
+        const p = d.p, pty = Math.floor(p.y / TILE);
+        const pveil = this.veilAt(Math.floor(p.x / TILE), pty);
+        if (pveil >= 1) { this.stranger(p, hi); return; }
+        const plip = pty * TILE;
+        c.save(); c.beginPath(); c.rect(-1e6, -1e6, 2e6, 1e6 + plip); c.clip();
+        this.stranger(p, hi); c.restore();
+        if (pveil > 0) {
+          c.save(); c.beginPath(); c.rect(-1e6, plip, 2e6, 1e6); c.clip();
+          c.globalAlpha = pveil; this.stranger(p, hi); c.restore();
         }
-        if (Sprites.has(p.sprite)) {
-          const f = p.walking ? Sprites.frame(p.sprite, this.animate, p.step)
-            : this.animate ? Sprites.breath(p.sprite) : 0;
-          Sprites.draw(c, p.sprite, p.dir ?? 2, f, p.x, p.y);
-        } else this.emoji('🧑', p.x, p.y, 28);
-        /* No name over a stranger. That label is how you tell one of the twenty
-           colleagues from another, and a street of floating names would say
-           these are twenty more people to get to know. They are not. */
-        if (p.sayT > 0) this.bubble(p.x, p.y - 34, p.say, Math.min(1, p.sayT));
       } else if (d.kind === 'car') {
         this.car(d.car);
         if (hi === d.car && !Cars.driving) {
@@ -1868,52 +1942,43 @@ const R = {
         c.restore();
       } else if (d.kind === 'npc') {
         const n = d.n;
-        /* Behind the wall in front of you, exactly as the furniture is. A
-           colleague showing through a wall reads as the wall being broken. */
-        const nveil = this.veilAt(Math.floor(n.x / TILE), Math.floor(n.y / TILE));
-        if (nveil <= 0) return;
-        if (nveil < 1) { c.save(); c.globalAlpha = nveil; }
-        const sprite = Sprites.has(n.id);
-        /* Stopped on a chair means seated, facing north — every desk chair has
-           its desk there. `at` is where they are DRAWN, and everything hanging
-           off a person (shadow, ring, name, quest mark, bubble) moves with it.
-           Interaction deliberately still uses n.x/n.y: reach should not change
-           because somebody sat down. */
-        const seat = sprite && !n.walking
-          ? Sprites.seatedAt(Math.floor(n.x / TILE), Math.floor(n.y / TILE)) : null;
-        const at = seat ? Sprites.seatPos(seat) : { x: n.x, y: n.y };
-        this.shadow(at.x, at.y + 13, 12, 5);
-        /* The LPC walk cycle carries its own vertical movement, so the bob is
-           only for the emoji fallback — doubling them reads as a limp. */
-        const bob = sprite ? 0
-          : n.walking && this.animate ? Math.abs(Math.sin(n.bob * 2)) * 3.5 : Math.sin(n.bob * .5) * 1;
-        const box = Sprites.box(n.id, at.x, at.y);
-        if (hi === n) {
-          c.save(); c.strokeStyle = 'rgba(255,179,71,.9)'; c.lineWidth = 2; c.shadowColor = '#ffb347'; c.shadowBlur = 14;
-          c.beginPath(); c.roundRect(box.x - 2, box.y - 2, box.w + 4, box.h + 4, 8); c.stroke(); c.restore();
+        /* BEHIND THE WALL IN FRONT OF YOU — and a person is not a filing
+           cabinet about it.
+
+           Every wall whose face you can see is drawn two courses tall, and the
+           upper course is painted over the row of floor BEHIND it. For
+           furniture that is the whole story: a filing cabinet is shorter than
+           the course that hides it, so veil() drops it and that is what stops
+           this building's furniture painting straight through its own walls.
+
+           A colleague is taller than that course. Half of them stands above
+           its top edge — which is why dropping them the same way was wrong in
+           a way you could sit and watch: a hundred and thirty-six squares of
+           this floor plan are "the row behind a wall", and one of them is the
+           bottom lane of the corridor, which is four lanes deep and which
+           everybody walks all day. From the main floor a colleague crossing it
+           blinked out and back every time they drifted a lane.
+
+           So they are CLIPPED rather than culled. What stands above the top of
+           the course is drawn solid, because you can see it and there is
+           nothing in front of it; what is behind the course fades on the
+           veil's own ramp exactly as it always did. Nothing shows through a
+           wall, which is the thing the veil was written for, and nobody
+           vanishes, which is the thing it cost. */
+        const nty = Math.floor(n.y / TILE);
+        const nveil = this.veilAt(Math.floor(n.x / TILE), nty);
+        if (nveil >= 1) { this.colleague(n, hi); return; }
+        /* The top edge of the course is the top edge of the tile they are
+           standing on: it is drawn over that tile, one course up from the wall
+           itself. Both halves are the same person drawn twice — same seat,
+           same frame of the same walk, same name — so neither can drift. */
+        const lip = nty * TILE;
+        c.save(); c.beginPath(); c.rect(-1e6, -1e6, 2e6, 1e6 + lip); c.clip();
+        this.colleague(n, hi); c.restore();
+        if (nveil > 0) {
+          c.save(); c.beginPath(); c.rect(-1e6, lip, 2e6, 1e6); c.clip();
+          c.globalAlpha = nveil; this.colleague(n, hi); c.restore();
         }
-        if (!this.cinema && this.questMark(n)) this.emoji('❗', at.x + 13, box.y - 4, 15);
-        if (sprite) {
-          /* Standing colleagues breathe. Walking ones do not need it — the
-             walk cycle already moves them — and a seated one is holding a
-             pose on purpose. Off entirely when Animation is off. */
-          const nf = seat ? Sprites.sit(n.id)
-            : n.walking ? Sprites.frame(n.id, this.animate, n.step)
-            : this.animate ? Sprites.breath(n.id) : 0;
-          const nlift = seat && this.animate ? Sprites.breathLift(n.id) : 0;
-          Sprites.draw(c, n.id, seat ? 0 : n.dir ?? 2, nf, at.x, at.y - nlift);
-        } else this.emoji(n.face, at.x, at.y - bob, 29);
-        /* NB: canvas font strings cannot contain CSS custom properties — an
-           invalid string is ignored and the previous (emoji-sized) font sticks. */
-        if (!this.cinema) {
-          c.font = NAME_FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
-          c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.7)';
-          c.strokeText(n.name, at.x, at.y + 26);
-          c.fillStyle = n.def.colour ? n.def.colour : 'rgba(223,230,242,.82)';
-          c.fillText(n.name, at.x, at.y + 26);
-        }
-        if (n.sayT > 0) this.bubble(at.x, at.y - 34, n.say, Math.min(1, n.sayT));
-        if (nveil < 1) c.restore();
       } else {
         const psprite = Sprites.has('player');
         /* Same as the colleagues: sitting draws you in the chair, not at the
