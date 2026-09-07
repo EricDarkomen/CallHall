@@ -31,6 +31,11 @@ const Sprites = {
        times the size of the cast and only somebody who opens the creator ever
        needs them. loadParts() brings them in on demand. */
     atlasSheets().forEach(s => { if (s && Array.isArray(s.ids) && !s.lazy) this.adopt(s); });
+    /* The expressions layer is a sheet like any other and is brought in with
+       the people it goes on, from the one place sheets are loaded. Guarded
+       because a page that does not ship engine/faces.js is still a page that
+       ships people — see engine/faces.js. */
+    if (typeof Faces !== 'undefined') Faces.load();
   },
 
   /* ---- the character creator's parts ----
@@ -127,6 +132,11 @@ const Sprites = {
     this._baked.delete(id);
     return true;
   },
+  /* Whether somebody is a stack of chosen parts rather than a row the build
+     baked. Only the player is ever either, and only Faces asks — a composed
+     person's face comes from the base they chose and a baked one's from the
+     row they are. */
+  composed(id) { return !!(this._baked && this._baked.has(id)); },
   /* One sheet, by id. Re-callable with the same id, which is how a sheet whose
      geometry is still being worked out — the editor's importer — is re-read
      without a second copy of its bitmap: the game never does that, and a load()
@@ -286,6 +296,11 @@ const Sprites = {
     c.imageSmoothingEnabled = false;
     c.drawImage(m.img, (dir * m.frames + frame) * m.fw, r.row * m.fh, m.fw, m.fh,
       Math.round(b.x), Math.round(b.y), m.fw, m.fh);
+    /* Whatever their face is doing, over the top of the person and inside the
+       same smoothing rule — an expression is pixel art too. It goes here
+       rather than in the renderer because everybody who draws a person calls
+       this: the floor, the street, and the character creator's preview. */
+    if (typeof Faces !== 'undefined') Faces.paint(c, id, dir, frame, b.x, b.y);
     c.imageSmoothingEnabled = smooth;
   }
 };

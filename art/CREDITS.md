@@ -15,6 +15,7 @@ at one commit:
 - `art/sprites/parts-hair.png` — [ElizaWy/LPC](https://github.com/ElizaWy/LPC), commit `f07f7f5892e67c932c68f70bb04472f2c64e46bc`
 - `art/sprites/parts-beard.png` — [ElizaWy/LPC](https://github.com/ElizaWy/LPC), commit `f07f7f5892e67c932c68f70bb04472f2c64e46bc`
 - `art/sprites/town.png` — [ElizaWy/LPC](https://github.com/ElizaWy/LPC), commit `f07f7f5892e67c932c68f70bb04472f2c64e46bc`
+- `art/sprites/faces.png` — [ElizaWy/LPC](https://github.com/ElizaWy/LPC), commit `f07f7f5892e67c932c68f70bb04472f2c64e46bc`
 
 **The original artwork has been modified**: layers were composited into single
 characters, recoloured using the LPC palette definitions, cropped to the walking
@@ -45,6 +46,30 @@ or by the Liberated Pixel Cup.
 - Thecilekli
 
 ## Assets used
+
+### `Adult Head - Elderly`
+
+- **Used for:** facial expressions
+- **Sheets:** faces
+- **Authors:** Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Eliza Wyatt.
+
+### `Adult Head - Feminine`
+
+- **Used for:** facial expressions
+- **Sheets:** faces
+- **Authors:** Stephen Challener (Redshrike), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Stephen Challener. Edited to be smaller and recolored by Eliza Wyatt. Expressions by Eliza Wyatt.
+
+### `Adult Head - Masculine`
+
+- **Used for:** facial expressions
+- **Sheets:** faces
+- **Authors:** Stephen Challener (Redshrike), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Stephen Challener. Edited to be smaller and recolored by Eliza Wyatt. Expressions by Eliza Wyatt.
 
 ### `Bin`
 

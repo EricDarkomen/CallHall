@@ -27,10 +27,39 @@ const Dialogue = {
     face.style.cssText = '';
     if (pic) { face.textContent = ''; Object.assign(face.style, pic); }
     else face.textContent = who.face || (who.def && who.def.face) || '🧑';
+    /* How they are with you, on their face rather than only in the line of
+       text beside it. Held for the conversation and cleared when you walk
+       away — anything that happens DURING it (see Rel.add) flashes over the
+       top of this and then hands it back. */
+    if (typeof Faces !== 'undefined' && id) {
+      Faces.hold(id, G.rel[id] !== undefined ? Faces.mood(G.rel[id]) : null);
+      this.faceExpr = null;
+      this.eyes();
+    }
     $('#dName').textContent = (who.name || (who.def && who.def.name) || '???').toUpperCase();
     $('#dRole').textContent = who.role || (who.def && who.def.role) || '';
     $('#dMood').textContent = id && G.rel[id] !== undefined ? Rel.label(G.rel[id]) : '';
     this.setNode(node);
+  },
+  /* The portrait's expression, kept up with the conversation. A face that is
+     set once when the box opens is a photograph: this is the same person
+     blinking, and pleased or unimpressed by what you just said, while you
+     read what they said back. Cheap enough to do every frame — it is one
+     string compare until the expression actually changes. */
+  eyes() {
+    if (typeof Faces === 'undefined' || !this.on) return;
+    const face = $('#dFace');
+    if (!face || !face.classList.contains('sprite')) return;
+    const id = this.npc && (this.npc.id || (this.npc.def && this.npc.def.id));
+    const expr = id ? Faces.of(id) : null;
+    if (expr === this.faceExpr) return;
+    this.faceExpr = expr;
+    const style = id && expr ? Faces.portrait(id, TOUCH ? 2 : 3) : null;
+    let el = face.firstElementChild;
+    if (!style) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement('i'); el.className = 'expr'; face.appendChild(el); }
+    el.style.cssText = '';
+    Object.assign(el.style, style);
   },
   setNode(node) {
     this.node = node; this.sel = 0;
@@ -53,7 +82,9 @@ const Dialogue = {
   },
   speed: 62,
   tick(dt) {
-    if (!this.on || !this.typing) return;
+    if (!this.on) return;
+    this.eyes();
+    if (!this.typing) return;
     const before = Math.floor(this.typed);
     this.typed += dt * this.speed;
     /* One blip every few characters actually revealed, rather than per frame —
@@ -118,6 +149,14 @@ const Dialogue = {
     this.close();
   },
   close() {
+    /* The expression was for the conversation, not for the rest of the day.
+       A flash set during it is left alone: it is already on its own clock and
+       will run out on the floor, which is the point of it. */
+    if (typeof Faces !== 'undefined') {
+      const id = this.npc && (this.npc.id || (this.npc.def && this.npc.def.id));
+      if (id) Faces.hold(id, null);
+    }
+    this.faceExpr = null;
     this.on = false; $('#dialogue').classList.remove('on');
     document.body.classList.remove('talking');
     /* A d-pad key held when the conversation started never received its

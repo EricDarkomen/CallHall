@@ -126,6 +126,11 @@ const Rel = {
   add(id, n) {
     G.rel[id] = clamp((G.rel[id] || 0) + n, -10, 10);
     if (n > 0) FX.float(P.x, P.y - 40, '♥ ' + (NPCS.find(x => x.id === id) || {}).name, '#ff9ec7');
+    /* And it shows. Usually this is called from inside a conversation, so the
+       face in the box is the face of the person you have just said the thing
+       to — a couple of seconds of it, over whatever they were holding, and
+       then back to how they are with you generally. */
+    if (typeof Faces !== 'undefined' && n) Faces.flash(id, n > 0 ? 'happy' : 'sad', 2.4);
   },
   get(id) { return G.rel[id] || 0; },
   label(v) { return v >= 8 ? 'Would cover your shift' : v >= 5 ? 'Fond of you' : v >= 2 ? 'Warm' : v >= 0 ? 'Colleague' : v >= -3 ? 'Cool' : 'Has told someone about you'; }
