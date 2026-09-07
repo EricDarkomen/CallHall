@@ -199,8 +199,12 @@ const NPCM = {
      run on. NOT G.minutes: an event that adds eleven minutes to the shift would
      end an evacuation before anybody had stood up. */
   now: 0, busyTiles: new Set(), stillTiles: new Map(), boss: null, lastEvent: null, dynAt: 0, stillFor: 0,
+  /* Set while an evacuation is running — see THE DRILL. Cleared with the
+     roster, so a new shift never starts halfway through somebody else's. */
+  drill: null,
   pvx: 0, pvy: 0,
   spawn() {
+    this.drill = null; this.lastEvent = null;
     this.all = NPCS.map(def => {
       const t = this.traits(def);
       return {
@@ -218,6 +222,11 @@ const NPCM = {
            are doing rather than who they are, so none of it is saved: a
            reloaded shift puts everybody at their desk and the day starts. */
         post: null, walking: false, chat: null, chatCool: rnd(5, 40), callOut: null,
+        /* Which part of an evacuation they are in, and the two squares it has
+           given them: one in the car park and one to come back to. Not saved,
+           like everything else here about where somebody is standing — a
+           reloaded shift starts with the whole floor at its desks. */
+        drill: null,
         lookAt: null, lookT: 0, idleT: rnd(2, 9), evade: 0, evadeX: 0, evadeY: 0,
         /* The steering: the heading actually being held, the tile being crossed
            to, and how the walk is going — closest they have been to where they
@@ -290,7 +299,9 @@ const NPCM = {
     this.list = this.all.filter(n => n.level === (level || 'office'));
     /* Nobody carries a conversation, a claimed spot or a grudge against a
        doorway across a level change: all three are about a floor plan that is
-       no longer loaded. */
+       no longer loaded. A drill is the one thing that survives, because it is
+       not about a floor plan at all — it is about which floor these people are
+       standing on; runDrill() re-aims them on the next frame. */
     this.all.forEach(n => {
       this.hangUp(n); n.post = null; n.gaveUp = null; n.destKey = ''; n.callOut = null;
       n.errand = null; this.repath(n);
@@ -348,10 +359,16 @@ const NPCM = {
      is nothing else, and it can be interrupted by anything. */
   destTile(n) {
     /* Called away. An override on everything, with an expiry on it, set by
-       watchFloor() when something happens to the building — see REACT. */
+       watchFloor() when something happens to the building — see REACT.
+
+       A call-out names either a waypoint or a bare square, and it has to be
+       able to name a square: a waypoint is a spot on the floor plan of the
+       BUILDING (see WP in data/world.js), and the drill below sends people to
+       a corner of the car park, which is a different map and has none. */
     if (n.callOut) {
-      if (this.now < n.callOut.until && WP[n.callOut.wp]) {
-        n.errand = null; n.dest = n.callOut.wp; return WP[n.callOut.wp];
+      const at = n.callOut.tile || WP[n.callOut.wp];
+      if (this.now < n.callOut.until && at) {
+        n.errand = null; n.dest = n.callOut.wp || 'assembly'; return at;
       }
       n.callOut = null;
     }
@@ -471,6 +488,13 @@ const NPCM = {
   post(n, dx, dy) {
     if (n.post) return n.post;
     if (n.dest === 'desk') return (n.post = [dx, dy]);
+    /* On a drill the square IS the destination and it is exactly itself, the
+       same as a desk is: on the way out everybody is aimed at the one door and
+       a queue for it is what an evacuation looks like, and in the car park
+       everybody already has a square of their own. Spreading either of them
+       around the target would put half the floor in the lobby waiting for a
+       door nobody was walking to. */
+    if (n.drill) return (n.post = [dx, dy]);
     const taken = new Set();
     for (const o of this.list) if (o !== n && o.post) taken.add(o.post[0] + ',' + o.post[1]);
     /* The square they just walked away from because they could not get to it.
@@ -552,12 +576,23 @@ const NPCM = {
      an event not named here simply gets no reaction, and one that is renamed or
      deleted quietly stops having one. Nothing in this table can fail. */
   REACT: {
-    /* Not a test. */
-    /* Long enough for the whole floor to get through the stairwell door, which
-       is one square wide and now takes people one at a time: twenty of them
-       queueing for it is most of a minute before the last one is through, and
-       the drill should last longer than the queue for it. */
-    firealarm2: { go: 'fireEsc', secs: 88, haste: 1.5 },
+    /* Not a test. The floor leaves the building — see the drill below.
+
+       It used to file into the fire escape, which is five squares by seven
+       with a one-square door in it, and stand there. That is a landing, not
+       an assembly point: twenty adults do not fit on it, the last of them
+       spent the drill in the queue, and the writing on this very event has
+       said all along that everybody stands in the CAR PARK for eleven
+       minutes. They do now.
+
+       `secs` is when they start coming back, not how long they are gone: the
+       walk down takes about half a minute for twenty people through one
+       doorway and the walk back up is on top of it, so seventy here is very
+       nearly the eighty-eight the stairwell version cost end to end. It has to
+       stay in that region. A shift is a few minutes of real time and the floor
+       is empty for all of this — which is the whole joke of the event, and
+       would stop being funny at twice the length. */
+    firealarm2: { evacuate: true, secs: 70, haste: 1.5 },
     /* A test. Nobody moves — they look up, and they go back to it, which is
        the joke the event is already making. Ron is in the lobby and out of
        range of the look, so Ron does not even look up. */
@@ -575,6 +610,7 @@ const NPCM = {
     const r = ev && this.REACT[ev.id];
     if (!r) return;
     const until = this.now + r.secs;
+    if (r.evacuate) return this.startDrill(until, r.haste || 1);
     for (const n of this.list) {
       if (r.go && WP[r.go]) { n.callOut = { wp: r.go, until, haste: r.haste || 1 }; this.hangUp(n); }
       if (r.look && WP[r.look]) {
@@ -586,6 +622,193 @@ const NPCM = {
       }
     }
   },
+
+  /* ---------------- THE DRILL ----------------
+     What the floor does when the alarm is not a test: it leaves the building,
+     stands in the car park, and comes back up. Three states, and a person is
+     in exactly one of them.
+
+       'out'  crossing the floor to the way out. Aimed at the door ITSELF
+              rather than at a square near it, because everybody is going
+              through the one door and a queue for it is what that looks like
+              — see post(). They are outside the moment they reach it.
+       'at'   standing on their own square of the car park, by the assembly
+              point. Handed out once, in roster order, so that a crowd is a
+              crowd and not a heap on one paving slab.
+       'in'   it is over: back to the door they came out of, and upstairs.
+
+     NOTHING HERE NAMES A LEVEL OR A TILE. The way out is the link table's —
+     the same `via`/`to`/`entry` row in data/levels.js that Levels.take() reads
+     when YOU press E on that door — and where people stand is wherever the
+     assembly point sign is standing. Move the sign in the editor and the drill
+     moves with it; put the car park somewhere else entirely and this does not
+     change. The one thing it insists on is that the place they evacuate to is
+     one door away, which is what a fire exit is.
+
+     A person who never reaches the door — stuck behind the one colleague who
+     has parked in it, or simply too far away when it ends — stands down where
+     they are and goes back to their day. That is a drill as well. */
+
+  /* The free square in front of a door, because a door is set into the
+     boundary wall and nobody can stand IN one: the way out of the fourth floor
+     and the way back into it are both scenery on a wall, exactly as they are
+     for the player. North first, then south, then either side — the office's
+     doors are in the bottom wall and the car park's in the top one, and
+     neither of those is a fact worth writing down twice. */
+  doorSide(rec, use) {
+    const o = (rec.objects || []).find(x => x.use === use);
+    if (!o) return null;
+    const free = (x, y) => x >= 0 && y >= 0 && x < rec.w && y < rec.h
+      && !rec.solid[y][x] && rec.zone[y][x];
+    for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]])
+      if (free(o.x + dx, o.y + dy)) return [o.x + dx, o.y + dy];
+    return null;
+  },
+  /* Squares for a crowd to stand on around a point, nearest first and in a
+     fixed order, so the same person gets the same square every time and nobody
+     is ever sent to a wall, a parked car or a stack of pallets.
+
+     Deliberately NOT Nav: this is asked about a level that is usually not the
+     one loaded — the whole floor is upstairs when the drill starts — and Nav
+     answers about the map World is holding. Rings off the sign are enough for
+     an open piece of tarmac, which is what an assembly point is. */
+  crowdSpots(rec, tx, ty, count) {
+    const out = [], seen = new Set();
+    const free = (x, y) => {
+      if (x < 0 || y < 0 || x >= rec.w || y >= rec.h) return false;
+      if (rec.solid[y][x] || !rec.zone[y][x]) return false;
+      if (rec.blocked && rec.blocked.has(x + ',' + y)) return false;
+      if (rec.carTiles && rec.carTiles.has(x + ',' + y)) return false;
+      const here = rec.byTile ? (rec.byTile.get(x + ',' + y) || []) : [];
+      return !here.some(o => o.solid);
+    };
+    for (let ring = 1; out.length < count && ring <= 9; ring++) {
+      for (let oy = -ring; oy <= ring && out.length < count; oy++) {
+        for (let ox = -ring; ox <= ring && out.length < count; ox++) {
+          if (Math.max(Math.abs(ox), Math.abs(oy)) !== ring) continue;
+          const x = tx + ox, y = ty + oy, k = x + ',' + y;
+          if (seen.has(k) || !free(x, y)) continue;
+          seen.add(k); out.push([x, y]);
+        }
+      }
+    }
+    return out;
+  },
+  /* Where this evacuation goes, worked out from the catalogue rather than
+     written down: the floor with the people on it is the hub, the place they
+     go is whichever level one door away has an assembly point standing in it,
+     and the way back is that level's own link home. Returns null — and so no
+     drill at all, rather than a broken one — if any of that is missing. */
+  drillPlan() {
+    const home = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
+    const homeRec = Levels.ensure(home);
+    if (!homeRec) return null;
+    for (const l of ((Levels.def(home) || {}).links || [])) {
+      const rec = Levels.ensure(l.to);
+      if (!rec) continue;
+      const sign = (rec.objects || []).find(o => o.use === 'assemblyPoint');
+      if (!sign) continue;
+      const back = ((Levels.def(l.to) || {}).links || []).find(b => b.to === home);
+      const out = this.doorSide(homeRec, l.via);
+      const home2 = back && this.doorSide(rec, back.via);
+      if (!out || !home2) continue;
+      return { home, homeRec, to: l.to, rec, out, back: home2, sign: [sign.x, sign.y] };
+    }
+    return null;
+  },
+  startDrill(until, haste) {
+    const plan = this.drillPlan();
+    if (!plan) return;
+    const crowd = this.all.filter(n => n.level === plan.home);
+    if (!crowd.length) return;
+    /* Both crowds laid out now, while the levels are certainly built: one in
+       the car park to stand in, one in the lobby to come back to. Arriving
+       twenty people on one square is a scrum that sorts itself out over about
+       four seconds of shoving, in full view. */
+    const spots = this.crowdSpots(plan.rec, plan.sign[0], plan.sign[1], crowd.length);
+    const seats = this.crowdSpots(plan.homeRec, plan.out[0], plan.out[1], crowd.length);
+    plan.until = until; plan.haste = haste; plan.began = this.now;
+    this.drill = plan;
+    crowd.forEach((n, i) => {
+      n.drill = { phase: 'out', i: i,
+        spot: spots[i % spots.length] || plan.sign,
+        seat: seats[i % seats.length] || plan.out };
+      n.post = null; n.errand = null; n.callOut = null; n.gaveUp = null;
+      this.hangUp(n);
+    });
+  },
+  /* Moved by the drill rather than by walking: through a door, onto a floor
+     that may not even be loaded. Everything about the walk they were in the
+     middle of is dropped, because it was about a map they are no longer on. */
+  stepThrough(n, level, tile) {
+    n.level = level;
+    n.x = (tile[0] + .5) * TILE; n.y = (tile[1] + .5) * TILE;
+    n.post = null; n.next = null; n.walking = false; n.errand = null;
+    n.destKey = ''; n.best = 1e9; n.noProg = 0; n.gaveUp = null;
+    this.hangUp(n);
+  },
+  /* Presence again, WITHOUT the reset enter() does: one person has walked
+     through a door and everybody else is exactly where they were. */
+  refresh() { this.list = this.all.filter(n => n.level === (World.level || 'office')); },
+  runDrill() {
+    const d = this.drill;
+    if (!d) return;
+    const over = this.now > d.until;
+    /* Whoever you are talking to is not going anywhere until you have finished
+       — the same rule the walk keeps, and for the same reason. */
+    const talkingTo = (Dialogue.on && Dialogue.npc && Dialogue.npc.id) || null;
+    let moved = false;
+    const reached = (n, t) => Math.hypot((t[0] + .5) * TILE - n.x, (t[1] + .5) * TILE - n.y) < TILE * 1.1;
+    /* `all` rather than `list`: half of them are standing on a level nobody is
+       looking at, which is the entire point of a floor that empties. */
+    for (const n of this.all) {
+      const k = n.drill;
+      if (!k || n.id === talkingTo) continue;
+      if (k.phase === 'out') {
+        /* Stood down before they even got out of the door. */
+        if (over) { n.drill = null; n.callOut = null; continue; }
+        if (n.level !== World.level) {
+          /* Their floor is not the one on screen, so nobody watches them cross
+             it — but somebody may well be watching the door at the other end.
+             One at a time, and through the door rather than straight onto the
+             tarmac, so that standing in the car park when the alarm goes is
+             twenty people coming out of a building and not twenty people
+             appearing at once in a car park. */
+          if (this.now < d.began + k.i * .8) continue;
+          const at = World.level === d.to ? d.back : k.spot;
+          this.stepThrough(n, d.to, at); k.phase = 'at'; moved = true; continue;
+        }
+        n.callOut = { tile: d.out, until: this.now + 2, haste: d.haste };
+        if (reached(n, d.out)) { this.stepThrough(n, d.to, k.spot); k.phase = 'at'; moved = true; }
+      } else if (k.phase === 'at') {
+        n.callOut = { tile: k.spot, until: this.now + 2, haste: 1 };
+        /* Going back in is given a deadline the way going out is not. Somebody
+           who never made it out simply stands down where they are and the day
+           carries on; somebody who never makes it back IN is a colleague left
+           standing in a car park for the rest of the shift, which is a bug
+           whatever caused it. Long enough to walk the length of the tarmac
+           twice, and then they are through the door wherever they are — you do
+           not watch people arrive at their own desks. */
+        if (over) { k.phase = 'in'; k.since = this.now; k.by = this.now + 45; }
+      } else {
+        if (n.level !== World.level) {
+          /* The same courtesy in reverse: if the floor is what is on screen,
+             they come back IN through the lobby doors, one at a time, and walk
+             to their desks from there like people. */
+          if (this.now < k.since + k.i * .8) continue;
+          const at = World.level === d.home ? d.out : k.seat;
+          this.stepThrough(n, d.home, at); n.drill = null; n.callOut = null; moved = true; continue;
+        }
+        n.callOut = { tile: d.back, until: this.now + 2, haste: d.haste };
+        if (reached(n, d.back) || this.now > k.by) {
+          this.stepThrough(n, d.home, k.seat); n.drill = null; n.callOut = null; moved = true;
+        }
+      }
+    }
+    if (moved) this.refresh();
+    if (over && !this.all.some(n => n.drill)) this.drill = null;
+  },
+
   /* Hand the routes the people. Three times a second rather than sixty: a crowd
      shuffling about would otherwise rebuild every route on the floor every
      frame, and none of this changes fast enough to notice.
@@ -631,6 +854,9 @@ const NPCM = {
     this.pvy = P.y - (this.pyWas === undefined ? P.y : this.pyWas);
     this.pxWas = P.x; this.pyWas = P.y;
     this.watchFloor();
+    /* Before the walk, not after it: a drill moves people between levels, and
+       who is standing on this one is what the whole of the walk below reads. */
+    this.runDrill();
     this.dynamics();
     /* Where everybody who is standing still is standing, once per frame, as
        tile keys. The walk below prices these up so a knot of people is walked
@@ -1025,7 +1251,14 @@ const NPCM = {
        instead was what kept the last few arrivals walking into backs for the
        whole of lunch. */
     const hx = Math.floor(n.x / TILE), hy = Math.floor(n.y / TILE);
-    if (d <= 3 || World.zoneAt(hx, hy) === World.zoneAt(tx, ty)) {   /* d is steps left */
+    /* AN EVACUATION IS NOT SOMEWHERE YOU CAN BE NEAR ENOUGH TO. "Near enough is
+       the room" is right for a coffee and wrong for a door you are leaving
+       through, and outdoors it is wrong by a whole car park: a zone out there
+       is a street, so the first stall on the way back to the building parked
+       four people forty feet from it, for good, standing in a car park they had
+       already been told to leave. They keep going instead — the noProg branch
+       below is the recovery, and the drill's own deadline is the backstop. */
+    if (!n.drill && (d <= 3 || World.zoneAt(hx, hy) === World.zoneAt(tx, ty))) {   /* d is steps left */
       const spot = this.freeSpotNear(n);
       if (spot) { n.post = spot; this.repath(n); return; }
     }
