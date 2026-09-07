@@ -113,6 +113,57 @@ are a wheelchair and a shopping trolley. They are drawn by the renderer instead,
 which is also what lets one turn through any angle rather than through the eight
 a sprite sheet would give it.
 
+## Faces
+
+Everybody blinks.
+
+That is the whole of it, most of the time, and it is the thing that stops
+twenty-one composited people from reading as furniture with legs. It comes from
+the same Liberated Pixel Cup kit as the rest of them: the LPC Revised heads are
+drawn with twelve expressions each — eyes closing, closed, looking left, looking
+right, rolling, shocked, angry, sad, happy, blushing, ashamed — and the sprite
+build brings all eleven of the non-neutral ones in.
+
+An expression is a patch, not a face. Shipping a face per expression would be
+two hundred and fifty-two more rows of character sheet, fourteen megapixels of
+PNG for a change to somebody's eyebrows; so `tools/build-sprites.mjs` ships the
+*difference* between a face and the same face at rest — twenty-two pixels by
+ten, per head, per direction — and `engine/faces.js` draws it over the top of a
+person who is already on the screen. The whole sheet is 68KB.
+
+Two things had to be measured rather than assumed, and the build measures both
+on every run and refuses to produce the sheet if either stops being true. A head
+**moves**: it bobs through the walk, drops two pixels when somebody sits down
+and rides four high through the run, so the sheet carries a table of where the
+head is in every frame of every direction and the patch goes wherever the head
+went. And a face belongs to a **person**: the build reads `revised.png` and works
+out which of the three heads and which skin each colleague was composited from,
+so Bev's mouth is Bev's mouth. The roster in `tools/sheets/faces.mjs` says who
+it thinks they are and the build proves it against their own pixels — get one
+wrong and nothing is built.
+
+The cast's patches are also **masked against their own hair**, which is baked
+into their sheet: nothing is kept that would land on Marjorie's fringe, so what
+she can be seen wearing is what she wears. The player's cannot be — the hair is
+chosen, not baked — and a heavy fringe takes a pixel or two of an eyebrow with
+it, which nobody has ever noticed.
+
+Where it shows:
+
+- **In the dialogue box**, most of all, because that is where you look somebody
+  in the eye. The portrait now blinks, and carries how they are with you — the
+  same number `Rel.label` puts into words beside it. Only the ends of the scale
+  show: the woman who is glad you are back, and the man who has told somebody
+  about you. Say something they like and it lands on their face for a couple of
+  seconds before handing the conversation back.
+- **On the floor**, on anybody standing or walking. Not on a seated colleague:
+  a seat faces its desk, and there is no face on the back of a head.
+- **On you**, coming off a call. A call won, a call transferred, and a call that
+  broke you are three different faces to be wearing on the way back to the desk.
+
+Off with Animation — `Esc · Settings`, or the operating system's reduced-motion
+setting — along with the breath and the walk. Nothing is said by a blink.
+
 ## The wallboard
 
 Every call centre has one bolted above the desks: how many people are holding,
@@ -170,6 +221,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
 | `tools/carjam.mjs` | Dev-time only: the traffic put through the four things that used to beach it, headless, so a change to the driving can be measured rather than driven into. |
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
+| `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
 | `engine/title.js`, `css/title.css` | The title screen: the wallboard, the switchboard behind it, and the menu. |
 | `scripts/release.sh` | Checks the build and moves the version string. Run it before you ship. |
 | `editor.html`, `editor/` | A level editor. Not the game, and never published. |
@@ -209,6 +261,14 @@ adding an entry to one of these files — never hand-editing `manifest.js` or
 `CREDITS.md`, both of which this regenerates and would just overwrite.
 Picking the crop rect is still a human job: never take one off a contact
 sheet without tiling it a few times over to check for a seam.
+
+Two kinds of managed sheet, and a sheet says which it is with `kind:`. A sheet
+of THINGS is crops — the town — and is what a sheet declares by saying nothing.
+The expressions sheet is the other kind: it is measured against the pinned
+character sheets rather than cropped, so it says `kind: 'faces'` and is built by
+`tools/lib/buildFaces.mjs`. A third kind would be a line in
+`tools/build-sprites.mjs` and nothing else; everything downstream of the build
+takes the same five things back, whichever built them.
 
 ### What a level may declare
 

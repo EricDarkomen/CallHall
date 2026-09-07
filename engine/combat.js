@@ -355,6 +355,14 @@ const Combat = {
     const E = this.E; if (!E || this.over) return;
     this.over = true; this.busy = true;
     Sfx.holdMusic(false);
+    /* You come off a call wearing it. The world is not being drawn while the
+       overlay is up, so this does not start counting down until the summary is
+       dismissed and you are back on the floor — which is exactly when there is
+       anybody to see it. */
+    if (typeof Faces !== 'undefined') {
+      Faces.flash('player', how === 'win' ? 'happy' : how === 'broken' ? 'shame'
+        : how === 'transfer' ? 'eyeroll' : 'sad', 7);
+    }
     count('calls');
     let xp = 0, money = 0, rep = 0, msg = '';
     if (how === 'win') {

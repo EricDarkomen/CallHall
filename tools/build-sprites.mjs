@@ -19,12 +19,26 @@ import { loadPinnedSheets } from './lib/pinned.mjs';
 import { loadCreditsSkeleton, renderCredits } from './lib/creditsText.mjs';
 import { renderManifest } from './lib/manifestText.mjs';
 import { buildManagedSheet } from './lib/buildSheet.mjs';
+import { buildFacesSheet } from './lib/buildFaces.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const MANAGED_SHEET_MODULES = [
   './sheets/town.mjs',
+  './sheets/faces.mjs',
 ];
+
+/* Two kinds of managed sheet. A sheet of THINGS is a set of crops off upstream
+   contact sheets, packed and named — that is buildSheet.mjs, and it is what a
+   sheet declares by saying nothing. A sheet of FACES is the expressions layer,
+   which is measured against the pinned character sheets rather than cropped,
+   and says so with `kind: 'faces'`. Adding a third kind means adding a line
+   here and nothing else: everything downstream takes the same five things
+   back, whichever built them. */
+const BUILDERS = {
+  tiles: (def) => buildManagedSheet(def),
+  faces: (def, ctx) => buildFacesSheet(def, ctx),
+};
 
 async function loadManagedDefs() {
   return Promise.all(MANAGED_SHEET_MODULES.map(async m => (await import(m)).default));
@@ -51,7 +65,9 @@ async function main() {
   const built = [];
   for (const def of toBuild) {
     process.stderr.write(`building ${def.id}...\n`);
-    built.push(await buildManagedSheet(def));
+    const build = BUILDERS[def.kind || 'tiles'];
+    if (!build) throw new Error(`sheet "${def.id}" declares kind "${def.kind}", which nothing here builds`);
+    built.push(await build(def, { root, atlas: committedAtlas }));
   }
 
   /* A managed sheet not asked for this run isn't dropped — it keeps whatever
