@@ -227,6 +227,12 @@ const NPCM = {
            like everything else here about where somebody is standing — a
            reloaded shift starts with the whole floor at its desks. */
         drill: null,
+        /* Gone home. Not saved either, for the same reason — but unlike the
+           rest of it, it is not simply false at spawn: a roster built at two in
+           the morning starts with everybody already away, or a reloaded night
+           shift begins with twenty people at their desks and then empties
+           itself in front of you. */
+        away: false,
         lookAt: null, lookT: 0, idleT: rnd(2, 9), evade: 0, evadeX: 0, evadeY: 0,
         /* The steering: the heading actually being held, the tile being crossed
            to, and how the walk is going — closest they have been to where they
@@ -244,6 +250,36 @@ const NPCM = {
       };
     });
     this.enter(World.level);
+    /* And then put them on the right side of five o'clock. A fresh roster is
+       always built at its desks; whether that is where anybody should be
+       depends on the clock, which spawn() has no business knowing about. */
+    this.homeSnap();
+  },
+  /* WHERE EVERYBODY SHOULD BE, IMMEDIATELY, with nobody walking to get there.
+     Called when the clock has JUMPED rather than run — a fresh roster, or a
+     save loaded at two in the morning — because runHome() below moves people
+     by walking them, and a building that empties itself over thirty seconds in
+     front of somebody who has just pressed Load is not an empty building, it is
+     a bug they are watching happen. */
+  homeSnap() {
+    if (typeof Sky === 'undefined') return;
+    const after = !Sky.staffed();
+    this._wasAfter = after;
+    /* Far enough in the past that nobody is waiting on the stagger: the stagger
+       is for a shift that ends while you are standing in it. */
+    this._homeAt = this.now - 200;
+    this._homeSpots = null; this._homeRec = null; this._homeDoor = null;
+    const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
+    this.all.forEach(n => {
+      const stay = this.HOME_STAY.includes(n.id);
+      if (after && !stay) { n.away = true; n.level = 'away'; n.callOut = null; return; }
+      if (!n.away) return;
+      n.away = false; n.level = n.def.level || hub;
+      n.x = (n.def.desk[0] + .5) * TILE; n.y = (n.def.desk[1] + .5) * TILE;
+      n.callOut = null; n.post = null; n.errand = null; n.next = null; n.walking = false;
+      n.destKey = ''; n.best = 1e9; n.noProg = 0; n.gaveUp = null;
+    });
+    this.refresh();
   },
   /* A stable number from a string. Used for the traits below and for which way
      round somebody joins a queue — anything that has to differ per person, not
@@ -817,6 +853,143 @@ const NPCM = {
     if (over && !this.all.some(n => n.drill)) this.drill = null;
   },
 
+  /* ---------------- GOING HOME ----------------
+     The floor used to be full at every hour the game had, because the game had
+     eight of them and all eight were office hours. It has twenty-four now, and
+     twenty people at their desks at three in the morning is not atmosphere: it
+     is a shift nobody clocked out of.
+
+     So at five they go, and between quarter past eight and nine they come back.
+     It is the drill's shape without the drill's round trip — a call-out to the
+     front doors, and then off the map — and it is built out of the drill's own
+     three primitives, which is why it is a page rather than a system:
+     doorSide() finds the square in front of the doors, `callOut` walks somebody
+     to a square, and `n.level` decides who is standing on the floor you are
+     looking at.
+
+     `away` is a level that is not in the catalogue, deliberately. Everything
+     that asks where somebody is gets an honest "not here": refresh() drops them
+     from the floor, here() says no, and Guide.aimAcross() finds no route to it
+     and leaves the tracker pinless rather than pointing at a door that does not
+     lead to Bev's house.
+
+     TWO PEOPLE DO NOT GO. Ron is on the desk and Bev has been here since six
+     and will be here at six tomorrow — the report has been saying so at the end
+     of every shift since before there was an evening to say it in. An empty
+     building is a set; an empty building with two people still in it is this
+     building. */
+  HOME_STAY: ['ron', 'bev'],
+  runHome() {
+    /* An evacuation outranks the end of a shift, and they can overlap: the
+       alarm can go at ten to five. Whoever is in a drill is in a drill. */
+    if (this.drill) return;
+    if (typeof Sky === 'undefined') return;
+    /* When the tide turned, in real SECONDS. It has to be real seconds and not
+       game minutes for the same reason the drill's clock is: what this is
+       pacing is people walking across an office, and walking happens in real
+       time whatever the clock outside is doing. */
+    const after = !Sky.staffed();
+    if (after !== this._wasAfter) {
+      this._wasAfter = after; this._homeAt = this.now; this._homeSpots = null;
+    }
+    if (this._homeAt === undefined) this._homeAt = this.now;
+    /* Nothing to do, which is almost every frame of almost every shift: either
+       everybody who should be here is, or everybody who has gone has. Checked
+       BEFORE the level and the door are looked up, because those are a scan of
+       a few hundred objects and this is twenty-one boolean comparisons. */
+    if (!this.all.some(n => (this.HOME_STAY.includes(n.id) ? false : after) !== !!n.away)) return;
+
+    const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
+    const rec = Levels.ensure(hub);
+    if (!rec) return;
+    /* The door, and A SQUARE EACH around it. The second half is the drill's
+       answer to the drill's own problem: one door tile holds one person, and
+       twenty people all steering for the same one is not a queue, it is a knot
+       — five of them never got within reach of it and stood in the lobby all
+       night. crowdSpots() rings the doors with real, free, stable squares, so
+       everybody is walking somewhere slightly different and the lobby drains
+       instead of seizing. Reaching YOUR square is close enough to the doors to
+       have gone through them.
+
+       Cached against the level record rather than recomputed: this runs every
+       frame and doorSide() reads every object on the floor. */
+    if (this._homeRec !== rec || !this._homeSpots) {
+      this._homeRec = rec;
+      this._homeDoor = this.doorSide(rec, 'exit');
+      this._homeSpots = this._homeDoor
+        ? this.crowdSpots(rec, this._homeDoor[0], this._homeDoor[1], this.all.length) : null;
+    }
+    const door = this._homeDoor;
+    if (!door) return;
+    const spots = this._homeSpots && this._homeSpots.length ? this._homeSpots : [door];
+
+    const talkingTo = (Dialogue.on && Dialogue.npc && Dialogue.npc.id) || null;
+    const reached = (n, t) => Math.hypot((t[0] + .5) * TILE - n.x, (t[1] + .5) * TILE - n.y) < TILE * 1.1;
+    /* Can the player actually see this person right now. Both halves matter:
+       Cam.visible answers about the level currently on screen, so without the
+       level test it says yes to somebody standing at the same coordinates two
+       floors up. */
+    const onScreen = n => n.level === World.level
+      && typeof Cam !== 'undefined' && Cam.visible && Cam.visible(n.x, n.y);
+    let moved = false;
+    for (const n of this.all) {
+      if (this.HOME_STAY.includes(n.id)) continue;
+      /* Stable per person, so the same people are always first out of the door
+         and the same people are always last, which is the single most true
+         thing about an office at five o'clock.
+
+         Going is spread wider than coming back, and that is not symmetry gone
+         wrong: leaving is a decision each of them makes separately, and
+         arriving is a car park emptying into a lobby. */
+      const order = (this.hash(n.id) % 13) * (after ? .5 : .3);
+      const due = this._homeAt + order;
+      if (this.now < due) continue;
+      if (after) {
+        if (n.away) continue;
+        /* Not while you are talking to them. Nobody walks out mid-sentence —
+           and the clock does not stop for it either, so they go the moment you
+           have finished. */
+        if (n.id === talkingTo) continue;
+        /* THE DEADLINE, and it is two deadlines, because the honest one is not
+           a time at all.
+
+           Walking is in real seconds and the evening is not: twenty people
+           crossing thirty tiles at forty pixels a second is half a minute each,
+           and half a minute after five o'clock is already twenty past six.
+           Waiting for all twenty to physically reach the lobby left the last of
+           them still walking at half nine.
+
+           So they give up on the walk — but never where you can see them do it.
+           Somebody blinking out of existence in front of you is worse than
+           anything the wait costs, and the moment they are off camera it costs
+           nothing at all, because what happens to people after they leave a
+           room you are in is exactly nothing. The forty-second one is the
+           backstop for the case that beats the first: a colleague wedged in a
+           doorway in full view is not a person going home, it is a bug you are
+           standing and watching. */
+        const gone = () => { n.level = 'away'; n.away = true; n.callOut = null; this.hangUp(n); moved = true; };
+        if (n.level !== hub) {
+          /* Somebody in the basement cannot walk to the office's front doors,
+             so they are simply not there any more — once nobody is looking. */
+          if (!onScreen(n) || this.now > due + 40) gone();
+          continue;
+        }
+        const spot = spots[this.hash(n.id) % spots.length] || door;
+        n.post = null; n.errand = null;
+        /* Faster than they came in. Everybody walks faster at five. */
+        n.callOut = { tile: spot, until: this.now + 2, haste: 1.5 };
+        if (reached(n, spot) || (this.now > due + 16 && !onScreen(n)) || this.now > due + 40) gone();
+      } else if (n.away) {
+        /* Back in through the lobby, one at a time, and they walk to their
+           desks from there like people — the schedule takes over the moment
+           they are standing on the floor again. */
+        this.stepThrough(n, hub, door);
+        n.away = false; moved = true;
+      }
+    }
+    if (moved) this.refresh();
+  },
+
   /* Hand the routes the people. Three times a second rather than sixty: a crowd
      shuffling about would otherwise rebuild every route on the floor every
      frame, and none of this changes fast enough to notice.
@@ -863,8 +1036,11 @@ const NPCM = {
     this.pxWas = P.x; this.pyWas = P.y;
     this.watchFloor();
     /* Before the walk, not after it: a drill moves people between levels, and
-       who is standing on this one is what the whole of the walk below reads. */
+       who is standing on this one is what the whole of the walk below reads.
+       Home time is the same kind of thing and goes in the same place — and
+       after the drill, because it stands down for one. */
     this.runDrill();
+    this.runHome();
     this.dynamics();
     /* Where everybody who is standing still is standing, once per frame, as
        tile keys. The walk below prices these up so a knot of people is walked

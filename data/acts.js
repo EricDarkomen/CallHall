@@ -34,7 +34,20 @@ const Acts = {
      the handler it was reached through. Moving a level or hanging a second door
      onto it is a change to that table and to nothing here. */
   exit() {
-    if (G.minutes >= DAY_END) return;
+    /* Out of hours this used to `return` — nothing happened at all, because
+       there was nothing on the other side of five o'clock to walk out into.
+       There is now. Clocking off does not lock the doors and it does not make
+       leaving a decision: you have finished, so you go. */
+    if (!Sky.working()) {
+      const dark = Sky.dark();
+      return insp('🚪', 'The way out', 'It is ' + clockStr(G.minutes), [
+        dark ? 'The door. Dark on the other side of it, and the car park lights doing what they can.'
+             : 'The door. Whatever is left of the day on the other side of it.',
+        Sky.kind().fall ? 'You can hear it on the canopy from here.'
+                        : 'Nobody is on the desk. The barrier is up. Nobody is looking, because there is nobody.'],
+        [{ t: 'Go.', to: null, do() { Levels.take('exit'); } },
+         { t: 'Not yet.', to: null }]);
+    }
     insp('🚪', 'The way out', 'It is ' + clockStr(G.minutes), [
       'The door. Daylight on the other side of it. A bus stop. A whole life.',
       'Ron is not looking. Ron is always looking, but he is not looking.'],
@@ -66,9 +79,15 @@ const Acts = {
   /* --- the working day --- */
   playerDesk() {
     const sit = { t: 'Sit back for five minutes.', to: null, do() { Acts._sit(); } };
-    if (G.minutes >= DAY_END) {
+    /* Not `G.minutes >= DAY_END` any more. That was true from five o'clock
+       until midnight and then quietly false again from midnight until nine,
+       which would have had the screen logging you back in at 00:01 and out
+       again at 09:00. Sky.working() is the question that was always meant. */
+    if (!Sky.working()) {
       return insp('🖥️', 'Your workstation', 'Shift over',
-        ['The shift is over. The screen has already logged you out. It did that at 17:00:00.'],
+        ['The shift is over. The screen has already logged you out. It did that at 17:00:00.',
+         Sky.smallHours() ? 'The clock in the corner of it says ' + clockStr(G.minutes) + '. It is not wrong.'
+                          : 'The monitor has gone to the bouncing logo. It is still not going to hit the corner.'],
         [sit, { t: 'Leave it.', to: null }]);
     }
     insp('🖥️', 'Your workstation', 'Yours, technically', [

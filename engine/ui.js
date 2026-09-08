@@ -138,12 +138,29 @@ const UI = {
     /* the bars turn red when you are nearly out of yourself */
     const low = P.patience <= P.patMax * 0.25;
     if (this._last.low !== low) { this._last.low = low; $('#hudTL').classList.toggle('low', low); }
+    /* The sky, in four words: what is falling, what season it is, and — after
+       five — that the shift is over, because at 19:40 on a Tuesday the clock
+       above it is the one number on this screen that could be misread as
+       something you are still being paid for. */
+    const sky = Sky.label() + ' · ' + Sky.seasonName()
+      + (Sky.working() ? '' : ' · off shift');
+    if (this._last.sky !== sky) {
+      this._last.sky = sky;
+      this.set('#hSkyT', 't', sky);
+    }
     /* How much of the shift is behind you, as the hairline along the bottom of
-       the phone bar. The clock says 14:20; this says "nearly there". */
+       the phone bar. The clock says 14:20; this says "nearly there" — and once
+       it is over it says so by sitting full and going out, rather than by
+       staying pinned at 100% all evening looking like it is still counting. */
     const shift = (clamp((G.minutes - DAY_START) / (DAY_END - DAY_START), 0, 1) * 100).toFixed(1) + '%';
     if (this._last.shift !== shift) {
       this._last.shift = shift;
       const b = $('#shiftBarI'); if (b) b.style.width = shift;
+    }
+    const done = !Sky.working();
+    if (this._last.done !== done) {
+      this._last.done = done;
+      const sb = $('#shiftBar'); if (sb) sb.classList.toggle('done', done);
     }
     Track.sync();
   },

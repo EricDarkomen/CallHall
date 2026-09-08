@@ -463,7 +463,27 @@ const LEVELS = {
          drive-thru is, and without it the window is two tiles further away
          than anybody can reach from a driving seat. The kerb drops itself:
          R.kerbs() finds no boundary where the tarmac runs through. */
-      { s: 'tarmac', r: [82, 50, 87, 51] }
+      { s: 'tarmac', r: [82, 50, 87, 51] },
+      /* THE GRASS, and it is laid last because a surface declared later wins:
+         these are strips OF the tarmac and the paving above, given back.
+
+         There are four of them and there is a reason there are only four. This
+         is the one surface in the game that knows what month it is — see
+         SURFACES.grass, which carries a tile per season — so it wants to be
+         somewhere the player passes daily rather than somewhere they would have
+         to go and look, and it wants to be a strip rather than a field, because
+         a business park has verges and does not have a park. Both edges of the
+         car park, the strip under its wall on the road outside the front doors,
+         and the long verge at the far side of Corven Way where the town stops
+         and the railway starts. */
+      { s: 'grass', r: [3, 3, 4, 12] },
+      { s: 'grass', r: [38, 3, 40, 12] },
+      /* Row 14 either side of the vehicle crossover: the crossover is tarmac
+         all the way through and must stay that way, or the game lays a verge
+         across the exit everybody drives out of. */
+      { s: 'grass', r: [2, 14, 33, 14] },
+      { s: 'grass', r: [38, 14, 41, 14] },
+      { s: 'grass', r: [6, 59, 109, 59] }
     ],
     /* The paint. Position-dependent, so none of it is a tile — see the note in
        tools/sheets/town.mjs about why the atlas has one road surface in it and

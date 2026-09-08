@@ -113,6 +113,64 @@ are a wheelchair and a shopping trolley. They are drawn by the renderer instead,
 which is also what lets one turn through any angle rather than through the eight
 a sprite sheet would give it.
 
+## The day, the night, and the weather
+
+The shift runs 09:00 to 17:00. The day does not.
+
+At five o'clock the report goes up, and when you dismiss it you are standing
+exactly where you were standing at 16:59. Nothing moves you, nothing is rebuilt,
+and nothing is handed back to you: the clock carries on running into the
+evening, the phones stop, the light starts going, everybody around you starts
+leaving, and the day changes at midnight, like a day. Your patience and your
+energy come back across the small hours instead of arriving full at nine, which
+means walking round town all night has a price and going home does not.
+
+Time after five is compressed — the hour the floor empties in less so, the small
+hours most of all — so the whole of 17:00 to 09:00 is about ninety seconds of
+real time. Long enough to walk out to the car park and watch the streetlights
+come on; short enough that nobody is sitting through it.
+
+The light is one grade over the finished frame: a multiply colour and a strength,
+interpolated along the sun's own arc, and nothing that draws knows what time it
+is. Outdoors it goes the whole way; indoors it goes about half, because the
+fourth floor has strip lights on a timer nobody has ever found and never goes
+fully dark — it just goes gloomy, and at three in the morning it should. The
+streetlights come on at dusk and put light back where there is a lamp, one of
+them in eight flickers, and anything being driven has headlights.
+
+The weather picks itself each morning out of the season's own bag and drifts
+during the day. It dims the light and takes the colour out of it, it falls past
+the camera, it wets the road — puddles gather in the same places every time it
+rains and dry slowly after it stops — and in winter it lies. Fog is scaled by how
+much light there is to catch, because fog at midday is a white sheet and fog at
+two in the morning is whatever the lamppost makes of it. Indoors you get none of
+it except on the one window on the fourth floor, which is exactly how much of the
+weather anybody at that desk sees.
+
+**And the year turns.** A fortnight a season, starting in autumn. The grass
+outside is the payoff: the LPC terrain sheets ship the same square of ground in
+four seasons at the same pixel, so one crop taken four times gives a verge that
+is green in April, gold in October and under snow in January without a line of
+the level changing. There is not much of it — both edges of the car park, the
+strip under its wall on the road outside the doors, the long verge at the far
+side of Corven Way — and that is the correct amount of nature for a business
+park.
+
+The season also decides when the sun is up, and that is where it stops being
+decoration. In summer it is light until half nine. In winter the sun sets at
+16:05 and the shift has fifty-five minutes left to run, so you arrive in the
+dark and you leave in the dark, which is the single most accurate thing this
+game says about working indoors.
+
+**The floor empties.** At five they go, and they go at their own pace and in
+their own order — the same people first every time, the same people last. They
+walk to the lobby, and once they are through it they are simply not anywhere,
+which is what happens to people after they leave a room you are in. Between
+quarter past eight and nine the next morning they come back the same way and walk
+to their desks. Two of them never leave: Ron is on the desk, and Bev has been
+here since six and will be here at six tomorrow. An empty building is a set; an
+empty building with two people still in it is this building.
+
 ## Faces
 
 Everybody blinks.
@@ -222,6 +280,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/carjam.mjs` | Dev-time only: the traffic put through the four things that used to beach it, headless, so a change to the driving can be measured rather than driven into. |
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
 | `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
+| `engine/sky.js` | The clock past five, the light, the weather and the season. Everything that draws asks it what time it is; nothing that draws knows. |
 | `engine/title.js`, `css/title.css` | The title screen: the wallboard, the switchboard behind it, and the menu. |
 | `scripts/release.sh` | Checks the build and moves the version string. Run it before you ship. |
 | `editor.html`, `editor/` | A level editor. Not the game, and never published. |

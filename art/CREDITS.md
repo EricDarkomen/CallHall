@@ -637,6 +637,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Original by Eliza Wyatt.
 
+### `Terrain (all seasons)`
+
+- **Used for:** terrain.grass.spring, terrain.grass.summer, terrain.grass.autumn, terrain.grass.winter
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original grass, dirt, and shallows by Lanea Zimmerman. Edited, animated, and recolored by Eliza Wyatt.
+
 ### `Tile C`
 
 - **Used for:** terrain.flag

@@ -85,6 +85,11 @@ const Save = {
          than the entry point, because you are where you were standing, not at
          the door you last came through. */
       Levels.resume();
+      /* The season the save was written in decides what the ground outside is
+         made of, and the ground is baked. Say so before the first frame, or a
+         shift loaded in December is played on August's grass until something
+         else happens to invalidate the tiles. */
+      Sky.resume();
       Player.recalc(); Cam.snap(); UI.hudDirty(); Guide.restore();
       UI.toast('↻', 'Shift restored. Day ' + G.day + ', ' + clockStr(G.minutes) + '.', 'good');
       return true;
@@ -158,7 +163,8 @@ const Report = {
     ];
     $('#repDay').textContent = 'DAY ' + G.day;
     $('#repBody').innerHTML =
-      '<p style="color:var(--dim);font-size:13px;margin-bottom:12px">17:00. The phones keep ringing. They are not your phones now.</p>' +
+      '<p style="color:var(--dim);font-size:13px;margin-bottom:12px">' + clockStr(G.minutes)
+        + '. The phones keep ringing. They are not your phones now.</p>' +
       rows.map(r => '<div class="rep-row"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('') +
       '<div class="verdict"><div class="sk" style="font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dim)">OVERALL PERFORMANCE</div>' +
       '<div class="vt">“' + v[0] + '”</div><div class="vn">*' + v[1] + '</div></div>' +
@@ -178,23 +184,29 @@ const Report = {
     $('#report').classList.add('on');
     Ach.get('a_first');
   },
+  /* CLOCKING OUT, which is not the same thing as the day ending and used to be
+     written as though it were. This did five things and three of them were
+     wrong: it moved the day on, it put the clock back to 09:00, it refilled
+     you, it teleported you to the security desk, and it cleared the day's
+     flags. All of that is a CUT — you pressed a button and woke up somewhere
+     else with no evening in between, which is the one thing a game about
+     having a job should never do to the end of a shift.
+
+     So it does one thing now: it takes the report off the screen. The clock
+     keeps running, the light starts going, everybody around you starts going
+     home, and you are standing exactly where you were standing at 16:59 with
+     however much patience you have left. Sky.newDay() does the rest at
+     midnight, which is when a day actually changes. */
   next() {
     $('#report').classList.remove('on');
-    G.day++; G.minutes = DAY_START;
-    G.todayStats = {}; G.chatSent = {}; G.mailSent = {}; G.eventCooldown = 8;
-    G.flags.calls1 = true;
-    /* Flags that describe today rather than the save. Leaving these set is how
-       yesterday's briefing turns up in tomorrow's meeting room. */
-    ['queueTriedToday', 'briefingToday', 'leftAtFive', 'coffeeBroken', 'phonesDown',
-     'itDown', 'looClosed', 'audit', 'rodent', 'newSystem', 'consultants',
-     'wifiDown', 'kettleDead', 'pigeonInside'].forEach(k => { delete G.flags[k]; });
-    P.patience = P.patMax; P.energy = P.eneMax;
-    P.x = SPAWN.x; P.y = SPAWN.y; Cam.snap();
-    Phones.clearAll();
     G.state = 'play';
-    UI.zone('Day ' + G.day + ' · ' + (DAYS[(G.day - 1) % 7] || 'Monday'));
-    UI.toast('🌅', 'Day ' + G.day + '. The lift is still broken. The stairs are still quicker.', 'gold');
-    Save.write();
+    Phones.clearAll();
+    UI.toast('🕔', pick([
+      'You are logged out. The building is not. Nothing stops you walking round it.',
+      'Clocked out at ' + clockStr(G.minutes) + '. The rest of the evening is, technically, yours.',
+      'That is the shift. The doors do not lock until somebody remembers to lock them.'
+    ]), 'gold');
+    Save.write(true);
     UI.hud();
   }
 };

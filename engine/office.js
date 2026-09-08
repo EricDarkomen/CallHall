@@ -28,6 +28,11 @@ const Phones = {
   ringing: [],
   tick(dt) {
     if (G.flags.phonesDown || G.state !== 'play') return;
+    /* The queue closes at five. It is the one promise this building keeps, and
+       until the clock ran past seventeen hundred there was no way to keep it —
+       the day simply ended. A phone still ringing at 02:00 is not atmosphere,
+       it is a shift nobody clocked out of. */
+    if (!Sky.working()) { if (this.ringing.length) this.clearAll(); return; }
     this.timer = (this.timer || 0) - dt;
     if (this.timer <= 0) {
       this.timer = rnd(7, 16);
