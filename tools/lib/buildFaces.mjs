@@ -43,6 +43,7 @@ function cellY(row) { return row * CELL; }
 
 export async function buildFacesSheet(def, ctx) {
   const { repo, commit, creditsPath } = def.source;
+  const part = def.part || 2;
   const cache = new Map();
   const png = async p => {
     if (!cache.has(p)) cache.set(p, decodePng(await fetchBytes(repo, commit, p)));
@@ -56,7 +57,7 @@ export async function buildFacesSheet(def, ctx) {
     const h = def.heads[key];
     if (byAsset.has(h.asset)) continue;
     const entry = parseCreditsBlock(creditsTxt, h.asset);
-    verifyLicence(entry);
+    verifyLicence(entry, part);
     byAsset.set(h.asset, { entry, heads: [] });
   }
 
@@ -279,9 +280,14 @@ export async function buildFacesSheet(def, ctx) {
   const sheetBullet = `- \`${outPath}\` — [${repo}](https://github.com/${repo}), commit \`${commit}\``;
   const artistNames = new Set();
   const assetChunks = [];
+  /* Everything this sheet is actually taken under, for assertOnePart() to add
+     up once it is built — the expressions are OGA-BY and part 2, and this is
+     what says so out loud rather than by assumption. */
+  const licencesTaken = [];
   for (const [assetName, { entry }] of byAsset) {
     entry.artists.forEach(a => artistNames.add(a));
-    const usedUnder = verifyLicence(entry);
+    const usedUnder = verifyLicence(entry, part);
+    licencesTaken.push(usedUnder);
     const lines = [
       `### \`${assetName}\``, '',
       `- **Used for:** facial expressions`,
@@ -293,5 +299,5 @@ export async function buildFacesSheet(def, ctx) {
     assetChunks.push(lines.join('\n'));
   }
 
-  return { sheet, outPath, pngBytes, sheetBullet, artistNames: [...artistNames], assetChunks };
+  return { sheet, part, licencesTaken, outPath, pngBytes, sheetBullet, artistNames: [...artistNames], assetChunks };
 }
