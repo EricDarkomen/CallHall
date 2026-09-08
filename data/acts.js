@@ -627,6 +627,23 @@ const Acts = {
       'A council bin, emptied on Thursdays, full by Tuesday.',
       'On top of it, balanced with some care, a takeaway cup from the coffee machine on the fourth floor. Somebody carried it all the way down here rather than use the bin by the lift, and there is no explanation for that which is not slightly sad.']);
   },
+  /* The one act in this file that reads the calendar. Sky.season() already
+     decides what the verge and the tree are wearing; this is the same fact
+     said out loud, so walking up to it in February and in May is not the same
+     two lines with a different picture behind them. */
+  streetTree() {
+    const lines = {
+      spring: ['A tree, in blossom, on a verge outside a call centre. Nobody planted it as a gesture — it is on the site plan as SOFT LANDSCAPING, and it has outlived two of the companies that leased this building.',
+               'The blossom is all over the bonnets of the cars parked under it. Somebody has written WASH ME in it.'],
+      summer: ['A tree in full leaf, and the only shade in the car park. The spaces under it are taken by half past eight every day of the summer and the ones at the far end are empty at noon.',
+               'A crisp packet has been in the fork of it since roughly April.'],
+      autumn: ['A tree going over to red. The leaves are on the tarmac, in the gutter, and trodden into the lobby carpet, which Facilities have sent an all-staff email about.',
+               'It is a nicer thing to look at in October than the building it stands outside.'],
+      winter: ['A bare tree with a fortnight of snow still lying along the branches. It looks dead. It is not, and the same thing could be said of most of the fourth floor.',
+               'Somebody has hung a single strand of tinsel on the lowest branch. It has been there since before it was seasonal and will be there after.']
+    };
+    insp('\ud83c\udf33', 'The tree', Sky.seasonName(), lines[Sky.season()] || lines.autumn);
+  },
   lamppost() {
     insp('💡', 'Lamppost', 'Council-maintained', [
       'A council lamppost, one of a matching pair, both working — which the fourth floor’s own lighting has not managed in a decade of maintenance tickets.',

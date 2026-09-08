@@ -746,6 +746,20 @@ const LEVELS = {
          the one lane cars actually use. */
       A({ x: 3, y: 7, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 40, y: 7, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      /* FOUR TREES, one at each end of each verge — the two strips of grass
+         down the sides of the car park, which are the only ground out here
+         nobody has tarmacked. They are the first thing in this game that
+         stands up and still knows what month it is: the verge under them has
+         changed colour with the season since there was a season, and now the
+         thing growing out of it does too. See FURN.tree in data/world.js.
+
+         Off the aisle and hard against the wall, for the lamppost's reason —
+         a car park plants its trees where a car cannot get at them, and every
+         one of these is a trunk you could walk a trolley past. */
+      A({ x: 4, y: 4, e: '🌳', name: 'The tree by the west wall', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 4, y: 11, e: '🌳', name: 'The tree by the west wall', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 39, y: 4, e: '🌳', name: 'The tree by the east wall', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 39, y: 11, e: '🌳', name: 'The tree by the east wall', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 31, y: 9, e: '🕳️', name: 'The drain in the car park', kind: 'drain', solid: false, use: 'carParkDrain' });
       A({ x: 30, y: 6, e: '🛒', name: 'The trolley', kind: 'shoptrolley', solid: true, use: 'trolley' });
 
@@ -758,6 +772,9 @@ const LEVELS = {
       A({ x: 40, y: 15, e: '🗑️', name: 'The council bin', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 29, y: 14, e: '🐦', name: 'A pigeon, possibly the same one', kind: 'pigeon', solid: false, use: 'pigeon' });
+      /* The one on the strip outside the front doors, which is the tree
+         everybody in the building sees twice a day and nobody has looked at. */
+      A({ x: 20, y: 14, e: '🌳', name: 'The tree outside the front doors', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 12, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 38, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 20, y: 16, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
@@ -795,7 +812,8 @@ const LEVELS = {
          The west side of the block. Nothing has a front door on it, which is
          what makes it the side everything gets put out on. */
       A({ x: 15, y: 26, e: '♻️', name: 'The bottle bank', kind: 'box', solid: true, use: 'bottleBank' });
-      A({ x: 15, y: 29, e: '🖍️', name: 'The wall on Aldergate Rise', kind: 'graf', solid: true, use: 'aldergateWall' });
+      A({ x: 15, y: 29, e: '🖍️', name: 'The wall on Aldergate Rise', kind: 'graf', solid: true, use: 'aldergateWall',
+        furn: { sprite: 'wall.graf.nice', paint: true } });
       A({ x: 7, y: 27, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       /* Against the kerb rather than against the wall. The west pavement here
          is two tiles wide and this used to stand on the inner one, which left
@@ -869,7 +887,8 @@ const LEVELS = {
          space leave the car here and walk. */
       A({ x: 100, y: 26, e: '🅿️', name: 'The multi-storey', kind: 'sign', solid: true, use: 'multiStorey' });
       A({ x: 101, y: 29, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
-      A({ x: 109, y: 28, e: '🖍️', name: 'The wall on Marlow Street', kind: 'graf', solid: true, use: 'marlowWall' });
+      A({ x: 109, y: 28, e: '🖍️', name: 'The wall on Marlow Street', kind: 'graf', solid: true, use: 'marlowWall',
+        furn: { sprite: 'wall.graf.sport', paint: true } });
       A({ x: 100, y: 45, e: '♻️', name: 'The bins on Marlow Street', kind: 'box', solid: true, use: 'marlowBins' });
       A({ x: 108, y: 46, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 106, y: 22, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
@@ -902,7 +921,15 @@ const LEVELS = {
       A({ x: 96, y: 57, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
       A({ x: 40, y: 59, e: '🚃', name: 'The railway', kind: 'view', solid: true, use: 'railway' });
       A({ x: 70, y: 59, e: '🕳️', name: 'The subway', kind: 'sign', solid: true, use: 'subway' });
-      A({ x: 20, y: 59, e: '🖍️', name: 'The wall on Corven Way', kind: 'graf', solid: true, use: 'corvenWall' });
+      A({ x: 20, y: 59, e: '🖍️', name: 'The wall on Corven Way', kind: 'graf', solid: true, use: 'corvenWall',
+        furn: { sprite: 'wall.graf.squad', paint: true } });
+      /* Three along the far verge, where the town stops and the railway
+         starts. Spaced so that driving the length of Corven Way passes one
+         about every twenty seconds, which is the only reason this verge is
+         a hundred tiles long and has anything on it at all. */
+      A({ x: 30, y: 59, e: '🌳', name: 'The trees along the railway', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 56, y: 59, e: '🌳', name: 'The trees along the railway', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 100, y: 59, e: '🌳', name: 'The trees along the railway', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 88, y: 59, e: '🐦', name: 'More gulls', kind: 'pigeon', solid: false, use: 'gulls' });
 
       /* ---- THE RETAIL PARK ----

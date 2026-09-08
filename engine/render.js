@@ -137,6 +137,16 @@ const R = {
     this._tiles.set(key, cv);
     return cv;
   },
+  /* Which sprite an object is wearing today. Almost always the one its kind
+     names and nothing more — but a thing may carry four of them keyed by
+     season instead of one, and then this is what picks. The same question
+     floorTile() asks of SURFACES.grass, asked of FURN.tree, and asked in one
+     place so the next seasonal object is a table entry rather than a branch
+     in the draw. */
+  spriteOf(f) {
+    return f && f.sprites ? f.sprites[Sky.season()] : f && f.sprite;
+  },
+
   floorTile(z, v, s) {
     /* The kit's floor, multiplied through the zone's colour: straight from the
        atlas each material is one flat colour and thirteen rooms become one room
@@ -2099,11 +2109,22 @@ const R = {
            the wall face, a kettle on the worktop. Emoji, shadow and highlight
            move together or you highlight the carpet under a poster. */
         const f = o.fdef || FURN[o.kind] || {};
+        /* Resolved once, here, because everything below asks the same question
+           of it — whether it hangs, whether it draws its own shadow, where its
+           middle is, and what to draw — and a tree must not be able to answer
+           in two different seasons within one frame. */
+        const fsprite = this.spriteOf(f);
         const size = o.kind === 'chair' ? (Sprites.ready ? 22 : 16) : (f.size ?? 20);
         let ex = d.wx, ey = d.wy, onFloor = true;
         if (o.mount === 'wall') {
           const s = o.wallSide;
-          ex += s === 'w' ? -TILE * .72 : s === 'e' ? TILE * .72 : 0;
+          /* Hung things stop short of the wall they hang on — that three
+             quarters of a tile is the thickness of the thing plus the fact
+             that you are looking at it from in front. Paint has no thickness
+             and no front: a tag goes ON the wall tile, centred, or half of it
+             ends up lying on the pavement beside it. */
+          const off = f.paint ? TILE : TILE * .72;
+          ex += s === 'w' ? -off : s === 'e' ? off : 0;
           /* A north wall is the one case with a wall to hang this ON: it is the
              only side that gets the second, taller tile stacked above it (see
              the `below` branch of the wall loop) — every other side is either a
@@ -2119,9 +2140,9 @@ const R = {
              but a wall-anchored SPRITE is the same kind of object, and a
              television bracketed level with the skirting board is not mounted,
              it is leaning. Anything that hangs hangs. */
-          const wallSprite = f.sprite && Tiles.anchors && Tiles.anchors[f.sprite] === 'wall';
+          const wallSprite = fsprite && Tiles.anchors && Tiles.anchors[fsprite] === 'wall';
           const high = s === 'n' && (o.art || wallSprite);
-          ey += s === 'n' ? (high ? -TILE * 1.45 : -TILE * .72) : s === 's' ? TILE * .68 : 0;
+          ey += s === 'n' ? (high ? -TILE * 1.45 : -TILE * .72) : s === 's' ? (f.paint ? TILE : TILE * .68) : 0;
           onFloor = false;
         } else if (o.onTable) {
           /* Before the worktop case: the jug and the biscuits are `surface`
@@ -2147,7 +2168,7 @@ const R = {
            than drawn. `chair`, `bin` and `hatch` used to be named here one at a
            time for exactly this reason; two of the three are covered by the
            sprite test now and the third by `drawn`. */
-        const drawsOwn = (f.sprite && Tiles.has(f.sprite)) || f.drawn || o.art || o.noEmoji;
+        const drawsOwn = (fsprite && Tiles.has(fsprite)) || f.drawn || o.art || o.noEmoji;
         if (onFloor && !drawsOwn && o.kind !== 'hatch') {
           this.shadow(ex, ey + size * .45, Math.max(11, size * .42), 5);
         }
@@ -2187,8 +2208,8 @@ const R = {
            back to the emoji anywhere but north — it has no orientation to get
            wrong. By anchor, so the next one is right without anybody
            remembering this. */
-        const edgeOn = o.mount === 'wall' && o.wallSide !== 'n'
-                    && f.sprite && Tiles.anchors && Tiles.anchors[f.sprite] === 'wall';
+        const edgeOn = o.mount === 'wall' && o.wallSide !== 'n' && !f.paint
+                    && fsprite && Tiles.anchors && Tiles.anchors[fsprite] === 'wall';
         /* Fifteen archive boxes and thirty-two chairs cut from one rectangle
            read as a stamp rather than as a room. Tiles.draw already mirrors —
            it is how the far leaf of a double doorway is drawn — so variety
@@ -2209,12 +2230,12 @@ const R = {
            to the map above: they are the floor and the UI, not the object. */
         const turn = (o.turn || 0) & 3;
         if (turn) {
-          const mid = (f.sprite && Tiles.has(f.sprite))
-            ? Tiles.centre(f.sprite, ex, ey + bob) : { x: ex, y: ey + bob };
+          const mid = (fsprite && Tiles.has(fsprite))
+            ? Tiles.centre(fsprite, ex, ey + bob) : { x: ex, y: ey + bob };
           c.save();
           c.translate(mid.x, mid.y); c.rotate(turn * Math.PI / 2); c.translate(-mid.x, -mid.y);
         }
-        if (edgeOn || !(f.sprite && Tiles.draw(c, f.sprite, ex, ey + bob, canFlip))) {
+        if (edgeOn || !(fsprite && Tiles.draw(c, fsprite, ex, ey + bob, canFlip))) {
           if (o.art) this.wallArt(o, ex, ey + bob, size);
           else if (!o.noEmoji) this.emoji(o.e, ex, ey + bob, size);
         }

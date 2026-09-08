@@ -191,6 +191,119 @@ export default {
         rect: [128, 64, 32, 32],
       },
     },
+    /* THE TREE, and it is the seasons trick again — one crop taken four times.
+
+       `Terrain/trees_<season>.png` is laid out exactly as `terrain_<season>.png`
+       is: the same tree at the same pixel in all four sheets, so a single rect
+       gives the same tree in blossom, in leaf, in red, and bare with snow lying
+       along its branches. That is the whole reason the verge outside the
+       building can grow a tree that knows what month it is for the cost of a
+       lookup — see FURN.tree in data/world.js, which carries `sprites` rather
+       than `sprite`, the same way SURFACES.grass carries `tiles`.
+
+       [417,112] is the one broadleaf on the sheet that stands COMPLETE and
+       alone: every other tree in the leafy rows touches its neighbour, and a
+       rect that clips a neighbouring canopy would put half of somebody else's
+       tree in the sky above this one. Measured off the sheet's own islands
+       rather than counted in cells, because this art is not on the 32px grid —
+       94x125 is three tiles across and four tall, which is what a tree that a
+       person can stand under has to be.
+
+       The trunk is 11px wide at the foot and centred in the crop, which is why
+       FURN.tree takes the lamppost's footprint and not a canopy-sized one: what
+       is in your way is a trunk. */
+    {
+      name: 'obj.tree.spring',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Terrain/trees_spring.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Trees (all seasons)',
+        rect: [417, 112, 94, 125],
+      },
+    },
+    {
+      name: 'obj.tree.summer',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Terrain/trees_summer.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Trees (all seasons)',
+        rect: [417, 112, 94, 125],
+      },
+    },
+    {
+      name: 'obj.tree.autumn',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Terrain/trees_autumn.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Trees (all seasons)',
+        rect: [417, 112, 94, 125],
+      },
+    },
+    {
+      /* Bare, with snow on the branches — the same courtesy the winter grass
+         does the verge, and for the same reason: the tree is already in winter
+         before the weather has drawn a single flake over the top of it. */
+      name: 'obj.tree.winter',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Terrain/trees_winter.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Trees (all seasons)',
+        rect: [417, 112, 94, 125],
+      },
+    },
+    /* THREE TAGS, one per street wall. The writing has always said those
+       walls were covered in this; until now they drew a biro scrawl, which is
+       the right instrument for a cubicle door in the building and the wrong
+       one for the side of a parade.
+
+       Cut-outs only. Half of this sheet's tags are painted onto a chunk of
+       their own brickwork — the "DANGER AREA" one carries a dark striped panel,
+       the green one a whole dark wall — and pasted onto the game's brick that
+       reads as a patch of somebody else's wall rather than as paint on ours.
+       These three are drawn on nothing, checked against the sheet's own alpha
+       before they were picked. They are wider than a tile on purpose: a
+       tag that stops at the tile boundary is a poster. */
+    {
+      name: 'wall.graf.nice',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Objects/Wall Items/Graffiti.png',
+        creditsPath: 'Objects/Wall Items/Credits.txt',
+        assetName: 'Graffiti & Graffiti Elements',
+        rect: [0, 32, 62, 47],
+      },
+    },
+    {
+      name: 'wall.graf.squad',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Objects/Wall Items/Graffiti.png',
+        creditsPath: 'Objects/Wall Items/Credits.txt',
+        assetName: 'Graffiti & Graffiti Elements',
+        rect: [260, 12, 87, 40],
+      },
+    },
+    {
+      name: 'wall.graf.sport',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Objects/Wall Items/Graffiti.png',
+        creditsPath: 'Objects/Wall Items/Credits.txt',
+        assetName: 'Graffiti & Graffiti Elements',
+        rect: [273, 104, 65, 35],
+      },
+    },
     {
       name: 'obj.wheeliebin',
       anchor: 'floor',
