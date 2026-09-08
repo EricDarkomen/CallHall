@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadPinnedSheets } from './lib/pinned.mjs';
+import { partOf } from './lib/source.mjs';
 import { loadCreditsSkeleton, renderCredits } from './lib/creditsText.mjs';
 import { renderManifest } from './lib/manifestText.mjs';
 import { buildManagedSheet } from './lib/buildSheet.mjs';
@@ -44,6 +45,65 @@ async function loadManagedDefs() {
   return Promise.all(MANAGED_SHEET_MODULES.map(async m => (await import(m)).default));
 }
 
+/* THE CHECK LICENSE HAS BEEN PROMISING.
+
+   LICENSE parts 2 and 3 both say this file refuses to pack ShareAlike art into
+   an OGA-BY sheet, and name this function while doing it. For a long while
+   that was true only by omission: no ShareAlike licence was accepted anywhere,
+   so none could get in. Now that a sheet may declare itself part 3 and take
+   CC-BY-SA art, "true by omission" is not true enough, and the assertion the
+   licence file describes has to actually exist.
+
+   What it enforces is one sentence: a sheet is all one part. Not because
+   mixing would be untidy — because a ShareAlike crop packed in among OGA-BY
+   ones would make the whole PNG an Adaptation of a ShareAlike work and force
+   every other artist in it into a licence they did not choose. That is the
+   reason art/sprites/sanitary.png is a file by itself, and it is the reason
+   the next ShareAlike thing will be too.
+
+   It runs over what was BUILT, from the licence each asset was actually taken
+   under rather than from what the sheet said about itself. In the ordinary way
+   of things it never fires: verifyLicence() has already refused the wrong
+   licence for the sheet's part, one asset at a time, while the sheet was being
+   built. This is the outer gate, and it is here because the inner one lives in
+   the builders and there is a list of them at the top of this file that is
+   meant to grow — a third kind that forgets to pass its sheet's part along
+   would sail straight past verifyLicence and straight into this. The claim
+   LICENSE makes is about the file you are reading, so the check it names is in
+   the file you are reading.
+
+   Pinned sheets are not checked here and do not need to be: they are
+   byte-for-byte the file that was licensed, and pinned.mjs refuses them if
+   that stops being so. */
+function assertOnePart(built) {
+  for (const b of built) {
+    const parts = new Map();
+    for (const licence of b.licencesTaken || []) {
+      const part = partOf(licence);
+      if (!part) throw new Error(`sheet "${b.sheet.id}" took "${licence}", which belongs to no licence part`);
+      if (!parts.has(part)) parts.set(part, []);
+      parts.get(part).push(licence);
+    }
+    if (parts.size > 1) {
+      const shown = [...parts].map(([part, ls]) => `part ${part} (${[...new Set(ls)].join(', ')})`).join(' and ');
+      throw new Error(
+        `refusing to write art/sprites/${b.sheet.id}.png: it mixes ${shown}.\n` +
+        `A sheet is one work on one set of terms. Packing ShareAlike art in with OGA-BY art ` +
+        `would make the whole sheet an Adaptation of a ShareAlike work and drag every other ` +
+        `contribution in it into a licence its artist never chose — see LICENSE parts 2 and 3. ` +
+        `Give the ShareAlike art a sheet of its own, as art/sprites/sanitary.png has.`
+      );
+    }
+    const [only] = [...parts.keys()];
+    if (only !== undefined && only !== b.part) {
+      throw new Error(
+        `sheet "${b.sheet.id}" declares part ${b.part} but its art is licensed part ${only} — ` +
+        `fix whichever of the two is wrong before this is written.`
+      );
+    }
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const check = args.includes('--check');
@@ -69,6 +129,7 @@ async function main() {
     if (!build) throw new Error(`sheet "${def.id}" declares kind "${def.kind}", which nothing here builds`);
     built.push(await build(def, { root, atlas: committedAtlas }));
   }
+  assertOnePart(built);
 
   /* A managed sheet not asked for this run isn't dropped — it keeps whatever
      is already committed for it, same as a pinned sheet does. */

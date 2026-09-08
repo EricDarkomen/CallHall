@@ -311,15 +311,31 @@ a checksum of the PNG as a tripwire — the build refuses outright if one of
 those files ever changes on disk without this tool having done it.
 
 **Managed** sheets are the rest — declared in `tools/sheets/*.mjs`, one file
-per sheet, each sprite naming an upstream repo, a commit, a file, a crop rect
-and the asset's display name in that project's own `Credits.txt`. Every build
-fetches that PNG and that `Credits.txt` fresh, re-checks the licence is still
-OGA-BY 3.0 or CC0, crops, packs, and refuses the whole sheet if a licence has
-changed underneath it. Adding a sprite to the town, or anywhere else, means
-adding an entry to one of these files — never hand-editing `manifest.js` or
-`CREDITS.md`, both of which this regenerates and would just overwrite.
-Picking the crop rect is still a human job: never take one off a contact
-sheet without tiling it a few times over to check for a seam.
+per sheet, each sprite naming where its pixels come from and a crop rect.
+Adding a sprite to the town, or anywhere else, means adding an entry to one of
+these files — never hand-editing `manifest.js` or `CREDITS.md`, both of which
+this regenerates and would just overwrite. Picking the crop rect is still a
+human job: never take one off a contact sheet without tiling it a few times
+over to check for a seam.
+
+A sprite names its source in one of two ways, and a sheet may not mix them,
+because a line in `CREDITS.md` names one source per sheet and has to stay true.
+
+| | |
+| --- | --- |
+| a **repo** source | `repo`, `commit`, `path`, and the asset's display name in that project's own `Credits.txt`. Every build fetches the PNG and that `Credits.txt` fresh and re-checks the licence, so a licence changing upstream stops the build. The town and the faces are these. |
+| a **file** source | `url`, `sha256`, `page`, and the credits written out in the sheet — for somewhere with no `Credits.txt` to read and no commit to pin, which is what an OpenGameArt submission is. There is nothing to re-parse there, so what is re-checked every build is the file's bytes: a re-upload under different terms stops the build instead of slipping through it. `CREDITS.md` marks those entries as reported by hand rather than read by the build, the same standing `LICENSE` part 3 already gives the sanitary sheet. |
+
+Either way the licence is checked against what the sheet is allowed to contain,
+and that depends on which **part** of `LICENSE` it belongs to. A part-2 sheet
+takes OGA-BY 3.0 or CC0 and refuses ShareAlike. A sheet that says `part: 3`
+takes CC-BY-SA 3.0 — and must be a sheet of its own, which is the whole point:
+one ShareAlike crop packed in among OGA-BY ones would make the entire PNG an
+Adaptation of a ShareAlike work and drag every other artist in it into a
+licence they never chose. `assertOnePart()` in `tools/build-sprites.mjs` is
+what refuses to write such a sheet. GPL 3.0 is not accepted in either: art
+offered only under the GPL is refused rather than quietly taken, for the reason
+`LICENSE` part 3 gives.
 
 Two kinds of managed sheet, and a sheet says which it is with `kind:`. A sheet
 of THINGS is crops — the town — and is what a sheet declares by saying nothing.
@@ -468,7 +484,7 @@ python3 -m http.server 8000    # then http://localhost:8000/editor.html
 
 ## Licence
 
-Two parts, because there are two kinds of thing here. See [LICENSE](LICENSE).
+Three parts, because there are three kinds of thing here. See [LICENSE](LICENSE).
 
 **The game** — code, writing, characters, design. Copyright © 2026 Grant van Zyl,
 licensed [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) —
@@ -483,10 +499,19 @@ the awnings — are not ours. They are pixel art from the
 NonCommercial or NoDerivatives terms — the PNGs in `art/sprites/` are the clean
 copies to take if you want them.
 
-Only assets offered under OGA-BY 3.0 or CC0 were used, deliberately: neither
-carries a ShareAlike term, so using them costs attribution and nothing else.
-`tools/build-sprites.mjs` re-checks that against upstream's own licence data on
-every build and refuses to produce a sheet if it stops being true.
+Every sheet listed above uses only assets offered under OGA-BY 3.0 or CC0,
+deliberately: neither carries a ShareAlike term, so using them costs
+attribution and nothing else. `tools/build-sprites.mjs` re-checks that against
+upstream's own licence data on every build and refuses to produce a sheet if it
+stops being true.
+
+ShareAlike art is not banned outright — it is kept in a file of its own.
+`art/sprites/sanitary.png` has always been that: one CC-BY-SA 3.0 tileset, in a
+sheet nothing else is packed into, under its own terms in `LICENSE` part 3. A
+sheet may declare `part: 3` and take CC-BY-SA art on the same footing, and the
+build refuses to mix the two in one PNG — mixing would make the whole sheet an
+Adaptation of a ShareAlike work and place a term on other artists' work that is
+not ours to place. See `LICENSE`, and the build section above.
 
 A work of fiction; CALLHALL Services plc and everyone in it are invented.
 "Call of Duty" is a trade mark of Activision Publishing, Inc. — this is an
