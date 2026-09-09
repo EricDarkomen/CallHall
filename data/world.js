@@ -74,6 +74,20 @@ const ZONES = {
   charity:   { name: 'The charity shop', floor: '#4a4638', alt: '#454133', wall: '#2b2820', tint: '#ffb347', tile: 'floor.carpet.dim', wtile: 'wall.drywall' },
   kebab:     { name: 'Bellhaven Kebab',  floor: '#4c4234', alt: '#473d30', wall: '#2a231b', tint: '#ffb347', surf: 'tile', tile: 'floor.tile', wtile: 'loo.wall' },
   vapour:    { name: 'Vapour Trail',     floor: '#3c4650', alt: '#37414b', wall: '#212831', tint: '#b48cff', surf: 'vinyl', tile: 'floor.diamond', wtile: 'wall.drywall' },
+  /* And five behind Fenn Street, which is the cheap side of the block and
+     looks it. Same rule as the four above — the colours are an argument the
+     act outside already made — but these are not shops, and none of them is
+     lit like one. A nail bar is lit like a dental surgery because it is doing
+     dentistry to a hand; a tyre bay has one bulb and a window in the roller
+     shutter; Unit 6 is whatever the last tenant left the lights as; a club is
+     the last room in England still lit at the brightness of 1974; and
+     Sunseekers is a corridor with no daylight in it at all, which is the
+     entire point of the business. */
+  nails:     { name: 'Nailed It',        floor: '#4c3f49', alt: '#473a44', wall: '#2c2229', tint: '#ff5f56', surf: 'vinyl', tile: 'floor.tile', wtile: 'wall.drywall' },
+  tyre:      { name: 'Bellhaven Tyre & Exhaust', floor: '#3e4045', alt: '#393b40', wall: '#232529', tint: '#ffb347', surf: 'concrete', wsurf: 'block', tile: 'floor.tile.dark', wtile: 'wall.brick' },
+  unitsix:   { name: 'Unit 6',           floor: '#454749', alt: '#404244', wall: '#28292b', tint: '#9fb3c8', surf: 'vinyl', tile: 'floor.sub', wtile: 'wall.drywall' },
+  club:      { name: 'The Working Men\u2019s Club', floor: '#4a3328', alt: '#452f24', wall: '#2a1d16', tint: '#ffb347', tile: 'floor.carpet', wtile: 'wall.drywall' },
+  tan:       { name: 'Sunseekers',       floor: '#4d4534', alt: '#484030', wall: '#2c271d', tint: '#ffb347', surf: 'vinyl', tile: 'floor.diamond', wtile: 'wall.drywall' },
   /* Not a street: a walled car park with one way in, like the forecourt at the
      other end of town, and the only place out here big enough to find out what
      the pool car does above thirty. */

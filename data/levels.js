@@ -638,6 +638,236 @@ const LEVELS = {
     }
   },
 
+  /* ---- NAILED IT ------------------------------------------------------
+     "Half the fourth floor gets their lunch-break gel done in here. The other
+     half pretends not to know that." The act outside has been saying that for
+     as long as there has been a High Street, and this room is that sentence
+     with a floor under it.
+
+     THE SHAPE IS THE JOKE. Every other unit on this street is a counter you
+     walk up to. This one is a corridor you walk DOWN, three stations along one
+     wall, and there is no way to be in it without going past all three — which
+     is the entire mechanism: you cannot get to the back of a nail bar without
+     being seen by everybody already in it, and neither can they.
+
+     Who is in the chairs is not decoration. It is Karen, who is in
+     back-to-backs; Sarah, who is at her desk; and Gary, who has been leaving
+     since 2022. Each of them has an act that changes once they know you have
+     seen them, and once all three know, the room has a state and so do you.
+     See nailsKaren and its two neighbours in data/acts.js. */
+  nails: {
+    name: 'Nailed It',
+    w: 17, h: 9,
+    rooms: [{ z: 'nails', r: [2, 2, 14, 6] }],
+    doors: [],
+    entries: { door: [8.5, 5.5] },
+    links: [{ via: 'nailsOut', to: 'outside', entry: 'nails' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 8, y: 6, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'nailsOut' });
+      /* The wall, which is entirely price list and evidence. */
+      A({ x: 3, y: 2, e: '🎨', name: 'The wall of colours', kind: 'chart', solid: true, use: 'nailsColours' });
+      A({ x: 6, y: 2, e: '📋', name: 'The price list', kind: 'poster', solid: true, use: 'nailsPrices' });
+      A({ x: 9, y: 2, e: '📷', name: 'The photograph of a hand', kind: 'poster', solid: true, use: 'nailsPhoto' });
+      A({ x: 12, y: 2, e: '📖', name: 'The appointment book', kind: 'board', solid: true, use: 'nailsBook' });
+      /* THE THREE STATIONS. In the order you pass them, which is the order
+         they find out. */
+      A({ x: 4, y: 3, e: '👩‍💼', name: 'Karen, in the first chair', kind: 'view', solid: true, use: 'nailsKaren' });
+      A({ x: 7, y: 3, e: '👩', name: 'Sarah, in the second chair', kind: 'view', solid: true, use: 'nailsSarah' });
+      A({ x: 10, y: 3, e: '🧑‍🦱', name: 'Gary, in the third chair', kind: 'view', solid: true, use: 'nailsGary' });
+      A({ x: 13, y: 3, e: '🚰', name: 'The basin', kind: 'sink', solid: true, use: 'nailsBasin' });
+      /* And the side of the room you are meant to wait on and nobody does. */
+      /* Nothing on tile (8,5): that is the tile you arrive on, and a solid
+         object standing on an arrival point is a room you spawn inside the
+         furniture of. */
+      A({ x: 4, y: 5, e: '🛋️', name: 'The bench you wait on', kind: 'sofa', solid: true, use: 'nailsBench' });
+      A({ x: 6, y: 5, e: '📰', name: 'The magazines', kind: 'misc', solid: true, use: 'nailsMags' });
+      A({ x: 11, y: 5, e: '🫙', name: 'The tip jar', kind: 'misc', solid: true, use: 'nailsTips' });
+    }
+  },
+
+  /* ---- BELLHAVEN TYRE & EXHAUST ---------------------------------------
+     The one interior on this map with NO COUNTER in it, and that is not an
+     omission. A tyre bay is not a shop: it is a volume you reverse a car into,
+     and the business is conducted standing up, next to the car, by somebody
+     who is looking at the car and not at you. So this room is mostly floor —
+     more empty tile than any other interior in the game — with the trade round
+     the edges of it and the only thing worth looking at four feet above your
+     head.
+
+     THE OBJECT AT THE MIDDLE IS THE POOL CAR. It is up on the ramp, it is not
+     yours, you cannot drive it, and the eleven invoices on the spike by the
+     door are for this exact vehicle and none of them has been paid. That is
+     the whole of what this room is about, and it is the one thing on this
+     street the fourth floor owes rather than buys. */
+  tyre: {
+    name: 'Bellhaven Tyre & Exhaust',
+    w: 19, h: 12,
+    rooms: [{ z: 'tyre', r: [2, 2, 16, 9] }],
+    doors: [],
+    entries: { door: [9.5, 8.5] },
+    links: [{ via: 'tyreOut', to: 'outside', entry: 'tyre' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 9, y: 9, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'tyreOut' });
+      A({ x: 4, y: 2, e: '📊', name: 'The chart of tyre pressures', kind: 'chart', solid: true, use: 'tyreChart' });
+      A({ x: 8, y: 2, e: '📅', name: 'The calendar from the parts supplier', kind: 'poster', solid: true, use: 'tyreCalendar' });
+      A({ x: 13, y: 2, e: '📜', name: 'The certificates', kind: 'board', solid: true, use: 'tyreCerts' });
+      /* THE RADIO. One station since the unit opened, and the only object in
+         this game that says something different every single time and never
+         says the same KIND of thing twice running — see tyreRadio, which walks
+         a cycle rather than picking at random. */
+      A({ x: 16, y: 3, e: '📻', name: 'The radio', kind: 'misc', solid: true, use: 'tyreRadio' });
+      /* The stock, which is the walls. */
+      A({ x: 3, y: 4, e: '🛞', name: 'The part-worns', kind: 'tyres', solid: true, use: 'tyrePartWorns' });
+      A({ x: 3, y: 6, e: '🛞', name: 'The part-worns', kind: 'tyres', solid: true, use: 'tyrePartWorns' });
+      /* The middle of the room, and the ceiling of it. */
+      A({ x: 9, y: 4, e: '🚗', name: 'The pool car, up on the ramp', kind: 'lift', solid: true, use: 'tyreRamp' });
+      /* By the door: the entire administrative apparatus of this business. */
+      A({ x: 16, y: 5, e: '🧾', name: 'The invoice spike', kind: 'paper', solid: true, use: 'tyreSpike' });
+      A({ x: 13, y: 7, e: '🌬️', name: 'The compressor', kind: 'server', solid: true, use: 'tyreCompressor' });
+      A({ x: 6, y: 7, e: '📦', name: 'The bag of granules', kind: 'box', solid: true, use: 'tyreGranules' });
+      A({ x: 15, y: 7, e: '🛢️', name: 'The oil drum', kind: 'bin', solid: true, use: 'tyreDrum' });
+    }
+  },
+
+  /* ---- UNIT 6 ---------------------------------------------------------
+     "The sign is always vinyl and always new. The unit is always the unit."
+
+     There is nobody in here. That is the first thing about it and it is
+     deliberate: every other interior in this game has somebody behind
+     something, and this one has a folding table with a card reader taped to
+     it. Whoever runs it is not here and will not be here, and the door was
+     open.
+
+     THE ROOM IS LAID OUT IN STRATA, back to front, and reading it from the
+     door is reading it in reverse chronological order. The near end is the
+     current business. The middle is the one before. The far end is the one
+     before that. Nothing has ever been taken out of this unit; things have
+     only ever been pushed further back into it, and the back wall is 2011. */
+  unitsix: {
+    name: 'Unit 6',
+    w: 17, h: 14,
+    rooms: [{ z: 'unitsix', r: [2, 2, 14, 11] }],
+    doors: [],
+    entries: { door: [8.5, 10.5] },
+    links: [{ via: 'sixOut', to: 'outside', entry: 'unitsix' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 8, y: 11, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'sixOut' });
+      /* The back wall carries all four businesses at once, left to right, and
+         none of them has ever taken anything down. */
+      A({ x: 3, y: 2, e: '🪟', name: 'The conservatory sample panel', kind: 'window', solid: true, use: 'sixConservatory' });
+      A({ x: 6, y: 2, e: '📄', name: 'A laminated sheet', kind: 'poster', solid: true, use: 'sixLaminate' });
+      A({ x: 9, y: 2, e: '🚪', name: 'The fire exit sign', kind: 'chart', solid: true, use: 'sixFireExit' });
+      A({ x: 12, y: 2, e: '🗓️', name: 'The class timetable', kind: 'board', solid: true, use: 'sixTimetable' });
+      /* 2011. Conservatories. */
+      A({ x: 4, y: 4, e: '📦', name: 'The offcuts of double glazing', kind: 'box', solid: true, use: 'sixGlazing' });
+      A({ x: 12, y: 4, e: '📕', name: 'The brochure stand', kind: 'flip', solid: true, use: 'sixBrochures' });
+      /* 2017. Soft play. */
+      A({ x: 5, y: 6, e: '🔵', name: 'One ball', kind: 'card', solid: false, use: 'sixBall' });
+      A({ x: 11, y: 6, e: '🥅', name: 'The netting', kind: 'barrier', solid: true, use: 'sixNetting' });
+      /* Now. A gym, allegedly. */
+      A({ x: 3, y: 9, e: '🏋️', name: 'A dumbbell, 4kg', kind: 'card', solid: false, use: 'sixDumbbell' });
+      A({ x: 5, y: 9, e: '🚣', name: 'The rowing machine', kind: 'bike', solid: true, use: 'sixRower' });
+      A({ x: 11, y: 9, e: '🪑', name: 'The folding table', kind: 'table', solid: true, use: 'sixTable' });
+      A({ x: 11, y: 10, e: '📋', name: 'The signing-in sheet', kind: 'paper', solid: true, use: 'sixSheet' });
+    }
+  },
+
+  /* ---- THE WORKING MEN'S CLUB -----------------------------------------
+     The biggest room in the game, and it is empty, because it is the middle of
+     a Tuesday and this room does not start until seven.
+
+     WHAT IT IS FOR is reading. Every other interior gives you people, or a
+     transaction, or a clock. This one gives you a wall, and the wall is the
+     minutes of a committee that has been the same six people since before the
+     building you work in was built — the fixture list, the honours board, the
+     banned list with one name on it, the raffle, and item 7, which has been
+     carried forward to the next meeting since 2019.
+
+     You cannot get in without a member signing you in. That gate is on the
+     street, in Acts.club, and it is satisfied by naming absolutely anybody,
+     because the doorman is not checking. The book by his elbow is the punch
+     line and it is in here. */
+  club: {
+    name: 'The Working Men’s Club',
+    w: 24, h: 17,
+    rooms: [{ z: 'club', r: [2, 2, 21, 14] }],
+    doors: [],
+    entries: { door: [11.5, 13.5] },
+    links: [{ via: 'clubOut', to: 'outside', entry: 'club' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 11, y: 14, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'clubOut' });
+      /* THE WALL. Left to right, and in the order a committee would have
+         wanted them: what we decided, who we are playing, who has won, who is
+         barred, what we are raffling, and the meter. */
+      A({ x: 4, y: 2, e: '📌', name: 'The committee minutes', kind: 'board', solid: true, use: 'clubMinutes' });
+      A({ x: 7, y: 2, e: '🗓️', name: 'The fixture list', kind: 'chart', solid: true, use: 'clubFixtures' });
+      A({ x: 10, y: 2, e: '🏆', name: 'The honours board', kind: 'poster', solid: true, use: 'clubHonours' });
+      A({ x: 13, y: 2, e: '🚫', name: 'The banned list', kind: 'poster', solid: true, use: 'clubBanned' });
+      A({ x: 16, y: 2, e: '🎟️', name: 'The raffle', kind: 'board', solid: true, use: 'clubRaffle' });
+      A({ x: 19, y: 2, e: '🎛️', name: 'The meter for the light over table two', kind: 'therm', solid: true, use: 'clubMeter' });
+      /* THE TABLES. Two tiles each, because a snooker table is not a square
+         and one tile of it reads as a card table. */
+      A({ x: 6, y: 6, e: '🎱', name: 'Table one', kind: 'table', solid: true, use: 'clubTableOne' });
+      A({ x: 7, y: 6, e: '🎱', name: 'Table one', kind: 'table', solid: true, use: 'clubTableOne' });
+      A({ x: 14, y: 6, e: '🎱', name: 'Table two', kind: 'table', solid: true, use: 'clubTableTwo' });
+      A({ x: 15, y: 6, e: '🎱', name: 'Table two', kind: 'table', solid: true, use: 'clubTableTwo' });
+      /* THE BAR, which is shut, which does not stop anybody. */
+      A({ x: 3, y: 9, e: '🍺', name: 'The bar', kind: 'cab', solid: true, use: 'clubBar' });
+      A({ x: 4, y: 9, e: '🍺', name: 'The bar', kind: 'cab', solid: true, use: 'clubBar' });
+      A({ x: 5, y: 9, e: '💷', name: 'The till, which is a drawer', kind: 'pc', solid: true, use: 'clubTill' });
+      A({ x: 7, y: 9, e: '🧓', name: 'The man at the end of the bar', kind: 'view', solid: true, use: 'clubMan' });
+      A({ x: 4, y: 11, e: '🪑', name: 'The chairs nobody moves', kind: 'chair', solid: true, use: 'clubChairs' });
+      A({ x: 5, y: 11, e: '🪑', name: 'The chairs nobody moves', kind: 'chair', solid: true, use: 'clubChairs' });
+      /* The far end: the function room, and everything waiting to go into it. */
+      A({ x: 19, y: 11, e: '🚪', name: 'The function room', kind: 'sign', solid: true, use: 'clubFunction' });
+      A({ x: 17, y: 12, e: '🪑', name: 'The stack of chairs', kind: 'heap', solid: true, use: 'clubStack' });
+      A({ x: 11, y: 9, e: '🕺', name: 'The dance floor', kind: 'step', solid: false, use: 'clubFloor' });
+      /* And the booth by the door you came past to get here. */
+      A({ x: 13, y: 13, e: '🪟', name: 'The doorman’s booth', kind: 'booth', solid: true, use: 'clubBooth' });
+      A({ x: 14, y: 13, e: '📖', name: 'The signing-in book', kind: 'paper', solid: true, use: 'clubBook' });
+    }
+  },
+
+  /* ---- SUNSEEKERS -----------------------------------------------------
+     A ROOM YOU CANNOT SEE. That is the design and it is the opposite of every
+     other interior out here: there is nothing in Sunseekers to look at,
+     because everything that happens in Sunseekers happens behind a door with a
+     light over it.
+
+     So it is a corridor. Three booths down one side, a desk at the end nobody
+     is at, and a bell. The whole business is audible and none of it is
+     visible, and the one thing you can do — go in a booth — takes the screen
+     nowhere at all, spends twelve minutes, and gives you back a room you have
+     already seen. It is the sparsest level in the game on purpose. */
+  tan: {
+    name: 'Sunseekers',
+    w: 11, h: 16,
+    rooms: [{ z: 'tan', r: [2, 2, 8, 13] }],
+    doors: [],
+    entries: { door: [5.5, 12.5] },
+    links: [{ via: 'tanOut', to: 'outside', entry: 'tan' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 5, y: 13, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'tanOut' });
+      A({ x: 3, y: 2, e: '⚠️', name: 'The warning notice', kind: 'poster', solid: true, use: 'tanWarning' });
+      A({ x: 5, y: 2, e: '📋', name: 'The price list', kind: 'chart', solid: true, use: 'tanPrices' });
+      A({ x: 7, y: 2, e: '🏝️', name: 'The photograph of a beach', kind: 'poster', solid: true, use: 'tanBeach' });
+      /* THE THREE DOORS. Numbered from the far end, which is how they are
+         numbered, which is why nobody can ever find booth one. */
+      A({ x: 3, y: 4, e: '🚪', name: 'Booth one', kind: 'booth', solid: true, use: 'tanBoothOne' });
+      A({ x: 3, y: 7, e: '🚪', name: 'Booth two', kind: 'booth', solid: true, use: 'tanBoothTwo' });
+      A({ x: 3, y: 10, e: '🚪', name: 'Booth three', kind: 'booth', solid: true, use: 'tanBoothThree' });
+      A({ x: 7, y: 7, e: '🧳', name: 'Somebody’s things outside booth two', kind: 'heap', solid: true, use: 'tanThings' });
+      A({ x: 7, y: 9, e: '🗑️', name: 'The bin of used goggles', kind: 'bin', solid: true, use: 'tanGoggles' });
+      A({ x: 6, y: 11, e: '🧾', name: 'The desk', kind: 'cab', solid: true, use: 'tanDesk' });
+      A({ x: 7, y: 11, e: '🔔', name: 'The bell', kind: 'misc', solid: true, use: 'tanBell' });
+    }
+  },
+
   /* ---- OUTSIDE --------------------------------------------------------
      The forecourt and the streets, which is the only level with a sky over it.
      `indoors: false` is what the renderer reads: no strip lights, daylight
@@ -739,6 +969,11 @@ const LEVELS = {
          than anybody can reach from a driving seat. The kerb drops itself:
          R.kerbs() finds no boundary where the tarmac runs through. */
       { s: 'tarmac', r: [82, 50, 87, 51] },
+      /* The car wash's apron, off Fenn Street. Same shape and the same reason
+         as the lane above: a hand car wash is a thing you drive ONTO, and
+         without tarmac up to the frontage the game lays a kerb across the
+         entrance six lads spend all day waving cars over. */
+      { s: 'tarmac', r: [38, 32, 43, 33] },
       /* THE GRASS, and it is laid last because a surface declared later wins:
          these are strips OF the tarmac and the paving above, given back.
 
@@ -844,6 +1079,10 @@ const LEVELS = {
          you come back out of it. */
       pub: [86.5, 15.5], bookies: [54.5, 15.5], laund: [92.5, 15.5],
       postoff: [98.5, 15.5], charity: [60.5, 15.5], kebab: [104.5, 15.5], vapour: [66.5, 15.5],
+      nails: [46.5, 15.5],
+      /* And five on Fenn Street, where the pavement is row 33 rather than row
+         15 because the parade faces the other way round the block. */
+      tyre: [20.5, 33.5], unitsix: [30.5, 33.5], club: [72.5, 33.5], tan: [82.5, 33.5],
     },
     links: [
       { via: 'frontDoors', to: 'office', entry: 'lobby' },
@@ -856,6 +1095,14 @@ const LEVELS = {
       { via: 'charityDoor', to: 'charity', entry: 'door' },
       { via: 'kebabDoor', to: 'kebab', entry: 'door' },
       { via: 'vapourDoor', to: 'vapour', entry: 'door' },
+      { via: 'nailsDoor', to: 'nails', entry: 'door' },
+      /* The back of the block. The car wash is deliberately not among them:
+         it has no door, because it is not a building you go into — see the
+         `fromCar` furnishing on its frontage below. */
+      { via: 'tyreDoor', to: 'tyre', entry: 'door' },
+      { via: 'sixDoor', to: 'unitsix', entry: 'door' },
+      { via: 'clubDoor', to: 'club', entry: 'door' },
+      { via: 'tanDoor', to: 'tan', entry: 'door' },
     ],
     /* The cars. Parked ones sit in bays and are scenery you can walk round and
        bump into; two of them are worth pressing E on and exactly one of them
@@ -1053,7 +1300,7 @@ const LEVELS = {
       A({ x: 39, y: 4, e: '🌳', name: 'The tree by the east wall', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 39, y: 11, e: '🌳', name: 'The tree by the east wall', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 31, y: 9, e: '🕳️', name: 'The drain in the car park', kind: 'drain', solid: false, use: 'carParkDrain' });
-      A({ x: 30, y: 6, e: '🛒', name: 'The trolley', kind: 'shoptrolley', solid: true, use: 'trolley' });
+      A({ x: 30, y: 6, e: '🛒', name: 'The trolley', kind: 'shoptrolley', solid: true, use: 'strayTrolley' });
 
       /* ---- BELLHAVEN ROAD ---- */
       /* On the pavement at the kerb, where a bus stop is. It has no wall
@@ -1100,13 +1347,14 @@ const LEVELS = {
       A({ x: 66, y: 14, e: '💨', name: 'Vapour Trail', kind: 'shop', solid: true, use: 'vapeShop' });
       A({ x: 72, y: 14, e: '🚧', name: 'The unit that is always being refitted', kind: 'shop', solid: true, use: 'refit',
         furn: { sprite: 'shop.awning.green' } });
+      A({ x: 76, y: 14, e: '🚛', name: 'The skip', kind: 'box', solid: true, use: 'refitSkip' });
       A({ x: 78, y: 14, e: '🪧', name: 'TO LET', kind: 'shopsign', solid: true, use: 'toLet' });
       /* The cones outside the unit that is always being refitted. Three of
          them, no work, no van, and nobody has moved them since the spring. */
       A({ x: 71, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
       A({ x: 72, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
       A({ x: 73, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
-      A({ x: 75, y: 15, e: '🛞', name: 'The tyres', kind: 'tyres', solid: true, use: 'tyres' });
+      A({ x: 75, y: 15, e: '🛞', name: 'The tyres', kind: 'tyres', solid: true, use: 'streetTyres' });
       A({ x: 56, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 76, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 62, y: 15, e: '🗑️', name: 'Bin, High Street', kind: 'bin', solid: false, use: 'highStreetBin',
@@ -1117,7 +1365,7 @@ const LEVELS = {
          The west side of the block. Nothing has a front door on it, which is
          what makes it the side everything gets put out on. */
       A({ x: 15, y: 26, e: '♻️', name: 'The bottle bank', kind: 'box', solid: true, use: 'bottleBank' });
-      A({ x: 15, y: 27, e: '🗑️', name: 'The recycling', kind: 'recycling', solid: true, use: 'recycling' });
+      A({ x: 15, y: 27, e: '🗑️', name: 'The recycling', kind: 'recycling', solid: true, use: 'streetRecycling' });
       A({ x: 15, y: 29, e: '🖍️', name: 'The wall on Aldergate Rise', kind: 'graf', solid: true, use: 'aldergateWall',
         furn: { sprite: 'wall.graf.nice', paint: true } });
       A({ x: 7, y: 27, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
@@ -1125,7 +1373,7 @@ const LEVELS = {
          is two tiles wide and this used to stand on the inner one, which left
          nothing for anybody walking up it to get past on and put every
          pedestrian who tried into the road. */
-      A({ x: 7, y: 30, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'trolley' });
+      A({ x: 7, y: 30, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'strayTrolley' });
 
       /* ---- FENN STREET ----
          The units along the back of the block, on the one other north wall out
@@ -1133,8 +1381,13 @@ const LEVELS = {
       A({ x: 20, y: 32, e: '🛞', name: 'Bellhaven Tyre & Exhaust', kind: 'shop', solid: true, use: 'tyres',
         furn: { sprite: 'shop.awning.amber' } });
       A({ x: 30, y: 32, e: '🏋️', name: 'Unit 6', kind: 'shop', solid: true, use: 'unitSix' });
+      /* The second `fromCar` thing on this map, and the one FURN.drivethru's
+         note said would come: a car wash is not a shop you walk into, it is a
+         lane you drive onto and stay in. On foot it is six lads looking at
+         you; from the pool car it is a transaction. Furnished rather than
+         given a kind of its own — see Object.assign in World.build. */
       A({ x: 40, y: 32, e: '🧼', name: 'The hand car wash', kind: 'shop', solid: true, use: 'carWash',
-        furn: { sprite: 'shop.awning.green' } });
+        furn: { sprite: 'shop.awning.green', fromCar: true } });
       A({ x: 50, y: 32, e: '🥪', name: 'The sandwich van’s pitch', kind: 'sign', solid: true, use: 'sandwichVan' });
       A({ x: 16, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 36, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
@@ -1185,7 +1438,7 @@ const LEVELS = {
       A({ x: 86, y: 33, e: '🗑️', name: 'Bin, Fenn Street', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 80, y: 41, e: '🚧', name: 'The fence round the yard', kind: 'barrier', solid: true, use: 'yardFence' });
-      A({ x: 68, y: 41, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'trolley' });
+      A({ x: 68, y: 41, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'strayTrolley' });
 
       /* ---- MARLOW STREET ----
          The far side of the second block. Nobody who works on the fourth floor
@@ -1264,7 +1517,7 @@ const LEVELS = {
          rather than in it: the whole point of the place is the space. */
       A({ x: 19, y: 47, e: '🛒', name: 'The trolley bay', kind: 'shoptrolley', solid: true, use: 'trolleyBay' });
       A({ x: 54, y: 47, e: '🛒', name: 'The trolley bay', kind: 'shoptrolley', solid: true, use: 'trolleyBay' });
-      A({ x: 30, y: 48, e: '🛒', name: 'A trolley, at large', kind: 'shoptrolley', solid: true, use: 'trolley' });
+      A({ x: 30, y: 48, e: '🛒', name: 'A trolley, at large', kind: 'shoptrolley', solid: true, use: 'strayTrolley' });
       A({ x: 52, y: 48, e: '♻️', name: 'The recycling point', kind: 'box', solid: true, use: 'recycling' });
       A({ x: 18, y: 46, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 55, y: 46, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
