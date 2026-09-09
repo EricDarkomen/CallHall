@@ -127,6 +127,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** No per-asset entry; covered by the repository's Credits.txt, which licenses the whole pack OGA-BY 3.0.
 
+### `Graffiti & Graffiti Elements`
+
+- **Used for:** wall.graf.nice, wall.graf.squad, wall.graf.sport
+- **Sheets:** town
+- **Authors:** Craftpix.net 2D Game Assets
+- **Licences offered:** OGA-by 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Craftpix.net
+
 ### `Gritty Dirt`
 
 - **Used for:** terrain.tarmac
@@ -661,6 +669,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** CC-BY-SA 3.0, GPL 3.0 — used here under CC-BY-SA 3.0
 - **Notes:** Original by Matthew Nash. Many parts based upon the LPC base assets.
 - **Provenance:** Attribution and licence reported by the project owner from https://opengameart.org/content/public-toilet-tileset; not independently verifiable from this build, which cannot reach that page. Re-check before relying on it.
+
+### `Trees (all seasons)`
+
+- **Used for:** obj.tree.spring, obj.tree.summer, obj.tree.autumn, obj.tree.winter
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original trees by Lanea Zimmerman. Leafless tree and thick trunk by Eliza Wyatt. Reconfigured and recolored by Eliza Wyatt.
 
 ### `Window Awnings A`
 

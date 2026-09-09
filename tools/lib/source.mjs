@@ -84,7 +84,15 @@ export async function fetchPinnedFile(url, sha256) {
    under the GPL stops the build instead of being quietly taken on terms the
    project has already decided it does not want.
 
-   The sheet says which part it is with `part:`, and says nothing to mean 2. */
+   The sheet says which part it is with `part:`, and says nothing to mean 2.
+
+   Matched case-insensitively, and that is not a loosening: Credits.txt is
+   prose typed by hand, and upstream's own files do not agree with themselves
+   about it — Objects/Wall Items writes "OGA-by 3.0" where Terrain writes
+   "OGA-BY 3.0". They are the same licence, and refusing one of them would be
+   refusing a typo rather than a term. What is compared is still the licence's
+   NAME from its first character on, so "OGA-BY-NC" would still not pass for
+   OGA-BY. */
 const LICENCES_BY_PART = {
   2: ['OGA-BY 3.0', 'CC0'],
   3: ['CC-BY-SA 3.0'],
@@ -95,12 +103,13 @@ export function licencesFor(part) {
   if (!allowed) throw new Error(`no such licence part "${part}" (known: ${PARTS.join(', ')})`);
   return allowed;
 }
+const offers = (licence, allowed) => licence.toLowerCase().startsWith(allowed.toLowerCase());
 /* Which part a licence belongs to, or null for one no sheet may take. The
    inverse of the table above, and what assertOnePart() in build-sprites.mjs
    asks once a sheet is built. */
 export function partOf(licence) {
   for (const part of PARTS) {
-    if (LICENCES_BY_PART[part].some(a => licence.startsWith(a))) return part;
+    if (LICENCES_BY_PART[part].some(a => offers(licence, a))) return part;
   }
   return null;
 }
@@ -154,7 +163,7 @@ export function parseCreditsBlock(text, assetName) {
    sheet's part decides, and what comes back is what art/CREDITS.md prints. */
 export function verifyLicence(entry, part = 2) {
   const allowed = licencesFor(part);
-  const ok = entry.licences.find(l => allowed.some(a => l.startsWith(a)));
+  const ok = entry.licences.find(l => allowed.some(a => offers(l, a)));
   if (!ok) {
     /* Two different mistakes, and telling them apart is most of the value of
        the message: art that changed terms under a sheet that was right about
@@ -170,5 +179,9 @@ export function verifyLicence(entry, part = 2) {
       `(currently listed: ${entry.licences.join(', ') || '(nothing)'})` + misfiled
     );
   }
-  return ok;
+  /* Spelled the licence's way rather than the typist's, keeping anything
+     upstream added after the name. art/CREDITS.md is this project's statement
+     of what it is using, and "OGA-by 3.0" in it reads as our mistake. */
+  const canonical = allowed.find(a => offers(ok, a));
+  return canonical + ok.slice(canonical.length);
 }

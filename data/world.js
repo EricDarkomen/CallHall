@@ -237,6 +237,12 @@ const FURN = {
      `wall.graffiti` is a spray-painted tag, and the graffiti in this building
      is biro — see the act. Drawn instead, and the kit's stays unused.) */
   mirror: { mount: 'wall', size: 20, sprite: 'wall.mirror' },
+  /* Still drawn rather than sprited, and deliberately: the graffiti in this
+     BUILDING is biro on a cubicle door — see the act — and a spray-painted tag
+     is the wrong instrument for it. The three walls out on the streets say
+     otherwise one at a time, with a `furn` of their own carrying a tag off
+     town.png and the `paint` flag that lets it hang on a wall you are not
+     looking square at. See LEVELS.outside. */
   graf: { mount: 'wall', size: 20, art: 'graf' },
   sofa: { size: 38, sprite: 'obj.sofa' },
   mugs: { mount: 'surface', size: 16, sprite: 'obj.mug' },
@@ -278,6 +284,21 @@ const FURN = {
      kerb line rather than over it — R.kerbs() runs after the floor and before
      anything that stands on it, which is where a drain belongs. */
   drain: { size: 20, sprite: 'obj.drain' },
+  /* A tree, and the only thing that STANDS in this game that knows what month
+     it is. `sprites` rather than `sprite`, resolved through Sky.season() by
+     R.spriteOf() exactly as SURFACES.grass's `tiles` are resolved by
+     R.floorTile(): blossom in spring, green in summer, red in autumn, and bare
+     with snow lying along the branches in winter — before the weather has
+     drawn a flake of its own over the top of it.
+
+     The footprint is the lamppost's, and for the lamppost's reason: what is in
+     your way is a trunk eleven pixels wide, not the three tiles of canopy over
+     it. A tree you had to walk around the shadow of would be a hedge. */
+  tree: {
+    size: 34, ground: [0.34],
+    sprites: { spring: 'obj.tree.spring', summer: 'obj.tree.summer',
+               autumn: 'obj.tree.autumn', winter: 'obj.tree.winter' }
+  },
   /* Its own kind rather than another `trolley`: this table is a literal and
      the last key wins, so reusing the name would quietly turn the fourth
      floor's tea trolley into a supermarket one. */

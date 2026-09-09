@@ -137,6 +137,16 @@ const R = {
     this._tiles.set(key, cv);
     return cv;
   },
+  /* Which sprite an object is wearing today. Almost always the one its kind
+     names and nothing more — but a thing may carry four of them keyed by
+     season instead of one, and then this is what picks. The same question
+     floorTile() asks of SURFACES.grass, asked of FURN.tree, and asked in one
+     place so the next seasonal object is a table entry rather than a branch
+     in the draw. */
+  spriteOf(f) {
+    return f && f.sprites ? f.sprites[Sky.season()] : f && f.sprite;
+  },
+
   floorTile(z, v, s) {
     /* The kit's floor, multiplied through the zone's colour: straight from the
        atlas each material is one flat colour and thirteen rooms become one room
@@ -873,7 +883,15 @@ const R = {
      puddles somewhere new each shower reads as static, not as weather. */
   wetGround(x0, y0, x1, y1) {
     const w = Sky.wet(), lie = Sky.lying();
-    if (World.indoors() || (w < .04 && lie < .04)) return;
+    const k = Sky.kind();
+    /* Rain hitting the ground. It used to be drawn with the falling rain, in
+       screen space, which put a scatter of little ripples at fixed points on
+       the CANVAS: walk, and the whole shower of them walked with you, pinned to
+       the glass like spots on a lens. A splash happens where a drop lands, and
+       where a drop lands is a place on the road. So it is here, with the
+       puddles, in world coordinates, under everything that walks through it. */
+    const splashing = this.animate && !World.indoors() && k.fall === 'rain' && k.rate >= 1;
+    if (World.indoors() || (w < .04 && lie < .04 && !splashing)) return;
     const c = this.ctx;
     c.save();
     if (w > .04) {
@@ -926,6 +944,39 @@ const R = {
         if (World.surf && World.surf[y][x] === 'tarmac') c.fillRect(x * TILE, y * TILE, TILE, TILE);
       }
     }
+    if (splashing) {
+      /* Each ground tile keeps its own clock, offset by its seed, and gets a
+         ripple on some of its turns and not others — so the splashes come and
+         go all over the road without anything having to remember one. The ring
+         widens as it goes; the three passes are its fade, because alpha is a
+         property of the path and a ripple that ends at full strength pops.
+
+         Nothing lands on the tiles under lying snow that the road has not
+         worn back through, and nothing lands indoors: both fall out of the
+         gate above rather than being tested for here. */
+      const t = this.t, dens = .10 * k.rate;
+      c.strokeStyle = '#c8e0f5';
+      c.lineWidth = 1;
+      for (let pass = 0; pass < 3; pass++) {
+        c.globalAlpha = (.30 - pass * .09) * Math.min(1, .35 + w);
+        c.beginPath();
+        for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+          if (!World.zone[y][x] || World.solid[y][x]) continue;
+          const sd = World.seed[y][x];
+          const cyc = t * 2.6 + sd * 11;
+          const g = Math.floor(cyc), ph = cyc - g;
+          if (Math.floor(ph * 3) !== pass) continue;
+          const i = x * 3011 + y * 7919;
+          if (this.noise(i, g) > dens) continue;
+          const cx = (x + this.noise(i + 1, g)) * TILE;
+          const cy = (y + this.noise(i + 2, g)) * TILE;
+          const r = 1.5 + ph * 5.5;
+          c.moveTo(cx + r, cy);
+          c.ellipse(cx, cy, r, r * .45, 0, 0, 6.3);
+        }
+        c.stroke();
+      }
+    }
     c.restore();
   },
   /* THE GRADE. One rectangle, multiplied, over everything that has been drawn
@@ -951,8 +1002,8 @@ const R = {
        nothing except what the streetlights make of it. Without the daylight
        term a foggy 02:00 came out paler than a clear 18:00, which is the one
        reading a night should never give. */
-    const fog = Sky.kind().fog;
-    if (fog) {
+    const fog = Sky.fog();
+    if (fog > .01) {
       const lit = clamp(Sky.sunPos() * 1.2 + .45, .16, 1);
       c.save();
       c.globalAlpha = fog * lit * (.34 + Math.sin(this.t * .12) * .03);
@@ -992,7 +1043,7 @@ const R = {
     const c = this.ctx;
     /* Fog is what makes a streetlight visible as a light rather than as a lit
        patch of pavement, so it does not dim the lamps — it does the opposite. */
-    const haze = 1 + (Sky.kind().fog || 0) * .8;
+    const haze = 1 + Sky.fog() * .8;
     const night = clamp(-Sky.sunPos() * 2.2 + .35, .15, 1) * haze;
     c.save();
     c.globalCompositeOperation = 'lighter';
@@ -1047,6 +1098,34 @@ const R = {
      the clock, so a downpour is four hundred numbers rather than four hundred
      allocations a second, and pausing the game stops it dead because `this.t`
      stops. */
+  /* A drop's own numbers, and the reason there is a hash here at all.
+
+     This used to be a pair of terms of the form `i * BIG % M`, which is a
+     lattice and not a scatter: both numbers were linear in the drop's index,
+     so the pairs fell on a handful of parallel lines and the rain arrived in
+     stripes. Worse, the two were correlated with each other and with
+     everything derived from them — a column of drops all fell at the same
+     speed, at the same length, because speed and length were read off the same
+     linear sequence as the column.
+
+     This is the finalising mix of a small integer hash: one multiply-xor-shift
+     round per call, no allocation, and `s` selects a stream, so one drop's x,
+     its y, its speed, its length and its lean are five independent numbers
+     rather than five views of one. Same cost as the arithmetic it replaced. */
+  noise(i, s) {
+    let h = Math.imul(i + 1, 374761393) + Math.imul(s + 1, 668265263) | 0;
+    h = Math.imul(h ^ h >>> 13, 1274126177);
+    return ((h ^ h >>> 16) >>> 0) / 4294967296;
+  },
+  /* Three sheets of it at three distances, because rain seen through rain is
+     not one flat curtain: the far stuff is thin, slow, short and dim, the near
+     stuff is bright and long and comes down hard. Three passes rather than
+     three hundred, since a stroke style is per path and a path is cheap. */
+  RAIN_LAYERS: [
+    { share: .46, alpha: .26, width: 1,   speed: .74, len: .70 },
+    { share: .34, alpha: .42, width: 1.2, speed: 1,   len: 1 },
+    { share: .20, alpha: .62, width: 1.7, speed: 1.32, len: 1.45 },
+  ],
   weather() {
     const k = Sky.kind();
     if (!k.fall || !k.rate) return;
@@ -1061,45 +1140,66 @@ const R = {
     const c = this.ctx, W = Cam.w, H = Cam.h, t = this.t;
     const n = Math.round((k.fall === 'snow' ? 90 : 150) * k.rate);
     c.save();
+    /* Both of these wrap their positions through a span WIDER than the screen,
+       so a drop that leaves one edge is already drawn coming in at the other.
+       The base number has to cover that whole span: seed it across the screen
+       only, as this did, and everything the lean pushes off the right-hand
+       edge lands back in the same narrow band on the left — which is a stripe
+       of double-thick rain down one side of the frame and nothing at all in
+       the corner it came from. Uniform over the span in, uniform out. */
+    const xSpan = W + 120, ySpan = H + 80;
     if (k.fall === 'snow') {
       c.fillStyle = 'rgba(244,250,255,.85)';
       for (let i = 0; i < n; i++) {
-        const sd = (i * 2654435761 % 1000) / 1000, sd2 = (i * 40503 % 977) / 977;
-        const sp = 26 + sd * 34;
-        const x = (sd * W + Math.sin(t * .7 + i) * 14 + t * 9) % (W + 40) - 20;
-        const y = (sd2 * H + t * sp) % (H + 20) - 10;
-        const r = 1.2 + sd2 * 1.6;
-        c.globalAlpha = .45 + sd * .5;
-        c.beginPath(); c.arc(x, y, r, 0, 6.3); c.fill();
+        const rx = this.noise(i, 1), ry = this.noise(i, 2), rs = this.noise(i, 3);
+        const rr = this.noise(i, 4), rd = this.noise(i, 5);
+        /* Not one drift for all of it: each flake has its own sway, its own
+           period and its own idea of down, which is the difference between
+           snow and a screensaver of dots. */
+        const sp = 22 + rs * 40;
+        const sway = Math.sin(t * (.45 + rd * .7) + rd * 12) * (7 + rd * 16);
+        const x = ((i + rx) * (xSpan / n) + sway + t * (5 + rd * 9)) % xSpan - 60;
+        const y = (ry * ySpan + t * sp) % ySpan - 40;
+        c.globalAlpha = .30 + rr * .62;
+        c.beginPath(); c.arc(x, y, .9 + rr * 2, 0, 6.3); c.fill();
       }
     } else {
       /* Rain and sleet. Sleet is rain that has given up: shorter, slower,
          paler, and it comes at you sideways because it always does. */
       const sleet = k.fall === 'sleet';
-      const slant = sleet ? 0.42 : 0.22;
-      c.strokeStyle = sleet ? 'rgba(219,232,245,.55)' : 'rgba(178,206,235,.45)';
-      c.lineWidth = sleet ? 1.4 : 1;
-      c.beginPath();
-      for (let i = 0; i < n; i++) {
-        const sd = (i * 2654435761 % 1000) / 1000, sd2 = (i * 40503 % 977) / 977;
-        const sp = (sleet ? 430 : 700) + sd * 420;
-        const len = (sleet ? 7 : 12) + sd2 * (sleet ? 5 : 12);
-        const y = (sd2 * H + t * sp) % (H + 60) - 30;
-        const x = (sd * W + y * slant) % (W + 60) - 30;
-        c.moveTo(x, y); c.lineTo(x - len * slant, y - len);
-      }
-      c.stroke();
-      /* Where it lands. A shower with no bounce is a screensaver. */
-      if (!sleet && k.rate >= 1) {
-        c.strokeStyle = 'rgba(200,224,245,.30)';
+      const lean = sleet ? 0.42 : 0.22;
+      const base = sleet ? 430 : 700, blen = sleet ? 7 : 12;
+      const col = sleet ? '219,232,245' : '178,206,235';
+      let from = 0;
+      for (const L of this.RAIN_LAYERS) {
+        const upto = Math.min(n, from + Math.round(n * L.share));
+        c.strokeStyle = `rgba(${col},${L.alpha * (sleet ? 1.3 : 1)})`;
+        c.lineWidth = L.width * (sleet ? 1.2 : 1);
         c.beginPath();
-        for (let i = 0; i < Math.round(n * .22); i++) {
-          const sd = (i * 22695477 % 1000) / 1000, sd2 = (i * 69621 % 977) / 977;
-          const ph = (t * 2.4 + sd2) % 1;
-          const x = sd * W, y = sd2 * H;
-          c.moveTo(x - 3 - ph * 4, y); c.lineTo(x + 3 + ph * 4, y);
+        /* Across, each drop gets its own slice of the width and a random
+           position inside it, rather than a random position across the whole
+           of it. Pure scatter clumps: with a few hundred drops you get a
+           handful of gaps and a handful of thickets every frame, and the eye
+           reads those as the rain being patchy rather than as the rain being
+           random. A drop's x barely moves once it is falling — the lean only
+           slides it a fifth of a screen over a whole descent — so evening it
+           out here evens out the whole shower, and the jitter inside the slice
+           is what keeps it from looking like railings. */
+        const slice = xSpan / Math.max(1, upto - from);
+        for (let i = from; i < upto; i++) {
+          const rx = this.noise(i, 1), ry = this.noise(i, 2);
+          const rs = this.noise(i, 3), rl = this.noise(i, 4), rn = this.noise(i, 5);
+          const sp = base * L.speed * (.78 + rs * .5);
+          const len = blen * L.len * (.62 + rl * .85);
+          /* Its own lean, within a few degrees of the shower's. Rain that all
+             leans by exactly the same amount is a hatching pattern. */
+          const sl = lean * (.82 + rn * .36);
+          const y = (ry * ySpan + t * sp) % ySpan - 40;
+          const x = ((i - from + rx) * slice + y * sl) % xSpan - 60;
+          c.moveTo(x, y); c.lineTo(x - len * sl, y - len);
         }
         c.stroke();
+        from = upto;
       }
     }
     c.restore();
@@ -2099,11 +2199,22 @@ const R = {
            the wall face, a kettle on the worktop. Emoji, shadow and highlight
            move together or you highlight the carpet under a poster. */
         const f = o.fdef || FURN[o.kind] || {};
+        /* Resolved once, here, because everything below asks the same question
+           of it — whether it hangs, whether it draws its own shadow, where its
+           middle is, and what to draw — and a tree must not be able to answer
+           in two different seasons within one frame. */
+        const fsprite = this.spriteOf(f);
         const size = o.kind === 'chair' ? (Sprites.ready ? 22 : 16) : (f.size ?? 20);
         let ex = d.wx, ey = d.wy, onFloor = true;
         if (o.mount === 'wall') {
           const s = o.wallSide;
-          ex += s === 'w' ? -TILE * .72 : s === 'e' ? TILE * .72 : 0;
+          /* Hung things stop short of the wall they hang on — that three
+             quarters of a tile is the thickness of the thing plus the fact
+             that you are looking at it from in front. Paint has no thickness
+             and no front: a tag goes ON the wall tile, centred, or half of it
+             ends up lying on the pavement beside it. */
+          const off = f.paint ? TILE : TILE * .72;
+          ex += s === 'w' ? -off : s === 'e' ? off : 0;
           /* A north wall is the one case with a wall to hang this ON: it is the
              only side that gets the second, taller tile stacked above it (see
              the `below` branch of the wall loop) — every other side is either a
@@ -2119,9 +2230,9 @@ const R = {
              but a wall-anchored SPRITE is the same kind of object, and a
              television bracketed level with the skirting board is not mounted,
              it is leaning. Anything that hangs hangs. */
-          const wallSprite = f.sprite && Tiles.anchors && Tiles.anchors[f.sprite] === 'wall';
+          const wallSprite = fsprite && Tiles.anchors && Tiles.anchors[fsprite] === 'wall';
           const high = s === 'n' && (o.art || wallSprite);
-          ey += s === 'n' ? (high ? -TILE * 1.45 : -TILE * .72) : s === 's' ? TILE * .68 : 0;
+          ey += s === 'n' ? (high ? -TILE * 1.45 : -TILE * .72) : s === 's' ? (f.paint ? TILE : TILE * .68) : 0;
           onFloor = false;
         } else if (o.onTable) {
           /* Before the worktop case: the jug and the biscuits are `surface`
@@ -2147,7 +2258,7 @@ const R = {
            than drawn. `chair`, `bin` and `hatch` used to be named here one at a
            time for exactly this reason; two of the three are covered by the
            sprite test now and the third by `drawn`. */
-        const drawsOwn = (f.sprite && Tiles.has(f.sprite)) || f.drawn || o.art || o.noEmoji;
+        const drawsOwn = (fsprite && Tiles.has(fsprite)) || f.drawn || o.art || o.noEmoji;
         if (onFloor && !drawsOwn && o.kind !== 'hatch') {
           this.shadow(ex, ey + size * .45, Math.max(11, size * .42), 5);
         }
@@ -2187,8 +2298,8 @@ const R = {
            back to the emoji anywhere but north — it has no orientation to get
            wrong. By anchor, so the next one is right without anybody
            remembering this. */
-        const edgeOn = o.mount === 'wall' && o.wallSide !== 'n'
-                    && f.sprite && Tiles.anchors && Tiles.anchors[f.sprite] === 'wall';
+        const edgeOn = o.mount === 'wall' && o.wallSide !== 'n' && !f.paint
+                    && fsprite && Tiles.anchors && Tiles.anchors[fsprite] === 'wall';
         /* Fifteen archive boxes and thirty-two chairs cut from one rectangle
            read as a stamp rather than as a room. Tiles.draw already mirrors —
            it is how the far leaf of a double doorway is drawn — so variety
@@ -2209,12 +2320,12 @@ const R = {
            to the map above: they are the floor and the UI, not the object. */
         const turn = (o.turn || 0) & 3;
         if (turn) {
-          const mid = (f.sprite && Tiles.has(f.sprite))
-            ? Tiles.centre(f.sprite, ex, ey + bob) : { x: ex, y: ey + bob };
+          const mid = (fsprite && Tiles.has(fsprite))
+            ? Tiles.centre(fsprite, ex, ey + bob) : { x: ex, y: ey + bob };
           c.save();
           c.translate(mid.x, mid.y); c.rotate(turn * Math.PI / 2); c.translate(-mid.x, -mid.y);
         }
-        if (edgeOn || !(f.sprite && Tiles.draw(c, f.sprite, ex, ey + bob, canFlip))) {
+        if (edgeOn || !(fsprite && Tiles.draw(c, fsprite, ex, ey + bob, canFlip))) {
           if (o.art) this.wallArt(o, ex, ey + bob, size);
           else if (!o.noEmoji) this.emoji(o.e, ex, ey + bob, size);
         }

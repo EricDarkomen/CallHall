@@ -163,14 +163,24 @@ const Sky = {
        w     how wet the ground is, 0..1, which lags the rain by design — a road
              does not dry the instant it stops
        l     how much snow is lying, same idea and much slower
+       f     how much fog there is, same idea again — it rolls in over the best
+             part of an hour and takes longer than that to lift
        flash storm lightning, in seconds, counted down by the renderer */
   state() {
-    if (!G.wx || !this.KINDS[G.wx.k]) G.wx = { k: 'grey', t: 0, w: 0, l: 0, flash: 0 };
+    if (!G.wx || !this.KINDS[G.wx.k]) G.wx = { k: 'grey', t: 0, w: 0, l: 0, f: 0, flash: 0 };
+    /* A save written before fog had a depth of its own carries no `f`. Start it
+       wherever the weather it was saved in belongs, so loading into a foggy
+       morning is foggy rather than a minute of clear air that then closes in. */
+    if (G.wx.f === undefined) G.wx.f = this.KINDS[G.wx.k].fog || 0;
     return G.wx;
   },
   kind() { return this.KINDS[this.state().k] || this.KINDS.grey; },
   wet() { return this.state().w || 0; },
   lying() { return this.state().l || 0; },
+  /* How thick the fog is NOW, which is not the same as how thick the weather
+     says it should be. Everything that draws fog asks this rather than
+     kind().fog — that number is the target it is heading for. */
+  fog() { return this.state().f || 0; },
   label() { const k = this.kind(); return k.e + ' ' + k.n; },
 
   /* Pick something new out of the season's bag. `soft` keeps it near what it
@@ -246,6 +256,14 @@ const Sky = {
     st.w = target > st.w ? Math.min(target, st.w + .03) : Math.max(0, st.w - .006);
     const lay = (k.lay || 0);
     st.l = lay > st.l ? Math.min(1, st.l + .004) : Math.max(0, st.l - (this.season() === 'winter' ? .0015 : .006));
+    /* And the fog, which used to be the one part of the weather with no depth
+       to it at all: it was read straight off the KIND, so it arrived at full
+       strength on the minute the weather changed its mind and was gone just as
+       flatly an hour later. Fog does not do that. It comes down over the best
+       part of an hour and it takes longer than that to lift, which is why it
+       is still there at eleven when it was supposed to burn off at nine. */
+    const fg = k.fog || 0;
+    st.f = fg > st.f ? Math.min(fg, st.f + .022) : Math.max(0, st.f - .009);
     /* THE NIGHT. What Report.next() used to hand back in one lump at 09:00, paid
        out across the hours you were asleep instead — so a player who stays up
        walking round town starts the next shift short, which is correct, and is
