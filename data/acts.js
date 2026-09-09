@@ -644,6 +644,16 @@ const Acts = {
     };
     insp('\ud83c\udf33', 'The tree', Sky.seasonName(), lines[Sky.season()] || lines.autumn);
   },
+  cones() {
+    insp('\ud83d\udea7', 'The cones', 'Unattended', [
+      'Three traffic cones in a row outside the unit that is always being refitted. No van, no barrier, no hole, and no one working.',
+      'They have been here long enough that the shop next door has started putting its A-board inside them, which is the closest thing this parade has to planning permission.']);
+  },
+  manhole() {
+    insp('\u26ab', 'A manhole cover', 'Surface water', [
+      'A manhole cover, sitting a few millimetres proud of the road, which is why every car that goes over it makes the same noise.',
+      'Cast into it, around the edge, is the name of a foundry in a town forty miles away that closed in 1987.']);
+  },
   lamppost() {
     insp('💡', 'Lamppost', 'Council-maintained', [
       'A council lamppost, one of a matching pair, both working — which the fourth floor’s own lighting has not managed in a decade of maintenance tickets.',

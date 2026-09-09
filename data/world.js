@@ -44,18 +44,18 @@ const ZONES = {
      UI.zone() puts on screen as you cross into it, so a street with its own
      name has to be its own zone. Driving the network announces each road as
      you turn into it, which is the entire reason the network is a network. */
-  forecourt: { name: 'The Forecourt',   floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
-  street:    { name: 'Bellhaven Road',  floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
-  high:      { name: 'The High Street', floor: '#4b4f57', alt: '#464a50', wall: '#35393f', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
-  aldergate: { name: 'Aldergate Rise',  floor: '#484c54', alt: '#43474d', wall: '#32363c', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
-  cargate:   { name: 'Cargate Lane',    floor: '#474b53', alt: '#42464c', wall: '#31353b', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
-  marlow:    { name: 'Marlow Street',   floor: '#494d55', alt: '#44484e', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
-  fenn:      { name: 'Fenn Street',     floor: '#464a52', alt: '#41454b', wall: '#30343a', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
-  corven:    { name: 'Corven Way',      floor: '#454951', alt: '#40444a', wall: '#2f3339', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' },
+  forecourt: { name: 'The Forecourt',   floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  street:    { name: 'Bellhaven Road',  floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  high:      { name: 'The High Street', floor: '#4b4f57', alt: '#464a50', wall: '#35393f', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  aldergate: { name: 'Aldergate Rise',  floor: '#484c54', alt: '#43474d', wall: '#32363c', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  cargate:   { name: 'Cargate Lane',    floor: '#474b53', alt: '#42464c', wall: '#31353b', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  marlow:    { name: 'Marlow Street',   floor: '#494d55', alt: '#44484e', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  fenn:      { name: 'Fenn Street',     floor: '#464a52', alt: '#41454b', wall: '#30343a', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  corven:    { name: 'Corven Way',      floor: '#454951', alt: '#40444a', wall: '#2f3339', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
   /* Not a street: a walled car park with one way in, like the forecourt at the
      other end of town, and the only place out here big enough to find out what
      the pool car does above thirty. */
-  retail:    { name: 'Bellhaven Retail Park', floor: '#484c53', alt: '#43474e', wall: '#32363c', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.flag', wtile: 'wall.brick' }
+  retail:    { name: 'Bellhaven Retail Park', floor: '#484c53', alt: '#43474e', wall: '#32363c', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' }
 };
 
 /* What a tile is MADE of, where that is not what its zone is made of. A level
@@ -74,7 +74,13 @@ const ZONES = {
 const SURFACES = {
   /* Roads and the car park. Cold, dark and unpatterned, which is what makes
      the paving beside it read as paving and the white lines read as paint. */
-  tarmac: { tile: 'terrain.tarmac', floor: '#a6acb5', alt: '#a0a6af', map: '#2c2f38' },
+  /* `alt` is the SAME as `floor`, and that is the road being poured rather
+     than laid. Every other surface alternates its tint a shade on the odd
+     tiles, which is what stops a floor reading as wallpaper — but the modern
+     road tile is a flat, even sheet of asphalt with no grain to hide behind,
+     and on that the alternation stopped being a texture and became a
+     chequerboard you could count the squares of. */
+  tarmac: { tile: 'terrain.road', floor: '#a6acb5', alt: '#a6acb5', map: '#2c2f38' },
   /* Grass, and the one surface in the game that is not the same thing twice.
      `tiles` rather than `tile`: the LPC terrain sheets ship the same square in
      four seasons at the same pixel, so this is one crop taken four times and
@@ -299,6 +305,13 @@ const FURN = {
     sprites: { spring: 'obj.tree.spring', summer: 'obj.tree.summer',
                autumn: 'obj.tree.autumn', winter: 'obj.tree.winter' }
   },
+  /* A cone. Not a barrier — a barrier is a pole across a gap and you get round
+     the end of it; a cone is a thing on the ground you walk round, and there
+     is usually more than one of them and no sign of anybody working. */
+  cone: { size: 20, sprite: 'obj.cone', ground: [0.5] },
+  /* A manhole cover. Flat, walkable, driveable and drawn with the drains,
+     which is where anything set INTO the road belongs. */
+  manhole: { size: 20, sprite: 'obj.manhole' },
   /* Its own kind rather than another `trolley`: this table is a literal and
      the last key wins, so reusing the name would quietly turn the fourth
      floor's tea trolley into a supermarket one. */
