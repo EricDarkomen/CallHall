@@ -806,7 +806,7 @@ const Acts = {
       'Behind him: a safe, a kettle, and a wall chart of stamp prices going back far enough to be upsetting.'],
       [{ t: 'Join the queue. (22 min.)', to: null, do() {
           G.minutes += 22; Player.mod({ patience: -4, energy: -3 });
-          Ach.get('a_queue');
+          Ach.get('a_postqueue');
           if (!Item.has('stamps')) Item.give('stamps');
           UI.toast('\ud83c\udfe4', 'Twenty-two minutes. You are served in ninety seconds. Nothing about the ratio is anybody’s fault and everybody has made their peace with it.');
         } },
@@ -1050,12 +1050,12 @@ const Acts = {
       'A give way sign at the top of the street, with the triangle painted on the road under it to match.',
       'The traffic out here does actually yield at these, and to the right where two of them want the junction at once, which makes this the best-observed rule in Bellhaven by a distance nobody wants to think about.']);
   },
-  tyres() {
+  streetTyres() {
     insp('\ud83d\udede', 'The tyres', 'Nobody\u2019s', [
       'A stack of tyres against the wall of the unit that is always being refitted, with two more leaning off it.',
       'They are not the right size for anything parked on this street, which raises a question about how they got here that nobody has ever asked out loud.']);
   },
-  recycling() {
+  streetRecycling() {
     insp('\ud83d\uddd1\ufe0f', 'The recycling', 'Collected fortnightly', [
       'The green bin, out beside the bottle bank. It goes out on a Tuesday, or a Wednesday, on a fortnightly cycle that the council publishes as a PDF and that nobody on this street has ever successfully predicted.',
       'Somebody has put a pizza box in it. Somebody always has.']);
@@ -1091,15 +1091,561 @@ const Acts = {
        { t: 'Leave it for somebody who needs it.', to: null }]);
   },
 
+  /* ---- NAILED IT ------------------------------------------------------
+     Not a shop act. A room with three people in it who work with you, and a
+     state that goes one way: nobody has seen anybody, then somebody has, then
+     everybody has, and then it is never mentioned again by any party for the
+     rest of the game. The three flags below are that, and Acts.nailsRoom() is
+     how many of them are set. */
+  nailsRoom() {
+    return (G.flags.sawKaren ? 1 : 0) + (G.flags.sawSarah ? 1 : 0) + (G.flags.sawGary ? 1 : 0);
+  },
+  /* Called by all three the moment they clock you. The achievement is for the
+     full set, because two people who have seen each other can pretend and
+     three cannot. */
+  nailsSpotted(who) {
+    G.flags[who] = true;
+    if (Acts.nailsRoom() === 3 && !G.flags.nailsAll) {
+      G.flags.nailsAll = true;
+      Ach.get('a_caught');
+      UI.toast('💅', 'All three of them. Nobody will ever raise it. It will simply be true now, for years.', 'gold');
+    }
+  },
+  nailsOut() { Sfx.door(); Levels.take('nailsOut'); },
+  nailsColours() {
+    insp('🎨', 'The wall of colours', 'Two hundred and eleven of them', [
+      'A rack of bottles arranged by nothing, named by somebody with a completely free hand and no supervision: Office Party, Second Interview, Sensible Beige, and one called Tuesday that is the exact grey of the fourth-floor carpet.',
+      'Somebody has put a small dot of every colour on the underside of the shelf, which is the only honest colour chart in the retail sector and is deliberately where the customer cannot see it.']);
+  },
+  nailsPrices() {
+    insp('📋', 'The price list', 'Laminated, once', [
+      'Gel £22. Acrylic £26. Infill £18. Repair of one nail, £4, which is the kindest line item in Bellhaven.',
+      'At the bottom, in a different font, added later and never removed: “WE DO NOT DO FEET. PLEASE STOP ASKING.”']);
+  },
+  nailsPhoto() {
+    insp('📷', 'The photograph of a hand', 'Blu-tacked', [
+      'A large photograph of a hand, taken professionally, lit like a watch advertisement, resting on a piece of grey velvet.',
+      'It is the owner’s own hand. She will tell you this if you ask and she will not tell you if you do not, and she has never once been asked.']);
+  },
+  nailsBook() {
+    insp('📖', 'The appointment book', 'Paper. Still paper.', [
+      'A hardback diary, biro, with the whole of next week already gone and Thursday lunchtime crossed through twice.',
+      'Reading upside down, which is a skill this job has given you and which you did not ask for, you can make out four names you recognise and one you very much do.']);
+  },
+
+  /* The three of them. Each one has a before and an after, and the after is
+     not embarrassment — it is the far more British thing, which is an
+     agreement arrived at in total silence and honoured for years. */
+  nailsKaren() {
+    if (!G.flags.sawKaren) {
+      Acts.nailsSpotted('sawKaren');
+      return insp('👩‍💼', 'Karen', 'Team Leader · in back-to-backs', [
+        'Karen is in the first chair with both hands flat on a towel and her phone face-down beside them, which is a thing her phone has never been in four years.',
+        'She sees you. There is a moment. It is not a long moment, because Karen has managed people for eleven years and has a procedure for everything.',
+        '“I’m working from a different location this afternoon,” she says, to a woman holding her little finger.']);
+    }
+    insp('👩‍💼', 'Karen', 'Team Leader · a different location', [
+      'She has gone back to looking at the middle distance with the enormous dignity of somebody who has decided that this is now simply a thing that is true.',
+      'Neither of you will bring it up. Not today, not at her one-to-one, not in six years. It will however be very slightly harder for her to say no to you, forever, and she knows that, and she knows you know.']);
+  },
+  nailsSarah() {
+    if (!G.flags.sawSarah) {
+      Acts.nailsSpotted('sawSarah');
+      return insp('👩', 'Sarah', 'Agent · keeper of #general', [
+        'Sarah is in the middle chair and has clocked you in the mirror before you are three feet into the room, because Sarah clocks everything, which is the entire basis of her authority.',
+        '“Right,” she says. “So. This is a rest day.”',
+        'It is Wednesday. You have both been on the same shift rota since March.']);
+    }
+    insp('👩', 'Sarah', 'Agent · documenting', [
+      'She has not gone quiet. Sarah does not go quiet. She has instead started telling you, at length and with real warmth, about a completely different subject, and she will keep doing this until you leave.',
+      'You are now, without anything having been signed, jointly responsible for a secret. This is the closest thing to a promotion the fourth floor offers.']);
+  },
+  nailsGary() {
+    if (!G.flags.sawGary) {
+      Acts.nailsSpotted('sawGary');
+      return insp('🧑‍🦱', 'Gary', 'Agent · leaving (est. 2022)', [
+        'Gary is in the third chair, gets exactly one hand’s worth done every six weeks, and is the only person in this room not pretending.',
+        '“Alright,” says Gary. “Yeah. I get it done. It’s twenty-two quid and it’s the best twenty-two quid I spend.”',
+        'He does not lower his voice. He has never lowered his voice. It is genuinely possible that Gary is the healthiest person in this postcode.']);
+    }
+    insp('🧑‍🦱', 'Gary', 'Agent · unbothered', [
+      '“You want to get it done,” says Gary. “Honestly. You’d be surprised.”',
+      'He is going to say this to you again on the fourth floor, at his desk, at volume, on a Tuesday, in front of Karen. He does not know that. You do.']);
+  },
+  nailsBasin() {
+    insp('🚰', 'The basin', 'Warm water, twice', [
+      'A small basin with a dish of white pebbles in it that are not there for any reason a pebble has ever been anywhere.',
+      'It is the only warm water on this street that comes out warm the first time you ask it to.']);
+  },
+  nailsBench() {
+    const room = Acts.nailsRoom();
+    insp('🛋️', 'The bench you wait on', room === 3 ? 'Fully occupied, socially' : 'Empty', [
+      'A padded bench along the window wall with three magazines and a cushion on it, and nobody has ever sat here, because everybody who comes in here has an appointment and everybody who has an appointment goes straight to a chair.',
+      room === 3
+        ? 'You could sit down. From here you would be looking at the backs of three heads, all of which know exactly where you are and none of which is going to turn round.'
+        : 'From it you would be able to see the whole room, which is the one thing nobody in the whole room wants.'],
+      [{ t: 'Sit on the bench. (10 min.)', to: null, do() {
+          G.minutes += 10; Player.mod({ patience: 5, energy: 3 });
+          UI.float('Ten minutes.', '#ff5f56');
+        } },
+       { t: 'Stay standing.', to: null }]);
+  },
+  nailsMags() {
+    insp('📰', 'The magazines', 'March', [
+      'Three magazines. One is from March, one is from a March, and one is a free supermarket magazine about pies which everybody in this room has read cover to cover and nobody has ever taken home.']);
+  },
+  nailsTips() {
+    insp('🫙', 'The tip jar', 'Honesty in a jam jar', [
+      'A jam jar with a slot cut in the lid by somebody who owned a Stanley knife and no patience.',
+      'It has £2.40 in it and a euro. There is always a euro. Nobody has ever seen a euro go in.'],
+      [{ t: 'Put a pound in.', to: null, if: () => P.money >= 1, do() {
+          Player.mod({ money: -1, patience: 3 });
+          UI.toast('🫙', 'A pound in a jar. Nobody sees you do it, which is the only condition under which it counts.');
+        } },
+       { t: 'Leave it.', to: null }]);
+  },
+
+  /* ---- BELLHAVEN TYRE & EXHAUST ---------------------------------------
+     A room with no counter in it and one thing worth looking at, which is
+     above your head and belongs to your employer. */
+  tyreOut() { Sfx.door(); Levels.take('tyreOut'); },
+  tyreChart() {
+    insp('📊', 'The chart of tyre pressures', 'To 2009', [
+      'A laminated wall chart of recommended pressures by make and model, going up to 2009, curling at three corners and load-bearing.',
+      'Every car built since is dealt with by a man looking at the car for two seconds and saying a number. He has never been wrong. The chart stays up because it is the sort of thing a wall should have on it.']);
+  },
+  tyreCalendar() {
+    insp('📅', 'The calendar from the parts supplier', 'February', [
+      'A free calendar from a parts wholesaler, still on February, showing a photograph of an exhaust manifold on a black background lit like it is being sold to a jury.',
+      'February of which year is not printed anywhere on it, and this is the single most researched question anybody from the fourth floor has ever brought back from this street.']);
+  },
+  tyreCerts() {
+    insp('📜', 'The certificates', 'Framed, four of them', [
+      'Four certificates in clip frames: two trade qualifications, one health and safety, and a fourth that on close inspection is a swimming award from 1988 belonging to somebody with the same surname.',
+      'It has been on that wall longer than the business has been at this address. It came off the wall of the last unit and it will go on the wall of the next one.']);
+  },
+  /* THE RADIO. The one object on this map with a running order rather than a
+     random pick: it walks the same six-step cycle a station walks, so standing
+     here long enough is the joke, and the joke is that it is EXACTLY like
+     standing in a tyre place long enough. The song is at the end because the
+     song is always at the end. */
+  tyreRadio() {
+    const n = G.flags.radioAt || 0;
+    G.flags.radioAt = n + 1;
+    const bit = [
+      ['The travel. There is a delay on the A-road out of town, which there is, and which there has been since a set of temporary lights went up in a month nobody can now name.',
+       'The presenter reads the name of the road slightly wrong. Nobody in the bay reacts. It is not their road.'],
+      ['A phone-in. A man called Baz is explaining, at length, why the bins have gone to three-weekly, and he is broadly correct and completely unbearable, and the presenter agrees with him in a voice that is trying to get to a jingle.',
+       'One of the lads says “he’s not wrong” to nobody in particular. Nobody in particular does not answer.'],
+      ['An advert for a sofa warehouse that has been closing down since the second Blair government. Four seconds of a man shouting a percentage.',
+       'Then an advert for a funeral plan, immediately, with no gap. The station does this all day and has never once noticed.'],
+      ['The travel again. The same road. The same lights. The presenter reads it with slightly less conviction this time, like somebody being made to repeat themselves in an argument they have already lost.'],
+      ['The phone-in again, different man, same bins. He gets ninety seconds. Baz got four minutes. Somewhere in this town Baz is furious about that and nobody will ever know.'],
+      ['And then, without warning, THE SONG. The one that has been on this station since the unit opened, that everybody in the bay knows every word of and nobody would admit to owning.',
+       'Two of the lads sing the third line. Not the chorus — the third line. It is completely involuntary and they are both slightly annoyed about it.',
+       'This is the correct way to hear music and nobody has done it on purpose since about 1994.'],
+    ][n % 6];
+    if (n % 6 === 5 && !G.flags.radioSong) { G.flags.radioSong = true; Ach.get('a_radio'); }
+    insp('📻', 'The radio', 'Same station since the unit opened', bit);
+  },
+  tyrePartWorns() {
+    insp('🛞', 'The part-worns', 'Legal, mostly', [
+      'A wall of second-hand tyres stacked to head height and sorted by a system that is real, is not written down anywhere, and would take a stranger about four years to learn.',
+      'Chalked on the side of one of them, in the shorthand of a man who is not expecting to be read by you: “PLD 4 THU — DO NOT.” Nobody has touched it. Nobody is going to.']);
+  },
+  tyreRamp() {
+    insp('🚗', 'The pool car, up on the ramp', 'Vehicle 1 of 1', [
+      'It is the pool car. It is eight feet in the air with its wheels off, its sills going brown in a way that is being described to somebody on the phone right now as “an advisory”, and a magnetic light hanging off its floorpan.',
+      'From underneath, a voice you do not know says a number, and a voice at the door says a different, smaller number back, and neither of them is talking to you.',
+      'It will be back in its bay by four. It always is. Nobody on the fourth floor has ever once wondered how.']);
+  },
+  /* The spike. Eleven invoices, none paid, and the only thing in this game you
+     can settle out of your own pocket for somebody who did not ask. */
+  tyreSpike() {
+    if (G.flags.paidInvoice) {
+      return insp('🧾', 'The invoice spike', 'Ten outstanding', [
+        'Ten now. The one you paid is folded over the top of the spike rather than on it, because he did not know where else to put a thing that had been dealt with.',
+        'He has not mentioned it to anybody and he is not going to. Neither of you has said the word “favour” and neither of you is going to do that either.']);
+    }
+    insp('🧾', 'The invoice spike', 'Eleven outstanding', [
+      'A steel spike on a shelf by the door with eleven yellow carbon copies on it, and every single one of them says CALLHALL SERVICES at the top in a hand that has got worse each time.',
+      'The oldest is four years old. The MOT, twice. Two exhausts. A wheel bearing. A tyre, and then the same tyre again, six weeks later, which tells its own story about a kerb on Aldergate Rise.',
+      'Nobody has chased them. Terry sends a card at Christmas. That is the arrangement, and both parties have been quietly furious about it for so long that it has become a friendship.'],
+      [{ t: 'Pay the oldest one yourself. (£48)', to: null, if: () => P.money >= 48, do() {
+          G.flags.paidInvoice = true;
+          Player.mod({ money: -48, patience: -2, rep: 6 });
+          Item.give('invoice');
+          Ach.get('a_invoice');
+          UI.toast('🧾', 'He looks at the money, then at you, then at the money. He does not ask which department. He writes PAID across it and gets the date wrong by a year.', 'gold');
+        } },
+       { t: 'Take a photograph of it for Terry.', to: null, do() {
+          UI.toast('📷', 'You will not send it. You know you will not send it. You take it anyway, which is what everybody does with evidence of something that is nobody’s fault.');
+        } },
+       { t: 'Look at something else.', to: null }]);
+  },
+  tyreCompressor() {
+    insp('🌬️', 'The compressor', 'On, always', [
+      'It cuts in about every ninety seconds, for eleven seconds, at a volume that would stop a meeting dead.',
+      'Nobody in this building has heard it for years. You will hear nothing else for the rest of the time you are in here, and on the way out you will realise you had stopped hearing it too, about four minutes ago.']);
+  },
+  tyreGranules() {
+    insp('📦', 'The bag of granules', 'For spills', [
+      'A split paper sack of absorbent granules, the smell of which is the smell of every garage, every school corridor after an incident, and one specific Tuesday in 2003 you had entirely forgotten until this second.']);
+  },
+  tyreDrum() {
+    insp('🛢️', 'The oil drum', 'Waste', [
+      'A blue drum of waste oil with a funnel in the top and a tide mark, collected by a man in a tanker on a schedule nobody here has ever had to think about.',
+      'It is the single best-run waste stream on this map, it costs this business nothing, and the council has spent four years failing to do the same thing with cardboard.']);
+  },
+
+  /* ---- UNIT 6 ---------------------------------------------------------
+     No staff, no counter, no transaction. The room is a stratigraphy and the
+     acts are read back to front: everything nearest the door is now, and
+     everything at the back is 2011. The gag is that the current business is
+     never stated by anything except one line on one clipboard. */
+  sixOut() { Sfx.door(); Levels.take('sixOut'); },
+  sixConservatory() {
+    insp('🪟', 'The conservatory sample panel', 'Anthracite grey', [
+      'A three-foot square of double-glazed unit in an aluminium frame, screwed to the back wall at the height of a man’s chest so that a man could tap it and say “that’s your twenty-eight mil, that is”.',
+      'Nobody has tapped it since 2011. You are absolutely going to tap it.'],
+      [{ t: 'Tap it.', to: null, do() {
+          Player.mod({ patience: 2 });
+          UI.toast('🪟', 'It goes “tok”. It is an extremely satisfying “tok”. You understand, briefly and completely, the entire conservatory industry.');
+        } },
+       { t: 'Do not tap it.', to: null, do() { UI.float('You will be back.', '#9fb3c8'); } }]);
+  },
+  sixLaminate() {
+    insp('📄', 'A laminated sheet', 'Sorry!', [
+      'A4, laminated, in a hand that slopes: “OUT OF ORDER — sorry!”',
+      'There are nine of these in this unit. One is on a wall. One is on the floor. One is on a door that has no lock, no handle and no other side.',
+      'And one of them, and you will need a moment with this, is laminated over the top of another laminated sheet that also says OUT OF ORDER — sorry!']);
+  },
+  sixFireExit() {
+    insp('🚪', 'The fire exit sign', 'Green, running man', [
+      'A running man, an arrow, and forty years of building regulations, pointing confidently and directly at a wall.',
+      'Behind that wall is Bellhaven Tyre & Exhaust. In the event of a fire the correct procedure, as signed, is to become a tyre place.']);
+  },
+  sixTimetable() {
+    insp('🗓️', 'The class timetable', 'Blank', [
+      'A whiteboard grid, professionally printed, Monday to Sunday, six slots a day, ruled off in permanent marker.',
+      'Every cell is empty except Wednesday at seven, which says “WED 7” in the same permanent marker, which is not information.']);
+  },
+  sixGlazing() {
+    insp('📦', 'The offcuts of double glazing', 'Stacked, 2011', [
+      'Nine offcuts of sealed unit stood on edge against the back wall with a bit of carpet under them so they do not chip.',
+      'Whoever put the carpet under them was being careful with something they were about to walk away from forever, and that is the single most human object in this unit.']);
+  },
+  sixBrochures() {
+    insp('📕', 'The brochure stand', 'Please take one', [
+      'A wire stand of glossy brochures for conservatories, sun lounges and orangeries, with a photograph on the front of a family sitting in weather Britain has had twice.',
+      'The finance table on the back page quotes an APR that makes you put it down and then, four seconds later, pick it up again to check.'],
+      [{ t: 'Take one.', to: null, do() {
+          UI.toast('📕', 'You take a brochure for a conservatory you cannot afford for a house you do not own. It will live in the pool car for two years.');
+        } },
+       { t: 'Please take none.', to: null }]);
+  },
+  sixBall() {
+    insp('🔵', 'One ball', 'Blue', [
+      'One soft play ball, blue, alone, forty feet from anything, in a unit that has not had a ball pit in it since 2019.',
+      'It is not in a corner. It is in the middle of the floor. Somebody has swept round it, repeatedly, over a period of years.'],
+      [{ t: 'Kick it.', to: null, do() {
+          Player.mod({ patience: 4 });
+          UI.toast('🔵', 'You kick it. It goes about nine feet and stops, and you look at where it has stopped, and you go and put it back where it was.');
+        } },
+       { t: 'Leave the ball.', to: null }]);
+  },
+  sixNetting() {
+    insp('🥅', 'The netting', 'Still bolted', [
+      'A run of soft play netting, the good stuff, rated and certificated, still bolted to the floor with resin anchors that would take an angle grinder and an afternoon.',
+      'Everything cheap about that business left in a van. Everything expensive about it is still here, which is how you can date every unit on this street: look for what was too much trouble to remove.']);
+  },
+  sixDumbbell() {
+    insp('🏋️', 'A dumbbell, 4kg', 'The evidence', [
+      'One dumbbell. Four kilograms. Pink. In a unit whose vinyl says, on the outside, in letters three feet high, BELLHAVEN STRENGTH & CONDITIONING.',
+      'It is the only piece of gym equipment in this unit that is not a rowing machine, and there is one rowing machine.']);
+  },
+  sixRower() {
+    insp('🚣', 'The rowing machine', 'Plugged in', [
+      'A rowing machine, quite a good one, plugged into a wall socket and switched on at the wall, with a monitor showing a single flashing zero.',
+      'The seat runs freely. The chain is oiled. Somebody looks after this and is not here.'],
+      [{ t: 'Have a go. (6 min.)', to: null, do() {
+          G.minutes += 6; Player.mod({ energy: -6, patience: 6 });
+          UI.toast('🚣', 'Six minutes. Five hundred metres. You get off it feeling wildly better than you expected and slightly worse than you have admitted.');
+        } },
+       { t: 'You are in work clothes.', to: null }]);
+  },
+  sixTable() {
+    insp('🪑', 'The folding table', 'Reception', [
+      'A wallpaper pasting table with a card reader taped to it, a roll of blue paper towel, and a plastic tub with £15 of float in it, entirely unattended, in an unlocked unit, on a Tuesday afternoon.',
+      'Nothing has ever been taken. Everybody who could take it drinks in the club four doors down and would have to keep doing that afterwards.']);
+  },
+  /* The one line in this unit that says what the unit currently is, and it is
+     on a clipboard, in biro, at knee height. */
+  sixSheet() {
+    if (!G.flags.knowUnitSix) {
+      G.flags.knowUnitSix = true;
+      Ach.get('a_unitsix');
+      return insp('📋', 'The signing-in sheet', 'Please sign in', [
+        'A clipboard. Columns for NAME, TIME IN, TIME OUT. Twenty-two lines, four of them filled, all four this morning, all four in the same biro.',
+        'And along the top, printed, small, the only place in this entire unit where the current business writes its own name down:',
+        '“BELLHAVEN BARBELL CLUB (formerly Bellhaven Strength & Conditioning) (formerly Fitness Unit 6) — members only, keycode on the group chat, PLEASE do not tell the landlord we are open.”',
+        'The vinyl on the front is a gym. The unit is a club. It has been a club, quietly, under four different signs, for eleven years, and every single one of those signs was true for about a fortnight.']);
+    }
+    insp('📋', 'The signing-in sheet', 'Four in this morning', [
+      'Four names, all in one biro, none of them in the same handwriting as the last four, which means one person signs everybody in and that person got here first and has already gone.',
+      'You could put your name down. You would then be a member of a club whose keycode you do not have, in a unit that officially sells conservatories.'],
+      [{ t: 'Sign in.', to: null, do() {
+          Player.mod({ patience: 4 });
+          UI.toast('📋', 'You write your name, the time, and — after a pause you will think about later — a time out that is four minutes from now. It is the most optimistic thing you have written all year.');
+        } },
+       { t: 'Do not join the club.', to: null }]);
+  },
+
+  /* ---- THE WORKING MEN'S CLUB -----------------------------------------
+     A gate, then a wall. Getting in costs a name and any name will do; being
+     in is a reading exercise, and the thing being read is a committee. */
+  clubOut() { Sfx.door(); Levels.take('clubOut'); },
+  clubBooth() {
+    insp('🪟', 'The doorman’s booth', 'Manned 12 till 12', [
+      'A hardboard booth the size of a wardrobe, with a hatch, a stool, a fan heater and a folded newspaper on the ledge, folded to the bit he is doing rather than the bit he is reading.',
+      'He is not security. There is nothing here to secure. He is the mechanism by which this room knows who is in it, which is a completely different job and a much older one.']);
+  },
+  clubBook() {
+    insp('📖', 'The signing-in book', 'Guests must be signed in by a member', [
+      'A hardback ledger, ruled columns, GUEST and SIGNED IN BY, going back to a first entry in 1974 which is in fountain pen.',
+      'You run your eye down the current page. Then the page before. Then, with a growing feeling, the page before that.',
+      'Every guest in this book for the last four years has been signed in by Terry. Every one. Hundreds. In eleven different handwritings, because Terry does not personally do the writing, and in one case in what is unmistakably a child’s.',
+      'Terry has not been here since March.']);
+  },
+  /* Seven items, chained rather than paged, because minutes are a thing you
+     are made to go THROUGH. Item 7 is the payload and the achievement. */
+  clubMinutes() {
+    const item = (n, lines, next) => ({
+      text: lines,
+      choices: [next
+        ? { t: 'Item ' + (n + 1) + '.', to: next }
+        : { t: 'Close the folder.', to: null, do() {
+            if (!G.flags.readMinutes) { G.flags.readMinutes = true; Ach.get('a_minutes'); }
+          } },
+        { t: 'Stop reading the minutes.', to: null }],
+    });
+    const seven = item(7, [
+      'ITEM 7: THE CEILING TILES IN THE FUNCTION ROOM.',
+      '“Carried forward to the next meeting.” Under it, in a different pen: “Carried forward to the next meeting.” Under that, in a third pen and slightly larger, as if to settle it: “CARRIED FORWARD.”',
+      'You count back through the folder. Item 7 has been carried forward at every meeting since March 2019, which is forty-eight meetings, which is more times than this committee has discussed anything it has ever resolved.',
+      'The ceiling tiles are fine. You looked at them on the way in. The ceiling tiles have always been fine. Item 7 is not about the ceiling tiles and everybody on this committee knows exactly what item 7 is about and not one of them is ever going to say it out loud, and so it will be carried forward until the last of the six of them dies.',
+    ], null);
+    const six = item(6, ['ITEM 6: RAFFLE.', '“Agreed to continue the raffle.” The raffle has continued since 1974 and has never been on any agenda as anything other than continuing.'], seven);
+    const five = item(5, ['ITEM 5: THE STEPS.', '“Agreed to get a price for the steps.” A price was got for the steps in 2016, 2018 and 2021. Three prices exist. The steps do not know about any of this and continue to be steps.'], six);
+    const four = item(4, ['ITEM 4: SNOOKER.', '“The league has asked about Wednesdays. Agreed to say we would look at Wednesdays.” They did not look at Wednesdays.'], five);
+    const three = item(3, ['ITEM 3: CORRESPONDENCE.', '“One letter, from the brewery. Read out. No action.” Nobody has ever recorded what was in the letter from the brewery, at any meeting, in fifty years.'], four);
+    const two = item(2, ['ITEM 2: MATTERS ARISING.', '“Matters arising from the previous minutes: none arising.” This has been the entirety of item 2 for four years, which means either nothing has arisen since 2021 or item 2 has quietly become a ceremony.'], three);
+    const one = item(1, ['ITEM 1: APOLOGIES.', '“Apologies received from D. Apologies received from R. Apologies from B accepted with regret.”', 'Nobody is ever named. The committee is six people and has been the same six people since before this building was wired, and they use initials, and they use them for each other, in a room they are all in.'], two);
+    insp('📌', 'The committee minutes', 'Pinned, in a plastic folder', [
+      'A plastic display folder on the noticeboard containing the minutes of the last four years of committee meetings, printed one side, in a font somebody chose in about 1998 and has defended since.',
+      'Seven items. It is always seven items. The seventh is the one.'],
+      [{ t: 'Read them properly.', to: one },
+       { t: 'You have your own meetings.', to: null }]);
+  },
+  clubFixtures() {
+    insp('🗓️', 'The fixture list', 'Snooker · Darts · Doms', [
+      'Three leagues, home and away, printed in a grid with the away teams in italics and the cup rounds in bold, and the whole thing folded twice at some point and never flattened.',
+      'The dominoes league has eleven teams in it. Eleven. In this town. There are more competitive dominoes players within a mile of this room than there are people on your floor, and you have never met one of them, and one of them almost certainly sold you a car.']);
+  },
+  clubHonours() {
+    insp('🏆', 'The honours board', 'Gold leaf on black', [
+      'Two columns of names in gold on a black board, hand-painted, one line per year, going back to 1961.',
+      'The same surname appears in 1974, 1998 and 2019, which is a grandfather, a father and a daughter, and the daughter’s line is the only one on the board that has been painted by somebody who was clearly being paid properly.',
+      'There is one blank line at the bottom, primed and ready. There always is. That is how you keep a board like this alive: you leave room.']);
+  },
+  clubBanned() {
+    insp('🚫', 'The banned list', 'By order of the committee', [
+      'A single sheet in a frame, which tells you the committee expected it to be a long list and it never was.',
+      'One name. Struck through with a single line, and then — you have to get quite close to the glass for this — the strike-through has itself been crossed out.',
+      'So he was barred, and then he was unbarred, and then somebody rebarred him, and the frame has not been opened since, which means it has been settled that way for so long that everybody has stopped knowing which state is current, including him, who drinks here on Fridays.']);
+  },
+  clubRaffle() {
+    if (Item.has('raffle')) {
+      return insp('🎟️', 'The raffle', 'Blue book, number 47', [
+        'You have 47. The draw is at the Christmas do. You are not going to the Christmas do.',
+        'The prize this month is a meat hamper, a bottle of something amber and, third prize, a voucher for a hand car wash four doors down, which will be won by somebody who does not drive.']);
+    }
+    insp('🎟️', 'The raffle', '£1 a strip', [
+      'A blue cloakroom-ticket book and a jam jar, unattended, on the ledge under the noticeboard, in a room that has been leaving a jam jar of money out since 1974.',
+      'The prizes are written on an envelope: a meat hamper, a bottle of something amber, and — third prize, and somebody has thought hard about this — a voucher for the car wash on the corner.'],
+      [{ t: 'Buy a strip. (£1)', to: null, if: () => P.money >= 1, do() {
+          Player.mod({ money: -1, patience: 4 });
+          Item.give('raffle');
+          UI.toast('🎟️', 'You tear off a strip and put a pound in a jar in an empty room. Nobody will ever check that you did. That is not the same as nobody knowing.');
+        } },
+       { t: 'Not your raffle.', to: null }]);
+  },
+  clubMeter() {
+    insp('🎛️', 'The meter for the light over table two', '20p · 30 min', [
+      'A coin meter on the wall, twenty pence for half an hour of light over table two. It is the only object in Bellhaven that still wants a coin and it is completely unashamed about it.',
+      'Table one’s light is on a switch and has been since 2004. Nobody has ever moved table two onto the switch. There is a reason and it is item 7.'],
+      [{ t: 'Put 20p in.', to: null, if: () => P.money >= 0.2, do() {
+          Player.mod({ money: -0.2 });
+          G.flags.clubLightOn = true;
+          UI.toast('🎛️', 'A clunk, a hum, and half an hour of light over an empty snooker table, in an empty room, in the middle of a Tuesday. It is one of the best things you have ever bought.');
+        } },
+       { t: 'Leave it dark.', to: null }]);
+  },
+  clubTableOne() {
+    insp('🎱', 'Table one', 'Lit', [
+      'Full size, re-clothed within living memory, ironed, brushed and covered with a fitted sheet everywhere except where somebody has turned the sheet back to look at it.',
+      'The rest is under the cushion at the bottom right, where the rest lives, where it has always lived, and where every single person who plays here would find it in the dark.']);
+  },
+  clubTableTwo() {
+    insp('🎱', 'Table two', G.flags.clubLightOn ? 'Lit, for thirty minutes' : 'Dark', [
+      G.flags.clubLightOn
+        ? 'Lit. Twenty pence of light on a cloth that has a shine down one side from forty years of the same shot, and a fine even layer of chalk dust you can see because there is finally something to see it in.'
+        : 'Dark, because the light over it is on a meter, and it is a Tuesday, and nobody has put twenty pence in a meter in this room since Sunday night.',
+      'The cloth is worse than table one’s and everybody plays on it anyway, because table one is table one, and this is exactly the same arrangement as the good chair on the fourth floor, and the same six people are enforcing it.']);
+  },
+  clubBar() {
+    insp('🍺', 'The bar', 'Opens at six', [
+      'Nine feet of it, wiped, with the towels on the pumps and the optics turned to the wall, and a laminated card by the till that says CARD MACHINE IS BACK — with a small hand-drawn party hat next to it.',
+      'The price list behind is written in chalk and the top figure on it is lower than the cheapest thing on the Bellhaven Arms’ chalkboard by ninety pence, which is the entire economic explanation for this room’s continued existence.']);
+  },
+  clubTill() {
+    insp('💷', 'The till, which is a drawer', 'Not a till', [
+      'It is a drawer. It has a cutlery insert in it. The tenners are under the insert and the float is in the bit for teaspoons.',
+      'Fifty-one years of accounts have gone through a cutlery insert and been correct to the penny every single time, which is more than can be said for the reconciliation system on your floor, which cost eleven thousand pounds.']);
+  },
+  clubMan() {
+    insp('🧓', 'The man at the end of the bar', 'The bar is shut', [
+      'The bar is shut. There is a man at the end of it. He has a glass, and it is empty, and it has been empty for some time, and he is not waiting for anybody to fill it.',
+      '“You’re one of Terry’s,” he says, without turning round. It is not a question and you have not been asked to confirm it.',
+      'He goes back to whatever he was doing before you came in, which was nothing, in a large empty room, happily, for as long as he likes. There is not a single person on your floor who could do that and every one of them thinks they want to.']);
+  },
+  clubChairs() {
+    insp('🪑', 'The chairs nobody moves', 'Four, in a row', [
+      'Four chairs against the wall, facing the room, spaced the way chairs get spaced when the same four people have sat in them for years and each one has quietly optimised.',
+      'The second from the left has a cushion on it that nobody else uses. It is not marked. It does not need to be.']);
+  },
+  clubFloor() {
+    insp('🕺', 'The dance floor', 'Sprung', [
+      'A rectangle of parquet in a sea of carpet, sprung underneath, and it gives about four millimetres when you step on it, which you can feel through work shoes and which is the entire reason it exists.',
+      'It has been danced on at eleven hundred functions and it will be danced on at your leaving do, by nine people, badly, to a song chosen by somebody in the office who has never been in this building.']);
+  },
+  clubFunction() {
+    insp('🚪', 'The function room', 'Available for hire', [
+      'Double doors with a laminated card: AVAILABLE FOR HIRE — NO CHARGE FOR MEMBERS’ FAMILY FUNERALS. That second clause has never been amended and is doing more good in this postcode than any policy on your intranet.',
+      'Through the crack: forty stacked chairs, a wallpaper table, a hatch to a kitchen, and eleven feet of bunting nobody has taken down since something in the summer.']);
+  },
+  clubStack() {
+    insp('🪑', 'The stack of chairs', 'Forty', [
+      'Forty stacking chairs in four stacks of ten, and one stack of eleven, which is either a mistake from a leaving do or the way somebody has decided it is now done.',
+      'These are the chairs of every retirement, every wake and every eighteenth this town has had since 1974, and they have never been anywhere else, and they never will be.']);
+  },
+
+  /* ---- SUNSEEKERS -----------------------------------------------------
+     A corridor. Everything that happens here happens behind a door. */
+  tanOut() { Sfx.door(); Levels.take('tanOut'); },
+  tanWarning() {
+    insp('⚠️', 'The warning notice', 'Statutory', [
+      'The statutory notice, in the smallest legal size, about skin type, exposure and the under-eighteens, next to a hand-written sign in marker four times the size that says PLEASE WIPE THE BED.',
+      'Everybody in this building obeys the second one.']);
+  },
+  tanPrices() {
+    insp('📋', 'The price list', 'Per minute', [
+      'Priced by the minute, in three tiers, with a fourth column of package deals whose arithmetic rewards buying an amount of ultraviolet light that is difficult to defend.',
+      'At the bottom: SPRAY — BOOTH 3 — ASK. Booth 3 has a laminated sheet on it. You are ahead of me.']);
+  },
+  tanBeach() {
+    insp('🏝️', 'The photograph of a beach', 'Adhesive vinyl', [
+      'A vinyl panel of a beach, applied to the wall of a corridor with no window in it, and starting to lift at the top left corner where somebody has picked at it while waiting.',
+      'The beach is in Thailand. Nobody who has ever stood in this corridor has been to Thailand. That is not a joke about anybody; it is simply true and quite sad and the panel is doing its best.']);
+  },
+  tanDesk() {
+    insp('🧾', 'The desk', 'Back in 5 mins', [
+      'A desk with a card machine, a jar of pens, a tub of goggles, and a folded sign that says BACK IN 5 MINS in a way that suggests the sign is load-bearing and permanent.',
+      'The chair behind it is warm. There is a mug on the desk with tea in it that is not cold. Somebody is forty feet away doing something and will be back long after you have gone.']);
+  },
+  tanBell() {
+    const n = (G.flags.tanBell || 0) + 1;
+    G.flags.tanBell = n;
+    const lines = n === 1
+      ? ['You ring the bell. It is a good bell, the shopkeeper kind, with a proper single note to it.', 'Nothing happens. Somewhere behind a door, a timer runs.']
+      : n === 2
+        ? ['You ring it again. The note is identical. It is a very well-made bell.', 'Still nothing. You become aware that you are now a person who has rung a bell twice.']
+        : n === 3
+          ? ['Three times. From behind booth two, a voice you cannot identify the gender or age of says, pleasantly, muffled through a door and a fan: “WON’T BE A SEC.”', 'It will be a sec. It will be several thousand secs.']
+          : ['You do not ring it a fourth time. You have decided this about yourself, standing in a corridor, alone, in front of a bell, and it is possibly the only decision you will make all day that holds.'];
+    insp('🔔', 'The bell', n >= 3 ? 'Won’t be a sec' : 'Please ring for service', lines);
+  },
+  /* Three doors. One is running, one has somebody's life outside it, and one
+     is out of order, and you can only ever go in the one that is free —
+     which is booth one, and which shows you nothing at all. */
+  tanBoothOne() {
+    if (G.flags.usedBooth) {
+      return insp('🚪', 'Booth one', 'Yours, twelve minutes ago', [
+        'The door is ajar and the fan is still running itself down, which it does for four minutes afterwards, which is longer than anybody stays to hear.',
+        'You wiped the bed. You did not need to be told twice.']);
+    }
+    insp('🚪', 'Booth one', 'Free', [
+      'A door with a green light over it, and behind the door a room you cannot see into, containing a machine you cannot see, in a building whose entire proposition is that you will not be looking at any of it.',
+      'Twelve minutes is the shortest they sell. Twelve minutes of light, alone, in a box, with a fan, for six pounds.'],
+      [{ t: 'Have twelve minutes. (£6)', to: null, if: () => P.money >= 6, do() {
+          G.flags.usedBooth = true;
+          G.minutes += 16; Player.mod({ money: -6, energy: 4, patience: 10 });
+          if (!Item.has('loyalty')) Item.give('loyalty');
+          Ach.get('a_booth');
+          UI.toast('🌞', 'The door shuts. The fan comes on. Nothing else is visible for twelve minutes and it is, without any competition at all, the most restful thing that has happened to you this week.', 'gold');
+        } },
+       { t: 'Look at the other doors.', to: null }]);
+  },
+  tanBoothTwo() {
+    insp('🚪', 'Booth two', 'Red light · 4 min remaining', [
+      'Red light. A fan. A digital timer above the door reading down through four minutes in a corridor with nobody in it to watch it.',
+      'And, faintly, through the door and under the fan, somebody singing. Not performing — the other kind, the kind people do when they are certain they are alone, badly, half the words, to something that is not playing in the room.',
+      'You are going to be somewhere else when that door opens. You owe them that.']);
+  },
+  tanBoothThree() {
+    insp('🚪', 'Booth three', 'Spray · out of order', [
+      'The spray booth. A4, laminated, sloping hand: “OUT OF ORDER — sorry!”',
+      'It is the same laminator, the same font and the same apology as the nine sheets in Unit 6, four doors down.',
+      'One person on this street owns a laminator. Everything that has ever gone wrong on Fenn Street has been announced by that one person, apologising, on behalf of businesses they have nothing to do with, for years.']);
+  },
+  tanThings() {
+    insp('🧳', 'Somebody’s things outside booth two', 'Not yours', [
+      'A coat, a lanyard face-down, a set of car keys, a phone screen-down, and a supermarket bag with a pint of milk in it, all in a neat pile on the floor outside a door with a red light over it.',
+      'Every object in that pile is a decision to trust a corridor, and the corridor has never once let anybody down, and none of them knows that about it.']);
+  },
+  tanGoggles() {
+    insp('🗑️', 'The bin of used goggles', 'Sterilised, allegedly', [
+      'A tub of small plastic goggles, and beside it a second tub for used ones, and between the two tubs a distance of about four inches and an enormous amount of faith.']);
+  },
+
+  /* ---- THE STREET, REVISITED ------------------------------------------
+     Six frontages that used to be a paragraph and are now a door, plus one
+     skip. */
+  refitSkip() {
+    const load = pick([
+      'Today it contains: a bath, four lengths of skirting, a door, and a rolled carpet that has been rained on and is now a geological feature.',
+      'Today it contains: the same bath. The skirting has gone. Nobody saw it go and nobody took it, and the bath is now demonstrably lower in the skip than it was, which is not physically possible.',
+      'Today it contains: almost nothing, and a single radiator, laid diagonally, in a way that says somebody emptied it at six this morning and immediately started again.',
+      'Today it contains: somebody else’s kitchen. It is not from this unit. It is not from this street. It got here in the night and it will be gone in the night.',
+    ]);
+    insp('🚛', 'The skip', 'Permit displayed (2019)', [
+      'A yellow skip on the road outside the unit that is always being refitted, with a permit cable-tied to it that expired in 2019 and a hi-vis vest tied to the corner nearest the traffic.',
+      load,
+      'It has never been full and it has never been empty. Two men come, and it goes, and an identical one is there the following morning, and this has now happened enough times that it has stopped being a coincidence and started being the business.']);
+  },
+
   /* --- THE HIGH STREET --- */
   nailedIt() {
     insp('💅', 'Nailed It', 'Open till six', [
       'A nail bar with a name the owner clearly enjoyed choosing, and a laminated price list that has not changed since it opened.',
-      'Half the fourth floor gets their lunch-break gel done in here. The other half pretends not to know that.'],
-      [{ t: 'Go in. (20 min.)', to: null, do() {
-          G.minutes += 20; Player.mod({ patience: 6, energy: -2 });
-          UI.toast('💅', 'Twenty minutes, and a colour you will not remember choosing.');
-        } },
+      'Half the fourth floor gets their lunch-break gel done in here. The other half pretends not to know that.',
+      /* The twenty minutes used to be spent out here on the pavement. They are
+         spent in there now, on a bench, in front of three people, which is a
+         different twenty minutes entirely. */
+      Acts.nailsRoom() === 3
+        ? 'Through the glass, three heads you know, in a row, none of them facing the window.'
+        : 'Through the glass: three chairs, all occupied, and a shape in the first one that is either a stranger or is going to make this afternoon much more interesting.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('nailsDoor'); } },
        { t: 'Not today.', to: null }]);
   },
   shopSign() {
@@ -1254,7 +1800,7 @@ const Acts = {
         'A road gully. Somebody’s keys went down it in 2019 and the story is still told with the wrong ending.',
         'A road gully, freshly jetted, which is the single most competent thing in the postcode.'])]);
   },
-  trolley() {
+  strayTrolley() {
     insp('🛒', 'The trolley', 'Two hundred yards from any shop that owns one', [
       'A supermarket trolley, upright, empty, and nowhere near a supermarket.',
       'Nobody has ever seen one being moved. They are only ever already somewhere new, like herons.'],
@@ -1321,18 +1867,64 @@ const Acts = {
   },
   tyres() {
     insp('🛞', 'Bellhaven Tyre & Exhaust', 'Unit 4', [
-      'A roller shutter, a stack of part-worns, and a radio that has been on the same station since the unit opened.',
-      'They do the pool car’s MOT. They have done it eleven times. They have never once been paid on time, and they have never once mentioned it, and Terry sends them a card at Christmas.']);
+      'A roller shutter, up, and past it a bay with more empty floor in it than anywhere else on this street, because the thing that goes in it is not people.',
+      'They do the pool car’s MOT. They have done it eleven times. They have never once been paid on time, and they have never once mentioned it, and Terry sends them a card at Christmas.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('tyreDoor'); } },
+       { t: 'Walk on.', to: null }]);
   },
   unitSix() {
-    insp('🏋️', 'Unit 6', 'Currently a gym', [
+    insp('🏋️', 'Unit 6', G.flags.knowUnitSix ? 'Currently a club' : 'Currently a gym', [
       'Unit 6 is a gym. Before that it was a soft play, before that a gym, before that a place that sold conservatories, and before that a gym.',
-      'The sign is always vinyl and always new. The unit is always the unit.']);
+      'The sign is always vinyl and always new. The unit is always the unit.',
+      G.flags.knowUnitSix
+        ? 'It is not a gym. You have been in and you have read the clipboard and you know exactly what it is, and the vinyl on the front of it is still, magnificently, a lie.'
+        : 'The door is on the latch. There is nobody at the front of it, and there is nobody at the back of it, and this is apparently fine.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('sixDoor'); } },
+       { t: 'Walk on.', to: null }]);
   },
+  /* THE ONE FRONTAGE ON THIS STREET WITH NO DOOR IN IT, on purpose. A hand
+     car wash is not a shop: it is a lane, and the entire transaction is
+     conducted through a window you never wind all the way down. So this act
+     has two halves and which one you get is decided by whether you are sitting
+     in something — see the `fromCar` furnishing in data/levels.js and
+     Interact.scan, which takes the E key off the door handle when you pull up
+     alongside. On foot there is nothing here for you and the lads know it. */
   carWash() {
-    insp('🧼', 'The hand car wash', '£6 / £9 / £12', [
-      'Six lads, four jet washes, one length of Astroturf, and a laminated price list with three tiers that nobody has ever been offered a choice between.',
-      'The pool car has been through here twice. Both times it came out cleaner than anything else in the car park and was, within a fortnight, indistinguishable.']);
+    if (!Cars.driving) {
+      return insp('🧼', 'The hand car wash', 'On foot', [
+        'Six lads, four jet washes, one length of Astroturf, and a laminated price list with three tiers that nobody has ever been offered a choice between.',
+        'You have arrived at a car wash without a car. Two of them look up. One of them looks at the space beside you where a car would be. Nobody says anything, because there is nothing to say, and the sponge does not stop moving for a second.',
+        'The pool car has been through here twice. Both times it came out cleaner than anything else in the car park and was, within a fortnight, indistinguishable.']);
+    }
+    if (G.flags.washedToday) {
+      return insp('🧼', 'The hand car wash', 'Already done', [
+        'The same lad walks out, sees the same car, and performs a small physical gesture that means “you have literally just had this done” without using any part of his face.',
+        'You raise a hand. He raises a sponge. The negotiation is complete and neither of you has spoken.']);
+    }
+    insp('🧼', 'The hand car wash', '£6 · £9 · £12', [
+      'You pull onto the Astroturf and a lad is at your window before the handbrake is fully on, which is a level of service the company you work for has spent four years and eleven thousand pounds failing to reproduce.',
+      '“Six, nine or twelve?” The price list is on a board behind him with three tiers on it. Nobody has ever been told what the difference is. Everybody says nine.'],
+      [{ t: '“Nine.” (Everybody says nine.)', to: null, if: () => P.money >= 9, do() {
+          G.flags.washedToday = true;
+          G.minutes += 14; Player.mod({ money: -9, patience: 8 });
+          Ach.get('a_carwash');
+          UI.toast('🧼', 'Fourteen minutes with the engine off, four men working round a car you do not own, and a small towel moment at the end that you did not know you needed. Nine pounds.', 'gold');
+        } },
+       { t: '“Six.”', to: null, if: () => P.money >= 6, do() {
+          G.flags.washedToday = true;
+          G.minutes += 9; Player.mod({ money: -6, patience: 5 });
+          Ach.get('a_carwash');
+          UI.toast('🧼', 'Six. It is identical to the nine. It has always been identical to the nine. Somewhere behind you a man is being charged nine.');
+        } },
+       { t: '“Twelve,” you say, wildly.', to: null, if: () => P.money >= 12, do() {
+          G.flags.washedToday = true;
+          G.minutes += 20; Player.mod({ money: -12, patience: 12, energy: -2 });
+          Ach.get('a_carwash');
+          UI.toast('🧼', 'They do the sills. Nobody does the sills. Two of them stop and look at what the other two are doing to the sills. This is the best the pool car has looked since 2019 and it is on your card.', 'gold');
+        } },
+       { t: 'Wind the window back up and drive off.', to: null, do() {
+          UI.toast('🧼', 'You drive off a car wash forecourt without buying a car wash, which is a thing you can do, and which nobody stops you doing, and which you will think about at half past nine tonight.');
+        } }]);
   },
   sandwichVan() {
     insp('🥪', 'The sandwich van’s pitch', 'Half eleven to one', [
@@ -1418,15 +2010,49 @@ const Acts = {
   },
 
   /* --- FENN STREET, EAST --- */
+  /* THE ONE DOOR OUT HERE WITH A CONDITION ON IT, and the condition is not a
+     clock, an item or a quest — it is a name. Any name. The doorman is not
+     checking, has never checked, and could not check; what he needs is for
+     somebody to have said one, out loud, to him, in the doorway, because that
+     is what a signing-in book is FOR and it never was about the names. The
+     punch line is the book itself and it is inside — see Acts.clubBook. */
   club() {
+    const inside = [{ t: 'Go in.', to: null, do() { Levels.take('clubDoor'); } },
+                    { t: 'Another time.', to: null }];
+    if (G.flags.clubSignedIn) {
+      return insp('🎱', 'The Working Men’s Club', 'Signed in', [
+        'Two snooker tables, a function room, and a committee that has been the same six people since before the building you work in was built.',
+        'He is in the booth. He does not ask you again. He is never going to ask you again, because he has written you down once, and to this room that is now simply a fact about the world.'], inside);
+    }
+    const signed = who => ({
+      text: ['“' + who + ',” he says, and writes it in the book, without looking at the book, or at you, or at the pen.',
+        'He does not check. There is no list to check against. He has been doing this for nineteen years and what he is actually verifying — the only thing anybody in this doorway has ever verified — is that you were prepared to say a name to a man in a booth.',
+        'The hatch stays where it is. He nods at the inner door. You are in.'],
+      choices: [{ t: 'Go in.', to: null, do() {
+          if (!G.flags.clubSignedIn) { G.flags.clubSignedIn = true; Ach.get('a_signedin'); }
+          Levels.take('clubDoor');
+        } }],
+      done() { if (!G.flags.clubSignedIn) { G.flags.clubSignedIn = true; Ach.get('a_signedin'); } },
+    });
     insp('🎱', 'The Working Men’s Club', 'Members and signed-in guests', [
       'Two snooker tables, a function room, and a committee that has been the same six people since before the building you work in was built.',
-      'It is where the leaving dos happen, because it is the only room in Bellhaven that holds forty people and does not charge for it.']);
+      'It is where the leaving dos happen, because it is the only room in Bellhaven that holds forty people and does not charge for it.',
+      'The door is on the latch. Behind a hatch in a booth the size of a wardrobe, a man lowers a folded newspaper and asks, with no hostility whatsoever and no particular interest either: “Who’s signing you in?”'],
+      [{ t: '“Terry.”', to: signed('Terry') },
+       { t: '“Marjorie.”', to: signed('Marjorie') },
+       { t: '“…Nigel?”', to: signed('Nigel') },
+       { t: 'Admit that nobody is.', to: {
+          text: ['“Right,” he says.',
+            'That is the entirety of it. No rule is quoted, no offence is taken, nothing is explained and nothing is refused, because refusing would require a decision and no decision has been made. He goes back to the newspaper.',
+            'You are not barred. You are not anything. You are a person standing in a doorway who has not said a name, and the door will keep being on the latch for exactly as long as that remains true.'] } }]);
   },
   tanning() {
     insp('🌞', 'Sunseekers', 'Sunbeds · nails · spray', [
       'A shopfront in a colour not otherwise found in this town, offering three services of which the second is also available forty feet away on the High Street.',
-      'The two proprietors are civil about this in the way that two people are civil about something for eleven years.']);
+      'The two proprietors are civil about this in the way that two people are civil about something for eleven years.',
+      'You cannot see in. There is no window into a tanning shop, anywhere, ever, and until this second you had never once noticed that.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('tanDoor'); } },
+       { t: 'Walk on.', to: null }]);
   },
   cashAndCarry() {
     insp('📦', 'The cash and carry', 'Trade only', [

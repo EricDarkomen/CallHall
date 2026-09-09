@@ -52,7 +52,13 @@ const ITEMS = {
   cushion:  { n: 'The Good Cushion', e: '🛏️', d: 'Memory foam, contoured, bought by somebody with their own money for their own spine. The chair was never the point.', v: 12, r: 'legendary', slot: 'trinket', eff: { patience: 12, empathy: 2 } },
   /* Off the High Street, from the four units that now have floors. */
   stamps:   { n: 'A Book of Stamps', e: '\ud83d\udcee', d: 'Bought at a counter, in person, after twenty-two minutes, in a transaction that took ninety seconds. You will use two of them.', v: 4.4, r: 'common' },
-  biscuits: { n: 'A Box of Biscuits (bought)', e: '🎁', d: 'The good ones. The foil ones. Bought with your own money for people who will never know it was you.', v: 4, r: 'rare' }
+  biscuits: { n: 'A Box of Biscuits (bought)', e: '🎁', d: 'The good ones. The foil ones. Bought with your own money for people who will never know it was you.', v: 4, r: 'rare' },
+  /* Off Fenn Street, from the units at the back of the block. None of the three
+     is worth anything and all three are worth keeping, which is the correct
+     ratio for a pocket. */
+  raffle:   { n: 'Raffle Ticket, Blue, 47', e: '🎟️', d: 'The draw is at the Christmas do. You will not be at the Christmas do. Somebody will hold this up and say the number twice into a room that is not listening, and 47 will not answer, and that is what happens to 47.', v: 1, r: 'common' },
+  loyalty:  { n: 'Loyalty Card (1 of 10)', e: '🎫', d: 'Ten stamps for a free session. One stamp. The card is good until it goes through the wash, which gives it about nine days, which is eight and a half sessions short.', v: 0, r: 'common' },
+  invoice:  { n: 'Invoice 0113, Marked Paid', e: '🧾', d: 'Yellow carbon copy, PAID written across it in biro by a man who did not want to write it. It is for £48 of work done on a car that is not yours, for a company that is not going to reimburse you. Keep it. It is the only receipt in this game for something that was actually owed.', v: 0, r: 'rare' }
 };
 
 /* ---------------- Skills ---------------- */
@@ -239,9 +245,18 @@ const ACHS = {
   a_pauline: { n: 'Pauline, 2008', e: '🍵', d: 'Get Dave to tell you why he is actually still here.' },
   a_greggs:  { n: 'The Best Thing About This Building', e: '🥐', d: 'Go to the Greggs. Everyone who works here knows.' },
   a_fourteenth: { n: 'The Fourteenth Mug', e: '🍵', d: 'Ask Marjorie about the one facing the wall.' },
-  a_queue:   { n: 'Fifth Of Four', e: '\ud83c\udfe4', d: 'Join the queue in the post office. The only way to observe the mechanism is to become part of it.' },
+  a_postqueue: { n: 'Fifth Of Four', e: '\ud83c\udfe4', d: 'Join the queue in the post office. The only way to observe the mechanism is to become part of it.' },
   a_boughtback: { n: 'Bought Back', e: '\u2615', d: 'Buy a mug from the charity shop. Somewhere, a shelf balances.' },
   a_kebab:   { n: 'The Correct Way To Eat It', e: '\ud83e\udd59', d: 'Get into Bellhaven Kebab, which means being on that street after four, which means not going straight home.' },
+  /* ---- the back of the block: Fenn Street's four units ---- */
+  a_caught:  { n: 'Nobody Saw Anybody', e: '💅', d: 'Be in Nailed It at the same time as all three of them. Nothing is ever said about it, by anyone, again.' },
+  a_invoice: { n: 'Somebody Should', e: '🧾', d: 'Pay one of the pool car\u2019s eleven outstanding invoices out of your own pocket.' },
+  a_radio:   { n: 'They Never Change It', e: '📻', d: 'Stand in the tyre place long enough for the radio to get all the way round to the song.' },
+  a_unitsix: { n: 'The Unit Is Always The Unit', e: '🏋️', d: 'Work out what Unit 6 currently is. There is exactly one piece of evidence and it is not the sign.' },
+  a_signedin:{ n: 'Signed In By Terry', e: '📖', d: 'Get into the Working Men\u2019s Club, which means a member, which means the same member it always means.' },
+  a_minutes: { n: 'Matters Arising', e: '📌', d: 'Read every one of the committee\u2019s minutes on the noticeboard. All of it. Including item 7.' },
+  a_booth:   { n: 'Twelve Minutes Of Nothing', e: '🌞', d: 'Go in a booth at Sunseekers. See nothing. Hear everything.' },
+  a_carwash: { n: 'Six Lads, One Astroturf', e: '🧼', d: 'Get the pool car washed without getting out of the pool car.' },
   a_biscuits: { n: 'Nobody Will Ever Know It Was You', e: '🎁', d: 'Buy the biscuits with your own money and say nothing.' },
   a_mo:      { n: 'Nobody Asks', e: '🧑‍🎓', d: 'Ask Mo whether he is actually alright, and mean it.' },
   a_poop:    { n: 'Listed Building', e: '🧻', d: 'Pay your respects to the only piece of writing in this building that outlived its author’s career.' },
