@@ -670,6 +670,123 @@ const Acts = {
       'The High Street from the inside, which is the same street and a different thing entirely.',
       'A bus goes past. Somebody you half recognise from the second floor walks by without looking in.']);
   },
+  /* --- inside the Bellhaven Arms --- */
+  pubOut() { Sfx.door(); Levels.take('pubOut'); },
+  pubBar() {
+    insp('🍺', 'The bar', 'Open 12–11', [
+      'A bar with the pumps at the near end and a landlord who has already read what you are here for and is not going to say anything about it either way.',
+      'Nobody from the fourth floor drinks here at lunchtime. Everybody has agreed on that without it ever having been discussed, and it is broken about twice a year, spectacularly.'],
+      [{ t: 'One, quickly. (25 min.)', to: null, do() {
+          G.minutes += 25; Player.mod({ patience: 10, energy: -4, money: -4.60 });
+          P.stats.bullshit += 1;
+          UI.toast('🍺', 'Twenty-five minutes and £4.60. You go back up in the lift rehearsing a sentence about the traffic.');
+        } },
+       { t: 'Not at this hour.', to: null }]);
+  },
+  pubOptics() {
+    insp('🥃', 'The optics', 'Behind the bar', [
+      'Bottles upside down in their brackets, and three of them are the same brand at three different prices depending on which shelf you are told they came from.']);
+  },
+  pubBoard() {
+    insp('📝', 'The chalkboard', 'Today’s specials', [
+      'A pie and a pint for the price of a pie and a pint in 2014, written in a hand that has written it a thousand times.',
+      'Under it, smaller: QUIZ TUES 8PM. £1 ENTRY. NO PHONES. The NO PHONES is underlined twice and enforced by a man called Ray.']);
+  },
+  pubTelly() {
+    insp('📺', 'The telly', 'Sound off', [
+      'Mounted in the corner at an angle that suits nobody sitting down, showing a match with the sound off and the subtitles on and half a second behind.']);
+  },
+  pubTable() {
+    insp('🪑', 'A table', 'Quiz corner', [
+      'A table with a beermat under one leg, which is the correct number of beermats and has been for years.'],
+      [{ t: 'Sit down for a bit.', to: null, do() {
+          G.minutes += 10; Player.mod({ patience: 9, energy: 2 });
+          UI.float('Ten minutes.', '#ffb347');
+        } },
+       { t: 'Stand.', to: null }]);
+  },
+  pubBench() {
+    insp('🛋️', 'The bench along the wall', 'Upholstered, once', [
+      'A padded bench along the wall in a red that was chosen to hide things and has been asked to.']);
+  },
+  pubFruit() {
+    insp('🎰', 'The fruit machine', '£100 jackpot', [
+      'A fruit machine in the corner with its volume turned most of the way down, which somehow makes it worse.',
+      'The jackpot is £100. It has been £100 for as long as anybody has looked, which suggests either great luck or none at all.']);
+  },
+  pubGlass() {
+    insp('🪟', 'The etched glass', 'Original, allegedly', [
+      'Etched glass with the name of a brewery that was bought in 1987 by a brewery that was bought in 2004 by a company that does not brew.',
+      'Through it, the High Street, in pieces, at the wrong sizes.']);
+  },
+
+  /* --- inside the bookmakers --- */
+  bookiesOut() { Sfx.door(); Levels.take('bookiesOut'); },
+  bookiesScreens() {
+    insp('📺', 'The screens', 'Sound off', [
+      'Four screens, all on, all silent, showing prices from meetings in four towns nobody in here is going to.']);
+  },
+  bookiesWolves() {
+    insp('📺', 'Wolverhampton', '2:40', [
+      'A man is watching a race in Wolverhampton with the sound off and total concentration.',
+      'He does not look up when you come in and he does not look up when you leave, and both of those are the correct amount of attention to pay a stranger in a bookmaker’s.']);
+  },
+  bookiesChairs() {
+    insp('🪑', 'The chairs', 'Free', [
+      'A row of chairs facing the screens, warm, upholstered and free. You can sit in them without buying anything and nobody will come over.',
+      'This is a fact about the high street and not about gambling, and it is the reason this room matters more than anything sold in it.'],
+      [{ t: 'Sit down where it is warm. (15 min.)', to: null, do() {
+          G.minutes += 15; Player.mod({ patience: 12, energy: 5 });
+          UI.toast('🪑', 'Fifteen minutes in the warm, watching a race in a town you have never been to. Nobody asked you for anything.');
+        } },
+       { t: 'Stay standing.', to: null }]);
+  },
+  bookiesCounter() {
+    insp('🧾', 'The counter', 'Behind glass', [
+      'A counter behind glass with a tray under it, and a woman doing a crossword who will stop the second anybody actually wants serving.']);
+  },
+  bookiesSlips() {
+    insp('🖊️', 'The slips and the pens on strings', 'Free to take', [
+      'Betting slips in a rack and four biros on strings, three of which work, which is the best working-biro ratio of any counter in this postcode including the one on the fourth floor.']);
+  },
+  bookiesBin() {
+    insp('🗑️', 'The bin of torn slips', 'Mostly torn', [
+      'A bin of torn slips, and every one of them was a plan.']);
+  },
+
+  /* --- inside the launderette --- */
+  laundOut() { Sfx.door(); Levels.take('laundOut'); },
+  laundWasher() {
+    insp('🧺', 'A washing machine', '£4.20 a load', [
+      'One of eight, numbered in marker pen, and the numbering skips six for a reason the woman behind the counter will tell you if you ask and which you will not forget.',
+      'It is running. Something in it goes round, and round, and round.']);
+  },
+  laundDryer() {
+    insp('🌀', 'A dryer', '20p for eight minutes', [
+      'Twenty pence for eight minutes, and everybody puts in forty and everybody is wrong about how long that is.']);
+  },
+  laundBench() {
+    insp('🛋️', 'The bench', 'While you wait', [
+      'A bench facing the machines, which is the only seat in Bellhaven where doing nothing is not just permitted but structural.'],
+      [{ t: 'Watch the drum go round. (10 min.)', to: null, do() {
+          G.minutes += 10; Player.mod({ patience: 11, energy: 3 });
+          UI.toast('🧺', 'Ten minutes of watching a drum go round. You could not tell anybody what you thought about, and you feel better.');
+        } },
+       { t: 'Not today.', to: null }]);
+  },
+  laundCounter() {
+    insp('🧾', 'The counter', 'Service washes', [
+      'Behind the counter, the woman who has run this place for nineteen years and knows more about this street than the council does.',
+      'She knows which unit is being refitted and by whom, what the bookmaker’s was before it was a bookmaker’s, and that somebody from the offices up the road brings tea towels in twice a year and has never once claimed it back.']);
+  },
+  laundPrices() {
+    insp('📋', 'The price list', 'Since March', [
+      'A price list with the old prices showing faintly under the new ones, which is the most honest pricing document in the county.']);
+  },
+  laundService() {
+    insp('🧺', 'The service washes', 'Ready by 4', [
+      'Bags of service washes on a shelf with names on them in marker pen. One of them says TERRY — TEA TOWELS, and has done, on and off, for years.']);
+  },
   busStop() {
     insp('🚏', 'The bus stop', 'The 41 and the 41A', [
       'The 41 and the 41A. The 41A is the same route as the 41 except that it does not stop here, which is not indicated anywhere at this stop.',
@@ -931,7 +1048,9 @@ const Acts = {
   bookies() {
     insp('🎰', 'Bellhaven Bookmakers', 'Open till ten', [
       'Carpet, screens, and a man watching a race in Wolverhampton with the sound off and total concentration.',
-      'It is the warmest building on this street and the only one with chairs you can sit in without buying anything, which is a fact about the high street and not about gambling.']);
+      'It is the warmest building on this street and the only one with chairs you can sit in without buying anything, which is a fact about the high street and not about gambling.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('bookiesDoor'); } },
+       { t: 'Walk on.', to: null }]);
   },
   charityShop() {
     insp('🧦', 'The charity shop', 'Air ambulance', [
@@ -1012,11 +1131,9 @@ const Acts = {
     insp('🍺', 'The Bellhaven Arms', 'Open 12–11, quiz Tuesdays', [
       'Etched glass, a carpet that has seen things, and a chalkboard outside offering a pie and a pint for the price of a pie and a pint in 2014.',
       'Nobody from the fourth floor drinks here at lunchtime, which everybody has agreed on without it ever having been discussed, and which is broken about twice a year, spectacularly.'],
-      [{ t: 'One, quickly. (25 min.)', to: null, do() {
-          G.minutes += 25; Player.mod({ patience: 10, energy: -4, money: -4.60 });
-          P.stats.bullshit += 1;
-          UI.toast('🍺', 'Twenty-five minutes and £4.60. You go back up in the lift rehearsing a sentence about the traffic.');
-        } },
+      /* The twenty-five minutes have moved to the bar. Going in is a door
+         now; what it costs is decided in there, by you, at the pumps. */
+      [{ t: 'Go in.', to: null, do() { Levels.take('pubDoor'); } },
        { t: 'It is twenty past ten.', to: null }]);
   },
   pubSign() {
@@ -1027,7 +1144,9 @@ const Acts = {
   launderette() {
     insp('🧺', 'The launderette', 'Service washes · 8 till 7', [
       'Eight machines, four dryers, a bench, and a woman who has run it for nineteen years and knows more about this street than the council does.',
-      'Terry brings the tea towels from the fourth floor here twice a year. He has never claimed it back and has never mentioned it, and this is the entirety of the building’s cleaning contract.']);
+      'Terry brings the tea towels from the fourth floor here twice a year. He has never claimed it back and has never mentioned it, and this is the entirety of the building’s cleaning contract.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('laundDoor'); } },
+       { t: 'Walk on.', to: null }]);
   },
   postOffice() {
     insp('📮', 'The post office', 'Counter closes 1–2', [

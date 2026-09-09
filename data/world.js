@@ -58,6 +58,13 @@ const ZONES = {
      road. Vinyl underfoot because that is what a place that mops at close
      has. */
   greggs:    { name: 'Greggs',          floor: '#4a4136', alt: '#453c32', wall: '#2b241d', tint: '#ffb347', surf: 'vinyl', tile: 'floor.tile', wtile: 'wall.drywall' },
+  /* The other three units with a floor behind them. Each one takes its colours
+     from what the act across the road already said about it: the pub is the
+     carpet that has seen things, the bookies is the warmest building on the
+     street, and the launderette is lit like a fridge and always has been. */
+  pub:       { name: 'The Bellhaven Arms', floor: '#4a2f2b', alt: '#452b27', wall: '#2a1a17', tint: '#ffb347', tile: 'floor.carpet', wtile: 'wall.drywall' },
+  bookies:   { name: 'Bellhaven Bookmakers', floor: '#3a3550', alt: '#35304a', wall: '#221f33', tint: '#b48cff', tile: 'floor.carpet.vio', wtile: 'wall.drywall' },
+  laund:     { name: 'The launderette',  floor: '#414a4e', alt: '#3c4549', wall: '#242b2e', tint: '#4da3ff', surf: 'vinyl', tile: 'floor.tile', wtile: 'wall.drywall' },
   /* Not a street: a walled car park with one way in, like the forecourt at the
      other end of town, and the only place out here big enough to find out what
      the pool car does above thirty. */
