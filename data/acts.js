@@ -644,6 +644,21 @@ const Acts = {
     };
     insp('\ud83c\udf33', 'The tree', Sky.seasonName(), lines[Sky.season()] || lines.autumn);
   },
+  giveWay() {
+    insp('\u26a0\ufe0f', 'Give way', 'Junction ahead', [
+      'A give way sign at the top of the street, with the triangle painted on the road under it to match.',
+      'The traffic out here does actually yield at these, and to the right where two of them want the junction at once, which makes this the best-observed rule in Bellhaven by a distance nobody wants to think about.']);
+  },
+  tyres() {
+    insp('\ud83d\udede', 'The tyres', 'Nobody\u2019s', [
+      'A stack of tyres against the wall of the unit that is always being refitted, with two more leaning off it.',
+      'They are not the right size for anything parked on this street, which raises a question about how they got here that nobody has ever asked out loud.']);
+  },
+  recycling() {
+    insp('\ud83d\uddd1\ufe0f', 'The recycling', 'Collected fortnightly', [
+      'The green bin, out beside the bottle bank. It goes out on a Tuesday, or a Wednesday, on a fortnightly cycle that the council publishes as a PDF and that nobody on this street has ever successfully predicted.',
+      'Somebody has put a pizza box in it. Somebody always has.']);
+  },
   cones() {
     insp('\ud83d\udea7', 'The cones', 'Unattended', [
       'Three traffic cones in a row outside the unit that is always being refitted. No van, no barrier, no hole, and no one working.',

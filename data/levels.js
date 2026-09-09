@@ -768,6 +768,12 @@ const LEVELS = {
          behind it to hang on, so it stands on its own post — which is what a
          bus stop does. */
       A({ x: 26, y: 15, e: '🚏', name: 'The bus stop', kind: 'sign', solid: true, use: 'busStop' });
+      /* GIVE WAY, above the kerb at last. One at the top of each of the three
+         north-south streets, on the left of the approach, where the painted
+         line already is and where the traffic already yields. */
+      A({ x: 14, y: 21, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      A({ x: 66, y: 21, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      A({ x: 108, y: 21, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
       A({ x: 24, y: 15, e: '🪑', name: 'The bench', kind: 'bench', solid: true, use: 'bench' });
       A({ x: 40, y: 15, e: '🗑️', name: 'The council bin', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
@@ -808,6 +814,7 @@ const LEVELS = {
       A({ x: 71, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
       A({ x: 72, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
       A({ x: 73, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
+      A({ x: 75, y: 15, e: '🛞', name: 'The tyres', kind: 'tyres', solid: true, use: 'tyres' });
       A({ x: 56, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 76, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 62, y: 15, e: '🗑️', name: 'Bin, High Street', kind: 'bin', solid: false, use: 'highStreetBin',
@@ -818,6 +825,7 @@ const LEVELS = {
          The west side of the block. Nothing has a front door on it, which is
          what makes it the side everything gets put out on. */
       A({ x: 15, y: 26, e: '♻️', name: 'The bottle bank', kind: 'box', solid: true, use: 'bottleBank' });
+      A({ x: 15, y: 27, e: '🗑️', name: 'The recycling', kind: 'recycling', solid: true, use: 'recycling' });
       A({ x: 15, y: 29, e: '🖍️', name: 'The wall on Aldergate Rise', kind: 'graf', solid: true, use: 'aldergateWall',
         furn: { sprite: 'wall.graf.nice', paint: true } });
       A({ x: 7, y: 27, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });

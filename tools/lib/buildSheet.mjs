@@ -45,6 +45,23 @@ function classify(src) {
   return { kind: 'repo', origin: `${src.repo}@${src.commit}`, key: src.path };
 }
 
+/* A sprite is usually one crop. It may instead be a STACK of them, which is
+   what a kit that ships its signs as a pole, a blank and a pictogram expects
+   you to do — see the note in tools/sheets/streets.mjs. `size` is the finished
+   sprite and each layer says where in it to put its crop, so the assembly is
+   described in the sheet rather than performed by hand in an image editor and
+   pasted in as a pixel nobody can re-derive.
+
+   One crop is just the one-layer case, written the short way. */
+function layersOf(src) {
+  if (!src.layers) return [{ entry: src.entry, rect: src.rect, at: [0, 0] }];
+  if (!src.size) throw new Error('a layered source must declare the finished `size`');
+  return src.layers.map(l => ({ entry: l.entry !== undefined ? l.entry : src.entry, rect: l.rect, at: l.at || [0, 0] }));
+}
+function sizeOf(src) {
+  return src.layers ? src.size : [src.rect[2], src.rect[3]];
+}
+
 /* The licence data for one upstream asset. A repo source has it read off
    upstream's own Credits.txt every build; a file source has it written into
    the sheet, because there is nothing at the other end to read. Both come back
@@ -88,20 +105,30 @@ export async function buildManagedSheet(def) {
   for (const s of sprites) {
     const src = s.source;
     const { kind, key } = classify(src);
-    if (!byFile.has(key)) {
-      let bytes;
-      if (kind === 'repo') bytes = await fetchBytes(src.repo, src.commit, src.path);
-      else {
-        if (!byDownload.has(src.url)) byDownload.set(src.url, await fetchPinnedFile(src.url, src.sha256));
-        bytes = src.entry ? zipRead(byDownload.get(src.url), src.entry) : byDownload.get(src.url);
+    const [sw, sh] = sizeOf(src);
+    const layers = [];
+    for (const layer of layersOf(src)) {
+      const lkey = kind === 'repo' ? key : src.url + (layer.entry ? '!' + layer.entry : '');
+      if (!byFile.has(lkey)) {
+        let bytes;
+        if (kind === 'repo') bytes = await fetchBytes(src.repo, src.commit, src.path);
+        else {
+          if (!byDownload.has(src.url)) byDownload.set(src.url, await fetchPinnedFile(src.url, src.sha256));
+          bytes = layer.entry ? zipRead(byDownload.get(src.url), layer.entry) : byDownload.get(src.url);
+        }
+        byFile.set(lkey, decodePng(bytes));
       }
-      byFile.set(key, decodePng(bytes));
-    }
-    const decoded = byFile.get(key);
-    const [rx, ry, rw, rh] = src.rect;
-    if (rx < 0 || ry < 0 || rx + rw > decoded.width || ry + rh > decoded.height) {
-      throw new Error(`sheet "${id}": rect [${src.rect}] for "${s.name}" falls outside ` +
-        `${key} (${decoded.width}x${decoded.height})`);
+      const decoded = byFile.get(lkey);
+      const [rx, ry, rw, rh] = layer.rect;
+      if (rx < 0 || ry < 0 || rx + rw > decoded.width || ry + rh > decoded.height) {
+        throw new Error(`sheet "${id}": rect [${layer.rect}] for "${s.name}" falls outside ` +
+          `${lkey} (${decoded.width}x${decoded.height})`);
+      }
+      if (layer.at[0] < 0 || layer.at[1] < 0 || layer.at[0] + rw > sw || layer.at[1] + rh > sh) {
+        throw new Error(`sheet "${id}": layer [${layer.rect}] of "${s.name}" sits at ` +
+          `[${layer.at}] in a ${sw}x${sh} sprite, which puts part of it outside`);
+      }
+      layers.push({ decoded, rect: layer.rect, at: layer.at });
     }
     if (!byAsset.has(src.assetName)) {
       const entry = await creditsFor(src, kind);
@@ -109,16 +136,19 @@ export async function buildManagedSheet(def) {
       byAsset.set(src.assetName, { entry, kind, page: src.page || null, spriteNames: [] });
     }
     byAsset.get(src.assetName).spriteNames.push(s.name);
-    items.push({ name: s.name, w: rw, h: rh, anchor: s.anchor || 'flat', decoded, rect: src.rect });
+    items.push({ name: s.name, w: sw, h: sh, anchor: s.anchor || 'flat', layers });
   }
 
   const { width, height } = shelfPack(items);
   const canvas = blankCanvas(width, height);
   const rects = {}, anchors = {};
   for (const it of items) {
-    const [rx, ry, rw, rh] = it.rect;
-    blit(canvas, it.decoded, rx, ry, rw, rh, it.x, it.y);
-    rects[it.name] = [it.x, it.y, rw, rh];
+    /* Bottom layer first, in the order the sheet lists them. */
+    for (const l of it.layers) {
+      const [rx, ry, rw, rh] = l.rect;
+      blit(canvas, l.decoded, rx, ry, rw, rh, it.x + l.at[0], it.y + l.at[1]);
+    }
+    rects[it.name] = [it.x, it.y, it.w, it.h];
     anchors[it.name] = it.anchor;
   }
 
