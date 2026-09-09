@@ -65,6 +65,15 @@ const ZONES = {
   pub:       { name: 'The Bellhaven Arms', floor: '#4a2f2b', alt: '#452b27', wall: '#2a1a17', tint: '#ffb347', tile: 'floor.carpet', wtile: 'wall.drywall' },
   bookies:   { name: 'Bellhaven Bookmakers', floor: '#3a3550', alt: '#35304a', wall: '#221f33', tint: '#b48cff', tile: 'floor.carpet.vio', wtile: 'wall.drywall' },
   laund:     { name: 'The launderette',  floor: '#414a4e', alt: '#3c4549', wall: '#242b2e', tint: '#4da3ff', surf: 'vinyl', tile: 'floor.tile', wtile: 'wall.drywall' },
+  /* Four more, and each one's colours are an argument the act outside it has
+     already made: the post office is municipal and always has been, the
+     charity shop is lit like a church hall because it is staffed like one,
+     the kebab shop is a room you only ever see at night, and Vapour Trail is
+     three shops wearing each other's flooring. */
+  postoff:   { name: 'The post office',  floor: '#3f4738', alt: '#3a4234', wall: '#232a1f', tint: '#5ad48a', surf: 'vinyl', tile: 'floor.tile', wtile: 'wall.drywall' },
+  charity:   { name: 'The charity shop', floor: '#4a4638', alt: '#454133', wall: '#2b2820', tint: '#ffb347', tile: 'floor.carpet.dim', wtile: 'wall.drywall' },
+  kebab:     { name: 'Bellhaven Kebab',  floor: '#4c4234', alt: '#473d30', wall: '#2a231b', tint: '#ffb347', surf: 'tile', tile: 'floor.tile', wtile: 'loo.wall' },
+  vapour:    { name: 'Vapour Trail',     floor: '#3c4650', alt: '#37414b', wall: '#212831', tint: '#b48cff', surf: 'vinyl', tile: 'floor.diamond', wtile: 'wall.drywall' },
   /* Not a street: a walled car park with one way in, like the forecourt at the
      other end of town, and the only place out here big enough to find out what
      the pool car does above thirty. */

@@ -513,6 +513,131 @@ const LEVELS = {
     }
   },
 
+  /* ---- THE POST OFFICE ------------------------------------------------
+     "A counter at the back of a shop that also sells greetings cards,
+     stationery and, for reasons lost to everyone, kites. The queue is four
+     people long at any hour of any day."
+
+     So the room is built around the queue, which is the only object in this
+     game that is four objects. The counter is at the BACK, past all the
+     things you did not come in for, which is not an accident and is the whole
+     design of every post office in the country. */
+  postoff: {
+    name: 'The post office',
+    w: 15, h: 13,
+    rooms: [{ z: 'postoff', r: [2, 2, 12, 10] }],
+    doors: [],
+    entries: { door: [7.5, 9.5] },
+    links: [{ via: 'postoffOut', to: 'outside', entry: 'postoff' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 7, y: 10, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'postoffOut' });
+      /* The counter, behind glass, at the back. */
+      A({ x: 6, y: 3, e: '🏤', name: 'The counter', kind: 'cab', solid: true, use: 'postCounter' });
+      A({ x: 7, y: 3, e: '🏤', name: 'The counter', kind: 'cab', solid: true, use: 'postCounter' });
+      A({ x: 8, y: 3, e: '⚖️', name: 'The scales', kind: 'pc', solid: true, use: 'postScales' });
+      A({ x: 5, y: 2, e: '🕐', name: 'The notice about 1 till 2', kind: 'poster', solid: true, use: 'postNotice' });
+      /* THE QUEUE. Four of them, always. */
+      A({ x: 7, y: 5, e: '🧍', name: 'First in the queue', kind: 'view', solid: true, use: 'postQueue1' });
+      A({ x: 7, y: 6, e: '🧍', name: 'Second in the queue', kind: 'view', solid: true, use: 'postQueue2' });
+      A({ x: 7, y: 7, e: '🧍', name: 'Third in the queue', kind: 'view', solid: true, use: 'postQueue3' });
+      A({ x: 7, y: 8, e: '🧍', name: 'Fourth in the queue', kind: 'view', solid: true, use: 'postQueue4' });
+      /* Everything you did not come in for. */
+      A({ x: 3, y: 5, e: '💌', name: 'The card carousel', kind: 'book', solid: true, use: 'postCards' });
+      A({ x: 3, y: 7, e: '📎', name: 'The stationery', kind: 'box', solid: true, use: 'postStationery' });
+      A({ x: 11, y: 5, e: '🪁', name: 'The kites', kind: 'box', solid: true, use: 'postKites' });
+      A({ x: 11, y: 7, e: '📦', name: 'The parcel shelf', kind: 'cab', solid: true, use: 'postParcels' });
+      A({ x: 4, y: 9, e: '🖊️', name: 'The pen on a chain', kind: 'paper', solid: true, use: 'postPen' });
+    }
+  },
+
+  /* ---- THE CHARITY SHOP -----------------------------------------------
+     "Books, a shelf of mugs, and a rail of work shirts that have all been
+     worn to the same job. Marjorie donated fourteen mugs here in 2016 and has
+     bought four of them back since, twice knowingly."
+
+     The shelf of mugs is therefore load-bearing and is placed where you cannot
+     miss it. */
+  charity: {
+    name: 'The charity shop',
+    w: 15, h: 12,
+    rooms: [{ z: 'charity', r: [2, 2, 12, 9] }],
+    doors: [],
+    entries: { door: [7.5, 8.5] },
+    links: [{ via: 'charityOut', to: 'outside', entry: 'charity' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 7, y: 9, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'charityOut' });
+      A({ x: 6, y: 3, e: '🧾', name: 'The till', kind: 'cab', solid: true, use: 'charityTill' });
+      A({ x: 7, y: 3, e: '🧓', name: 'The volunteer', kind: 'view', solid: true, use: 'charityVolunteer' });
+      A({ x: 4, y: 2, e: '🚑', name: 'The air ambulance poster', kind: 'poster', solid: true, use: 'charityPoster' });
+      /* THE SHELF OF MUGS, which is the reason this room exists. */
+      A({ x: 10, y: 3, e: '☕', name: 'The shelf of mugs', kind: 'book', solid: true, use: 'charityMugs' });
+      A({ x: 3, y: 5, e: '👔', name: 'The rail of work shirts', kind: 'cupboard', solid: true, use: 'charityShirts' });
+      A({ x: 3, y: 7, e: '📚', name: 'The book table', kind: 'table', solid: true, use: 'charityBooks' });
+      A({ x: 10, y: 6, e: '🧩', name: 'The jigsaw', kind: 'box', solid: true, use: 'charityJigsaw' });
+      A({ x: 10, y: 8, e: '📺', name: 'The electricals corner', kind: 'tv', solid: true, use: 'charityElectrical' });
+      A({ x: 5, y: 6, e: '🕯️', name: 'The bric-a-brac', kind: 'misc', solid: true, use: 'charityBricabrac' });
+    }
+  },
+
+  /* ---- BELLHAVEN KEBAB ------------------------------------------------
+     "Shut. It is nine in the morning and this is a building that has never
+     once been open at nine in the morning."
+
+     Which is the joke, so the door only opens after five — see the act. This
+     room exists to be a room you have only ever seen at night, and it is the
+     only interior in the game you cannot get into during the shift. */
+  kebab: {
+    name: 'Bellhaven Kebab',
+    w: 14, h: 11,
+    rooms: [{ z: 'kebab', r: [2, 2, 11, 8] }],
+    doors: [],
+    entries: { door: [6.5, 7.5] },
+    links: [{ via: 'kebabOut', to: 'outside', entry: 'kebab' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 6, y: 8, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'kebabOut' });
+      A({ x: 5, y: 3, e: '🥙', name: 'The vertical spit', kind: 'vend', solid: true, use: 'kebabSpit' });
+      A({ x: 6, y: 3, e: '🥗', name: 'The salad tray', kind: 'cab', solid: true, use: 'kebabSalad' });
+      A({ x: 7, y: 3, e: '🧾', name: 'The counter', kind: 'cab', solid: true, use: 'kebabCounter' });
+      A({ x: 9, y: 3, e: '🥤', name: 'The drinks fridge', kind: 'fridge', solid: true, use: 'kebabFridge' });
+      A({ x: 4, y: 2, e: '🖼️', name: 'The photograph', kind: 'poster', solid: true, use: 'kebabPhoto' });
+      A({ x: 9, y: 2, e: '🪧', name: 'UNDER NEW MANAGEMENT', kind: 'sign', solid: true, use: 'kebabSign' });
+      A({ x: 4, y: 6, e: '🪑', name: 'The two stools nobody sits on', kind: 'chair', solid: true, use: 'kebabStools' });
+      A({ x: 10, y: 6, e: '🗑️', name: 'The bin by the door', kind: 'bin', solid: true, use: 'kebabBin' });
+    }
+  },
+
+  /* ---- VAPOUR TRAIL ---------------------------------------------------
+     "A vape shop that was a phone repair shop, which was a nail bar, which was
+     a bakery that everybody still gives directions by."
+
+     Nothing in here was ever taken out. The bakery's tiling is under the
+     vinyl, the nail bar's basin is still plumbed into the wall, the phone
+     repair counter is the counter, and the current business is a wall of
+     bottles in front of all of it. A unit on a parade is a sediment. */
+  vapour: {
+    name: 'Vapour Trail',
+    w: 14, h: 11,
+    rooms: [{ z: 'vapour', r: [2, 2, 11, 8] }],
+    doors: [],
+    entries: { door: [6.5, 7.5] },
+    links: [{ via: 'vapourOut', to: 'outside', entry: 'vapour' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 6, y: 8, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'vapourOut' });
+      A({ x: 6, y: 3, e: '🧾', name: 'The counter', kind: 'cab', solid: true, use: 'vapourCounter' });
+      A({ x: 7, y: 3, e: '🔧', name: 'The screwdriver mat', kind: 'paper', solid: true, use: 'vapourMat' });
+      A({ x: 4, y: 2, e: '🧴', name: 'The wall of liquids', kind: 'chart', solid: true, use: 'vapourLiquids' });
+      A({ x: 9, y: 2, e: '📱', name: 'The old sign showing through', kind: 'poster', solid: true, use: 'vapourGhostSign' });
+      A({ x: 10, y: 4, e: '💅', name: 'The nail bar basin', kind: 'sink', solid: true, use: 'vapourBasin' });
+      A({ x: 3, y: 6, e: '🍞', name: 'The bakery tiling', kind: 'misc', solid: false, use: 'vapourTiles' });
+      A({ x: 9, y: 6, e: '🪑', name: 'The chair from the nail bar', kind: 'chair', solid: true, use: 'vapourChair' });
+      A({ x: 6, y: 6, e: '💨', name: 'The smell', kind: 'view', solid: false, use: 'vapourSmell' });
+    }
+  },
+
   /* ---- OUTSIDE --------------------------------------------------------
      The forecourt and the streets, which is the only level with a sky over it.
      `indoors: false` is what the renderer reads: no strip lights, daylight
@@ -718,6 +843,7 @@ const LEVELS = {
       /* On the pavement outside each one, which is where you are standing when
          you come back out of it. */
       pub: [86.5, 15.5], bookies: [54.5, 15.5], laund: [92.5, 15.5],
+      postoff: [98.5, 15.5], charity: [60.5, 15.5], kebab: [104.5, 15.5], vapour: [66.5, 15.5],
     },
     links: [
       { via: 'frontDoors', to: 'office', entry: 'lobby' },
@@ -726,6 +852,10 @@ const LEVELS = {
       { via: 'pubDoor', to: 'pub', entry: 'door' },
       { via: 'bookiesDoor', to: 'bookies', entry: 'door' },
       { via: 'laundDoor', to: 'laund', entry: 'door' },
+      { via: 'postoffDoor', to: 'postoff', entry: 'door' },
+      { via: 'charityDoor', to: 'charity', entry: 'door' },
+      { via: 'kebabDoor', to: 'kebab', entry: 'door' },
+      { via: 'vapourDoor', to: 'vapour', entry: 'door' },
     ],
     /* The cars. Parked ones sit in bays and are scenery you can walk round and
        bump into; two of them are worth pressing E on and exactly one of them
