@@ -50,6 +50,8 @@ const ITEMS = {
   lunch:    { n: 'An Actual Proper Lunch', e: '🍲', d: 'Hot. Eaten sitting down. Away from the desk. Legally yours. Ron was right.', v: 5, r: 'rare', use: 'properLunch' },
   survey:   { n: 'A Completed Survey', e: '📄', d: '“5. The lady on the phone actually listened.” They never know it was you.', v: 0, r: 'legendary', quest: true },
   cushion:  { n: 'The Good Cushion', e: '🛏️', d: 'Memory foam, contoured, bought by somebody with their own money for their own spine. The chair was never the point.', v: 12, r: 'legendary', slot: 'trinket', eff: { patience: 12, empathy: 2 } },
+  /* Off the High Street, from the four units that now have floors. */
+  stamps:   { n: 'A Book of Stamps', e: '\ud83d\udcee', d: 'Bought at a counter, in person, after twenty-two minutes, in a transaction that took ninety seconds. You will use two of them.', v: 4.4, r: 'common' },
   biscuits: { n: 'A Box of Biscuits (bought)', e: '🎁', d: 'The good ones. The foil ones. Bought with your own money for people who will never know it was you.', v: 4, r: 'rare' }
 };
 
@@ -237,6 +239,9 @@ const ACHS = {
   a_pauline: { n: 'Pauline, 2008', e: '🍵', d: 'Get Dave to tell you why he is actually still here.' },
   a_greggs:  { n: 'The Best Thing About This Building', e: '🥐', d: 'Go to the Greggs. Everyone who works here knows.' },
   a_fourteenth: { n: 'The Fourteenth Mug', e: '🍵', d: 'Ask Marjorie about the one facing the wall.' },
+  a_queue:   { n: 'Fifth Of Four', e: '\ud83c\udfe4', d: 'Join the queue in the post office. The only way to observe the mechanism is to become part of it.' },
+  a_boughtback: { n: 'Bought Back', e: '\u2615', d: 'Buy a mug from the charity shop. Somewhere, a shelf balances.' },
+  a_kebab:   { n: 'The Correct Way To Eat It', e: '\ud83e\udd59', d: 'Get into Bellhaven Kebab, which means being on that street after four, which means not going straight home.' },
   a_biscuits: { n: 'Nobody Will Ever Know It Was You', e: '🎁', d: 'Buy the biscuits with your own money and say nothing.' },
   a_mo:      { n: 'Nobody Asks', e: '🧑‍🎓', d: 'Ask Mo whether he is actually alright, and mean it.' },
   a_poop:    { n: 'Listed Building', e: '🧻', d: 'Pay your respects to the only piece of writing in this building that outlived its author’s career.' },

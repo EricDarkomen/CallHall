@@ -787,6 +787,236 @@ const Acts = {
     insp('🧺', 'The service washes', 'Ready by 4', [
       'Bags of service washes on a shelf with names on them in marker pen. One of them says TERRY — TEA TOWELS, and has done, on and off, for years.']);
   },
+  /* --- inside the post office ---
+     The counter is at the back past everything you did not come in for, the
+     queue is four people long, and between one and two it is none of your
+     business because the counter is shut. That last one is the clock's, not a
+     flag's: Sky.m() is minutes past midnight and this reads it like the notice
+     on the door does. */
+  postoffOut() { Sfx.door(); Levels.take('postoffOut'); },
+  postCounter() {
+    const m = Sky.m();
+    if (m >= 780 && m < 840) {
+      return insp('\ud83c\udfe4', 'The counter', 'CLOSED 1–2', [
+        'The shutter is down and the notice is up, and the notice is correct: the counter closes between one and two.',
+        'Four people are waiting anyway. Not queuing — waiting. There is a difference and everybody in this room understands it perfectly.']);
+    }
+    insp('\ud83c\udfe4', 'The counter', 'Position 1 of 1', [
+      'A counter behind glass with a tray under it, staffed by a man who can do anything the state requires of a person and is currently doing all of it, one customer at a time.',
+      'Behind him: a safe, a kettle, and a wall chart of stamp prices going back far enough to be upsetting.'],
+      [{ t: 'Join the queue. (22 min.)', to: null, do() {
+          G.minutes += 22; Player.mod({ patience: -4, energy: -3 });
+          Ach.get('a_queue');
+          if (!Item.has('stamps')) Item.give('stamps');
+          UI.toast('\ud83c\udfe4', 'Twenty-two minutes. You are served in ninety seconds. Nothing about the ratio is anybody’s fault and everybody has made their peace with it.');
+        } },
+       { t: 'Look at the kites instead.', to: null }]);
+  },
+  postScales() {
+    insp('\u2696\ufe0f', 'The scales', 'Large letter', [
+      'A set of scales and a slotted plastic template for deciding whether a thing is a Large Letter or a Small Parcel, which is the only genuinely tense measurement in British life.',
+      'A woman ahead of you is posting something that is four millimetres too thick and does not know it yet.']);
+  },
+  postNotice() {
+    insp('\ud83d\udd50', 'The notice about 1 till 2', 'Since 2011', [
+      'CLOSED 1–2. Laminated, in a font that means it, taped to the glass at a height that means everybody has read it and nobody has absorbed it.',
+      'Underneath, in biro, on a Post-it that has outlived three Post-its: “THIS INCLUDES BANK HOLIDAYS”.']);
+  },
+  postQueue1() {
+    insp('\ud83e\uddcd', 'First in the queue', 'Being served', [
+      'A man posting a passport application by a method the internet has been offering for nine years, because he does not trust the internet with his face.',
+      'He is right, is the thing. He is completely right.']);
+  },
+  postQueue2() {
+    insp('\ud83e\uddcd', 'Second in the queue', 'Two parcels', [
+      'A woman with two parcels, one of which is a return and one of which is a gift, and she has already worked out that they need different queues at the same counter.']);
+  },
+  postQueue3() {
+    insp('\ud83e\uddcd', 'Third in the queue', 'Not sure', [
+      'Somebody who is not certain they are in the right place and is not going to ask, because asking would cost the position and the position is the only thing they are sure of.']);
+  },
+  postQueue4() {
+    insp('\ud83e\uddcd', 'Fourth in the queue', 'Just came in for a card', [
+      'Somebody who came in for a card, found themselves at the back of four, and has decided that as long as they are here they may as well see what happens.',
+      'You are about to be fifth. The queue is four people long at any hour of any day: it is always four people, and it is never the same four people, and the only way to observe the mechanism is to become part of it.']);
+  },
+  postCards() {
+    insp('\ud83d\udc8c', 'The card carousel', 'Sorry For Your Loss / 40 Today', [
+      'A carousel of greetings cards arranged so that Sympathy is directly above Congratulations On Your New Home, which is either an accident or the truest thing on this street.',
+      'The 40 Today section is four times the size of the 30 Today section. Somebody did the research.']);
+  },
+  postStationery() {
+    insp('\ud83d\udcce', 'The stationery', 'Also sold here', [
+      'Envelopes in nine sizes, none of which is the size of the thing you have, and a display of pens that would furnish the fourth floor for a decade.',
+      'A sign says WE HAVE MOVED THE SELLOTAPE. It does not say where.']);
+  },
+  postKites() {
+    insp('\ud83e\ude81', 'The kites', 'For reasons lost to everyone', [
+      'Six kites, hung high, in a shop four hundred metres from the nearest open ground and eleven miles from the sea.',
+      'They have been here since before the current staff. Nobody has ever seen one sold and nobody has ever suggested taking them down, and both of those facts are, by now, the reason for the other.']);
+  },
+  postParcels() {
+    insp('\ud83d\udce6', 'The parcel shelf', 'Awaiting collection', [
+      'Parcels awaiting collection, each with a card slip on it, one of them addressed to a business at this postcode that closed in 2019 and which nobody is willing to be the person who bins.']);
+  },
+  postPen() {
+    insp('\ud83d\udd8a\ufe0f', 'The pen on a chain', 'Works', [
+      'A biro on a chain, which works, which is a small miracle, and which is chained up precisely because it works.']);
+  },
+
+  /* --- inside the charity shop --- */
+  charityOut() { Sfx.door(); Levels.take('charityOut'); },
+  charityTill() {
+    insp('\ud83e\uddfe', 'The till', 'Cash preferred', [
+      'A till from a previous business, operated slowly and correctly, and a card machine that is produced from under the counter like a concession.']);
+  },
+  charityVolunteer() {
+    insp('\ud83e\uddd3', 'The volunteer', 'Tuesdays and Thursdays', [
+      'She does Tuesdays and Thursdays and has done since she retired from something she will not name in a building she will point at.',
+      'She prices everything by holding it up and looking at it, and she has never once been wrong, and there is no system.']);
+  },
+  charityPoster() {
+    insp('\ud83d\ude91', 'The air ambulance poster', 'Every penny', [
+      'A poster showing the helicopter, the crew, and a number that is what one flight costs, printed in a size that makes the number the whole poster.']);
+  },
+  charityMugs() {
+    insp('\u2615', 'The shelf of mugs', 'Fourteen, once', [
+      'Two shelves of mugs, which is the single most reliable shelf in the whole of the retail sector: everybody donates mugs and nobody stops owning them.',
+      'Marjorie donated fourteen here in 2016 and has bought four of them back since, twice knowingly. The one facing the wall is facing the wall for a reason, and the reason is on the other side of it.'],
+      [{ t: 'Buy a mug. (£1.50)', to: null, if: () => P.money >= 1.5, do() {
+          Player.mod({ money: -1.5 }); Item.give('mug'); Ach.get('a_boughtback');
+          UI.toast('\u2615', 'A plain white mug, one pound fifty, to a good cause. Marjorie will notice it on Monday and will say nothing on Monday.');
+        } },
+       { t: 'Turn the one facing the wall around.', to: null, do() {
+          G.flags.turnedTheMug = true;
+          insp('\u2615', 'The one facing the wall', 'WORLD’S OKAYEST BOSS', [
+            'On the other side, in a font from 2009: WORLD’S OKAYEST BOSS.',
+            'Somebody in this postcode was given this. Somebody in this postcode kept it for years, and then did not.']);
+        } },
+       { t: 'Leave the mugs alone.', to: null }]);
+  },
+  charityShirts() {
+    insp('\ud83d\udc54', 'The rail of work shirts', 'Size 16, mostly', [
+      'A rail of work shirts that have all been worn to the same job: the collar goes first, then the cuffs, then the person.',
+      'Three of them still have the lanyard clip mark on the left placket, in the same place, which means three people in this town stood the same way for years.']);
+  },
+  charityBooks() {
+    insp('\ud83d\udcda', 'The book table', 'All 50p', [
+      'A table of paperbacks at 50p, on which there are four copies of the same thriller, because in 2011 everybody in Bellhaven was given it and in 2013 everybody in Bellhaven finished with it.',
+      'Underneath: a hardback about a war, a book about a cathedral, and a diet book from a year when that diet was legal.']);
+  },
+  charityJigsaw() {
+    insp('\ud83e\udde9', 'The jigsaw', '1000 pieces', [
+      'A thousand-piece jigsaw of a harbour, with a note taped to the lid in careful capitals: 1 PIECE MISSING (SORRY).',
+      'Somebody did that. Somebody finished it, found the gap, and rather than say nothing, wrote a note and apologised to a stranger they will never meet. That is the whole of the case for the species and it is on a table in Bellhaven for fifty pence.']);
+  },
+  charityElectrical() {
+    insp('\ud83d\udcfa', 'The electricals corner', 'PAT tested', [
+      'Three kettles, a DVD player, and a bread maker, each with a green sticker saying it has been tested and is safe, which is not the same as saying anybody should.',
+      'The bread maker will be bought. Bread makers are always bought. Bread makers always come back.']);
+  },
+  charityBricabrac() {
+    insp('\ud83d\udd6f\ufe0f', 'The bric-a-brac', 'Everything 80p', [
+      'Candlesticks, a carriage clock, and a small brass thing that everybody picks up and nobody can identify, which is why it is still here and why it will outlast the shop.']);
+  },
+  /* --- inside the kebab shop, which you can only ever be in at night --- */
+  kebabOut() { Sfx.door(); Levels.take('kebabOut'); },
+  kebabSpit() {
+    insp('\ud83e\udd59', 'The vertical spit', 'On since four', [
+      'The spit, turning, going quietly about the only continuous manufacturing process left in Bellhaven.',
+      'It has been on since four in the afternoon and it will be on until three in the morning, which makes it the longest shift on this street by a distance and nobody has ever thanked it.']);
+  },
+  kebabSalad() {
+    insp('\ud83e\udd57', 'The salad tray', 'Six compartments', [
+      'Six compartments, of which four are used, and the two that are not used are cucumber and jalapeños, in a town that has strong opinions about both and expresses neither.']);
+  },
+  kebabCounter() {
+    insp('\ud83e\uddfe', 'The counter', 'Cash, card, whatever', [
+      'A counter, a menu board above it with photographs of everything, and a man who has been asked what he recommends nine thousand times and has answered honestly nine thousand times.'],
+      [{ t: 'Order something. (£7.50, 15 min.)', to: null, if: () => P.money >= 7.5, do() {
+          G.minutes += 15; Player.mod({ money: -7.5, energy: 22, patience: 6 });
+          Ach.get('a_kebab');
+          UI.toast('\ud83e\udd59', 'Seven fifty. You eat it walking, which is the correct way, and it is the best thing that has happened since about eleven.');
+        } },
+       { t: 'Just looking at the photographs.', to: null }]);
+  },
+  kebabFridge() {
+    insp('\ud83e\udd64', 'The drinks fridge', 'Cans, mostly', [
+      'A fridge of cans, arranged by nobody, in which the third shelf is entirely one flavour because in 2021 a delivery went wrong and it has been quietly working through it ever since.']);
+  },
+  kebabPhoto() {
+    insp('\ud83d\uddbc\ufe0f', 'The photograph', 'Framed, by the till', [
+      'A framed photograph on the wall by the counter: eleven people from an office Christmas party, in this doorway, at an hour the photograph does not disclose.',
+      'Nigel is in the middle of it, and Nigel is doing something with his arms that has never been explained to anybody on the fourth floor and never will be. It is framed. Somebody in this shop framed it.'],
+      [{ t: 'Ask about the photograph.', to: null, do() {
+          G.flags.askedAboutNigel = true;
+          insp('\ud83e\udd59', 'The man behind the counter', 'Remembers', [
+            '“Two thousand and nineteen,” he says, without looking up, without being told which year you meant.',
+            '“He come back the week after and apologised. Only one who ever did.” He turns the spit a quarter turn. “Good lad.”',
+            'You are going to have to go back up to the fourth floor tomorrow and look at Nigel, and know this.']);
+        } },
+       { t: 'Leave it alone.', to: null }]);
+  },
+  kebabSign() {
+    insp('\ud83e\udea7', 'UNDER NEW MANAGEMENT', 'Since 2014', [
+      'A sign saying UNDER NEW MANAGEMENT, which went up in 2014 and has stayed up through two further changes of management, at which point the sign became true again twice and nobody had to do anything.']);
+  },
+  kebabStools() {
+    insp('\ud83e\ude91', 'The two stools nobody sits on', 'Fixed to the floor', [
+      'Two stools bolted to the floor at a shelf, provided in good faith, used by no human being in the history of this unit.',
+      'Everybody eats standing up or walking home. The stools are not for sitting on. The stools are for making it a place that has stools.']);
+  },
+  kebabBin() {
+    insp('\ud83d\uddd1\ufe0f', 'The bin by the door', 'Emptied nightly', [
+      'The bin by the door, emptied every night, which means it is the only bin in Bellhaven that is ever actually empty and the only one you never see empty.']);
+  },
+
+  /* --- inside Vapour Trail, which is three shops in a trenchcoat --- */
+  vapourOut() { Sfx.door(); Levels.take('vapourOut'); },
+  vapourCounter() {
+    insp('\ud83e\uddfe', 'The counter', 'Was a repair counter', [
+      'A glass-topped counter with the current business laid out inside it and a strip of masking tape along the back edge with SCREENS FROM £45 still written on it in marker.',
+      'It is a good counter. It has outlasted three businesses and it will outlast this one, and whoever comes next will keep it too.']);
+  },
+  vapourMat() {
+    insp('\ud83d\udd27', 'The screwdriver mat', 'Still there', [
+      'A magnetic mat with numbered wells for the screws out of a phone, still taped down beside the till, three businesses later.',
+      'There are two screws in well number four. They have been in well number four since a Tuesday in 2021 and they belong to a phone that was collected, paid for, and is now itself two phones ago.']);
+  },
+  vapourLiquids() {
+    insp('\ud83e\uddf4', 'The wall of liquids', 'Buy 2 get 1', [
+      'A wall of bottles in flavours that describe things rather than taste: Blue Ice, Wild Fruit, Heisenberg, and one called Bakery which everybody who works on this street finds funnier than the shop intends.']);
+  },
+  vapourGhostSign() {
+    insp('\ud83d\udcf1', 'The old sign showing through', 'Three coats', [
+      'High on the back wall, under the current paint and coming through it the way these things always do, the top half of the previous signage — and under that, fainter, the one before.',
+      'The parade is written on top of itself. If you stand at the right angle you can read a phone number that would now ring a launderette.']);
+  },
+  vapourBasin() {
+    insp('\ud83d\udc85', 'The nail bar basin', 'Still plumbed in', [
+      'A nail bar basin, low, moulded, and still plumbed into the wall, because taking it out would mean a plumber and a plumber would mean a landlord.',
+      'There is a box of till roll in it. It has been the till roll shelf for longer than it was ever a basin.']);
+  },
+  vapourTiles() {
+    insp('\ud83c\udf5e', 'The bakery tiling', 'Under the vinyl', [
+      'By the door, where the vinyl has lifted and been taped rather than replaced, you can see the floor under it: small white hexagonal tiles with a black border, which is a bakery floor, and everybody in this town still says “where the bakery was”.',
+      'Four businesses have stood on it. The tiles are the only one of them that was built to last, and they were never once the business.']);
+  },
+  vapourChair() {
+    insp('\ud83e\ude91', 'The chair from the nail bar', 'Reupholstered once', [
+      'A padded chair on a chrome base, which is not the sort of chair a shop like this buys, because it is not the sort of chair a shop like this buys.',
+      'It is very comfortable. Everybody who sits in it says so, and nobody ever asks why a vape shop has it.'],
+      [{ t: 'Sit in the chair from the nail bar.', to: null, do() {
+          G.minutes += 8; Player.mod({ patience: 8, energy: 2 });
+          UI.float('Eight minutes.', '#b48cff');
+        } },
+       { t: 'Stand.', to: null }]);
+  },
+  vapourSmell() {
+    insp('\ud83d\udca8', 'The smell', 'All four of them', [
+      'The current smell is the liquids. Under it is acetone, which is the nail bar. Under that is warm solder, which is the phone repair.',
+      'And under all of it, faintly, on a warm day, with the door shut: bread. There is no bread. There has been no bread since 2009. The building is doing it from memory.']);
+  },
   busStop() {
     insp('🚏', 'The bus stop', 'The 41 and the 41A', [
       'The 41 and the 41A. The 41A is the same route as the 41 except that it does not stop here, which is not indicated anywhere at this stop.',
@@ -1055,12 +1285,16 @@ const Acts = {
   charityShop() {
     insp('🧦', 'The charity shop', 'Air ambulance', [
       'Books, a shelf of mugs, and a rail of work shirts that have all been worn to the same job.',
-      'Marjorie donated fourteen mugs here in 2016 and has bought four of them back since, twice knowingly.']);
+      'Marjorie donated fourteen mugs here in 2016 and has bought four of them back since, twice knowingly.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('charityDoor'); } },
+       { t: 'Walk on.', to: null }]);
   },
   vapeShop() {
     insp('💨', 'Vapour Trail', 'Was three other things', [
       'A vape shop that was a phone repair shop, which was a nail bar, which was a bakery that everybody still gives directions by.',
-      'The signage has been changed four times and the awning has not been changed once, so the awning is still bakery-coloured, which is how the whole street tells you what used to be here.']);
+      'The signage has been changed four times and the awning has not been changed once, so the awning is still bakery-coloured, which is how the whole street tells you what used to be here.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('vapourDoor'); } },
+       { t: 'Walk on.', to: null }]);
   },
   refit() {
     insp('🚧', 'The unit that is always being refitted', 'Opening soon', [
@@ -1151,12 +1385,26 @@ const Acts = {
   postOffice() {
     insp('📮', 'The post office', 'Counter closes 1–2', [
       'A counter at the back of a shop that also sells greetings cards, stationery and, for reasons lost to everyone, kites.',
-      'The queue is four people long at any hour of any day. It is the same four people in the sense that it is always four people; it is never the same four people.']);
+      'The queue is four people long at any hour of any day. It is the same four people in the sense that it is always four people; it is never the same four people.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('postoffDoor'); } },
+       { t: 'Another time.', to: null }]);
   },
+  /* The one shopfront on this street whose door depends on the clock, and it
+     depends on it because that was always the joke: a building that has never
+     once been open at nine in the morning. It opens at four, when the spit
+     goes on. Sky.m() is minutes past midnight. */
   kebab() {
+    if (Sky.m() < 960) {
+      return insp('🌯', 'Bellhaven Kebab', 'Opens at four', [
+        'Shut. It is the middle of a working day and this is a building that has never once been open in the middle of a working day, or at nine in the morning, or at any hour that appears on a timesheet.',
+        'Through the glass: the spit, cold and still, and the chairs up on the shelf. Come back when it is dark.',
+        'The Christmas party ended here in 2019, 2021 and 2022. There is a photograph on the fourth floor of Nigel in this doorway that has never been explained and never will be.']);
+    }
     insp('🌯', 'Bellhaven Kebab', 'Open till 3am, obviously', [
-      'Shut. It is nine in the morning and this is a building that has never once been open at nine in the morning.',
-      'The Christmas party ended here in 2019, 2021 and 2022. There is a photograph on the fourth floor of Nigel in this doorway that has never been explained and never will be.']);
+      'Open. The spit is turning, the bottom corner of the window has fogged, and the light coming out of this doorway is doing more for this end of the High Street than the streetlights are.',
+      'The Christmas party ended here in 2019, 2021 and 2022. There is a photograph on the fourth floor of Nigel in this doorway that has never been explained and never will be — and there is, it turns out, a second copy of it, and it is not on the fourth floor.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('kebabDoor'); } },
+       { t: 'Not tonight.', to: null }]);
   },
   phoneBox() {
     insp('📞', 'The phone box', 'Adopted', [
