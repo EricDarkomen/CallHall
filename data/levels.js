@@ -363,6 +363,57 @@ const LEVELS = {
     }
   },
 
+  /* ---- GREGGS ---------------------------------------------------------
+     The first place out here you can go INTO that is not this company's own
+     building, and the reason it is this one is that the writing got there
+     first: the act across the road has described the inside of it — lit like
+     an operating theatre, permanently busy, the whole fourth floor's opinion
+     of a day decided in here at about half eleven — since before there was a
+     street to stand on.
+
+     It is one room, which is what a unit on a parade is. The counter runs
+     along the back, the queue is the width of the shop, and buying something
+     is the same Shop panel it always was: this level did not replace the shop,
+     it put a floor under it.
+
+     Small on purpose. A unit like this is four metres wide and the tables are
+     an afterthought by the window, and a level the size of the office would be
+     a lie about what is behind that frontage. */
+  greggs: {
+    name: 'Greggs',
+    w: 15, h: 11,
+    rooms: [{ z: 'greggs', r: [2, 2, 12, 8] }],
+    doors: [],
+    entries: { door: [7.5, 7.5] },
+    links: [{ via: 'greggsOut', to: 'outside', entry: 'greggs' }],
+    furnish() {
+      const A = o => this.add(o);
+      /* The way back out, on the shop floor by the door. */
+      A({ x: 7, y: 8, e: '\ud83d\udeaa', name: 'The door out', kind: 'exit', solid: false, use: 'greggsOut' });
+      /* THE COUNTER, along the back wall. Three tiles of it, because the queue
+         is the width of the shop and the shop is not wide. */
+      A({ x: 5, y: 3, e: '\ud83e\uddfe', name: 'The counter', kind: 'cab', solid: true, use: 'greggsCounter' });
+      A({ x: 6, y: 3, e: '\ud83e\uddfe', name: 'The counter', kind: 'cab', solid: true, use: 'greggsCounter' });
+      A({ x: 7, y: 3, e: '\ud83d\udcb3', name: 'The till', kind: 'pc', solid: true, use: 'greggsTill' });
+      A({ x: 8, y: 3, e: '\ud83e\uddfe', name: 'The counter', kind: 'cab', solid: true, use: 'greggsCounter' });
+      /* The hot cabinet, which is the thing everybody is actually looking at. */
+      A({ x: 9, y: 3, e: '\ud83e\udd50', name: 'The hot cabinet', kind: 'vend', solid: true, use: 'greggsCabinet' });
+      A({ x: 10, y: 3, e: '\ud83e\uddca', name: 'The drinks fridge', kind: 'fridge', solid: true, use: 'greggsFridge' });
+      /* The board nobody reads, because everybody already knows. */
+      A({ x: 6, y: 2, e: '\ud83d\udccb', name: 'The menu board', kind: 'board', solid: true, use: 'greggsBoard' });
+      A({ x: 9, y: 2, e: '\ud83d\udcc4', name: 'The allergen folder', kind: 'poster', solid: true, use: 'greggsAllergens' });
+      /* Two tables by the window, which is one more than anybody uses. */
+      A({ x: 4, y: 6, e: '\ud83e\ude91', name: 'The table by the window', kind: 'table', solid: true, use: 'greggsTable' });
+      A({ x: 4, y: 7, e: '\ud83e\ude91', name: 'The chair nobody has moved', kind: 'chair', solid: true, use: 'greggsTable' });
+      A({ x: 11, y: 7, e: '\ud83d\uddd1\ufe0f', name: 'The bin', kind: 'bin', solid: true, use: 'greggsBin' });
+      /* The queue barrier, which is a strip of tape on the floor and a sign. */
+      /* On the SOUTH wall, because the street is south of this unit — which is
+         also why the frontage outside has no sash window on it: you are looking
+         at the back of that wall from out there. */
+      A({ x: 10, y: 8, e: '\ud83e\ude9f', name: 'The window onto the High Street', kind: 'view', solid: false, use: 'greggsWindow' });
+    }
+  },
+
   /* ---- OUTSIDE --------------------------------------------------------
      The forecourt and the streets, which is the only level with a sky over it.
      `indoors: false` is what the renderer reads: no strip lights, daylight
@@ -563,8 +614,12 @@ const LEVELS = {
     doors: [],
     /* In the walkway between the two banks of bays, facing away from the
        doors. Not in a bay: you come out of a building on foot. */
-    entries: { doors: [20.5, 4.5] },
-    links: [{ via: 'frontDoors', to: 'office', entry: 'lobby' }],
+    entries: { doors: [20.5, 4.5], greggs: [31.5, 22.5] },
+    links: [
+      { via: 'frontDoors', to: 'office', entry: 'lobby' },
+      /* The one shopfront on this street with a floor behind it. */
+      { via: 'greggsDoor', to: 'greggs', entry: 'door' },
+    ],
     /* The cars. Parked ones sit in bays and are scenery you can walk round and
        bump into; two of them are worth pressing E on and exactly one of them
        will let you in. The last four have a `route` instead of a bay, which is
@@ -946,6 +1001,25 @@ const LEVELS = {
       A({ x: 56, y: 59, e: '🌳', name: 'The trees along the railway', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 100, y: 59, e: '🌳', name: 'The trees along the railway', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 88, y: 59, e: '🐦', name: 'More gulls', kind: 'pigeon', solid: false, use: 'gulls' });
+
+      /* THE GLASS, one pane beside each frontage. Scenery: it is the
+         window of the unit whose sign is next to it, and after dark it is
+         the only thing on this parade that is on. */
+      A({ x: 48, y: 14, e: '\ud83e\ude9f', name: 'The window of Nailed It', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 56, y: 14, e: '\ud83e\ude9f', name: 'The window of Bellhaven Bookmakers', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 62, y: 14, e: '\ud83e\ude9f', name: 'The window of The charity shop', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 68, y: 14, e: '\ud83e\ude9f', name: 'The window of Vapour Trail', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 74, y: 14, e: '\ud83e\ude9f', name: 'The window of The unit that is always being refitted', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 88, y: 14, e: '\ud83e\ude9f', name: 'The window of The Bellhaven Arms', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 94, y: 14, e: '\ud83e\ude9f', name: 'The window of The launderette', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 100, y: 14, e: '\ud83e\ude9f', name: 'The window of The post office', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 106, y: 14, e: '\ud83e\ude9f', name: 'The window of Bellhaven Kebab', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 22, y: 32, e: '\ud83e\ude9f', name: 'The window of Bellhaven Tyre & Exhaust', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 32, y: 32, e: '\ud83e\ude9f', name: 'The window of Unit 6', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 42, y: 32, e: '\ud83e\ude9f', name: 'The window of The hand car wash', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 74, y: 32, e: '\ud83e\ude9f', name: 'The window of The Working Men’s Club', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 84, y: 32, e: '\ud83e\ude9f', name: 'The window of Sunseekers', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 94, y: 32, e: '\ud83e\ude9f', name: 'The window of The cash and carry', kind: 'shopwin', solid: false, use: 'shopWindow' });
 
       /* ---- THE RETAIL PARK ----
          Fifteen spaces, a lane down the middle and more tarmac than anywhere

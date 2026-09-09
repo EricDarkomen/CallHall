@@ -611,10 +611,64 @@ const Acts = {
     insp('🥐', 'Greggs', 'Across the road', [
       'Across the road, lit like an operating theatre, permanently busy.',
       'The whole fourth floor’s opinion of a day is decided somewhere in here, at about half eleven.'],
-      [{ t: 'Go in. (12 min.)', to: null, do() {
-          G.minutes += 12; Player.mod({ energy: 4 }); Ach.get('a_greggs'); Shop.open('greggs');
-        } },
+      /* There is a floor behind that frontage now. Going in used to BE the
+         transaction — twelve minutes and a panel; it is a door to somewhere,
+         and the buying happens at the counter like it does in a shop. */
+      [{ t: 'Go in.', to: null, do() { Ach.get('a_greggs'); Levels.take('greggsDoor'); } },
        { t: 'Not today.', to: null }]);
+  },
+  /* --- inside the Greggs --- */
+  greggsOut() { Sfx.door(); Levels.take('greggsOut'); },
+  greggsCounter() {
+    insp('\ud83e\uddfe', 'The counter', 'Serving', [
+      'The counter, and behind it somebody moving at a speed the fourth floor has never once managed.',
+      'The queue is four deep and moving. It is always four deep and it is always moving, and nobody has ever worked out how both of those are true at once.'],
+      [{ t: 'Buy something. (12 min.)', to: null, do() {
+          G.minutes += 12; Player.mod({ energy: 4 }); Shop.open('greggs');
+        } },
+       { t: 'Just looking.', to: null }]);
+  },
+  greggsTill() {
+    insp('\ud83d\udcb3', 'The till', 'Card only, today', [
+      'A card reader with a handwritten note taped under it: CARD ONLY TODAY, SORRY. The tape has gone amber, which puts today some time last year.']);
+  },
+  greggsCabinet() {
+    insp('\ud83e\udd50', 'The hot cabinet', 'Warm', [
+      'Steel trays under a heat lamp, and the smell that has been doing more for this parade\u2019s footfall than any of the signage.',
+      'The sausage rolls are at the front. They are always at the front. This is not an accident and somewhere there is a person whose job it was.']);
+  },
+  greggsFridge() {
+    insp('\ud83e\uddca', 'The drinks fridge', 'Chilled', [
+      'Cans, bottles, and the meal-deal shelf, which is the only place in Bellhaven where a decision gets made quickly.']);
+  },
+  greggsBoard() {
+    insp('\ud83d\udccb', 'The menu board', 'Above the counter', [
+      'A lit board with everything on it and the prices in a font chosen to be read from the door.',
+      'Nobody in the queue is looking at it. Everybody in the queue already knows.']);
+  },
+  greggsAllergens() {
+    insp('\ud83d\udcc4', 'The allergen folder', 'Ask a colleague', [
+      'A laminated folder on a chain, which is the most seriously anybody in this postcode takes documentation.',
+      'The fourth floor has a policy folder too. Nobody has ever opened it, and it is not on a chain, and it is not laminated.']);
+  },
+  greggsTable() {
+    insp('\ud83e\ude91', 'The table by the window', 'Two seats', [
+      'A small table by the window with two seats, wiped recently enough that you can see where the cloth went.',
+      'From here you can see the office. You can see your own floor. You can see, from a seat in a bakery, the window you spend your day beside.'],
+      [{ t: 'Sit for a minute.', to: null, do() {
+          G.minutes += 6; Player.mod({ patience: 7, energy: 3 });
+          UI.float('A minute.', '#ffb347');
+        } },
+       { t: 'Stand.', to: null }]);
+  },
+  greggsBin() {
+    insp('\ud83d\uddd1\ufe0f', 'The bin', 'Bags and bags', [
+      'A swing bin with a paper bag balanced on the flap, because the flap is full of paper bags.']);
+  },
+  greggsWindow() {
+    insp('\ud83e\ude9f', 'The window onto the High Street', 'From the inside', [
+      'The High Street from the inside, which is the same street and a different thing entirely.',
+      'A bus goes past. Somebody you half recognise from the second floor walks by without looking in.']);
   },
   busStop() {
     insp('🚏', 'The bus stop', 'The 41 and the 41A', [
@@ -658,6 +712,11 @@ const Acts = {
     insp('\ud83d\uddd1\ufe0f', 'The recycling', 'Collected fortnightly', [
       'The green bin, out beside the bottle bank. It goes out on a Tuesday, or a Wednesday, on a fortnightly cycle that the council publishes as a PDF and that nobody on this street has ever successfully predicted.',
       'Somebody has put a pizza box in it. Somebody always has.']);
+  },
+  shopWindow(o) {
+    insp('\ud83e\ude9f', o.name, 'Shopfront', [
+      'A shop window with a sash frame that predates every business that has ever traded behind it.',
+      'There is a sticker in the corner from an alarm company, a faded card for a taxi firm, and a smaller one for a locksmith who is either very good or has been putting cards up for twenty years.']);
   },
   cones() {
     insp('\ud83d\udea7', 'The cones', 'Unattended', [
