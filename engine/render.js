@@ -144,7 +144,14 @@ const R = {
      place so the next seasonal object is a table entry rather than a branch
      in the draw. */
   spriteOf(f) {
-    return f && f.sprites ? f.sprites[Sky.season()] : f && f.sprite;
+    if (!f) return undefined;
+    /* Lit from inside, once the streetlights are on. The same idea as the
+       seasonal swap below and a different axis of it: a shop is not a
+       different shop after dark, it is the same shop with the lights on. Only
+       outdoors — a window seen from inside the building it belongs to is the
+       office's own, and Sky.lampsOn() has nothing to say about that. */
+    if (f.lit && !World.indoors() && Sky.lampsOn()) return f.lit;
+    return f.sprites ? f.sprites[Sky.season()] : f.sprite;
   },
 
   floorTile(z, v, s) {

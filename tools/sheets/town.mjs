@@ -286,6 +286,50 @@ export default {
        canopy from above that it went unnoticed until there were six of them.
        These are the face-on cell of three of the blocks, trimmed to the awning
        and its two support arms. */
+    /* SHOPFRONTS. Three sash windows off one sheet, the same window in three
+       states: daylight, dark, and lit from inside. The parade's units were a
+       wall with an emoji hung on it; they are now a wall with a window in it,
+       and the window knows what time it is — FURN.shop carries `lit`, which
+       R.spriteOf() swaps in when the streetlights come on. Walk back up the
+       High Street at half four in December and the shops are lit.
+
+       The dark one is not a spare: it is the unit that is always being
+       refitted and the one with TO LET in it, which are the two frontages on
+       that parade that should stay black when everything either side of them
+       comes on. */
+    {
+      name: 'shop.window',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Windows/Ornamental Windows A.png',
+        creditsPath: 'Structure/Windows/Credits.txt',
+        assetName: 'Ornamental Windows A',
+        rect: [32, 36, 32, 52],
+      },
+    },
+    {
+      name: 'shop.window.lit',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Windows/Ornamental Windows A.png',
+        creditsPath: 'Structure/Windows/Credits.txt',
+        assetName: 'Ornamental Windows A',
+        rect: [64, 36, 32, 52],
+      },
+    },
+    {
+      name: 'shop.window.dark',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Windows/Ornamental Windows A.png',
+        creditsPath: 'Structure/Windows/Credits.txt',
+        assetName: 'Ornamental Windows A',
+        rect: [0, 36, 32, 52],
+      },
+    },
     {
       name: 'shop.awning',
       anchor: 'wall',

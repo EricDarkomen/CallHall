@@ -52,6 +52,12 @@ const ZONES = {
   marlow:    { name: 'Marlow Street',   floor: '#494d55', alt: '#44484e', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
   fenn:      { name: 'Fenn Street',     floor: '#464a52', alt: '#41454b', wall: '#30343a', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
   corven:    { name: 'Corven Way',      floor: '#454951', alt: '#40444a', wall: '#2f3339', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  /* INSIDE A BUSINESS. The first interior out here that is not this company's
+     own building: warm where the office is cold, and lit like an operating
+     theatre, which is what the act has always said about it from across the
+     road. Vinyl underfoot because that is what a place that mops at close
+     has. */
+  greggs:    { name: 'Greggs',          floor: '#4a4136', alt: '#453c32', wall: '#2b241d', tint: '#ffb347', surf: 'vinyl', tile: 'floor.tile', wtile: 'wall.drywall' },
   /* Not a street: a walled car park with one way in, like the forecourt at the
      other end of town, and the only place out here big enough to find out what
      the pool car does above thirty. */
@@ -270,7 +276,16 @@ const FURN = {
   /* A bench is longer than it is deep, and a barrier is a pole across a gap:
      both are things you get round the end of rather than square blocks. */
   bench: { size: 30, ground: [0.86, 0.4] }, barrier: { size: 26, ground: [0.8, 0.34] },
-  puddle: { size: 22 }, shop: { mount: 'wall', size: 27 },
+  puddle: { size: 22 },
+  shop: { mount: 'wall', size: 27 },
+  /* THE GLASS. Not the shop — the shop is the sign over the door and it keeps
+     the emoji that says which shop it is, because a sash window does not tell
+     you whether you are outside a launderette or a bookmaker's. This is the
+     frontage either side of it: a window in the wall, and the same window lit
+     from inside once the streetlights come on, which R.spriteOf() swaps in.
+     Walk back up the High Street at half four in December and the parade is
+     lit. Scenery, so it never blocks the pavement. */
+  shopwin: { mount: 'wall', size: 20, sprite: 'shop.window', lit: 'shop.window.lit' },
   /* Redeclared from the wall-mounted block at the top of this table, and only
      to add a footprint: a sign with a wall behind it hangs on the wall, and a
      sign with nothing behind it — a bus stop, a car park sign — stands on a

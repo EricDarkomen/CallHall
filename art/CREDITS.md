@@ -449,6 +449,14 @@ or by the Liberated Pixel Cup.
 - **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 
+### `Ornamental Windows A`
+
+- **Used for:** shop.window, shop.window.lit, shop.window.dark
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Blue and yellow glow and emission map by Eliza Wyatt. Recolors by Eliza Wyatt.
+
 ### `Pants 03 - Pants`
 
 - **Used for:** legs
