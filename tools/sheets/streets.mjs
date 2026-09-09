@@ -87,5 +87,45 @@ export default {
       anchor: 'flat',
       source: from('terrains/manhole_and_cover.png', [64, 0, 32, 32]),
     },
+    /* A GIVE WAY sign, and it is three pieces of this kit put together rather
+       than one crop: the pack ships poles on one sheet and sign faces on
+       another, on purpose, so that a game can build the signs it actually
+       needs. `layers` is that, done in the sheet where it can be re-derived,
+       rather than in an image editor and pasted in as pixels nobody can
+       account for. See layersOf() in tools/lib/buildSheet.mjs.
+
+       This one is not decoration. Twelve junction mouths out there are painted
+       with a give-way line and the traffic genuinely yields at them, to the
+       right where two cars want the junction at once — see steerTraffic() in
+       engine/cars.js and the GIVE WAY block in data/levels.js. Until now the
+       rule was on the road and nothing above the kerb said so. */
+    {
+      name: 'sign.giveway',
+      anchor: 'floor',
+      source: {
+        url, sha256, page, assetName, artists, licences, details,
+        size: [20, 50],
+        layers: [
+          { entry: 'decor/sign_poles.png', rect: [14, 80, 4, 46], at: [8, 4] },
+          { entry: 'decor/traffic_sign_base.png', rect: [134, 39, 20, 19], at: [0, 0] },
+        ],
+      },
+    },
+    {
+      /* A stack of tyres and a couple leaning off it. Outside the unit that is
+         always being refitted, with the cones, because a thing nobody is doing
+         any work on accumulates the things nobody is taking away. */
+      name: 'obj.tyres',
+      anchor: 'floor',
+      source: from('decor/wheels_and_tires.png', [162, 118, 28, 40]),
+    },
+    {
+      /* The green one. The street already has the council's grey wheelie bins
+         off the other sheet; this is the recycling that goes out beside them
+         and comes back in on a different day for reasons nobody can recite. */
+      name: 'obj.recycling',
+      anchor: 'floor',
+      source: from('decor/trash_bins.png', [136, 16, 16, 22]),
+    },
   ],
 };

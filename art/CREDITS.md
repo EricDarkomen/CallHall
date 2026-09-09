@@ -179,7 +179,7 @@ or by the Liberated Pixel Cup.
 
 ### `LPC Modern Streets`
 
-- **Used for:** terrain.road, terrain.slab, obj.cone, obj.manhole
+- **Used for:** terrain.road, terrain.slab, obj.cone, obj.manhole, sign.giveway, obj.tyres, obj.recycling
 - **Sheets:** streets
 - **Authors:** Faufilage
 - **Licences offered:** CC0 — used here under CC0

@@ -305,6 +305,14 @@ const FURN = {
     sprites: { spring: 'obj.tree.spring', summer: 'obj.tree.summer',
                autumn: 'obj.tree.autumn', winter: 'obj.tree.winter' }
   },
+  /* A GIVE WAY sign on its post. Standing in its own right rather than hung on
+     anything, so it keeps a post's footprint and not a sign's: what is in your
+     way is 4 pixels of galvanised tube. */
+  roadsign: { size: 24, sprite: 'sign.giveway', ground: [0.28] },
+  /* Tyres nobody is coming back for. */
+  tyres: { size: 26, sprite: 'obj.tyres', ground: [0.72, 0.5] },
+  /* The green one, which goes out on a different day. */
+  recycling: { size: 24, sprite: 'obj.recycling', ground: [0.55] },
   /* A cone. Not a barrier — a barrier is a pole across a gap and you get round
      the end of it; a cone is a thing on the ground you walk round, and there
      is usually more than one of them and no sign of anybody working. */
