@@ -1945,10 +1945,17 @@ const R = {
        them, and a screen-space wash never can be. */
     this.wetGround(x0, y0, x1, y1);
 
-    /* worn patches and old stains */
+    /* worn patches and old stains. The patch is a whole tile lightened by
+       under two percent, which is nothing at all on carpet or on grit and was
+       nothing at all on the road until the road became a flat, poured sheet
+       with no grain in it: on that, a tile-shaped patch is a tile-shaped
+       patch, and a road with a chequerboard on it is worse than a road with
+       nothing on it. So the carriageway sits this one out and keeps the
+       stains below, which are round, and which a road has anyway. */
     c.fillStyle = 'rgba(255,255,255,.018)';
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       if (!World.zone[y][x] || World.solid[y][x]) continue;
+      if (World.surf && World.surf[y][x] === 'tarmac') continue;
       if (World.seed[y][x] > .82) c.fillRect(x * TILE, y * TILE, TILE, TILE);
     }
     c.fillStyle = 'rgba(0,0,0,.13)'; c.beginPath();

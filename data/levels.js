@@ -772,6 +772,7 @@ const LEVELS = {
       A({ x: 40, y: 15, e: '🗑️', name: 'The council bin', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 29, y: 14, e: '🐦', name: 'A pigeon, possibly the same one', kind: 'pigeon', solid: false, use: 'pigeon' });
+      A({ x: 18, y: 18, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
       /* The one on the strip outside the front doors, which is the tree
          everybody in the building sees twice a day and nobody has looked at. */
       A({ x: 20, y: 14, e: '🌳', name: 'The tree outside the front doors', kind: 'tree', solid: true, use: 'streetTree' });
@@ -802,6 +803,11 @@ const LEVELS = {
       A({ x: 72, y: 14, e: '🚧', name: 'The unit that is always being refitted', kind: 'shop', solid: true, use: 'refit',
         furn: { sprite: 'shop.awning.green' } });
       A({ x: 78, y: 14, e: '🪧', name: 'TO LET', kind: 'shopsign', solid: true, use: 'toLet' });
+      /* The cones outside the unit that is always being refitted. Three of
+         them, no work, no van, and nobody has moved them since the spring. */
+      A({ x: 71, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
+      A({ x: 72, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
+      A({ x: 73, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
       A({ x: 56, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 76, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 62, y: 15, e: '🗑️', name: 'Bin, High Street', kind: 'bin', solid: false, use: 'highStreetBin',
@@ -918,6 +924,7 @@ const LEVELS = {
       A({ x: 68, y: 51, e: '🗑️', name: 'Bin, Corven Way', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 26, y: 52, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      A({ x: 46, y: 55, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
       A({ x: 96, y: 57, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
       A({ x: 40, y: 59, e: '🚃', name: 'The railway', kind: 'view', solid: true, use: 'railway' });
       A({ x: 70, y: 59, e: '🕳️', name: 'The subway', kind: 'sign', solid: true, use: 'subway' });

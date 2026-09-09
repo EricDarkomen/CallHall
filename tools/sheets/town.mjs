@@ -27,52 +27,11 @@ export default {
         rect: [0, 0, 32, 32],
       },
     },
-    {
-      /* The pavement. Reused the whole length of the street, tinted by each
-         surface's own colour exactly as floor.carpet is reused across the
-         office's rooms — see render.js's floorTile(). One flagstone,
-         two towns' worth of ground. */
-      name: 'terrain.flag',
-      anchor: 'flat',
-      source: {
-        repo, commit,
-        path: 'Structure/Floor/Tile C.png',
-        creditsPath: 'Structure/Floor/Credits.txt',
-        assetName: 'Tile C',
-        /* Every cell in this sheet is already a complete, self-contained
-           swatch — a preview grid of finished tiles, not a single texture
-           sliced up — so any one cell is safe to crop without tiling it
-           first to hunt for a seam. */
-        rect: [32, 32, 32, 32],
-      },
-    },
-    {
-      /* The road. "Gritty Dirt" is four recolours of one grit texture and the
-         fourth of them is a cold blue-grey — which, multiplied through a grey
-         surface tint, is tarmac: loose chippings, no pattern, no direction.
-         The name upstream gives it is about where Sharm first used it and not
-         about what it looks like, so it is worth ignoring: what it looks like
-         is a road.
-
-         Every marking painted over it — the centre dashes, the double yellows,
-         the bays, the crossing — is drawn by render.js's roadPaint() rather
-         than cropped, because a marking is position-dependent and a tile is
-         not: one dash in the atlas would still need the renderer to know which
-         tiles get one, which way round, and where the line stops. */
-      name: 'terrain.tarmac',
-      anchor: 'flat',
-      source: {
-        repo, commit,
-        path: 'Structure/Floor/Gritty Dirt.png',
-        creditsPath: 'Structure/Floor/Credits.txt',
-        assetName: 'Gritty Dirt',
-        /* Bottom-right of a 2x2 of colour variants. Tiled 3x3 and looked at
-           before it was picked: the grit runs off every edge and back on the
-           other side with no seam and no repeating landmark, which is the one
-           thing a surface covering half a level has to get right. */
-        rect: [32, 32, 32, 32],
-      },
-    },
+    /* The pavement and the carriageway used to be here: a mediaeval flagstone
+       and a recoloured patch of grit, both picked because they were the
+       closest thing to a modern street in a kit that has no streets in it.
+       They are now in tools/sheets/streets.mjs, drawn for the job, and these
+       two came out rather than sit in the atlas unused. */
     {
       /* A gully in the kerb. The bottom cell of a four-cell sheet whose other
          three are the same drain with weeds and water coming out of it — this

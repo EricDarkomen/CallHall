@@ -15,11 +15,15 @@
      for somewhere with no Credits.txt to read and no commit to pin. An
      OpenGameArt submission is this: a page, some attachments, and a licence
      stated beside them. What is re-checked every build is the file's bytes.
+     It may name an `entry` as well, for the common case where the attachment
+     is an archive and the sprite sheet is a path inside it — the checksum is
+     still the whole download's, so the pin covers everything in there.
 
    A sprite says which by whether its source names a `repo` or a `url`, and a
    sheet may not contain both — a bullet in art/CREDITS.md names one source per
    sheet and has to be able to stay true. */
 import { fetchBytes, fetchText, fetchPinnedFile, parseCreditsBlock, verifyLicence } from './source.mjs';
+import { zipRead } from './zip.mjs';
 import { decodePng, encodePng, blankCanvas, blit } from './png.mjs';
 import { shelfPack } from './pack.mjs';
 import { shortHash } from './hash.mjs';
@@ -35,7 +39,7 @@ function classify(src) {
   if (src.url) {
     if (!src.sha256) throw new Error(`the file source ${src.url} declares no sha256 to pin it by`);
     if (!src.page) throw new Error(`the file source ${src.url} declares no page it came from`);
-    return { kind: 'file', origin: src.page, key: src.url };
+    return { kind: 'file', origin: src.page, key: src.url + (src.entry ? '!' + src.entry : '') };
   }
   if (!src.repo) throw new Error('a source names neither a repo nor a url');
   return { kind: 'repo', origin: `${src.repo}@${src.commit}`, key: src.path };
@@ -77,13 +81,21 @@ export async function buildManagedSheet(def) {
      sprites in this sheet are cropped from the same file. */
   const byAsset = new Map();
   const byFile = new Map();
+  /* Downloads are cached by URL and decoded sheets by URL-and-entry, so a
+     twelve-sprite sheet cut from four files inside one archive fetches that
+     archive once. */
+  const byDownload = new Map();
   for (const s of sprites) {
     const src = s.source;
     const { kind, key } = classify(src);
     if (!byFile.has(key)) {
-      byFile.set(key, decodePng(kind === 'repo'
-        ? await fetchBytes(src.repo, src.commit, src.path)
-        : await fetchPinnedFile(src.url, src.sha256)));
+      let bytes;
+      if (kind === 'repo') bytes = await fetchBytes(src.repo, src.commit, src.path);
+      else {
+        if (!byDownload.has(src.url)) byDownload.set(src.url, await fetchPinnedFile(src.url, src.sha256));
+        bytes = src.entry ? zipRead(byDownload.get(src.url), src.entry) : byDownload.get(src.url);
+      }
+      byFile.set(key, decodePng(bytes));
     }
     const decoded = byFile.get(key);
     const [rx, ry, rw, rh] = src.rect;

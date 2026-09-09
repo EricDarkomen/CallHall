@@ -26,6 +26,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const MANAGED_SHEET_MODULES = [
   './sheets/town.mjs',
+  './sheets/streets.mjs',
   './sheets/faces.mjs',
 ];
 
