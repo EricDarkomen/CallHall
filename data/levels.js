@@ -414,6 +414,105 @@ const LEVELS = {
     }
   },
 
+  /* ---- THE BELLHAVEN ARMS ---------------------------------------------
+     Etched glass, a carpet that has seen things, and a chalkboard offering a
+     pie and a pint for the price of a pie and a pint in 2014 — all of which
+     the act across the road has said for as long as there has been a road. It
+     is in here now.
+
+     The bar runs along the back and the room is deeper than it is wide, which
+     is what a pub on a parade is: a frontage the width of a shop and a room
+     that goes back further than you expect. */
+  pub: {
+    name: 'The Bellhaven Arms',
+    w: 15, h: 13,
+    rooms: [{ z: 'pub', r: [2, 2, 12, 10] }],
+    doors: [],
+    entries: { door: [7.5, 9.5] },
+    links: [{ via: 'pubOut', to: 'outside', entry: 'pub' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 7, y: 10, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'pubOut' });
+      /* THE BAR. Four tiles of it, the pumps at the near end where a person
+         stands, and the optics on the wall behind. */
+      A({ x: 5, y: 3, e: '🍺', name: 'The bar', kind: 'cab', solid: true, use: 'pubBar' });
+      A({ x: 6, y: 3, e: '🍺', name: 'The bar', kind: 'cab', solid: true, use: 'pubBar' });
+      A({ x: 7, y: 3, e: '🍺', name: 'The pumps', kind: 'cab', solid: true, use: 'pubBar' });
+      A({ x: 8, y: 3, e: '🍺', name: 'The bar', kind: 'cab', solid: true, use: 'pubBar' });
+      A({ x: 10, y: 3, e: '🥃', name: 'The optics', kind: 'book', solid: true, use: 'pubOptics' });
+      A({ x: 4, y: 2, e: '📝', name: 'The chalkboard', kind: 'board', solid: true, use: 'pubBoard' });
+      A({ x: 9, y: 2, e: '📺', name: 'The telly', kind: 'tv', solid: true, use: 'pubTelly' });
+      /* The quiz corner, which is where the quiz is on a Tuesday and where
+         nothing at all happens for the other six days. */
+      A({ x: 4, y: 6, e: '🪑', name: 'A table', kind: 'table', solid: true, use: 'pubTable' });
+      A({ x: 4, y: 7, e: '🪑', name: 'A chair', kind: 'chair', solid: true, use: 'pubTable' });
+      A({ x: 11, y: 6, e: '🛋️', name: 'The bench along the wall', kind: 'sofa', solid: true, use: 'pubBench' });
+      A({ x: 11, y: 9, e: '🎰', name: 'The fruit machine', kind: 'vend', solid: true, use: 'pubFruit' });
+      A({ x: 3, y: 10, e: '🪟', name: 'The etched glass', kind: 'view', solid: false, use: 'pubGlass' });
+    }
+  },
+
+  /* ---- BELLHAVEN BOOKMAKERS -------------------------------------------
+     "The warmest building on this street and the only one with chairs you can
+     sit in without buying anything, which is a fact about the high street and
+     not about gambling." That sentence is the whole brief for this room, and
+     the row of chairs facing the screens is the whole of the design. */
+  bookies: {
+    name: 'Bellhaven Bookmakers',
+    w: 14, h: 11,
+    rooms: [{ z: 'bookies', r: [2, 2, 11, 8] }],
+    doors: [],
+    entries: { door: [6.5, 7.5] },
+    links: [{ via: 'bookiesOut', to: 'outside', entry: 'bookies' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 6, y: 8, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'bookiesOut' });
+      /* THE SCREENS, along the wall, one of them Wolverhampton. */
+      A({ x: 4, y: 2, e: '📺', name: 'The screens', kind: 'screen', solid: true, use: 'bookiesScreens' });
+      A({ x: 6, y: 2, e: '📺', name: 'The screens', kind: 'screen', solid: true, use: 'bookiesScreens' });
+      A({ x: 8, y: 2, e: '📺', name: 'Wolverhampton', kind: 'screen', solid: true, use: 'bookiesWolves' });
+      /* THE CHAIRS. The point of the room. */
+      A({ x: 4, y: 5, e: '🪑', name: 'The chairs', kind: 'chair', solid: true, use: 'bookiesChairs' });
+      A({ x: 5, y: 5, e: '🪑', name: 'The chairs', kind: 'chair', solid: true, use: 'bookiesChairs' });
+      A({ x: 6, y: 5, e: '🪑', name: 'The chairs', kind: 'chair', solid: true, use: 'bookiesChairs' });
+      A({ x: 7, y: 5, e: '🪑', name: 'The chairs', kind: 'chair', solid: true, use: 'bookiesChairs' });
+      A({ x: 10, y: 3, e: '🧾', name: 'The counter', kind: 'cab', solid: true, use: 'bookiesCounter' });
+      A({ x: 10, y: 4, e: '🖊️', name: 'The slips and the pens on strings', kind: 'paper', solid: true, use: 'bookiesSlips' });
+      A({ x: 3, y: 7, e: '🗑️', name: 'The bin of torn slips', kind: 'bin', solid: true, use: 'bookiesBin' });
+    }
+  },
+
+  /* ---- THE LAUNDERETTE ------------------------------------------------
+     "Eight machines, four dryers, a bench, and a woman who has run it for
+     nineteen years and knows more about this street than the council does."
+     Eight machines, four dryers, a bench, and her. The act wrote the floor
+     plan and this only lays it out. */
+  laund: {
+    name: 'The launderette',
+    w: 16, h: 11,
+    rooms: [{ z: 'laund', r: [2, 2, 13, 8] }],
+    doors: [],
+    entries: { door: [8.5, 7.5] },
+    links: [{ via: 'laundOut', to: 'outside', entry: 'laund' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 8, y: 8, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'laundOut' });
+      /* EIGHT MACHINES along the back wall. */
+      for (let i = 0; i < 8; i++) {
+        A({ x: 3 + i, y: 3, e: '🧺', name: 'A washing machine', kind: 'vend', solid: true, use: 'laundWasher' });
+      }
+      /* FOUR DRYERS down the side. */
+      for (let i = 0; i < 4; i++) {
+        A({ x: 12, y: 3 + i, e: '🌀', name: 'A dryer', kind: 'fridge', solid: true, use: 'laundDryer' });
+      }
+      /* THE BENCH, and her. */
+      A({ x: 5, y: 6, e: '🛋️', name: 'The bench', kind: 'sofa', solid: true, use: 'laundBench' });
+      A({ x: 9, y: 6, e: '🧾', name: 'The counter', kind: 'cab', solid: true, use: 'laundCounter' });
+      A({ x: 3, y: 2, e: '📋', name: 'The price list', kind: 'board', solid: true, use: 'laundPrices' });
+      A({ x: 11, y: 7, e: '🧺', name: 'The service washes', kind: 'box', solid: true, use: 'laundService' });
+    }
+  },
+
   /* ---- OUTSIDE --------------------------------------------------------
      The forecourt and the streets, which is the only level with a sky over it.
      `indoors: false` is what the renderer reads: no strip lights, daylight
@@ -614,11 +713,19 @@ const LEVELS = {
     doors: [],
     /* In the walkway between the two banks of bays, facing away from the
        doors. Not in a bay: you come out of a building on foot. */
-    entries: { doors: [20.5, 4.5], greggs: [31.5, 22.5] },
+    entries: {
+      doors: [20.5, 4.5], greggs: [31.5, 22.5],
+      /* On the pavement outside each one, which is where you are standing when
+         you come back out of it. */
+      pub: [86.5, 15.5], bookies: [54.5, 15.5], laund: [92.5, 15.5],
+    },
     links: [
       { via: 'frontDoors', to: 'office', entry: 'lobby' },
-      /* The one shopfront on this street with a floor behind it. */
+      /* The four shopfronts on this street with a floor behind them. */
       { via: 'greggsDoor', to: 'greggs', entry: 'door' },
+      { via: 'pubDoor', to: 'pub', entry: 'door' },
+      { via: 'bookiesDoor', to: 'bookies', entry: 'door' },
+      { via: 'laundDoor', to: 'laund', entry: 'door' },
     ],
     /* The cars. Parked ones sit in bays and are scenery you can walk round and
        bump into; two of them are worth pressing E on and exactly one of them
