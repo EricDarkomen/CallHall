@@ -1977,8 +1977,18 @@ const Cam = {
      bounds crossed over (a minimum above the maximum), which pinned the whole
      map into the top-left corner with the rest of the window left as void. */
   bound(v, span, view) {
-    const lo = -40, hi = span * TILE - view + 40;
-    if (hi <= lo) return (span * TILE - view) / 2;
+    /* Flush with the edge of the map, not forty pixels past it. That overscan
+       showed a strip of nothing down the side of the frame: no ground, no
+       kerb, no wetness, no lamplight — and, in the rain, drops falling against
+       a flat slab with nothing behind them, which reads as a gap in the shower
+       rather than as the end of the map. There is nothing out there to look
+       at, so the camera no longer goes and looks at it.
+
+       A map SMALLER than the window still has to sit somewhere: centre it, as
+       it always did, because a minimum above a maximum pins the whole thing
+       into the corner and leaves the rest of the window as void. */
+    const lo = 0, hi = span * TILE - view;
+    if (hi <= lo) return hi / 2;
     return clamp(v, lo, hi);
   },
   follow(dt) {

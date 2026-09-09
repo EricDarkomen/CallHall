@@ -1002,8 +1002,8 @@ const R = {
        nothing except what the streetlights make of it. Without the daylight
        term a foggy 02:00 came out paler than a clear 18:00, which is the one
        reading a night should never give. */
-    const fog = Sky.kind().fog;
-    if (fog) {
+    const fog = Sky.fog();
+    if (fog > .01) {
       const lit = clamp(Sky.sunPos() * 1.2 + .45, .16, 1);
       c.save();
       c.globalAlpha = fog * lit * (.34 + Math.sin(this.t * .12) * .03);
@@ -1043,7 +1043,7 @@ const R = {
     const c = this.ctx;
     /* Fog is what makes a streetlight visible as a light rather than as a lit
        patch of pavement, so it does not dim the lamps — it does the opposite. */
-    const haze = 1 + (Sky.kind().fog || 0) * .8;
+    const haze = 1 + Sky.fog() * .8;
     const night = clamp(-Sky.sunPos() * 2.2 + .35, .15, 1) * haze;
     c.save();
     c.globalCompositeOperation = 'lighter';
