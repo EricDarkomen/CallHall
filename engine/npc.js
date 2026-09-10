@@ -1082,10 +1082,24 @@ const NPCM = {
              a door above a shop, and the same two deadlines apply: give up off
              camera, and give up in view only when standing and watching it has
              become worse than the blink. */
-          const at = n.def.home && n.def.home.at;
+          const h = n.def.home;
+          const at = h && h.at;
           if (!at) { gone(); continue; }
           n.callOut = { tile: at, until: this.now + 2, haste: 1.35 };
-          if (reached(n, at) || (this.now > n.homeward + 20 && !onScreen(n)) || this.now > n.homeward + 60) gone();
+          const arrived = reached(n, at);
+          /* WAITING FOR THE 41. Somebody whose way home is a bus does not
+             vanish on reaching a bus stop — they stand at it, which is what a
+             bus stop is, and they go when the bus comes and not before.
+
+             Only while you are watching. Off camera the deadlines below take
+             them, because a person you cannot see standing at a stop for
+             ninety seconds is a person who caught it, and nobody was ever
+             going to be told otherwise. */
+          if (arrived && h.bus && onScreen(n)) {
+            if (typeof Cars !== 'undefined' && Cars.stoppedAt(at[0], at[1])) gone();
+            continue;
+          }
+          if (arrived || (this.now > n.homeward + 20 && !onScreen(n)) || this.now > n.homeward + 60) gone();
           continue;
         }
         if (n.level !== hub) {

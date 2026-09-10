@@ -87,7 +87,12 @@ const Cars = {
         /* What is holding it up, published for the car behind: the give-way
            rule is the only thing out there that needs to know what somebody
            ELSE can see. */
-        blockedBy: null, wheel: 0
+        blockedBy: null, wheel: 0,
+        /* SERVICE. A vehicle with `stops:` pulls up at each of them, waits,
+           and goes — see the note over serveStop(). Everything else on this
+           network has an empty list and never looks at any of it. */
+        stops: (c.stops || []).map(q => ({ x: q.at[0] * TILE, y: q.at[1] * TILE, secs: q.secs || 6 })),
+        stopFor: 0, stopIdx: -1, stopCool: 0, serving: 0
       };
       if (c.route && c.route.length > 1) {
         car.route = c.route.map(p => ({ x: p[0] * TILE, y: p[1] * TILE }));
@@ -431,6 +436,58 @@ const Cars = {
   onRoad(x, y) {
     return World.surfAt(Math.floor(x / TILE), Math.floor(y / TILE)) === 'tarmac';
   },
+  /* Pulling up, waiting, and going again. Returns the speed the vehicle
+     should be asking for, which is the only thing it changes.
+
+     `stopIdx` is which stop it is at, and it is remembered rather than
+     recomputed so that a bus sitting at one for six seconds does not spend
+     those six seconds rediscovering it. `stopCool` is the second or two after
+     pulling away during which every stop is invisible to it — without that a
+     bus leaves a stop at walking pace, is still within reach of it, and serves
+     it again for ever. */
+  serveStop(car, want, c, s, dt) {
+    if (car.stopFor > 0) {
+      car.stopFor -= dt;
+      if (car.stopFor <= 0) { car.stopFor = 0; car.stopIdx = -1; car.stopCool = 2.2; }
+      return 0;
+    }
+    car.serving = 0;
+    if (car.stopCool > 0) { car.stopCool -= dt; car.serving = 0; return want; }
+    for (let i = 0; i < car.stops.length; i++) {
+      const st = car.stops[i];
+      const dx = st.x - car.x, dy = st.y - car.y;
+      /* Along its own nose, so a stop on the far carriageway — or one it has
+         already gone past — is not one it is approaching. */
+      const ahead = dx * c + dy * s;
+      const dist = Math.hypot(dx, dy);
+      if (dist > TILE * 6 || ahead < -TILE * 0.6) continue;
+      if (dist < TILE * 1.3 || ahead < 0) { car.stopFor = st.secs; car.stopIdx = i; car.serving = 0; return 0; }
+      /* Slow over the last six tiles rather than standing on the brakes at the
+         pole, which is what a bus does and what a bus looks like.
+
+         `dist` is in PIXELS and the constant has to be scaled for that: at the
+         far edge of the window this should be asking for about cruise and at
+         the pole for nothing, which is a shade under one. It was 24, which is
+         thirty times too big, so the ramp never bound on anything and the bus
+         went from 120 to a dead stop inside four tenths of a second — correct
+         to the tile, and an emergency stop rather than a bus service. */
+      car.serving = 1;
+      return Math.min(want, Math.max(0, (dist - TILE * 1.1) * 0.8));
+    }
+    return want;
+  },
+  /* Is a vehicle standing at this tile with its doors open — asked by
+     engine/npc.js, which has six people at a bus stop who would otherwise
+     have to evaporate. */
+  stoppedAt(tx, ty) {
+    for (const car of this.list()) {
+      if (car.stopFor <= 0 || car.stopIdx < 0) continue;
+      const st = car.stops[car.stopIdx];
+      if (Math.hypot(st.x - (tx + .5) * TILE, st.y - (ty + .5) * TILE) < TILE * 3) return car;
+    }
+    return null;
+  },
+
   /* Is this car's route drawn on road AT ALL? Asked once per car and
      remembered. Nothing above should start second-guessing a route on a level
      that declares no surfaces: every probe would come back "off the road",
@@ -540,6 +597,24 @@ const Cars = {
     if (noseOff) want = Math.min(want, car.cruise * 0.42);
     if (astray) want = Math.min(want, 52);
 
+    /* ---- THE BUS STOP ------------------------------------------------
+       A route point a vehicle SERVES rather than passes. Everything else out
+       here treats stopping as a failure to be recovered from — the kerb, the
+       queue, the stuck detector — because until now nothing on this network
+       had any reason to stop anywhere on purpose.
+
+       A stop is served when the bus is approaching one it has not just done:
+       `want` is ramped down over the last few metres so it arrives at a halt
+       rather than braking on top of it, then held at nothing for the dwell,
+       then a short cooldown so it does not immediately re-serve the stop it is
+       still sitting at.
+
+       Nothing here suppresses the queue behind it, and that is deliberate: a
+       car held up by a stopped bus is a car held up by a stopped bus, and the
+       give-way and pull-round rules below already know exactly what to do
+       about one. It is the most realistic traffic this town has. */
+    if (car.stops.length) want = this.serveStop(car, want, c, s, dt);
+
     const block = this.blocker(car);
     /* What is holding THIS car up, for the car behind to read next frame — see
        the give-way rule below. A person is not recorded: nobody negotiates
@@ -583,7 +658,11 @@ const Cars = {
        Three shunts against the same thing is not a manoeuvre, it is a driver
        who came off the road somewhere else entirely, so the third one re-reads
        the route as well. */
-    if (!block && want > 12 && Math.abs(car.fwd) < 8) car.stuck += dt;
+    /* A bus at a stop is not stuck: it is doing the one thing it is for. The
+       ramp above can leave it asking for a little speed while barely moving,
+       which is exactly the shape this detector was written to catch. */
+    if (car.stopFor > 0 || car.stopCool > 0 || car.serving) car.stuck = 0;
+    else if (!block && want > 12 && Math.abs(car.fwd) < 8) car.stuck += dt;
     else car.stuck = Math.max(0, car.stuck - dt * 2);
     if (car.stuck > 1.1) {
       car.stuck = 0; car.pull = 0;

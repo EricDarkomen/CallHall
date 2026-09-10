@@ -1022,11 +1022,72 @@ const Acts = {
       'The current smell is the liquids. Under it is acetone, which is the nail bar. Under that is warm solder, which is the phone repair.',
       'And under all of it, faintly, on a warm day, with the door shut: bread. There is no bread. There has been no bread since 2009. The building is doing it from memory.']);
   },
+  /* ---- THE 41 ----------------------------------------------------------
+     Two poles, one route, and a bus that actually pulls up at them — see
+     `stops:` on the 41 in data/levels.js and Cars.serveStop().
+
+     The two stops are a four-minute walk apart and eleven minutes by bus, and
+     everybody takes the bus, and that is not a joke about Bellhaven; that is
+     every town. Acts.ride() is the whole of it: the same six lines from either
+     end, because a bus is a bus. */
+  /* `at` is the pole, `to` is where you are put down at the OTHER end — and
+     both halves of that have to be a bit of pavement. Getting off a bus into
+     a live carriageway is a thing this game will let you do all day and a
+     thing no bus has ever done to anybody. */
+  BUSSTOPS: [{ at: [26, 15], name: 'the stop outside the office', to: [47.5, 58.5] },
+             { at: [46, 58], name: 'the stop on Corven Way', to: [27.5, 15.5] }],
+  /* Is the 41 standing here with its doors open. The 41A never is, which is
+     the entire point of the 41A. */
+  busHere(i) {
+    const st = Acts.BUSSTOPS[i];
+    return typeof Cars !== 'undefined' && Cars.stoppedAt ? Cars.stoppedAt(st.at[0], st.at[1]) : null;
+  },
+  ride(i) {
+    const st = Acts.BUSSTOPS[i];
+    G.minutes += 11;
+    P.x = st.to[0] * TILE; P.y = st.to[1] * TILE;
+    if (typeof Cam !== 'undefined' && Cam.snap) Cam.snap();
+    Player.mod({ energy: 3, patience: 4 });
+    if (!G.flags.rodeThe41) { G.flags.rodeThe41 = true; Ach.get('a_the41'); }
+    UI.toast('\ud83d\ude8c', pick([
+      'Eleven minutes. It is a four-minute walk. You sat upstairs at the front like a child and you would do it again.',
+      'Eleven minutes, and for nine of them the driver and one other passenger conducted an entire conversation about a roundabout.',
+      'Eleven minutes. Nobody asked you for anything. Nobody could reach you. It was the best part of the day and it cost £2.40.',
+    ]), 'gold');
+  },
   busStop() {
-    insp('🚏', 'The bus stop', 'The 41 and the 41A', [
+    const on = Acts.busHere(0);
+    insp('🚏', 'The bus stop', on ? 'The 41 is here' : 'The 41 and the 41A', [
       'The 41 and the 41A. The 41A is the same route as the 41 except that it does not stop here, which is not indicated anywhere at this stop.',
       'The timetable is behind scratched perspex and has been superseded twice.',
-      'You could stand here. You could just stand here, and a bus would come, and it would take you somewhere that is not this.']);
+      on
+        ? 'And here it is. Green one. Doors open, engine running, indicator already on, in the way that means you have about nine seconds to decide something.'
+        : 'You could stand here. You could just stand here, and a bus would come, and it would take you somewhere that is not this.'],
+      on ? [{ t: 'Get on. (£2.40)', to: null, if: () => P.money >= 2.4, do() { Player.mod({ money: -2.4 }); Acts.ride(0); } },
+            { t: 'Let it go.', to: null, do() {
+                UI.toast('\ud83d\ude8c', 'It goes. There is not another one for a while and you knew that when you did it.'); } }]
+        : [{ t: 'Read the timetable.', to: null, do() {
+              insp('\ud83d\uddd3\ufe0f', 'The timetable', 'Superseded twice', [
+                'Two timetables in one frame, the newer one taped over the older one and coming away at three corners, so both are legible and they disagree.',
+                'Where they disagree, everybody in Bellhaven goes with the older one, and everybody in Bellhaven is right, because the 41 has never once run to the new one.']);
+            } },
+           { t: 'Walk.', to: null }]);
+  },
+  corvenStop() {
+    const on = Acts.busHere(1);
+    insp('🚏', 'The stop on Corven Way', on ? 'The 41 is here' : 'The 41, and the railway behind you', [
+      'The other end of the 41: a pole, a frame with no timetable in it at all, and a bench that is not a bench but a leaning rail, installed by somebody who had read a document about loitering.',
+      'Behind it, through the fence, the railway. Two things pass this spot on a schedule and only one of them stops.',
+      on
+        ? 'The green one is here, and the driver has seen you, and is doing the thing with the eyebrows that means get on or do not but decide.'
+        : 'Nobody waits here in the afternoon. At ten to eight in the morning there are eleven people at this rail and not one of them is talking.'],
+      on ? [{ t: 'Get on. (£2.40)', to: null, if: () => P.money >= 2.4, do() { Player.mod({ money: -2.4 }); Acts.ride(1); } },
+            { t: 'Let it go.', to: null }]
+        : [{ t: 'Lean on the rail that is not a bench.', to: null, do() {
+              G.minutes += 4; Player.mod({ patience: 5 });
+              UI.float('Four minutes.', '#9fb3c8');
+            } },
+           { t: 'Walk back.', to: null }]);
   },
   streetBin() {
     insp('🗑️', 'The council bin', 'Emptied Thursdays', [
@@ -1598,6 +1659,11 @@ const Acts = {
   /* ---- THE STREET, REVISITED ------------------------------------------
      Six frontages that used to be a paragraph and are now a door, plus one
      skip. */
+  theFortyOne() {
+    insp('\ud83d\ude8c', 'The 41', 'Stops here', [
+      'The green one. It stops. It has always stopped. Every argument anybody in this town has ever had about the buses is downstream of the fact that one of the two stops and they are the same shape from a distance.',
+      'Through the windows: four people, all of whom are sitting on their own, all of whom could have sat together, all of whom have made the correct decision.']);
+  },
   refitSkip() {
     const load = pick([
       'Today it contains: a bath, four lengths of skirting, a door, and a rolled carpet that has been rained on and is now a geological feature.',

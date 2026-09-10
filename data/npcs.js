@@ -453,7 +453,7 @@ const NPCS = [
 },
 {
   id: 'marjorie', name: 'Marjorie', face: '👩‍🦰', role: 'Agent · custodian of fourteen mugs',
-  home: { at: [25, 15], where: 'the 41, from the stop outside, with fourteen mugs unaccounted for at home' },
+  home: { at: [25, 15], bus: true, where: 'the 41, from the stop outside, with fourteen mugs unaccounted for at home' },
   desk: [29, 23], colour: '#ffb347',
   /* One till two, in front of the shelf of mugs in the charity shop, in her
      coat, holding one. She donated fourteen in 2016 and has bought four
@@ -651,7 +651,7 @@ const NPCS = [
 },
 {
   id: 'sarah', name: 'Sarah', face: '👩', role: 'Agent · keeper of #general',
-  home: { at: [25, 15], where: 'the 41, three stops, and she knows everybody who gets on at all three' },
+  home: { at: [25, 15], bus: true, where: 'the 41, three stops, and she knows everybody who gets on at all three' },
   desk: [25, 23], colour: '#5ad48a',
   /* Second chair. She is the hardest of the three to walk in on and the
      easiest of the three to catch, which are not the same thing. */
@@ -873,7 +873,7 @@ const NPCS = [
 },
 {
   id: 'janet', name: 'Janet', face: '👩‍🏫', role: 'Learning & Development',
-  home: { at: [25, 15], where: 'the 41A, which does not stop here, so she walks to the stop that it does' },
+  home: { at: [25, 15], bus: true, where: 'the 41A, which does not stop here, so she walks to the stop that it does' },
   desk: [7, 32], colour: '#5ad48a',
   schedule: [[540,'training'],[720,'breakTable'],[770,'training']],
   lines: ["Smile while being insulted!", "That’s a learning opportunity.", "Let’s put a pin in that.", "There are no wrong answers. There are wrong answers."],
@@ -1200,7 +1200,7 @@ const NPCS = [
 },
 {
   id: 'sandra', name: 'Sandra', face: '👩‍⚖️', role: 'Quality & Compliance · has heard you',
-  home: { at: [25, 15], where: 'the 41, with a book, and she has never once been asked what it is' },
+  home: { at: [25, 15], bus: true, where: 'the 41, with a book, and she has never once been asked what it is' },
   desk: [29, 27], colour: '#b48cff',
   schedule: [[540,'desk'],[600,'booth'],[660,'desk'],[720,'breakTable'],[760,'booth'],[840,'desk'],[930,'booth']],
   lines: ["I’m scoring, not judging.", "It’s a framework, not an opinion.", "You did say ‘no worries’ eleven times.", "That was a good call, actually."],
@@ -1356,7 +1356,7 @@ const NPCS = [
 },
 {
   id: 'tomasz', name: 'Tomasz', face: '🧑‍🍳', role: 'Agency · 3-month contract (since 2019)',
-  home: { at: [25, 15], where: 'the last bus, every night, and he has never once been on the first' },
+  home: { at: [25, 15], bus: true, where: 'the last bus, every night, and he has never once been on the first' },
   desk: [21, 23], colour: '#4da3ff',
   schedule: [[540,'desk'],[600,'desk'],[720,'fireEsc'],[750,'desk'],[860,'coffee'],[880,'desk']],
   lines: ["I don’t get the emails.", "I’m agency, so.", "It’s fine. It’s a job.", "Do not ask me about the pension.", "I have no lanyard. Nobody has noticed."],
@@ -1741,7 +1741,7 @@ const NPCS = [
 },
 {
   id: 'iris', name: 'Iris', face: '👵', role: 'The charity shop · Tuesdays and Fridays',
-  home: { at: [25, 15], where: 'the 41, Tuesdays and Fridays, and she is at the stop twenty minutes early both days' },
+  home: { at: [25, 15], bus: true, where: 'the 41, Tuesdays and Fridays, and she is at the stop twenty minutes early both days' },
   level: 'charity', desk: [7, 3], dir: 2, colour: '#ffb347',
   hours: [540, 1020],
   look: { base: 'base:fem/Porcelain', eyes: 'eyes:Hazel', hair: 'hair:Medium 07 - Bob, Side Part/Gray',

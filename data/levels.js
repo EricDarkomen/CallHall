@@ -1257,7 +1257,35 @@ const LEVELS = {
          and never has been: it is the first thing the bus stop's own sign has
          said about it since long before there was a road here to not stop on. */
       { model: 'bus', name: 'The 41A', use: 'theBus', traffic: true, cruise: 128, leg: 0, along: 40,
-        route: [[9.5, 17.5], [106.5, 17.5], [106.5, 56.5], [9.5, 56.5]] }
+        route: [[9.5, 17.5], [106.5, 17.5], [106.5, 56.5], [9.5, 56.5]] },
+      /* AND THE 41, WHICH STOPS. The same route, to the tile, because that is
+         what the bus stop's sign has always said about the pair of them — the
+         41A is the same route as the 41 except that it does not stop here. One
+         of them has `stops:` and the other does not, and that one field is the
+         whole of the difference between two buses that a town has argued about
+         for years.
+
+         A different green so you can tell which is coming from the far end of
+         Bellhaven Road, because six people's evening depends on knowing that
+         and so, now, does yours.
+
+         The two stops are the ones with poles on the pavement beside them:
+         outside this building, and down on Corven Way by the railway. It
+         serves them in that order going round, which means the walk is four
+         minutes and the bus is eleven, and everybody takes the bus. */
+      { model: 'bus', body: '#2f5d43', roof: '#f0ece2', name: 'The 41', use: 'theFortyOne',
+        traffic: true, cruise: 120, leg: 2, along: 30,
+        route: [[9.5, 17.5], [106.5, 17.5], [106.5, 56.5], [9.5, 56.5]],
+        stops: [{ at: [26.5, 17.5], secs: 7 }, { at: [46.5, 56.5], secs: 7 }] },
+      /* TWO OF THEM, because a route with one bus on it is not a route, it is
+         a lay-by with a timetable. A lap of this network is the better part of
+         a minute and a half, which is a very long time to stand at a pole in
+         the rain watching a game not happen; half of that is a wait, and a
+         wait is what a bus stop is for. Started half a loop apart. */
+      { model: 'bus', body: '#2f5d43', roof: '#f0ece2', name: 'The 41', use: 'theFortyOne',
+        traffic: true, cruise: 120, leg: 0, along: 62,
+        route: [[9.5, 17.5], [106.5, 17.5], [106.5, 56.5], [9.5, 56.5]],
+        stops: [{ at: [26.5, 17.5], secs: 7 }, { at: [46.5, 56.5], secs: 7 }] }
     ],
     /* THE PEOPLE. Not the twenty colleagues — those are NPCM's, they are all
        upstairs, and they have schedules and opinions. These are strangers, and
@@ -1555,6 +1583,10 @@ const LEVELS = {
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 26, y: 52, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
       A({ x: 46, y: 55, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
+      /* The other end of the 41. A pole, a timetable, and a bench that is not
+         a bench — see the act. It is here because a route with one stop on it
+         is not a route, it is a lay-by. */
+      A({ x: 46, y: 58, e: '🚏', name: 'The stop on Corven Way', kind: 'sign', solid: true, use: 'corvenStop' });
       A({ x: 96, y: 57, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
       A({ x: 40, y: 59, e: '🚃', name: 'The railway', kind: 'view', solid: true, use: 'railway' });
       A({ x: 70, y: 59, e: '🕳️', name: 'The subway', kind: 'sign', solid: true, use: 'subway' });
