@@ -564,16 +564,68 @@ const R = {
      repository. A car in that style would have to be drawn, and a car that is
      drawn may as well be drawn by the renderer, where it can turn through any
      angle rather than the eight a sprite sheet would give it. */
+  /* WHAT SHAPE A VEHICLE IS, as six numbers, so that a bus and a hatchback are
+     not the same drawing at two sizes — which is what they were, and which is
+     why the 41 read as a very long car.
+
+       nose/tail  how much of the full width the front and back keep. A car is
+                  narrower at both ends than across the doors; a van and a bus
+                  are boxes and say so.
+       belly      how far the sides bulge past the widest point. Under 1 for a
+                  slab, a shade over for a body with shoulders on it.
+       base/rear  where the axles are, as a fraction of the half-length. A bus
+                  carries its back axle much further aft than a car does, and
+                  getting that wrong is most of why a long vehicle looks like
+                  it is sliding rather than being driven.
+       cab        the fraction of the length the cabin occupies, from the nose.
+
+     A new model is still an entry in a table and not a new drawing: it names a
+     shape, or names none and gets `car`. */
+  CARSHAPES: {
+    car: { nose: .84, tail: .90, belly: 1.03, base: .60, rear: -.62, cab: 'car' },
+    van: { nose: .97, tail: .99, belly: 1.0, base: .64, rear: -.68, cab: 'van' },
+    bus: { nose: .98, tail: .99, belly: 1.0, base: .70, rear: -.74, cab: 'bus' },
+  },
+  /* One vehicle, from above: the body, the glass, four wheels with the front
+     pair turned to wherever the steering is, and the lights that say what it
+     is doing.
+
+     Nothing here is a sprite, and that is not for want of looking: the kit
+     this game pins is a mediaeval-through-Victorian tile set with a wheelchair
+     and a shopping trolley in it as the only wheeled things in the whole
+     repository. A car in that style would have to be drawn, and a car that is
+     drawn may as well be drawn by the renderer, where it can turn through any
+     angle rather than the eight a sprite sheet would give it. */
   car(car) {
     const c = this.ctx, d = car.def;
     const hl = d.len / 2, hw = d.wid / 2;
+    const S = this.CARSHAPES[d.shape] || this.CARSHAPES.car;
+    const fw = hw * S.nose, rw = hw * S.tail, bel = hw * S.belly;
+
+    /* The outline, and it is a PATH rather than a rounded rectangle. A rect is
+       a slab: the whole reason a car reads as a car from directly above is that
+       it is narrower at the nose than across the doors, and a bus reads as a
+       bus because it is not. Built once and laid down twice — the shadow
+       and the body — so the two can never disagree about the shape. */
+    const outline = () => {
+      c.beginPath();
+      c.moveTo(-hl + rw * .45, -rw);
+      c.quadraticCurveTo(0, -bel, hl - fw * .5, -fw);
+      c.quadraticCurveTo(hl, -fw, hl, -fw * .45);
+      c.quadraticCurveTo(hl, fw * .45, hl - fw * .5, fw);
+      c.quadraticCurveTo(0, bel, -hl + rw * .45, rw);
+      c.quadraticCurveTo(-hl, rw, -hl, rw * .45);
+      c.quadraticCurveTo(-hl, -rw * .45, -hl + rw * .45, -rw);
+      c.closePath();
+    };
+
     /* The shadow is the ground's, so it is offset in the WORLD (down and a
        little right, like every other shadow in this game) and only then turned
        to match the body. */
     c.save();
     c.translate(car.x + 2, car.y + 6); c.rotate(car.a);
     c.fillStyle = 'rgba(0,0,0,.32)';
-    c.beginPath(); c.roundRect(-hl, -hw, d.len, d.wid, 9); c.fill();
+    outline(); c.fill();
     c.restore();
 
     c.save();
@@ -581,19 +633,22 @@ const R = {
 
     /* Wheels first: they are under the arches. The front pair turn, which is
        four pixels of movement and the single thing that most makes the car
-       look like it is being driven rather than slid. */
+       look like it is being driven rather than slid. Sized off the vehicle
+       rather than fixed at twelve by six — a bus on a hatchback's tyres was
+       the other half of why it looked wrong. */
+    const tw = Math.max(11, d.wid * .44), th = Math.max(5, d.wid * .21);
     c.fillStyle = '#16181c';
     const wheel = (u, turn) => {
       c.save(); c.translate(u, 0);
       for (const v of [-hw - 1, hw + 1]) {
         c.save(); c.translate(0, v); if (turn) c.rotate(turn);
-        c.beginPath(); c.roundRect(-6, -3, 12, 6, 2); c.fill();
+        c.beginPath(); c.roundRect(-tw / 2, -th / 2, tw, th, 2); c.fill();
         c.restore();
       }
       c.restore();
     };
-    wheel(hl * 0.58, (car.wheel || 0) * 0.5);
-    wheel(-hl * 0.58, 0);
+    wheel(hl * S.base, (car.wheel || 0) * 0.5);
+    wheel(hl * S.rear, 0);
 
     /* The body. A flat fill would read as a card: the gradient across it is
        the light coming off a curved roof, which is the only reason a car in
@@ -603,40 +658,144 @@ const R = {
     g.addColorStop(.45, d.body);
     g.addColorStop(1, this.shade(d.body, -.28));
     c.fillStyle = g;
-    c.beginPath(); c.roundRect(-hl, -hw, d.len, d.wid, 8); c.fill();
+    outline(); c.fill();
     c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 1.5; c.stroke();
 
-    /* Roof and glass. The windscreen is the bigger of the two and it is at the
-       front, which is how you can tell at a glance which way a stationary car
-       is pointing — the thing GTA got right and nobody has improved on. */
-    c.fillStyle = 'rgba(30,38,50,.85)';
-    c.beginPath(); c.roundRect(hl * 0.18, -hw + 3, hl * 0.36, d.wid - 6, 3); c.fill();
-    c.beginPath(); c.roundRect(-hl * 0.72, -hw + 4, hl * 0.26, d.wid - 8, 3); c.fill();
-    c.fillStyle = this.shade(d.roof, .04);
-    c.beginPath(); c.roundRect(-hl * 0.44, -hw + 2, hl * 0.62, d.wid - 4, 4); c.fill();
-    c.fillStyle = 'rgba(255,255,255,.10)';
-    c.fillRect(-hl * 0.44, -hw + 2, hl * 0.62, 2);
+    /* BUMPERS, which is what `trim` was for. It has been on every entry in the
+       CARS table since the table existed and was read by nothing at all. */
+    if (d.trim) {
+      c.fillStyle = d.trim;
+      c.beginPath(); c.roundRect(hl - 3.5, -fw * .82, 3, fw * 1.64, 1.5); c.fill();
+      c.beginPath(); c.roundRect(-hl + .5, -rw * .82, 3, rw * 1.64, 1.5); c.fill();
+    }
+
+    const glass = 'rgba(30,38,50,.85)';
+    if (S.cab === 'bus') {
+      /* A BUS IS A ROW OF WINDOWS. That is the whole of what one looks like
+         from above and it is what tells you, at a glance and from the far end
+         of Bellhaven Road, that the thing coming is not a very long car. */
+      c.fillStyle = glass;
+      c.beginPath(); c.roundRect(hl * .62, -hw + 2.5, hl * .2, d.wid - 5, 2); c.fill();
+      const n = 6, x0 = -hl * .82, span = hl * 1.36, gh = 4.6;
+      for (let i = 0; i < n; i++) {
+        const x = x0 + span * (i / n);
+        for (const v of [-hw + 2, hw - 2 - gh]) {
+          c.beginPath(); c.roundRect(x, v, span / n - 3, gh, 1); c.fill();
+        }
+      }
+      /* The destination blind, pale, at the front, and the doors — one bay of
+         the nearside left out of the window run and painted lighter. */
+      c.fillStyle = 'rgba(238,236,228,.92)';
+      c.beginPath(); c.roundRect(hl * .86, -hw + 4, 3, d.wid - 8, 1.5); c.fill();
+      c.fillStyle = this.shade(d.body, -.34);
+      c.beginPath(); c.roundRect(hl * .38, hw - 2 - gh - .7, span / n + 1, gh + 1.4, 1.5); c.fill();
+    } else if (S.cab === 'van') {
+      /* A cab at the very front, a bulkhead, and then a box with nothing in
+         it. No side glass at all, which is the entire visual difference
+         between a van and an estate car and is why one of them is a van. */
+      c.fillStyle = glass;
+      c.beginPath(); c.roundRect(hl * .52, -hw + 3, hl * .3, d.wid - 6, 3); c.fill();
+      c.strokeStyle = 'rgba(0,0,0,.22)'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(hl * .44, -hw + 2); c.lineTo(hl * .44, hw - 2); c.stroke();
+      c.fillStyle = this.shade(d.roof, .02);
+      c.beginPath(); c.roundRect(-hl * .8, -hw + 3, hl * 1.18, d.wid - 6, 3); c.fill();
+      /* The roof vent, which every van in the country has and nobody has ever
+         looked at on purpose. */
+      c.fillStyle = 'rgba(255,255,255,.14)';
+      c.beginPath(); c.roundRect(-hl * .1, -5, 10, 10, 2); c.fill();
+    } else {
+      /* Roof and glass. The windscreen is the bigger of the two and it is at
+         the front, which is how you can tell at a glance which way a stationary
+         car is pointing — the thing GTA got right and nobody has improved on.
+         Both panes are TAPERED now: glass in a car is raked, so from above it
+         is a trapezium and never a rectangle, and the two of them leaning
+         towards each other is most of what makes the roof look curved. */
+      const pane = (x0, x1, w0, w1) => {
+        c.beginPath();
+        c.moveTo(x0, -w0); c.lineTo(x1, -w1); c.lineTo(x1, w1); c.lineTo(x0, w0);
+        c.closePath(); c.fill();
+      };
+      c.fillStyle = glass;
+      pane(hl * .18, hl * .54, hw - 3.2, hw - 5.4);          /* windscreen */
+      pane(-hl * .46, -hl * .72, hw - 3.6, hw - 5.8);        /* rear screen */
+      c.fillStyle = this.shade(d.roof, .04);
+      c.beginPath(); c.roundRect(-hl * .44, -hw + 2.6, hl * .62, d.wid - 5.2, 4); c.fill();
+      /* One specular line down the centre of the roof rather than a band along
+         its edge: a car in the rain has a highlight where the crown is. */
+      c.fillStyle = 'rgba(255,255,255,.13)';
+      c.beginPath(); c.roundRect(-hl * .40, -1.6, hl * .54, 3.2, 1.6); c.fill();
+    }
+
+    /* WING MIRRORS. Four pixels each, and they do more for the silhouette than
+       anything else on this list — they are the only part of a car that sticks
+       out sideways, so they are what stops the outline reading as a lozenge. */
+    if (S.cab !== 'bus') {
+      /* At the CAB, which on a van is right at the front and on a car is a
+         third of the way back — a van with its mirrors amidships looks like a
+         van somebody has reversed. */
+      const mx = S.cab === 'van' ? hl * .5 : hl * .2;
+      c.fillStyle = this.shade(d.body, -.3);
+      for (const v of [-1, 1]) {
+        c.beginPath();
+        c.roundRect(mx, v * (hw - 1) - (v < 0 ? 2.6 : 0), 5, 2.6, 1);
+        c.fill();
+      }
+    }
+
+    /* The magnetic door sign that has slid, which the pool car's own entry in
+       the CARS table has described since the day it was written. */
+    if (d.sign) {
+      c.save(); c.translate(-hl * .06, -hw + 1.5); c.rotate(-0.09);
+      c.fillStyle = 'rgba(232,236,242,.9)';
+      c.beginPath(); c.roundRect(-hl * .22, 0, hl * .44, 5, 1); c.fill();
+      c.fillStyle = 'rgba(60,80,120,.55)';
+      c.fillRect(-hl * .18, 1.6, hl * .36, 1.8);
+      c.restore();
+    }
+    if (d.roofSign) {
+      c.fillStyle = 'rgba(240,232,200,.95)';
+      c.beginPath(); c.roundRect(-4, -hw * .5, 8, hw, 1.5); c.fill();
+    }
 
     /* Somebody in it. A head, at the right-hand seat, because this is
        Bellhaven and not Bellhaven, Ohio. */
     if (car === Cars.driving || car.traffic) {
       c.fillStyle = car === Cars.driving ? 'rgba(233,214,190,.95)' : 'rgba(60,66,78,.9)';
-      c.beginPath(); c.arc(-hl * 0.1, hw * 0.42, 3.4, 0, 6.3); c.fill();
+      c.beginPath(); c.arc(-hl * 0.1 + (S.cab === 'bus' ? hl * .62 : 0), hw * 0.42, 3.4, 0, 6.3); c.fill();
     }
 
     /* Lights. Two at each end; the back pair come up when the brakes are on or
        when it is reversing, which are the two times a car behind you needs to
        know. */
     const lit = car.braking || car.fwd < -4;
-    for (const v of [-hw + 4, hw - 4]) {
+    for (const v of [-fw + 3.5, fw - 3.5]) {
       c.fillStyle = 'rgba(255,244,214,.85)';
-      c.beginPath(); c.roundRect(hl - 4, v - 2.5, 3, 5, 1.5); c.fill();
+      c.beginPath(); c.roundRect(hl - 5, v - 2.5, 3, 5, 1.5); c.fill();
+    }
+    for (const v of [-rw + 3.5, rw - 3.5]) {
       c.fillStyle = lit ? '#ff5f56' : 'rgba(150,52,48,.9)';
-      c.beginPath(); c.roundRect(-hl + 1, v - 2.5, 3, 5, 1.5); c.fill();
+      c.beginPath(); c.roundRect(-hl + 2, v - 2.5, 3, 5, 1.5); c.fill();
+    }
+    /* INDICATORS, and they are real: `wheel` is where the steering actually
+       is, so the amber that comes on is the corner the vehicle is genuinely
+       turning towards. Every car at every junction in this town now signals,
+       correctly, without a line of the traffic code changing — and the 41
+       pulling away from a stop has its indicator on, which is a thing the bus
+       stop's act claims about it. Off with Animation, along with everything
+       else that blinks. */
+    const turn = car.wheel || 0;
+    if (this.animate && Math.abs(turn) > .22 && Math.floor(this.t * 2.6) % 2 === 0) {
+      const v = turn < 0 ? -1 : 1;
+      c.fillStyle = '#ffb347';
+      /* INBOARD of the headlight, not outboard. The lights already sit at the
+         widest part of the nose, so pushing the indicator further out put it
+         three pixels off the side of the vehicle, hanging in the road. */
+      c.beginPath(); c.roundRect(hl - 5, v * (fw - 3.5) - 2.5 - v * 4.5, 3, 4, 1.5); c.fill();
+      c.beginPath(); c.roundRect(-hl + 2, v * (rw - 3.5) - 2.5 - v * 4.5, 3, 4, 1.5); c.fill();
     }
     if (lit && Math.abs(car.fwd) > 20) {
       c.fillStyle = 'rgba(255,95,86,.18)';
-      c.beginPath(); c.roundRect(-hl - 7, -hw + 2, 8, d.wid - 4, 3); c.fill();
+      c.beginPath(); c.roundRect(-hl - 7, -rw + 2, 8, rw * 2 - 4, 3); c.fill();
     }
     c.restore();
   },

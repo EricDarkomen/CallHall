@@ -158,24 +158,35 @@ const SURFACES = {
    Handling numbers, not personality: a car that is slow because it is a
    twenty-year-old pool car is slow HERE, in one number, and reads as itself
    without anything in engine/cars.js knowing which car it is. */
+/* `shape` names an entry in R.CARSHAPES and decides the silhouette: a bus is
+   not a long car and a van is not a wide one, and drawing all three from one
+   outline was why the 41 read as a saloon somebody had stretched. Saying
+   nothing means `car`, which is seven of the nine.
+
+   `trim` is the bumpers. It has been on every entry here since the table
+   existed and was read by nothing at all until now.
+
+   `sign` and `roofSign` are two details the writing had already committed to:
+   the pool car's magnetic door sign that has slid, described in its own
+   comment below, and the light on a taxi. */
 const CARS = {
   /* The pool car. The only one in the county with a magnetic door sign that
      has slid, and the only one in this car park you are allowed to move. */
-  pool:  { len: 56, wid: 27, top: 232, acc: 150, grip: 5.5, turn: 2.5, body: '#b9bec4', roof: '#8d949c', trim: '#33383e' },
+  pool:  { len: 56, wid: 27, top: 232, acc: 150, grip: 5.5, turn: 2.5, body: '#b9bec4', roof: '#8d949c', trim: '#33383e', sign: true },
   hatch: { len: 52, wid: 26, top: 265, acc: 190, grip: 6.2, turn: 2.9, body: '#7d2f34', roof: '#5e2327', trim: '#2b2f33' },
   estate:{ len: 62, wid: 28, top: 245, acc: 160, grip: 5.2, turn: 2.3, body: '#2f4a6b', roof: '#243a54', trim: '#2b2f33' },
-  van:   { len: 70, wid: 30, top: 210, acc: 120, grip: 4.4, turn: 2.0, body: '#d8d5cc', roof: '#c2bfb5', trim: '#3a3a38' },
+  van:   { len: 70, wid: 30, top: 210, acc: 120, grip: 4.4, turn: 2.0, body: '#d8d5cc', roof: '#c2bfb5', trim: '#3a3a38', shape: 'van' },
   /* Traffic. Ordinary cars in ordinary colours, so that what goes past the
      Greggs is not obviously the same car eight times. */
   saloon:{ len: 56, wid: 27, top: 220, acc: 150, grip: 5.5, turn: 2.4, body: '#3f5a44', roof: '#31462f', trim: '#2b2f33' },
-  taxi:  { len: 56, wid: 27, top: 230, acc: 165, grip: 5.5, turn: 2.5, body: '#c9a227', roof: '#a8871f', trim: '#2b2f33' },
+  taxi:  { len: 56, wid: 27, top: 230, acc: 165, grip: 5.5, turn: 2.5, body: '#c9a227', roof: '#a8871f', trim: '#2b2f33', roofSign: true },
   small: { len: 46, wid: 25, top: 250, acc: 200, grip: 6.5, turn: 3.1, body: '#5a5f8a', roof: '#464a6b', trim: '#2b2f33' },
   /* The 41A. Long enough that it has to slow right down for a corner and take
      the whole width of the junction to get round one, which is the point of
      having one on the network at all — and it does not stop at the bus stop,
      which is the thing the bus stop has said about the 41A since long before
      there was a road for it to not stop on. */
-  bus:   { len: 96, wid: 32, top: 175, acc: 95, grip: 3.6, turn: 1.9, body: '#8d3a3f', roof: '#f0ece2', trim: '#2b2f33' }
+  bus:   { len: 96, wid: 32, top: 175, acc: 95, grip: 3.6, turn: 1.9, body: '#8d3a3f', roof: '#f0ece2', trim: '#2b2f33', shape: 'bus' }
 };
 
 /* How each kind of object is furnished, keyed by `kind`.
