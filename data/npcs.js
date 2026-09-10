@@ -7,6 +7,32 @@
  * exclusive `if:` guards.
  */
 
+/* OUT OF THE BUILDING.
+ *
+ * `out: { from, to, level, tile }` on a person means: between those two times
+ * on the clock they are not on the fourth floor, they are standing on that
+ * tile of that level. NPCM.runErrands() moves them and NPCM.homeSnap() starts
+ * them there if the shift is loaded mid-window; nothing else in the engine
+ * needed to learn anything, because `n.level` was already the thing every
+ * reader of presence asks about.
+ *
+ * It is here because the town got built and then furnished with strangers.
+ * There are twenty-one people in this game with sprites, expressions, moods
+ * and dialogue trees, and a nail bar was standing three anonymous emoji in the
+ * chairs when the joke it was written for is that they are COLLEAGUES.
+ *
+ * Every window below is one somebody's schedule already had a hole in — lunch,
+ * or the dead hour after it, or ten past four — so nobody is missing from a
+ * desk they were meant to be at. And each of them says something about the
+ * person that the fourth floor cannot: Karen is not in back-to-backs, Sarah
+ * knows everything and is therefore the easiest to catch, Gary does not care
+ * who knows, Marjorie is losing an argument with herself in front of a shelf,
+ * and Nigel is the only one of the twenty-one who has ever been happy in this
+ * town and there is a photograph of it that everybody has read wrong.
+ *
+ * A person in a shop still runs their own entry() — they are the same person —
+ * so the branch is one line at the top of it, testing World.level. */
+
 /* ---------------- NPCs, personalities, dialogue trees ---------------- */
 const NPCS = [
 {
@@ -84,9 +110,16 @@ const NPCS = [
 {
   id: 'karen', name: 'Karen', face: '👩‍💼', role: 'Team Leader · 47 tabs open',
   desk: [33, 19], colour: '#ff5f56',
+  /* Twelve till one, in the first chair at Nailed It, having told the floor
+     she is working from a different location this afternoon. She is. */
+  /* `face: 2` is toward the camera, and it is not decoration: the three of
+     them are facing the room because being seen is the entire mechanism of
+     this shop. Marjorie and Nigel below face away for the opposite reason. */
+  out: { from: 720, to: 780, level: 'nails', tile: [4, 3], face: 2 },
   schedule: [[540,'desk'],[600,'mgmt'],[660,'desk'],[720,'breakTable2'],[750,'desk'],[840,'mgmt'],[900,'desk']],
   lines: ["I’m in back-to-backs today.", "Can we take this offline?", "Just circling back on that.", "I haven’t had a chance to look at it.", "Really quick question —"],
   entry() {
+    if (World.level === 'nails') return G.flags.sawKaren ? 'nails2' : 'nails';
     if (!G.flags.metKaren) return 'first';
     if (G.flags.calls1 && !G.flags.karenReview) return 'review';
     /* The 2022 booking. She has been carrying it for four years and mentions it
@@ -99,6 +132,27 @@ const NPCS = [
     return 'again';
   },
   nodes: {
+    /* ---- NAILED IT, between one and two ---- */
+    nails: { text: ["Karen has both hands flat on a towel and her phone face-down beside them, which is a thing her phone has never once been in four years.",
+        "She sees you. It is not a long moment. Karen has managed people for eleven years and has a procedure for everything.",
+        "“I’m working from a different location this afternoon,” she says, to a woman holding her little finger."],
+      do() { Acts.nailsSpotted('sawKaren'); },
+      choices: [
+        { t: "“Me too.”", to: 'nails_pact' },
+        { t: "“You’re in back-to-backs.”", to: 'nails_caught' },
+        { t: "Say nothing at all and look at the price list.", to: 'nails_nothing' }] },
+    nails_pact: { text: ["“Right,” says Karen. “Good.”",
+        "That is the whole negotiation. Four words. It is binding on both of you until one of you leaves the company, and it will be honoured to the letter by two people who have never honoured a deadline between them."],
+      do() { Rel.add('karen', 2); } },
+    nails_caught: { text: ["“I am in back-to-backs,” says Karen, without moving her hands. “This is between two of them.”",
+        "It is twenty past twelve. Her calendar, which you have seen, has one thing on it today and it is at half three.",
+        "Neither of you says anything else. She will remember this. She will also — and nobody warns you about this part — think slightly more of you for it, because eleven years of managing people has left her with almost nobody who will just say the thing."],
+      do() { Rel.add('karen', 1); P.stats.bullshit += 1; } },
+    nails_nothing: { text: ["You say nothing. You look at the price list. It has not changed since the shop opened and you read all of it.",
+        "“Yeah,” says Karen, eventually, to nobody in particular. “Same.”"],
+      do() { Rel.add('karen', 2); } },
+    nails2: { text: ["She has gone back to looking at the middle distance with the enormous dignity of a woman who has decided that this is now simply a thing that is true.",
+        "Neither of you will bring it up. Not today, not at your one-to-one, not in six years. It will however be very slightly harder for her to say no to you, forever, and she knows that, and she knows you know."] },
     first: { text: ["Hiya! You’re the new one. Lovely. Really quick — do you know how to use the system?"],
       choices: [
         { t: "No, I started forty minutes ago.", to: 'first2' },
@@ -375,14 +429,55 @@ const NPCS = [
 {
   id: 'marjorie', name: 'Marjorie', face: '👩‍🦰', role: 'Agent · custodian of fourteen mugs',
   desk: [29, 23], colour: '#ffb347',
+  /* One till two, in front of the shelf of mugs in the charity shop, in her
+     coat, holding one. She donated fourteen in 2016 and has bought four
+     back, twice knowingly. The act on that shelf has said so from the day
+     the shop had a floor; this is her actually doing it. */
+  out: { from: 780, to: 840, level: 'charity', tile: [10, 4], face: 0 },
   schedule: [[540,'coffee'],[560,'desk'],[620,'coffee'],[640,'desk'],[720,'breakTable'],[780,'desk'],[870,'coffee'],[890,'desk']],
   lines: ["That’s my mug.", "That one’s also mine.", "Don’t use the blue one.", "Fourteen. I counted."],
   entry() {
+    if (World.level === 'charity') return G.flags.marjorieBought ? 'shop2' : 'shop';
     if (Q.active('q_keycard') && !G.flags.marjorieMug) return 'mug';
     if (Q.active('q_headset') && G.flags.askedDave && !G.flags.askedMarjorie) return 'headset';
     return G.flags.metMarjorie ? 'again' : 'first';
   },
   nodes: {
+    /* ---- THE CHARITY SHOP, one till two ---- */
+    shop: { text: ["Marjorie is standing in front of the shelf of mugs in her coat, holding one.",
+        "She is holding it the way you hold something you have already washed up eleven hundred times.",
+        "She has not noticed you. Marjorie notices everything about a mug and nothing else."],
+      choices: [
+        { t: "“Is that one of yours?”", to: 'shop_yes' },
+        { t: "“How many is that now, Marjorie?”", to: 'shop_yes' },
+        { t: "Leave her to it.", to: 'shop_leave' }] },
+    shop_yes: { text: ["“It’s one of mine.” She turns it round. There is a chip on the base you would have to already know about to find, and she found it in about a second and a half.",
+        "“I gave fourteen of these in twenty-sixteen. I have bought four of them back. Twice I knew I was doing it.”",
+        "“This would be the third time I have knowingly done it. I would like it noted that I have not yet decided.”",
+        "It is £1.20. It has been £1.20 for nine years. This is not about £1.20."],
+      choices: [
+        { t: "“Buy it, Marjorie.”", to: 'shop_buy' },
+        { t: "“Put it back.”", to: 'shop_back' },
+        { t: "“You gave it away.”", to: 'shop_gave' }] },
+    shop_buy: { text: ["“Right,” says Marjorie. “Yes. Right.”",
+        "She takes it to the till at a speed that suggests she was waiting for exactly one person to say exactly that, and has been waiting since about ten past one.",
+        "Fifteen mugs. Well — fourteen, and one of them three times, which is not the same fourteen and she knows it is not."],
+      do() { G.flags.marjorieBought = true; Rel.add('marjorie', 4); Ach.get('a_knowingly');
+        UI.toast('☕', 'The shelf is one mug shorter. Somewhere on the fourth floor, a cupboard is one mug fuller, and the ledger of Marjorie has never once balanced and never will.', 'gold'); } },
+    shop_back: { text: ["“No,” she agrees. “No. You’re right.”",
+        "She puts it back. She puts it back facing the wall, which is not where it was, and which is the exact thing she does to the fourteenth mug in the cupboard on the fourth floor.",
+        "She will be in here again on Thursday. You both know it. Neither of you says it."],
+      do() { Rel.add('marjorie', 2); } },
+    shop_gave: { text: ["Marjorie looks at you over the top of the mug for slightly longer than is comfortable.",
+        "“I gave it away,” she says, “to a charity. And then somebody priced it at one pound twenty. And every single day since, it has been sitting on a shelf being worth one pound twenty.”",
+        "“And I don’t mind that. I want to be very clear that I don’t mind that at all.”",
+        "She minds."],
+      do() { Rel.add('marjorie', 1); } },
+    shop_leave: { text: ["You leave her to it. It seemed like the sort of thing a person should be allowed to lose to on their own.",
+        "Behind you, at the till, you hear a very small “...oh, go on then.”"],
+      do() { G.flags.marjorieBought = true; Rel.add('marjorie', 1); } },
+    shop2: { text: ["She has it in her handbag rather than in a carrier bag, which is a decision, and it is the decision of somebody who does not intend to be asked about it on the way back.",
+        "“Lovely to see you,” says Marjorie, with the enormous warmth of a woman who would now very much like you to be somewhere else."] },
     first: { text: ["Oh, hello! New?", "Right — mug policy. You get the plain white one. Not the blue one, not the one with the cat, not the one that says NOT A MORNING PERSON, that’s aspirational and it’s mine."],
       choices: [
         { t: "How many mugs do you have, Marjorie?", to: 'how' },
@@ -422,15 +517,40 @@ const NPCS = [
 {
   id: 'gary', name: 'Gary', face: '🧑‍🦱', role: 'Agent · leaving (est. 2022)',
   desk: [37, 19], colour: '#b48cff',
+  /* Third chair, every six weeks, and he would tell you the date. Gary is
+     the only one of the three not pretending, which is why he is last:
+     the room gets more honest the further into it you go. */
+  out: { from: 720, to: 780, level: 'nails', tile: [10, 3], face: 2 },
   schedule: [[540,'desk'],[590,'coffee'],[610,'desk'],[720,'breakTable2'],[790,'desk'],[880,'looDoor'],[900,'desk']],
   lines: ["I’m off in a couple of months anyway.", "This place, honestly.", "I’ve got an interview lined up.", "I’ve had it up to here."],
   entry() {
+    if (World.level === 'nails') return G.flags.sawGary ? 'nails2' : 'nails';
     if (G.flags.gotGoodChair) return 'chairdone';
     if (Q.active('q_chair') && G.flags.garyChairTerms) return 'chairdeal';
     if (Q.active('q_chair')) return 'chair';
     return G.flags.metGary ? 'again' : 'first';
   },
   nodes: {
+    /* ---- NAILED IT ---- */
+    nails: { text: ["Gary gets exactly one hand’s worth done every six weeks and is the only person in this room who is not pretending.",
+        "“Alright,” says Gary. “Yeah. I get it done. It’s twenty-two quid and it’s the best twenty-two quid I spend all month.”",
+        "He does not lower his voice. He has never lowered his voice. It is genuinely possible that Gary is the healthiest person in this postcode."],
+      do() { Acts.nailsSpotted('sawGary'); },
+      choices: [
+        { t: "“Does Karen know you’re here?”", to: 'nails_karen', if: () => !!G.flags.sawKaren },
+        { t: "“Twenty-two quid.”", to: 'nails_money' },
+        { t: "“Good for you, Gary.”", to: 'nails_good' }] },
+    nails_karen: { text: ["“Karen’s over there,” says Gary, without looking.",
+        "He says it at the volume he says everything at. Two chairs away, a woman who is working from a different location this afternoon does not turn round, does not react, and does not breathe."],
+      do() { Rel.add('gary', 2); } },
+    nails_money: { text: ["“Twenty-two quid,” says Gary. “I spent twenty-six on a lunch on Tuesday I can’t remember. This lasts six weeks and I look at it every day.”",
+        "He has, without any effort at all, just made the single most coherent financial argument anybody on the fourth floor has made this year."],
+      do() { Rel.add('gary', 2); } },
+    nails_good: { text: ["“Cheers,” says Gary, genuinely surprised, and then slightly annoyed at being surprised.",
+        "He is going to say this to you again on the fourth floor, at his desk, at volume, on a Tuesday, in front of Karen. He does not know that yet. You do."],
+      do() { Rel.add('gary', 3); } },
+    nails2: { text: ["“You want to get it done,” says Gary. “Honestly. You’d be surprised.”",
+        "He is not leaving in a couple of months. He has not been leaving in a couple of months since 2022. But he is, six weeks at a time, doing exactly one thing for himself, and that is one more than anybody else on that floor manages."] },
     chair: { text: ["The chair.", "Everyone asks about the chair eventually. You’ve lasted longer than most, I’ll give you that."],
       choices: [
         { t: "Where did it come from?", to: 'chairfrom' },
@@ -505,15 +625,50 @@ const NPCS = [
 {
   id: 'sarah', name: 'Sarah', face: '👩', role: 'Agent · keeper of #general',
   desk: [25, 23], colour: '#5ad48a',
+  /* Second chair. She is the hardest of the three to walk in on and the
+     easiest of the three to catch, which are not the same thing. */
+  out: { from: 720, to: 780, level: 'nails', tile: [7, 3], face: 2 },
   schedule: [[540,'desk'],[600,'fridge'],[615,'desk'],[720,'breakTable'],[780,'desk'],[900,'coffee'],[920,'desk']],
   lines: ["Whose yoghurt is that?", "I’m going to send a message about it.", "It had my NAME on it.", "I’m not angry, I’m documenting."],
   entry() {
+    if (World.level === 'nails') return G.flags.sawSarah ? 'nails2' : 'nails';
     if (Q.active('q_fridge') && G.flags.fridgeClues >= 3) return 'solve';
     if (Q.active('q_fridge')) return 'during';
     if (G.flags.metSarah) return 'again';
     return 'first';
   },
   nodes: {
+    /* ---- NAILED IT ---- */
+    nails: { text: ["Sarah has clocked you in the mirror before you are three feet into the room, because Sarah clocks everything, which is the entire basis of her authority on the fourth floor.",
+        "“Right,” she says. “So. This is a rest day.”",
+        "It is Wednesday. You have been on the same rota since March."],
+      do() { Acts.nailsSpotted('sawSarah'); },
+      choices: [
+        { t: "“It’s a rest day.”", to: 'nails_deal' },
+        { t: "“It’s Wednesday, Sarah.”", to: 'nails_wed' },
+        { t: "“Whose yoghurt was it, Sarah?”", to: 'nails_yoghurt' }] },
+    nails_deal: { text: ["“It’s a rest day,” you agree.",
+        "Sarah nods once, slowly, the way people nod when a treaty has been signed and neither party intends to read it.",
+        "You are now jointly responsible for a secret with the person who runs #general. This is the closest thing to a promotion the fourth floor has ever offered anybody."],
+      do() { Rel.add('sarah', 3); } },
+    nails_wed: { text: ["“It’s Wednesday, Sarah.”",
+        "“It is,” says Sarah. “And I’m documenting that you said that.”",
+        "She is not angry. Sarah is never angry. Sarah documents."],
+      do() { Rel.add('sarah', 1); } },
+    nails_yoghurt: { text: ["Sarah goes very still. The woman doing her nails does not look up and does not stop.",
+        "“...That,” says Sarah, “is low. That is genuinely low.”",
+        "A pause of about four seconds, which in this room is a geological age.",
+        "“And I respect it. And we are never speaking about either of these things again, and I mean either of them, and I mean ever.”"],
+      do() { Rel.add('sarah', 4); G.flags.sarahPact = true; } },
+    /* `text` as a FUNCTION, not an array with a ternary in it. An array
+       literal is evaluated when this file is parsed, which is before the game
+       has a G to read flags off — see Dialogue.setNode(), which calls a text
+       function at the moment the node opens and is the only place a node may
+       look at game state. */
+    nails2: { text: () => ["She has not gone quiet. Sarah does not go quiet. She has instead begun telling you, at length and with real warmth, about a completely unrelated subject, and she will keep doing it until you leave.",
+        G.flags.sarahPact
+          ? "Neither of you has mentioned a yoghurt. Neither of you is going to. It is, at this point, the strongest bond either of you has at this company."
+          : "It is a genuinely interesting subject. That is the craft of it."] },
     first: { text: ["Hiya. Sorry, quick question — did you take a lunch out of the fridge this morning?"],
       choices: [
         { t: "No, I’ve only just arrived.", to: 'no' },
@@ -850,14 +1005,50 @@ const NPCS = [
 {
   id: 'nigel', name: 'Nigel', face: '👔', role: 'Area Manager',
   desk: [46, 3], colour: '#ff5f56',
+  /* Four o'clock, when the spit goes on, on one of the two stools nobody
+     sits on in Bellhaven Kebab. There has been a photograph of Nigel in
+     that doorway on the fourth floor since 2019 and nobody has ever
+     explained it. He is the only one of the twenty-one who has ever been
+     happy in this town, and four hundred people have read the evidence of
+     it exactly backwards. */
+  out: { from: 960, to: 1020, level: 'kebab', tile: [4, 6], face: 0 },
   schedule: [[540,'mgmt'],[660,'corridor'],[690,'mgmt'],[720,'breakTable2'],[780,'mgmt'],[900,'printer'],[930,'mgmt']],
   lines: ["Can I have a quick word?", "It’s not a criticism, it’s a conversation.", "I’m going to need you to be honest with me. Not too honest.", "Everything alright?"],
   entry() {
+    if (World.level === 'kebab') return G.flags.nigelKebab ? 'kebab2' : 'kebab';
     if (G.flags.nigelBeaten) return 'beaten';
     if (!G.flags.metNigel) return 'first';
     return 'quickword';
   },
   nodes: {
+    /* ---- BELLHAVEN KEBAB, after four ---- */
+    kebab: { text: ["Nigel is on one of the two stools nobody sits on, in his coat, with a tray.",
+        "He is the Area Manager. It is ten past four. The company he is across four sites of is nine minutes’ walk from this stool and has four hundred people in it, and not one of them has ever seen this.",
+        "“Alright,” says Nigel.",
+        "He does not ask you anything. Nigel always asks you something."],
+      choices: [
+        { t: "“There’s a photo of you on the fourth floor. In that doorway.”", to: 'kebab_photo' },
+        { t: "“Can I have a quick word?”", to: 'kebab_word' },
+        { t: "“Alright, Nigel.” Leave it there.", to: 'kebab_alright' }] },
+    kebab_photo: { text: ["Nigel chews. He looks at the doorway. He looks back at the tray.",
+        "“Two thousand and nineteen,” he says. “Christmas do. Everybody got taxis and I stayed, and I had one of these, and I sat on this stool, and it was the best hour I’d had in about four years.”",
+        "“And somebody took a picture of it. And it went in a frame. And now it means something completely different to four hundred people, and I have never once corrected it.”",
+        "He eats a chip.",
+        "“Don’t correct it.”"],
+      do() { G.flags.nigelKebab = true; Rel.add('nigel', 4); Ach.get('a_nigelkebab'); } },
+    kebab_word: { text: ["“Can I have a quick word?” you say.",
+        "Nigel puts the tray down. Something happens to his face that you have never seen it do and would not be able to describe to anybody.",
+        "“...Yeah,” he says. “Go on then.”",
+        "You have not prepared a word. You have nothing at all. You had simply, for a very long time, wanted to be the one who said it.",
+        "“It’s not a criticism,” you say. “It’s a conversation.”",
+        "Nigel laughs. Out loud, once, in a kebab shop, at ten past four, in a way that four hundred people would not believe you about and you are never going to try to tell them."],
+      do() { G.flags.nigelKebab = true; Rel.add('nigel', 6); Ach.get('a_nigelkebab'); } },
+    kebab_alright: { text: ["“Alright, Nigel.”",
+        "“Alright,” says Nigel.",
+        "And that is it, and it is enough, and both of you go back to your own trays, and it is the single least stressful exchange either of you has had with the other since you started."],
+      do() { Rel.add('nigel', 2); } },
+    kebab2: { text: ["He is still there. He is in no hurry at all, which is a thing you have never once seen about this man in the building where he is paid to be in a hurry.",
+        "“Get the chilli sauce,” says Nigel. “Not the garlic. The garlic’s mayonnaise and they know it.”"] },
     first: { text: ["Ah. New starter. Nigel. Area Manager. I’m across four sites and none of them are happy, which tells me the problem is systemic and therefore not mine.",
       "Everything alright?"],
       choices: [
