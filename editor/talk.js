@@ -55,6 +55,18 @@ const Talk = {
        waypoint: it means their own, wherever that has been moved to. */
     this.schedule = clone(p.schedule || []);
     this.entrySrc = typeof p.entry === 'function' ? String(p.entry) : null;
+    /* EVERYTHING THIS EDITOR DOES NOT MODEL, KEPT VERBATIM.
+       emit.talkPerson() writes a fixed list of fields, so any field added to a
+       def that this file has not been taught about is silently dropped the
+       first time somebody saves the roster — which is how a person's `look:`
+       or `out:` would quietly disappear and nobody would find out until the
+       game booted without them. The fix is a passthrough rather than five more
+       named fields, so the NEXT one added never has to touch the editor at
+       all. `entry` and `nodes` are excluded because they are functions and
+       trees this file does model, a piece at a time. */
+    const MODELLED = ['id', 'name', 'role', 'face', 'lines', 'desk', 'colour', 'schedule', 'entry', 'nodes'];
+    this.extra = {};
+    Object.keys(p).forEach(k => { if (MODELLED.indexOf(k) < 0) this.extra[k] = clone(p[k]); });
     this.order = Object.keys(p.nodes || {});
     this.nodes = {};
     this.order.forEach(k => { this.nodes[k] = this.grab(p.nodes[k]); });
@@ -82,7 +94,7 @@ const Talk = {
 
   state() {
     return clone({ name: this.name, role: this.role, face: this.face, lines: this.lines,
-      desk: this.desk, colour: this.colour, schedule: this.schedule,
+      desk: this.desk, colour: this.colour, schedule: this.schedule, extra: this.extra,
       entrySrc: this.entrySrc, order: this.order, nodes: this.nodes });
   },
   restore(s) { Object.keys(s).forEach(k => this[k] = clone(s[k])); },

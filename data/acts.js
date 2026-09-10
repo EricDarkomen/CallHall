@@ -870,11 +870,6 @@ const Acts = {
     insp('\ud83e\uddfe', 'The till', 'Cash preferred', [
       'A till from a previous business, operated slowly and correctly, and a card machine that is produced from under the counter like a concession.']);
   },
-  charityVolunteer() {
-    insp('\ud83e\uddd3', 'The volunteer', 'Tuesdays and Thursdays', [
-      'She does Tuesdays and Thursdays and has done since she retired from something she will not name in a building she will point at.',
-      'She prices everything by holding it up and looking at it, and she has never once been wrong, and there is no system.']);
-  },
   charityPoster() {
     insp('\ud83d\ude91', 'The air ambulance poster', 'Every penny', [
       'A poster showing the helicopter, the crew, and a number that is what one flight costs, printed in a size that makes the number the whole poster.']);
@@ -1500,12 +1495,6 @@ const Acts = {
     insp('💷', 'The till, which is a drawer', 'Not a till', [
       'It is a drawer. It has a cutlery insert in it. The tenners are under the insert and the float is in the bit for teaspoons.',
       'Fifty-one years of accounts have gone through a cutlery insert and been correct to the penny every single time, which is more than can be said for the reconciliation system on your floor, which cost eleven thousand pounds.']);
-  },
-  clubMan() {
-    insp('🧓', 'The man at the end of the bar', 'The bar is shut', [
-      'The bar is shut. There is a man at the end of it. He has a glass, and it is empty, and it has been empty for some time, and he is not waiting for anybody to fill it.',
-      '“You’re one of Terry’s,” he says, without turning round. It is not a question and you have not been asked to confirm it.',
-      'He goes back to whatever he was doing before you came in, which was nothing, in a large empty room, happily, for as long as he likes. There is not a single person on your floor who could do that and every one of them thinks they want to.']);
   },
   clubChairs() {
     insp('🪑', 'The chairs nobody moves', 'Four, in a row', [

@@ -67,6 +67,47 @@ const Look = {
     return !!Sprites.compose('player', picks);
   },
 
+  /* ---- DRESSING THE REST OF THE CAST ----
+     The character sheet the build bakes is PINNED — a checksum this project
+     cannot rebuild — and it has twenty-one rows in it. For a long time that
+     was read as a limit of twenty-one people, and it is not: it is a limit on
+     how many people can be BAKED. The creator's parts are the same LPC art cut
+     the other way, one variant per row across seven sheets, and compose()
+     stacks them under any id you like. It has only ever been asked for
+     'player' because the player was the only person the game did not know in
+     advance.
+
+     So a person in data/npcs.js may carry a `look:` — the same seven-key stack
+     the creator writes, in the same vocabulary — and be composed at boot. That
+     is where every publican, doorman and shopkeeper in Bellhaven comes from,
+     and it costs the atlas nothing: the pixels are already shipped for the
+     creator, already credited, and already under the same licence.
+
+     What it costs is the parts sheets at boot rather than on demand — about
+     270KB, against the cast's 211KB — and only when somebody actually needs
+     dressing. A build with no `look:` anywhere never fetches them. */
+  needsDressing() {
+    return typeof NPCS !== 'undefined' && NPCS.some(d => d && d.look);
+  },
+  /* One person. Returns false when the parts are not in yet, which is not an
+     error: they are their emoji until it succeeds, which is the same fallback
+     a missing sheet has always had. */
+  dress(id, look) {
+    if (!look || !Sprites.partsReady()) return false;
+    const picks = this.picks(look);
+    return picks.length ? !!Sprites.compose(id, picks) : false;
+  },
+  /* Everybody with a `look:`, once the parts have decoded. Safe to call twice
+     — compose() overwrites the row it made last time. */
+  dressCast(then) {
+    if (!this.needsDressing()) { if (then) then(0); return; }
+    this.load(ok => {
+      let n = 0;
+      if (ok) for (const d of NPCS) if (d.look && this.dress(d.id, d.look)) n++;
+      if (then) then(n);
+    });
+  },
+
   /* Bring the parts in, then rebuild the menus and the preview. Called from
      open(), so nobody pays for them until they ask. */
   load(then) {

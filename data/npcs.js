@@ -1632,4 +1632,257 @@ const NPCS = [
       "Nobody’s said anything about the card yet. They will at four.",
       "I’ve got the second-best chair, actually. Nobody knows that either."]), to: null }
   }
-}];
+},
+/* ---------------- BELLHAVEN ----------------
+ * Six people who do not work on the fourth floor, and the reason they can
+ * exist at all: `look:`.
+ *
+ * The character sheet the build bakes is PINNED and has twenty-one rows in it,
+ * and for a while that was read as a hard cap of twenty-one people. It is not.
+ * It is a cap on how many people can be BAKED — and the character creator's
+ * parts are the same LPC art cut the other way, one variant per row, stacked
+ * at runtime by Sprites.compose(), which has only ever been asked for 'player'
+ * because the player is the one person the game cannot know in advance.
+ *
+ * So: `look:` is the same seven-key stack the creator writes, in the same
+ * vocabulary, and Look.dressCast() composes everybody who carries one when the
+ * game boots. It adds no art, no licence and no credit — those pixels already
+ * ship for the creator — and until the parts decode these six are their emoji,
+ * which is the fallback a missing sheet has always had.
+ *
+ * Two other fields do the work of putting them somewhere that is not a call
+ * centre. `hours:` is their own day rather than the office's, because a
+ * launderette opens at eight and a club does not start until noon. `dir:` is
+ * which way they stand behind their own counter, because the rule underneath
+ * it — face the monitor — was written when everybody in this game had a desk.
+ *
+ * None of them has a schedule. They are where they are; that is the job.
+ */
+{
+  id: 'pat', name: 'Pat', face: '🧑‍🦳', role: 'The launderette · nineteen years',
+  level: 'laund', desk: [9, 5], dir: 2, colour: '#4da3ff',
+  hours: [480, 1140],
+  look: { base: 'base:fem/Ivory', eyes: 'eyes:Blue', hair: 'hair:Short 05 - Natural/Gray',
+    torso: 'torso:fem/Shirt 09 - Polo/White', legs: 'legs:fem/Pants 03 - Pants/Navy',
+    feet: 'feet:fem/Shoes 01 - Shoes/Black' },
+  lines: ["Second one along sticks.", "It's not the machine, love.", "Terry's are due back Thursday.",
+    "I've seen that jacket before."],
+  entry() { return G.flags.metPat ? 'again' : 'first'; },
+  nodes: {
+    first: { text: ["“You’re from the offices,” says Pat, before you have said anything at all.",
+        "She has run this launderette for nineteen years and she has never once been wrong about where somebody is from. It is not a trick. She has simply been at the front of this street for nineteen years and everybody walks past the front of this street."],
+      do() { G.flags.metPat = true; },
+      choices: [
+        { t: "“How could you tell?”", to: 'tell' },
+        { t: "“I’m here about the tea towels.”", to: 'towels' },
+        { t: "“Just looking, thanks.”", to: 'looking' }] },
+    tell: { text: ["“Lanyard,” says Pat, not looking at your lanyard.",
+        "You are not wearing your lanyard. You took it off in the lift. She is not going to explain and she is enjoying this."],
+      do() { Rel.add('pat', 2); } },
+    towels: { text: ["“Terry’s?” Her whole face changes. “He’s not been in since March.”",
+        "She goes and gets them anyway. Two bags. Washed, dried, folded, in the way that things are folded by somebody who folds four hundred things a day.",
+        "“Tell him they’ve been ready since April and I’m not charging him for the standing.”",
+        "The cleaning contract for the fourth floor of your building is this woman, twice a year, for nothing, because of one man who has not been in since March."],
+      do() { Rel.add('pat', 4); G.flags.patTowels = true; Ach.get('a_towels'); } },
+    looking: { text: ["“Course you are,” says Pat, and goes back to it.",
+        "There is a fan heater on in October, a radio on a shelf that is not the tyre place’s station, and a smell of hot cotton that is the single most comforting thing on this street."],
+      do() { Rel.add('pat', 1); } },
+    /* `text` as a FUNCTION. An array literal with a flag in it is evaluated
+       when this file is PARSED, which is before engine/state.js has declared
+       G — see the note on sarah's nails2 node. */
+    again: { text: () => [G.flags.patTowels
+        ? "“Have you told him?” says Pat. You have not told him. “No,” she says. “No, you haven’t.”"
+        : "“Second one along sticks,” says Pat, to nobody, to the room, to the street, to the nineteen years.",
+      "She knows which unit is being refitted and by whom. She knows what the bookmaker’s was before it was a bookmaker’s. She has never once been asked."] },
+  }
+},
+{
+  id: 'iris', name: 'Iris', face: '👵', role: 'The charity shop · Tuesdays and Fridays',
+  level: 'charity', desk: [7, 3], dir: 2, colour: '#ffb347',
+  hours: [540, 1020],
+  look: { base: 'base:fem/Porcelain', eyes: 'eyes:Hazel', hair: 'hair:Medium 07 - Bob, Side Part/Gray',
+    torso: 'torso:fem/Shirt 07 - Buttoned Longsleeve Shirt/Forest', legs: 'legs:fem/Pants 04 - Cuffed Pants/Charcoal',
+    feet: 'feet:fem/Shoes 01 - Shoes/Brown' },
+  lines: ["Everything on that rail is two pound.", "We can’t take electricals.", "It’s all for the air ambulance.",
+    "She’s in again. Bless her."],
+  entry() {
+    if (G.flags.marjorieBought && !G.flags.irisSaw) return 'saw';
+    return G.flags.metIris ? 'again' : 'first';
+  },
+  nodes: {
+    first: { text: ["“Everything on that rail is two pound,” says Iris, who has said this eleven thousand times and still says it like it is good news.",
+        "She is here Tuesdays and Fridays, she is not paid, and she has been doing it since she retired from something she will not tell you about."],
+      do() { G.flags.metIris = true; },
+      choices: [
+        { t: "“What did you do before?”", to: 'before' },
+        { t: "“Why the air ambulance?”", to: 'ambulance' },
+        { t: "“Two pound. Right.”", to: 'twopound' }] },
+    before: { text: ["“Payroll,” says Iris. “Thirty-one years. For a company that made handles.”",
+        "“Just handles?”",
+        "“Just handles. Door handles, drawer handles, one year a handle for a coffin, which I did not enjoy processing.”",
+        "She is completely delighted to have been asked. Nobody asks."],
+      do() { Rel.add('iris', 3); } },
+    ambulance: { text: ["Iris straightens a mug that does not need straightening.",
+        "“Because it came,” she says.",
+        "That is the whole answer and she does not give any more of it, and you do not ask for any more of it, and she goes back to the rail."],
+      do() { Rel.add('iris', 2); } },
+    twopound: { text: ["“Two pound,” agrees Iris. “Unless it’s got a label in, and then it’s three, and I decide what’s got a label in.”"],
+      do() { Rel.add('iris', 1); } },
+    saw: { text: ["Iris leans over the till, delighted, and lowers her voice to a volume that would carry across a church hall.",
+        "“She’s bought another one.”",
+        "“I know,” you say.",
+        "“She gave them to us.” Iris is shaking her head and beaming at the same time. “She gave them to us and she keeps buying them back and I have never said a word and I am never going to, because it is one pound twenty and she comes in.”"],
+      do() { G.flags.irisSaw = true; Rel.add('iris', 4); } },
+    again: { text: ["“It’s all for the air ambulance,” says Iris, in case you have forgotten, which you have not, because she has told you every time."] },
+  }
+},
+{
+  id: 'norman', name: 'Norman', face: '🧔‍♂️', role: 'The club · on the door since 2006',
+  level: 'club', desk: [12, 13], dir: 2, colour: '#ffb347',
+  hours: [720, 1380],
+  look: { base: 'base:masc/Tawny', eyes: 'eyes:Brown', hair: 'hair:Short 06 - Balding/Gray',
+    beard: 'beard:Facial Hair 07 - Medium Beard/Gray',
+    torso: 'torso:masc/Shirt 01 - Longsleeve Shirt/White', legs: 'legs:masc/Pants 03 - Pants/Charcoal',
+    feet: 'feet:masc/Shoes 01 - Shoes/Black' },
+  lines: ["Who’s signing you in?", "Book’s there.", "Function room’s booked Saturday.", "Mind the step."],
+  entry() { return G.flags.normanTold ? 'again' : 'first'; },
+  nodes: {
+    first: { text: ["Norman folds the newspaper to the bit he is doing rather than the bit he is reading, which is the only way this man has ever folded a newspaper.",
+        "“You got in, then,” he says. He wrote you in himself, four minutes ago, and he is not being sarcastic. He genuinely finds it pleasant that you got in."],
+      choices: [
+        { t: "“Do you ever check?”", to: 'check' },
+        { t: "“Every guest in that book is Terry.”", to: 'terry' },
+        { t: "“What’s the newspaper?”", to: 'paper' }] },
+    check: { text: ["“Check what?”",
+        "“Whether they’re actually members.”",
+        "Norman considers this for a genuinely long time, the way a man considers a question nobody has put to him in nineteen years.",
+        "“If you’ll say a name to me in a doorway,” he says eventually, “you’re the sort that belongs in here. If you won’t, you’re not. That’s the check. That’s always been the check.”",
+        "It is, on reflection, a better door policy than the keycard on the fourth floor."],
+      do() { G.flags.normanTold = true; Rel.add('norman', 4); Ach.get('a_thecheck'); } },
+    terry: { text: ["“Terry signs everybody in,” says Norman, entirely unbothered.",
+        "“Terry hasn’t been in since March.”",
+        "“No,” agrees Norman. “But he signs everybody in.”",
+        "He says it the way you would say a thing about the weather. Somewhere on the fourth floor a man who has not been to this club in six months is holding the door open for four hundred people and does not know it."],
+      do() { G.flags.normanTold = true; Rel.add('norman', 3); } },
+    paper: { text: ["He shows you. It is the quick crossword, three quarters done, in a biro that has run out and been continued in a different biro.",
+        "“Six down,” says Norman. “Nine letters. ‘Kept going’.”",
+        "You look at it for a while. So does he. Neither of you gets it, and it is one of the better ninety seconds of your week."],
+      do() { Rel.add('norman', 2); } },
+    again: { text: ["“Book’s there,” says Norman, and it is, and you are in it, and that is the whole of the arrangement."] },
+  }
+},
+{
+  id: 'stan', name: 'Stan', face: '🧓', role: 'The club · the end of the bar',
+  level: 'club', desk: [7, 9], dir: 0, colour: '#9fb3c8',
+  hours: [720, 1380],
+  look: { base: 'base:masc/Ivory', eyes: 'eyes:Gray', hair: 'hair:Short 06 - Balding/Gray',
+    torso: 'torso:masc/Shirt 07 - Buttoned Longsleeve Shirt/Sky', legs: 'legs:masc/Pants 03 - Pants/Navy',
+    feet: 'feet:masc/Shoes 01 - Shoes/Brown' },
+  lines: ["...", "You’re one of Terry’s.", "Bar’s shut.", "It opens at six."],
+  entry() { return G.flags.stanTold ? 'again' : 'first'; },
+  nodes: {
+    first: { text: ["The bar is shut. There is a man at the end of it. He has a glass, and it is empty, and it has been empty for some time, and he is not waiting for anybody to fill it.",
+        "“You’re one of Terry’s,” he says, without turning round.",
+        "It is not a question and you have not been asked to confirm it."],
+      choices: [
+        { t: "“The bar’s shut.”", to: 'shut' },
+        { t: "“What are you doing?”", to: 'doing' },
+        { t: "Sit down and say nothing.", to: 'sit' }] },
+    shut: { text: ["“It is,” says Stan.",
+        "He does not move. Four minutes later, when you have looked at three noticeboards and come back, he still has not moved, and the empty glass is still exactly where it was, and he is having a lovely time."],
+      do() { Rel.add('stan', 1); } },
+    doing: { text: ["Stan turns round for the first time.",
+        "“Nothing,” he says.",
+        "He says it the way other people say a job title. There is no apology in it anywhere, no explanation and no boredom, and it takes you a moment to work out what is odd about it, and what is odd about it is that you have never once heard anybody say that word without flinching.",
+        "“I did forty-one years,” says Stan, “and now I do this, and this is better.”",
+        "He turns back."],
+      do() { G.flags.stanTold = true; Rel.add('stan', 4); Ach.get('a_nothing'); } },
+    sit: { text: ["You sit down two stools along and say nothing.",
+        "Neither of you says anything for a while. A clock somewhere does what clocks do in rooms like this, which is get louder.",
+        "It is, without any competition, the most restful ninety seconds you have had at work, and you are technically at work."],
+      do() { G.minutes += 4; Player.mod({ patience: 8 }); Rel.add('stan', 3);
+        UI.float('Four minutes.', '#ffb347'); } },
+    again: { text: ["“Alright,” says Stan, to the bar.",
+        "That is it. That is all of it. He will be here when you come back and he will say exactly that, and there is a version of you in about thirty years that would very much like to be him."] },
+  }
+},
+{
+  id: 'jules', name: 'Jules', face: '💅', role: 'Nailed It · the hand in the photograph',
+  level: 'nails', desk: [5, 4], dir: 2, colour: '#ff5f56',
+  hours: [540, 1080],
+  look: { base: 'base:fem/Coffee', eyes: 'eyes:Black', hair: 'hair:Medium 09 - Twists/Black',
+    torso: 'torso:fem/Shirt 04 - T-shirt/Forest', legs: 'legs:fem/Pants 04 - Cuffed Pants/Charcoal',
+    feet: 'feet:fem/Shoes 01 - Shoes/Black' },
+  lines: ["Two minutes, love.", "We don’t do feet.", "That colour’s discontinued.", "Sit anywhere."],
+  entry() { return G.flags.metJules ? 'again' : 'first'; },
+  nodes: {
+    first: { text: ["“Two minutes, love,” says Jules, without stopping and without looking up, and it will not be two minutes and both of you know that.",
+        "It is her shop. It is her name on the awning, her price list, her joke, and — though you would have to be told — her hand in the enormous photograph on the wall."],
+      do() { G.flags.metJules = true; },
+      choices: [
+        { t: "“Is that your hand in the photo?”", to: 'hand' },
+        { t: "“Why don’t you do feet?”", to: 'feet' },
+        { t: "“Est. last Tuesday?”", to: 'est' }] },
+    hand: { text: ["Jules stops. It is the first time she has stopped.",
+        "“Nobody asks that,” she says. “In eleven years nobody has asked me that.”",
+        "“Is it?”",
+        "“It’s my hand. I had it done properly, by a photographer, with the velvet and the lights and everything, and it cost me two hundred and eighty pound in two thousand and fourteen and I have never told a living soul what it cost.”",
+        "She looks at it. “Two hundred and eighty pound,” she says again, to herself, delightedly, like a woman confessing to a very small and very good crime."],
+      do() { Rel.add('jules', 5); Ach.get('a_thehand'); } },
+    feet: { text: ["“Because I did do feet,” says Jules, “for two years, and I would rather close this shop than do that again, and I mean that, and I have thought about it.”",
+        "The sign in the window says WE DO NOT DO FEET. PLEASE STOP ASKING. It is, you now understand, not a joke and never was."],
+      do() { Rel.add('jules', 2); } },
+    est: { text: ["“Est. last Tuesday,” agrees Jules. “Eleven years it’s said that.”",
+        "“Terry says it’s a joke.”",
+        "“Terry,” says Jules, with enormous fondness and no respect whatsoever, “thinks a lot of things are jokes.”"],
+      do() { Rel.add('jules', 3); } },
+    again: { text: () => [Acts.nailsRoom() === 3
+      ? "“Your lot are in,” says Jules, evenly, to a room in which nobody is looking at anybody. “They’re always in. It’s the only appointment on this street I’ve never had to chase.”"
+      : "“Sit anywhere,” says Jules, indicating three chairs, of which she knows, and you know, that only one is ever free."] },
+  }
+},
+{
+  id: 'wes', name: 'Wes', face: '🧑‍🔧', role: 'Bellhaven Tyre & Exhaust · Unit 4',
+  level: 'tyre', desk: [12, 4], dir: 2, colour: '#ffb347',
+  hours: [480, 1080],
+  look: { base: 'base:masc/Brown', eyes: 'eyes:Brown', hair: 'hair:Short 01 - Buzzcut/Black',
+    beard: 'beard:Facial Hair 06 - Trimmed Beard/Black',
+    torso: 'torso:masc/Shirt 04 - T-shirt/Forest', legs: 'legs:masc/Pants 03 - Pants/Charcoal',
+    feet: 'feet:masc/Shoes 01 - Shoes/Black' },
+  lines: ["It’s an advisory.", "Won’t be today.", "Who’s it for?", "Tell Terry I said hello."],
+  entry() {
+    if (G.flags.paidInvoice && !G.flags.wesPaid) return 'paid';
+    return G.flags.metWes ? 'again' : 'first';
+  },
+  nodes: {
+    first: { text: ["Wes comes out from under the pool car wiping his hands on a rag that has not made anything cleaner since about 2018.",
+        "“Who’s it for?” he says, then sees the lanyard you are not wearing. “Ah. You’re the offices.”",
+        "He does not say anything about the eleven invoices on the spike four feet from your elbow. He has never said anything about them to anybody."],
+      do() { G.flags.metWes = true; },
+      choices: [
+        { t: "“What’s wrong with it?”", to: 'wrong' },
+        { t: "“Why do you keep doing the work?”", to: 'why' },
+        { t: "“Nice radio.”", to: 'radio' }] },
+    wrong: { text: ["“Sills are going,” says Wes. “Rear beam’s got a shake in it. Nearside track rod end’s got play you could hear from the pavement.”",
+        "“Is that bad?”",
+        "“It’s an advisory,” says Wes, which is what a man says when the honest answer would end up in an email."],
+      do() { Rel.add('wes', 2); } },
+    why: { text: ["Wes looks at the spike, and then at the car above your head, and then does a thing with his shoulders that is not quite a shrug.",
+        "“Your Terry sends me a card at Christmas,” he says.",
+        "“That’s it?”",
+        "“He’s sent one every year for eleven years and he’s never once put his own name in it, it just says ‘from the fourth floor’, and I know it’s him, and he knows I know it’s him.”",
+        "He goes back under the car. “Tell him I said hello. Don’t tell him about the sills.”"],
+      do() { Rel.add('wes', 4); Ach.get('a_thecard'); } },
+    radio: { text: ["“Don’t touch the radio,” says Wes, from under a car, without any heat in it at all.",
+        "Nobody was going to touch the radio."],
+      do() { Rel.add('wes', 1); } },
+    paid: { text: ["Wes has the yellow copy in his hand and he is holding it slightly away from himself, like a document that has done something unusual.",
+        "“You paid one.”",
+        "“I did.”",
+        "“That wasn’t yours to pay.” He is not angry. He is trying to work out what has happened to his afternoon.",
+        "He folds it, puts it in his top pocket rather than on the spike, and goes back under the car, and about four seconds later, from underneath, in a voice that is not addressed to you: “...well.”"],
+      do() { G.flags.wesPaid = true; Rel.add('wes', 6); } },
+    again: { text: ["“Won’t be today,” says Wes, to a question you have not asked, about a car you did not bring in, and he is right on all three counts."] },
+  }
+}
+];
