@@ -267,6 +267,7 @@ const ACHS = {
   a_thehand: { n: 'Two Hundred And Eighty Pound', e: '📷', d: 'Ask Jules about the photograph of the hand. Nobody has asked in eleven years.' },
   a_thecard: { n: 'From The Fourth Floor', e: '🎄', d: 'Find out why Bellhaven Tyre & Exhaust keeps doing the work.' },
   a_flat6:   { n: 'He Bought A Screwdriver For It', e: '🚪', d: 'Go up to the flats above the parade and read the outside of Mo\u2019s front door.' },
+  a_the41:   { n: 'Somewhere That Is Not This', e: '🚌', d: 'Catch the 41. It is a four-minute walk and eleven minutes on the bus and you took the bus.' },
   a_biscuits: { n: 'Nobody Will Ever Know It Was You', e: '🎁', d: 'Buy the biscuits with your own money and say nothing.' },
   a_mo:      { n: 'Nobody Asks', e: '🧑‍🎓', d: 'Ask Mo whether he is actually alright, and mean it.' },
   a_poop:    { n: 'Listed Building', e: '🧻', d: 'Pay your respects to the only piece of writing in this building that outlived its author’s career.' },
