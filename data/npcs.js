@@ -29,28 +29,57 @@
  * `where` is prose and is read by the profile panel and by the doors on the
  * parade. Nothing in the engine reads it. */
 
-/* OUT OF THE BUILDING.
+/* OUT OF THE BUILDING, AND OUT IN THE EVENING.
  *
- * `out: { from, to, level, tile }` on a person means: between those two times
- * on the clock they are not on the fourth floor, they are standing on that
- * tile of that level. NPCM.runErrands() moves them and NPCM.homeSnap() starts
- * them there if the shift is loaded mid-window; nothing else in the engine
- * needed to learn anything, because `n.level` was already the thing every
- * reader of presence asks about.
+ * `out: [{ from, to, level, tile, face, lines }]` on a person means: between
+ * those two times on the clock they are not on the fourth floor, they are
+ * standing on that tile of that level, facing that way, saying those things.
+ * NPCM.runErrands() moves them and NPCM.homeSnap() starts them there if the
+ * shift is loaded mid-window; nothing else in the engine needed to learn
+ * anything, because `n.level` was already the thing every reader of presence
+ * asks about. A single object rather than a list still means what it always
+ * meant.
  *
  * It is here because the town got built and then furnished with strangers.
- * There are twenty-one people in this game with sprites, expressions, moods
+ * There are twenty-six people in this game with sprites, expressions, moods
  * and dialogue trees, and a nail bar was standing three anonymous emoji in the
  * chairs when the joke it was written for is that they are COLLEAGUES.
  *
- * Every window below is one somebody's schedule already had a hole in — lunch,
- * or the dead hour after it, or ten past four — so nobody is missing from a
- * desk they were meant to be at. And each of them says something about the
- * person that the fourth floor cannot: Karen is not in back-to-backs, Sarah
- * knows everything and is therefore the easiest to catch, Gary does not care
- * who knows, Marjorie is losing an argument with herself in front of a shelf,
- * and Nigel is the only one of the twenty-one who has ever been happy in this
- * town and there is a photograph of it that everybody has read wrong.
+ * A LIST RATHER THAN ONE WINDOW, because a day has more than one hole in it.
+ * It was one for as long as every window in the table was lunch, and lunch is
+ * one window; a man who has the same thing in Greggs at twenty past eight for
+ * seventeen years and is in the Bellhaven Arms at quarter past five is two,
+ * and writing two Daves was never going to be the answer.
+ *
+ * AND THE EVENING IS THE POINT OF THE SECOND ONE. Five o'clock used to be the
+ * last thing that happened to anybody — the doors, the street, their own
+ * direction, gone — so a town with fourteen rooms in it went dark at the exact
+ * hour a town starts, and the pub across the road from twenty people who had
+ * just finished work was empty every night of the game. A window that opens
+ * after five outranks going home (see runHome), and when it shuts they go home
+ * FROM there rather than from a desk they left hours ago (see CLOSING TIME in
+ * runErrands). Somebody already away comes back OUT for one, which is how a
+ * kebab shop has anybody in it at nine at night.
+ *
+ * Every daytime window below is one somebody's schedule already had a hole in
+ * — lunch, or the dead hour after it, or ten past four — so nobody is missing
+ * from a desk they were meant to be at. And each of them says something about
+ * the person that the fourth floor cannot: Karen is not in back-to-backs,
+ * Sarah knows everything and is therefore the easiest to catch, Gary does not
+ * care who knows, Marjorie is losing an argument with herself in front of a
+ * shelf, Nigel is the man who has not paid the eleven invoices on that spike,
+ * Priya's favourite part of her day is being fourth in a queue, and Mo stands
+ * outside his own front door for a bit before he goes in.
+ *
+ * `lines:` is what they say WHILE THEY ARE THERE, and it is the whole reason
+ * the rooms are worth walking to: six colleagues in a pub who are still
+ * talking about the printer are six colleagues at their desks. Idle mutters
+ * and colleague-to-colleague chatter both read it — see NPCM.linesFor().
+ *
+ * THREE ROOMS ARE DELIBERATELY EMPTY and stay that way. Unit 6 has nobody in
+ * it and that is the first thing about Unit 6. Sunseekers is a room you cannot
+ * see, because everything in Sunseekers happens behind a door with a light
+ * over it. And Colin does not go anywhere, ever, which is Colin.
  *
  * A person in a shop still runs their own entry() — they are the same person —
  * so the branch is one line at the top of it, testing World.level. */
@@ -60,6 +89,16 @@ const NPCS = [
 {
   id: 'dave', name: 'Dave', face: '🧔', role: 'Senior Agent · 17 years served',
   home: { at: [6, 30], where: 'Aldergate Rise, twenty-two minutes on foot, the same twenty-two minutes for seventeen years' },
+  out: [
+    { from: 495, to: 540, level: 'greggs', tile: [7, 4], face: 0,
+      /* The same thing every morning for seventeen years. */
+      lines: ["Same as yesterday.", "He doesn’t even ask any more.",
+        "Seventeen years of this.", "It isn’t a treat if it’s every day."] },
+    { from: 1035, to: 1320, level: 'pub', tile: [5, 4], face: 0,
+      /* And the other end of the same day. */
+      lines: ["One, and then I’m off.", "Twenty-two minutes, that walk.",
+        "Go on. Ask me about the Q3 graph.", "This is the good bit of the day, this."] },
+  ],
   desk: [21, 19], colour: '#4da3ff',
   schedule: [[540,'desk'],[615,'coffee'],[630,'desk'],[720,'breakTable'],[765,'looDoor'],[780,'desk'],[900,'coffee'],[915,'desk']],
   lines: ["Mm.", "Have you tried not caring? It works.", "That’ll be the printer.", "It’s always the printer.", "Seventeen years.", "No, I don’t want the team leader job."],
@@ -139,7 +178,15 @@ const NPCS = [
   /* `face: 2` is toward the camera, and it is not decoration: the three of
      them are facing the room because being seen is the entire mechanism of
      this shop. Marjorie and Nigel below face away for the opposite reason. */
-  out: { from: 720, to: 780, level: 'nails', tile: [4, 3], face: 2 },
+  out: [
+    { from: 720, to: 780, level: 'nails', tile: [4, 3], face: 2,
+      lines: ["I’m in back-to-backs, obviously.", "Don’t.",
+        "This is my lunch. This is legally my lunch.", "You’ve seen nothing."] },
+    { from: 860, to: 935, level: 'postoff', tile: [6, 4], face: 0,
+      /* The parcel that has been in the boot for three weeks. */
+      lines: ["It’s been in the boot three weeks.", "Is this the queue, or is that the queue?",
+        "I’m going to be forty minutes now.", "Proof of postage. Always proof of postage."] },
+  ],
   schedule: [[540,'desk'],[600,'mgmt'],[660,'desk'],[720,'breakTable2'],[750,'desk'],[840,'mgmt'],[900,'desk']],
   lines: ["I’m in back-to-backs today.", "Can we take this offline?", "Just circling back on that.", "I haven’t had a chance to look at it.", "Really quick question —"],
   entry() {
@@ -386,6 +433,17 @@ const NPCS = [
 {
   id: 'steve', name: 'Steve', face: '🧑‍🔧', role: 'IT · appears when things break',
   home: { at: [96, 15], where: 'Flat 4, above the parade, eleven feet over a vape shop that was a bakery' },
+  out: [
+    { from: 745, to: 800, level: 'vapour', tile: [6, 4], face: 0,
+      /* The counter in there is a phone repair counter and he is the reason it is. */
+      lines: ["That counter’s a phone repair counter.",
+        "I fixed screens on that. Right there.", "They kept the mat. They kept the actual mat.",
+        "Nothing ever leaves this unit."] },
+    { from: 1040, to: 1200, level: 'flats', tile: [12, 6], face: 0,
+      /* Flat 4 is his, and the landing is the bit of it anybody else is entitled to. */
+      lines: ["Flat 4. Over the vape shop.", "Half of this is for a bakery.",
+        "Nobody bins it. Nobody ever bins it.", "You get used to the smell. You do."] },
+  ],
   desk: [53, 32], colour: '#5ad48a',
   schedule: [[540,'serverRoom'],[600,'printer'],[615,'serverRoom'],[720,'breakTable'],[750,'serverRoom'],[900,'printer'],[930,'serverRoom']],
   lines: ["Have you tried restarting it?", "It’s not a network issue.", "That’s a hardware thing, that.", "I’ve logged it."],
@@ -459,7 +517,15 @@ const NPCS = [
      coat, holding one. She donated fourteen in 2016 and has bought four
      back, twice knowingly. The act on that shelf has said so from the day
      the shop had a floor; this is her actually doing it. */
-  out: { from: 780, to: 840, level: 'charity', tile: [10, 4], face: 0 },
+  out: [
+    { from: 780, to: 840, level: 'charity', tile: [10, 4], face: 0,
+      lines: ["That’s mine. That was mine.", "Four. I’ve bought four of them back.",
+        "Two pound. For my own mug.", "I’m not buying it. I’m looking at it."] },
+    { from: 1022, to: 1130, level: 'laund', tile: [9, 7], face: 0,
+      /* A service wash on the way to the stop, and Pat knows whose everything is. */
+      lines: ["Service wash, Pat.", "Fourteen. There were fourteen.",
+        "She knows whose everything is.", "Bus at half past. I’ve got time."] },
+  ],
   schedule: [[540,'coffee'],[560,'desk'],[620,'coffee'],[640,'desk'],[720,'breakTable'],[780,'desk'],[870,'coffee'],[890,'desk']],
   lines: ["That’s my mug.", "That one’s also mine.", "Don’t use the blue one.", "Fourteen. I counted."],
   entry() {
@@ -547,7 +613,20 @@ const NPCS = [
   /* Third chair, every six weeks, and he would tell you the date. Gary is
      the only one of the three not pretending, which is why he is last:
      the room gets more honest the further into it you go. */
-  out: { from: 720, to: 780, level: 'nails', tile: [10, 3], face: 2 },
+  out: [
+    { from: 720, to: 780, level: 'nails', tile: [10, 3], face: 2,
+      lines: ["Yeah. And?", "Put it in the group chat, I don’t care.",
+        "I’ve been leaving since 2022, mate.", "Best hour of the week, this."] },
+    { from: 860, to: 930, level: 'bookies', tile: [5, 5],
+      /* In the warm, in a chair, not betting. */
+      lines: ["Wolverhampton. It’s always Wolverhampton.",
+        "It’s warm and the chairs are free.", "I’m not even betting.",
+        "Nobody has ever once asked where I’ve been."] },
+    { from: 1030, to: 1350, level: 'pub', tile: [6, 4], face: 0,
+      /* The leaving drinks. They were the leaving drinks last year as well. */
+      lines: ["These are my leaving drinks.", "They were my leaving drinks last year an’ all.",
+        "Still here. Still leaving.", "Somebody get Marcus a chair."] },
+  ],
   schedule: [[540,'desk'],[590,'coffee'],[610,'desk'],[720,'breakTable2'],[790,'desk'],[880,'looDoor'],[900,'desk']],
   lines: ["I’m off in a couple of months anyway.", "This place, honestly.", "I’ve got an interview lined up.", "I’ve had it up to here."],
   entry() {
@@ -655,7 +734,15 @@ const NPCS = [
   desk: [25, 23], colour: '#5ad48a',
   /* Second chair. She is the hardest of the three to walk in on and the
      easiest of the three to catch, which are not the same thing. */
-  out: { from: 720, to: 780, level: 'nails', tile: [7, 3], face: 2 },
+  out: [
+    { from: 720, to: 780, level: 'nails', tile: [7, 3], face: 2,
+      lines: ["I know. I know, I know, I know.", "You will not put this in #general.",
+        "I’m at my desk. I am at my desk right now.", "Karen’s here as well. Look at her."] },
+    { from: 1040, to: 1290, level: 'pub', tile: [4, 7],
+      /* In the chair, because somebody has to be sitting down. */
+      lines: ["One, and then the 41.", "I know everybody who gets on at all three stops.",
+        "Don’t tell me anything. I’ll only know it.", "Half seven bus. That’s the one."] },
+  ],
   schedule: [[540,'desk'],[600,'fridge'],[615,'desk'],[720,'breakTable'],[780,'desk'],[900,'coffee'],[920,'desk']],
   lines: ["Whose yoghurt is that?", "I’m going to send a message about it.", "It had my NAME on it.", "I’m not angry, I’m documenting."],
   entry() {
@@ -737,6 +824,15 @@ const NPCS = [
 {
   id: 'kevin', name: 'Kevin', face: '🧑‍💻', role: 'Agent · wearing a headset',
   home: { at: [30, 8], where: 'the bike rack, on a bike, in weather that has never once been suitable' },
+  out: [
+    { from: 720, to: 780, level: 'greggs', tile: [6, 4], face: 0,
+      lines: ["Sausage roll. Obviously a sausage roll.", "I keep the headset on. It’s easier.",
+        "Twelve minutes, door to door.", "Is that queue moving or is that queue not moving."] },
+    { from: 930, to: 995, level: 'tyre', tile: [12, 8], face: 0,
+      /* A bike, a puncture, and a man who fixes exhausts. */
+      lines: ["It’s a bike. It’s a puncture.", "He’s going to laugh at me.",
+        "He’s laughing at me.", "Every weather. Every single weather."] },
+  ],
   desk: [41, 19], colour: '#4da3ff',
   schedule: [[540,'desk'],[640,'coffee'],[655,'desk'],[720,'breakTable2'],[780,'desk'],[900,'desk']],
   lines: ["Has anyone seen my headset?", "I definitely had it.", "It’s not in the drawer.", "I can hear you, weirdly."],
@@ -784,6 +880,14 @@ const NPCS = [
 {
   id: 'priya', name: 'Priya', face: '👩‍💻', role: 'Subject Matter Expert · knows everything, tells no one',
   home: { at: [30, 8], where: 'a village with a shop that shuts at one, which she chose on purpose' },
+  out: [
+    { from: 735, to: 795, level: 'postoff', tile: [8, 9], face: 0,
+      /* Fourth in a queue is the only place all day nobody asks her anything. */
+      lines: ["Fourth in the queue. Always fourth.",
+        "The shop at home shuts at one. I chose that.",
+        "Nobody has asked me anything for nine minutes.",
+        "This is the best part of my day and I mean it."] },
+  ],
   desk: [45, 19], colour: '#b48cff',
   schedule: [[540,'desk'],[600,'printer'],[620,'desk'],[720,'breakTable'],[770,'desk'],[860,'archive'],[900,'desk']],
   lines: ["That’s a known issue.", "It’s in the knowledge base. Nobody reads the knowledge base.", "I wrote that article. In 2021.", "Escalate it to me and I’ll do it properly."],
@@ -828,6 +932,17 @@ const NPCS = [
 {
   id: 'terry', name: 'Terry', face: '👴', role: 'Facilities · has every key ever made',
   home: { at: [70, 58], where: 'the far side of the railway, through the subway, and he walked it before it was lit' },
+  out: [
+    { from: 720, to: 790, level: 'bookies', tile: [4, 5],
+      /* The sentence the room was written from, with him in it. */
+      lines: ["Warmest building on this street.",
+        "Chairs you can sit in without buying anything.", "I’ve not put a bet on since 1998.",
+        "They know me. They don’t mind."] },
+    { from: 1155, to: 1380, level: 'club', tile: [4, 11],
+      /* Item seven has been carried forward since 2019 and he was at the meeting. */
+      lines: ["Item seven. Carried forward.", "It’s been carried forward since 2019.",
+        "I’ve got a key to this an’ all.", "Norman’ll sign you in. Norman signs anybody in."] },
+  ],
   desk: [6, 9], colour: '#ffb347',
   schedule: [[540,'archive'],[660,'coffee'],[680,'archive'],[720,'breakTable2'],[780,'archive'],[900,'training'],[930,'archive']],
   lines: ["Mind the boxes.", "That door’s not a door.", "I’ve got a key for that.", "Nobody comes down here.", "I’m not replacing that flap a third time."],
@@ -874,6 +989,13 @@ const NPCS = [
 {
   id: 'janet', name: 'Janet', face: '👩‍🏫', role: 'Learning & Development',
   home: { at: [25, 15], bus: true, where: 'the 41A, which does not stop here, so she walks to the stop that it does' },
+  out: [
+    { from: 720, to: 780, level: 'charity', tile: [4, 7], face: 1,
+      /* The book table, every day, and she takes the books. */
+      lines: ["There’s a jigsaw. There is always a jigsaw.",
+        "Somebody’s whole life on that rail.", "Learning and Development. Twelve pound a year.",
+        "I’ll take the books. I always take the books."] },
+  ],
   desk: [7, 32], colour: '#5ad48a',
   schedule: [[540,'training'],[720,'breakTable'],[770,'training']],
   lines: ["Smile while being insulted!", "That’s a learning opportunity.", "Let’s put a pin in that.", "There are no wrong answers. There are wrong answers."],
@@ -924,6 +1046,15 @@ const NPCS = [
 {
   id: 'mo', name: 'Mo', face: '🧑‍🎓', role: 'Trainee · started the same day as you',
   home: { at: [96, 15], where: 'Flat 6, above the parade, the first place that has ever been his' },
+  out: [
+    { from: 720, to: 775, level: 'greggs', tile: [5, 4], face: 0,
+      lines: ["I get the same as Dave. He said to.", "Started the same day as you, me.",
+        "Is this the bit where we talk?", "I’ve got a flat. Above the shops. It’s mine."] },
+    { from: 1030, to: 1180, level: 'flats', tile: [13, 3], face: 0,
+      /* Flat 6, and he stands outside it for a bit before he goes in. */
+      lines: ["Flat 6. That door’s mine.", "First place that’s ever been mine.",
+        "The light’s on a timer. Two minutes.", "I just stand here sometimes."] },
+  ],
   desk: [17, 19], colour: '#4da3ff',
   schedule: [[540,'desk'],[600,'looDoor'],[615,'desk'],[720,'breakTable2'],[780,'desk'],[840,'coffee'],[860,'desk']],
   lines: ["Do we get lunch? Like, an actual lunch?", "I’ve just been shouted at about a boiler.", "Is it always like this?", "I like it here. Is that bad?"],
@@ -1047,7 +1178,15 @@ const NPCS = [
      explained it. He is the only one of the twenty-one who has ever been
      happy in this town, and four hundred people have read the evidence of
      it exactly backwards. */
-  out: { from: 960, to: 1020, level: 'kebab', tile: [4, 6], face: 0 },
+  out: [
+    { from: 620, to: 760, level: 'tyre', tile: [9, 5], face: 0,
+      /* The eleven invoices on the spike are for that car and he is the man who has not paid them. */
+      lines: ["Put it on the account.", "There is an account.",
+        "That’s our pool car, that is.", "I’ll get Finance to look at it."] },
+    { from: 960, to: 1020, level: 'kebab', tile: [4, 6], face: 0,
+      lines: ["Four sites, me.", "I’m not due at any of them.",
+        "Best chips in the region and I’ll say that anywhere.", "Don’t put this in a report."] },
+  ],
   schedule: [[540,'mgmt'],[660,'corridor'],[690,'mgmt'],[720,'breakTable2'],[780,'mgmt'],[900,'printer'],[930,'mgmt']],
   lines: ["Can I have a quick word?", "It’s not a criticism, it’s a conversation.", "I’m going to need you to be honest with me. Not too honest.", "Everything alright?"],
   entry() {
@@ -1122,6 +1261,12 @@ const NPCS = [
 {
   id: 'alan', name: 'Alan', face: '🧓', role: 'Escalations · takes the ones nobody else can',
   home: { at: [3, 22], where: 'west, on foot, past the multi-storey, in no hurry whatsoever' },
+  out: [
+    { from: 1035, to: 1305, level: 'pub', tile: [10, 4], face: 0,
+      /* One, and then west past the multi-storey in no hurry whatsoever, which is why. */
+      lines: ["I take the ones nobody else can.", "So I have one. And then I walk.",
+        "Past the multi-storey. No hurry.", "It’s out of your head by Aldergate."] },
+  ],
   desk: [37, 23], colour: '#5ad48a',
   schedule: [[540,'desk'],[610,'fireEsc'],[625,'desk'],[720,'step'],[755,'desk'],[880,'fireEsc'],[900,'desk']],
   lines: ["Mm. Yes. Go on.", "No, you’re quite right to be angry.", "I’ve got all day.", "Let’s start at the beginning.", "It’s not a technique. It’s just listening."],
@@ -1201,6 +1346,15 @@ const NPCS = [
 {
   id: 'sandra', name: 'Sandra', face: '👩‍⚖️', role: 'Quality & Compliance · has heard you',
   home: { at: [25, 15], bus: true, where: 'the 41, with a book, and she has never once been asked what it is' },
+  out: [
+    { from: 850, to: 910, level: 'postoff', tile: [6, 9], face: 0,
+      lines: ["I’m posting something. That’s all.", "You may carry on.",
+        "No, you may not see it.", "It’s a book club. It is a book club."] },
+    { from: 1030, to: 1230, level: 'pub', tile: [11, 7], face: 0,
+      /* One, with the book nobody has ever asked her about. */
+      lines: ["One. With my book.", "Nobody has ever asked me what it is.",
+        "You’re not going to ask either, are you.", "I’ve heard you, remember."] },
+  ],
   desk: [29, 27], colour: '#b48cff',
   schedule: [[540,'desk'],[600,'booth'],[660,'desk'],[720,'breakTable'],[760,'booth'],[840,'desk'],[930,'booth']],
   lines: ["I’m scoring, not judging.", "It’s a framework, not an opinion.", "You did say ‘no worries’ eleven times.", "That was a good call, actually."],
@@ -1277,6 +1431,13 @@ const NPCS = [
 {
   id: 'fiona', name: 'Fiona', face: '👩‍🦳', role: 'People Partner · 0.6 FTE · the entire People Team',
   home: { at: [30, 8], where: 'two other sites and a car boot with three lanyards in it' },
+  out: [
+    { from: 715, to: 785, level: 'postoff', tile: [7, 4], face: 0,
+      /* Three sites’ worth of post and 0.6 of a person to take it. */
+      lines: ["Three sites’ worth of post. One of me.", "0.6 FTE. This is the 0.4.",
+        "Recorded delivery, all of it.",
+        "It’s cheaper than the franking machine. It genuinely is."] },
+  ],
   desk: [26, 12], colour: '#ffb347',
   schedule: [[540,'hrCorner'],[620,'corridor'],[660,'hrCorner'],[720,'breakTable2'],[780,'meetRoom'],[840,'hrCorner'],[930,'lobby']],
   lines: ["I’m only in Tuesdays and Thursdays.", "That’s a conversation for your line manager.", "I don’t have an office, no.", "Have you done your 30/60/90?"],
@@ -1357,6 +1518,12 @@ const NPCS = [
 {
   id: 'tomasz', name: 'Tomasz', face: '🧑‍🍳', role: 'Agency · 3-month contract (since 2019)',
   home: { at: [25, 15], bus: true, where: 'the last bus, every night, and he has never once been on the first' },
+  out: [
+    { from: 1130, to: 1395, level: 'kebab', tile: [6, 4], face: 0,
+      /* The last bus every night, and this is where the waiting is done. */
+      lines: ["Last bus is twenty past.", "Three-month contract. Since 2019.",
+        "He knows my order. That’s something.", "It’s warm in here and it’s warm on the bus."] },
+  ],
   desk: [21, 23], colour: '#4da3ff',
   schedule: [[540,'desk'],[600,'desk'],[720,'fireEsc'],[750,'desk'],[860,'coffee'],[880,'desk']],
   lines: ["I don’t get the emails.", "I’m agency, so.", "It’s fine. It’s a job.", "Do not ask me about the pension.", "I have no lanyard. Nobody has noticed."],
@@ -1478,6 +1645,12 @@ const NPCS = [
 {
   id: 'bev', name: 'Bev', face: '👩‍🔧', role: 'Cleaning · in at six · sees everything',
   home: { at: [108, 30], where: 'Marlow Street, and she is back before any of them, which is the whole of the arrangement' },
+  out: [
+    { from: 460, to: 520, level: 'greggs', tile: [5, 4], face: 0,
+      /* In at six, so this is the middle of her day and the shop is otherwise empty. */
+      lines: ["In at six. This is my break.", "Nobody in that building’s awake yet.",
+        "I’ve done two floors already.", "They think it cleans itself."] },
+  ],
   desk: [9, 18], colour: '#5ad48a',
   schedule: [[540,'kettle'],[560,'corridor'],[600,'trolleyPark'],[660,'looSink'],[720,'breakTable'],[780,'archive'],[860,'corridor'],[920,'tin']],
   lines: ["Mind your feet, love.", "I’ve done that floor twice.", "Six o’clock start, me.", "I know whose that is.", "Don’t worry about it, I’ll get it."],
@@ -1588,6 +1761,15 @@ const NPCS = [
 {
   id: 'marcus', name: 'Marcus', face: '🧔‍♂️', role: 'Agent · it is, apparently, his birthday',
   home: { at: [30, 8], where: 'furthest of anybody, and he leaves last, and nobody has ever put those two facts together' },
+  out: [
+    { from: 720, to: 780, level: 'greggs', tile: [8, 4], face: 0,
+      /* It is his birthday and he is buying, which is the wrong way round and he knows. */
+      lines: ["It’s my birthday.", "I’m buying. It’s a tray. It’s a whole tray.",
+        "Nobody’s signed the card.", "They’ve signed it. Have they signed it?"] },
+    { from: 1050, to: 1380, level: 'pub', tile: [7, 4], face: 0,
+      lines: ["It is still my birthday.", "Furthest to go, me. Bus and then a bus.",
+        "I’ll get the next one in.", "Somebody said they were coming."] },
+  ],
   desk: [45, 31], colour: '#ffb347',
   schedule: [[540,'desk'],[720,'desk'],[780,'desk'],[900,'desk']],
   lines: ["...", "Morning.", "It’s fine.", "No, nobody’s said anything.", "I did get the card, yeah."],
@@ -1703,6 +1885,13 @@ const NPCS = [
 {
   id: 'pat', name: 'Pat', face: '🧑‍🦳', role: 'The launderette · nineteen years',
   home: { at: [96, 15], where: 'Flat 1, above her own launderette, nineteen years, four stairs and a fire door' },
+  out: [
+    { from: 800, to: 845, level: 'postoff', tile: [7, 4], face: 0,
+      /* Fifteen minutes, sign turned round, two doors down, and everybody knows where she is. */
+      lines: ["Fifteen minutes. Sign’s turned round.", "Everybody knows where I am.",
+        "One till two, it says. It has never once been one till two.",
+        "Nineteen years and I’ve never had a full lunch."] },
+  ],
   level: 'laund', desk: [9, 5], dir: 2, colour: '#4da3ff',
   hours: [480, 1140],
   look: { base: 'base:fem/Ivory', eyes: 'eyes:Blue', hair: 'hair:Short 05 - Natural/Gray',
@@ -1742,6 +1931,12 @@ const NPCS = [
 {
   id: 'iris', name: 'Iris', face: '👵', role: 'The charity shop · Tuesdays and Fridays',
   home: { at: [25, 15], bus: true, where: 'the 41, Tuesdays and Fridays, and she is at the stop twenty minutes early both days' },
+  out: [
+    { from: 690, to: 735, level: 'greggs', tile: [10, 4], face: 0,
+      /* Twenty-five minutes, and the charity shop is shut while she has them. */
+      lines: ["Tea. Just the tea.", "Two pound on that rail. Everything.",
+        "It’s all for the air ambulance.", "I’ll be back before anybody notices."] },
+  ],
   level: 'charity', desk: [7, 3], dir: 2, colour: '#ffb347',
   hours: [540, 1020],
   look: { base: 'base:fem/Porcelain', eyes: 'eyes:Hazel', hair: 'hair:Medium 07 - Bob, Side Part/Gray',
@@ -1819,6 +2014,12 @@ const NPCS = [
 {
   id: 'stan', name: 'Stan', face: '🧓', role: 'The club · the end of the bar',
   home: { at: [86, 15], where: 'about forty feet, which is why he is in no rush at all to do it' },
+  out: [
+    { from: 835, to: 905, level: 'bookies', tile: [7, 5],
+      /* The club does not get going until seven and his front door is forty feet from it. */
+      lines: ["Club doesn’t get going till seven.", "So I sit here.",
+        "Forty feet from my door, that club.", "Wolverhampton’s on. It’s always on."] },
+  ],
   level: 'club', desk: [7, 9], dir: 0, colour: '#9fb3c8',
   hours: [720, 1380],
   look: { base: 'base:masc/Ivory', eyes: 'eyes:Gray', hair: 'hair:Short 06 - Balding/Gray',
@@ -1855,6 +2056,13 @@ const NPCS = [
 {
   id: 'jules', name: 'Jules', face: '💅', role: 'Nailed It · the hand in the photograph',
   home: { at: [30, 8], where: 'out of town, in a car, because nobody who owns a shop on this parade lives on it except Pat' },
+  out: [
+    { from: 890, to: 945, level: 'vapour', tile: [10, 5], face: 0,
+      /* The basin in there is her old basin and nobody ever took it out. */
+      lines: ["That basin’s still plumbed in.", "That was us. That was our basin.",
+        "Six year I’ve been three doors down.",
+        "They never took it out. Nobody takes anything out."] },
+  ],
   level: 'nails', desk: [5, 4], dir: 2, colour: '#ff5f56',
   hours: [540, 1080],
   look: { base: 'base:fem/Coffee', eyes: 'eyes:Black', hair: 'hair:Medium 09 - Twists/Black',
@@ -1891,6 +2099,16 @@ const NPCS = [
 {
   id: 'wes', name: 'Wes', face: '🧑‍🔧', role: 'Bellhaven Tyre & Exhaust · Unit 4',
   home: { at: [3, 22], where: 'over the road from the unit, so he can see the shutter from his kitchen and has never once needed to' },
+  out: [
+    { from: 495, to: 545, level: 'greggs', tile: [9, 4], face: 0,
+      /* The shutter goes up first and that is enough for them. */
+      lines: ["Bay’s cold till nine anyway.", "Shutter’s up. That’s enough for them.",
+        "Over the road, me. I can see it from here.", "Two teas. Don’t ask."] },
+    { from: 1080, to: 1290, level: 'pub', tile: [9, 4], face: 0,
+      /* Shuts at six, and the pub is nearer than his own front door. */
+      lines: ["Shut at six. Every day, six.", "Eleven invoices, that lot owe me.",
+        "I’ll not chase it. I know where they work.", "Over the road and then over the road."] },
+  ],
   level: 'tyre', desk: [12, 4], dir: 2, colour: '#ffb347',
   hours: [480, 1080],
   look: { base: 'base:masc/Brown', eyes: 'eyes:Brown', hair: 'hair:Short 01 - Buzzcut/Black',

@@ -445,7 +445,12 @@ const LEVELS = {
       /* The quiz corner, which is where the quiz is on a Tuesday and where
          nothing at all happens for the other six days. */
       A({ x: 4, y: 6, e: '🪑', name: 'A table', kind: 'table', solid: true, use: 'pubTable' });
-      A({ x: 4, y: 7, e: '🪑', name: 'A chair', kind: 'chair', solid: true, use: 'pubTable' });
+      /* `solid: false`, for the reason the nail bar's three are: a chair nobody
+         can stand on is a chair nobody can sit in, and anybody standing still
+         on a chair tile is drawn sitting in it. There are people in here at ten
+         past five now — see `out:` in data/npcs.js — and a pub in which all six
+         of them are stood up is a bar, not a pub. */
+      A({ x: 4, y: 7, e: '🪑', name: 'A chair', kind: 'chair', solid: false, use: 'pubTable' });
       A({ x: 11, y: 6, e: '🛋️', name: 'The bench along the wall', kind: 'sofa', solid: true, use: 'pubBench' });
       A({ x: 11, y: 9, e: '🎰', name: 'The fruit machine', kind: 'vend', solid: true, use: 'pubFruit' });
       A({ x: 3, y: 10, e: '🪟', name: 'The etched glass', kind: 'view', solid: false, use: 'pubGlass' });
@@ -471,11 +476,14 @@ const LEVELS = {
       A({ x: 4, y: 2, e: '📺', name: 'The screens', kind: 'screen', solid: true, use: 'bookiesScreens' });
       A({ x: 6, y: 2, e: '📺', name: 'The screens', kind: 'screen', solid: true, use: 'bookiesScreens' });
       A({ x: 8, y: 2, e: '📺', name: 'Wolverhampton', kind: 'screen', solid: true, use: 'bookiesWolves' });
-      /* THE CHAIRS. The point of the room. */
-      A({ x: 4, y: 5, e: '🪑', name: 'The chairs', kind: 'chair', solid: true, use: 'bookiesChairs' });
-      A({ x: 5, y: 5, e: '🪑', name: 'The chairs', kind: 'chair', solid: true, use: 'bookiesChairs' });
-      A({ x: 6, y: 5, e: '🪑', name: 'The chairs', kind: 'chair', solid: true, use: 'bookiesChairs' });
-      A({ x: 7, y: 5, e: '🪑', name: 'The chairs', kind: 'chair', solid: true, use: 'bookiesChairs' });
+      /* THE CHAIRS. The point of the room, and `solid: false` is what finally
+         makes them it: "the only building on this street with chairs you can
+         sit in without buying anything" was, until this, four chairs nobody
+         could sit in, including the player. They face the screens because a
+         seated sprite takes its facing from the chair and not from the person
+         — see R.drawNPC — and everybody in here is facing the screens. */
+      for (let i = 0; i < 4; i++)
+        A({ x: 4 + i, y: 5, e: '🪑', name: 'The chairs', kind: 'chair', solid: false, face: 0, use: 'bookiesChairs' });
       A({ x: 10, y: 3, e: '🧾', name: 'The counter', kind: 'cab', solid: true, use: 'bookiesCounter' });
       A({ x: 10, y: 4, e: '🖊️', name: 'The slips and the pens on strings', kind: 'paper', solid: true, use: 'bookiesSlips' });
       A({ x: 3, y: 7, e: '🗑️', name: 'The bin of torn slips', kind: 'bin', solid: true, use: 'bookiesBin' });
@@ -836,8 +844,10 @@ const LEVELS = {
       A({ x: 5, y: 9, e: '💷', name: 'The till, which is a drawer', kind: 'pc', solid: true, use: 'clubTill' });
       /* Stan is at (7,9), with his back to the room, and Norman is at (12,13)
          beside his booth. Both are people now rather than furniture. */
-      A({ x: 4, y: 11, e: '🪑', name: 'The chairs nobody moves', kind: 'chair', solid: true, use: 'clubChairs' });
-      A({ x: 5, y: 11, e: '🪑', name: 'The chairs nobody moves', kind: 'chair', solid: true, use: 'clubChairs' });
+      /* `solid: false`, same as the bookmaker's row and the pub's one: nobody
+         moves them and, from half seven, somebody is sitting in one. */
+      A({ x: 4, y: 11, e: '🪑', name: 'The chairs nobody moves', kind: 'chair', solid: false, face: 0, use: 'clubChairs' });
+      A({ x: 5, y: 11, e: '🪑', name: 'The chairs nobody moves', kind: 'chair', solid: false, face: 0, use: 'clubChairs' });
       /* The far end: the function room, and everything waiting to go into it. */
       A({ x: 19, y: 11, e: '🚪', name: 'The function room', kind: 'sign', solid: true, use: 'clubFunction' });
       A({ x: 17, y: 12, e: '🪑', name: 'The stack of chairs', kind: 'heap', solid: true, use: 'clubStack' });

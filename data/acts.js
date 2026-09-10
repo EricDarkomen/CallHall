@@ -673,9 +673,14 @@ const Acts = {
   /* --- inside the Bellhaven Arms --- */
   pubOut() { Sfx.door(); Levels.take('pubOut'); },
   pubBar() {
+    /* The second line is about LUNCHTIME and always was, and from ten past five
+       there are five or six of them standing at this bar — see `out:` in
+       data/npcs.js. So after the shift it gets the other half of the same
+       sentence, which is the half that makes the first half mean anything. */
     insp('🍺', 'The bar', 'Open 12–11', [
       'A bar with the pumps at the near end and a landlord who has already read what you are here for and is not going to say anything about it either way.',
-      'Nobody from the fourth floor drinks here at lunchtime. Everybody has agreed on that without it ever having been discussed, and it is broken about twice a year, spectacularly.'],
+      'Nobody from the fourth floor drinks here at lunchtime. Everybody has agreed on that without it ever having been discussed, and it is broken about twice a year, spectacularly.',
+      ...(Sky.working() ? [] : ['After five it is a different room and the same people, and nobody has ever agreed anything about that at all.'])],
       [{ t: 'One, quickly. (25 min.)', to: null, do() {
           G.minutes += 25; Player.mod({ patience: 10, energy: -4, money: -4.60 });
           P.stats.bullshit += 1;
