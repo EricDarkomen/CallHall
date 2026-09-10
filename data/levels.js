@@ -1458,8 +1458,25 @@ const LEVELS = {
       A({ x: 66, y: 14, e: '💨', name: 'Vapour Trail', kind: 'shop', solid: true, use: 'vapeShop' });
       A({ x: 72, y: 14, e: '🚧', name: 'The unit that is always being refitted', kind: 'shop', solid: true, use: 'refit',
         furn: { sprite: 'shop.awning.green' } });
-      A({ x: 76, y: 14, e: '🚛', name: 'The skip', kind: 'box', solid: true, use: 'refitSkip' });
       A({ x: 78, y: 14, e: '🪧', name: 'TO LET', kind: 'shopsign', solid: true, use: 'toLet' });
+      /* THE SKIP, at the KERB, and the row it is on is the whole of the fix.
+         It stood at 76,14 — the back half of the footway, against the
+         shopfronts — and 76,15 is a lamppost and 75,15 is the tyres. Three
+         things, two rows, and a two-tile pavement: between the skip and the
+         lamppost there were eleven pixels and a person is nineteen wide, so
+         the High Street was SHUT between the refit and the launderette. A man
+         on the phone walked into it on the first lap of the first shift and
+         stood there for the rest of the day, which is what the pavement was
+         asking him to do.
+         A skip goes at the kerb anyway — that is the side the lorry gets a
+         chain on it from — and the kerb side is where every other thing out
+         here already is. That leaves row 14 clear the length of the parade,
+         which is the lane in front of the windows and the one everybody walks.
+         The footprint is its own, because the emoji is a lorry and the thing
+         is a skip: a shade under a tile long and two thirds of one deep, which
+         is a skip, rather than the whole square a `box` claims by default. */
+      A({ x: 78, y: 15, e: '🚛', name: 'The skip', kind: 'box', solid: true, use: 'refitSkip',
+        furn: { ground: [0.94, 0.62] } });
       /* The cones outside the unit that is always being refitted. Three of
          them, no work, no van, and nobody has moved them since the spring. */
       A({ x: 71, y: 15, e: '🚧', name: 'The cones', kind: 'cone', solid: true, use: 'cones' });
@@ -1610,6 +1627,69 @@ const LEVELS = {
       A({ x: 56, y: 59, e: '🌳', name: 'The trees along the railway', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 100, y: 59, e: '🌳', name: 'The trees along the railway', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 88, y: 59, e: '🐦', name: 'More gulls', kind: 'pigeon', solid: false, use: 'gulls' });
+
+      /* THE DOORS, one to each frontage, and the reason they are a block of
+         their own is that until they existed this town had none. There was
+         glass, there were awnings, there were signs and there was a way in
+         that worked — press E on the sign — and there was nowhere on any of
+         the four parades that LOOKED like a way in. A high street is doors.
+         Somebody standing on the pavement outside fourteen businesses could
+         not see one of them.
+
+         On the WALL ROW, never on the pavement: the row above each frontage is
+         the front of the building, it is the one course this projection shows
+         you the face of, and a door drawn anywhere else is a door lying on the
+         ground. The same row the glass beside it hangs on, one row up. That is
+         also why there is nothing here for the Greggs — it is on the south
+         side of Bellhaven Road, backing onto the block, and you are looking at
+         the back of its front wall. It has no face to put a door in, which is
+         the same reason it has no window and no awning.
+
+         `via` is the LINK, not the destination: the link table above says where
+         each one goes and this says which link it is, so a shop that moves
+         moves in one place. World.behind() reads it to find the floor you can
+         see through the opening — see R.thresholds().
+
+         `solid` is the difference between a door and a shut door, and it is
+         the honest one: a unit with a floor behind it stands open, and a unit
+         with nothing behind it is shut, because a door you cannot go through
+         is a door that is shut rather than a door that is missing. The empty
+         unit, the cash and carry and the four sheds on Corven Way are shut.
+         They are still doors, and a parade where every third unit has no door
+         at all reads as a rendering fault rather than as a street.
+
+         The `use` is the frontage's own handler, so pressing E on the door and
+         pressing E on the sign over it are the same act — which they are: it
+         is one shop. */
+      /* The High Street, west of Cargate. */
+      A({ x: 46, y: 13, e: '🚪', name: 'Nailed It', kind: 'exit', solid: false, use: 'nailedIt', via: 'nailsDoor' });
+      A({ x: 54, y: 13, e: '🚪', name: 'Bellhaven Bookmakers', kind: 'exit', solid: false, use: 'bookies', via: 'bookiesDoor' });
+      A({ x: 60, y: 13, e: '🚪', name: 'The charity shop', kind: 'exit', solid: false, use: 'charityShop', via: 'charityDoor' });
+      A({ x: 66, y: 13, e: '🚪', name: 'Vapour Trail', kind: 'exit', solid: false, use: 'vapeShop', via: 'vapourDoor' });
+      A({ x: 72, y: 13, e: '🚪', name: 'The unit that is always being refitted', kind: 'exit', solid: true, use: 'refit' });
+      /* And east of it, where the parade keeps going because a high street
+         does. The door beside the launderette is the one with no shop on it,
+         and it is a door in exactly the way the other eight are. */
+      A({ x: 86, y: 13, e: '🚪', name: 'The Bellhaven Arms', kind: 'exit', solid: false, use: 'thePub', via: 'pubDoor' });
+      A({ x: 92, y: 13, e: '🚪', name: 'The launderette', kind: 'exit', solid: false, use: 'launderette', via: 'laundDoor' });
+      A({ x: 96, y: 13, e: '🚪', name: 'The door beside the launderette', kind: 'exit', solid: false, use: 'flatsDoorway', via: 'flatsDoor' });
+      A({ x: 98, y: 13, e: '🚪', name: 'The post office', kind: 'exit', solid: false, use: 'postOffice', via: 'postoffDoor' });
+      A({ x: 104, y: 13, e: '🚪', name: 'Bellhaven Kebab', kind: 'exit', solid: false, use: 'kebab', via: 'kebabDoor' });
+      /* Fenn Street, at the back of both blocks. The car wash is not among
+         them and never will be: it has no door, because it is not a building
+         you go into — see its `fromCar` furnishing. */
+      A({ x: 20, y: 31, e: '🚪', name: 'Bellhaven Tyre & Exhaust', kind: 'exit', solid: false, use: 'tyres', via: 'tyreDoor' });
+      A({ x: 30, y: 31, e: '🚪', name: 'Unit 6', kind: 'exit', solid: false, use: 'unitSix', via: 'sixDoor' });
+      A({ x: 72, y: 31, e: '🚪', name: 'The Working Men’s Club', kind: 'exit', solid: false, use: 'club', via: 'clubDoor' });
+      A({ x: 82, y: 31, e: '🚪', name: 'Sunseekers', kind: 'exit', solid: false, use: 'tanning', via: 'tanDoor' });
+      A({ x: 92, y: 31, e: '🚪', name: 'The cash and carry', kind: 'exit', solid: true, use: 'cashAndCarry' });
+      /* Corven Way, against the retail park's own back wall. Four sheds, four
+         shut doors, and the drive-thru is not one of them for the car wash's
+         reason: a hatch in a wall is not a way in. */
+      A({ x: 24, y: 49, e: '🚪', name: 'The superstore', kind: 'exit', solid: true, use: 'superstore' });
+      A({ x: 34, y: 49, e: '🚪', name: 'Screw & Fix', kind: 'exit', solid: true, use: 'screwfix' });
+      A({ x: 44, y: 49, e: '🚪', name: 'The pet superstore', kind: 'exit', solid: true, use: 'petStore' });
+      A({ x: 74, y: 49, e: '🚪', name: 'The carpet warehouse', kind: 'exit', solid: true, use: 'carpets' });
 
       /* THE GLASS, one pane beside each frontage. Scenery: it is the
          window of the unit whose sign is next to it, and after dark it is

@@ -51,10 +51,22 @@ const Peds = {
         sprite: p.sprite || 'marcus',
         speed: (p.speed || 1.15) * TILE,
         route, leg: 0, wait: 0,
+        /* WHICH WAY ROUND THE LOOP. A route is a ring of pavement and this is
+           the direction it is being walked in, so turning round is a sign flip
+           and nothing else — the same waypoints in the other order, for ever.
+           See turnBack(), which is the one thing that ever changes it. */
+        way: 1,
         x: 0, y: 0, dir: 2, step: 0, walking: true,
-        /* Which way they committed to going round the last thing in the way,
-           and how much longer they are holding it — see walk(). */
-        dodge: 0, side: 1,
+        /* How far round the last thing in the way they committed to going, and
+           how long they are holding it — see walk(). An ANGLE rather than a
+           side, because how far round something you have to go depends on the
+           something: a lamppost is a lean and a skip is most of a right angle,
+           and one fixed angle for both is what leaves somebody leaning on the
+           skip. */
+        dodge: 0, turn: 0,
+        /* The closest they have got to the waypoint they are walking to, and
+           how long it has been since that improved. The backstop: see walk(). */
+        near: Infinity, stuck: 0,
         /* Said out loud, and for how long. Only ever when something happens to
            them — see honk() — because a street of people muttering on a timer
            is a street nobody can read. */
@@ -92,6 +104,41 @@ const Peds = {
      pressed against it while politely trying both sides — and held long
      enough to actually clear something a tile across at walking pace. */
   DODGE_A: 1.05, DODGE_T: 0.9,
+  /* And the LADDER, which is the half that was missing. One angle answers one
+     question — "is there room to lean round this" — and a bin, a lamppost and
+     a bollard all say yes to it. A skip on a two-tile footway says no on both
+     sides, and the old pickSide, having only that one angle, still had to
+     return a side: it returned the shut one and committed to it for the better
+     part of a second, then did it again, and again. So try the lean, then most
+     of a right angle, then very nearly a full one, which is a person stepping
+     off the kerb — and only when all three are shut on both sides is the way
+     ahead actually shut. */
+  DODGE_LADDER: [1.05, 1.6, 2.1],
+  /* How long somebody may fail to get any closer to where they are going
+     before it stops being a dodge and starts being a pocket. Longer than a
+     dodge is held for, and shorter than anybody watching would need to notice
+     that a man on the phone has not moved. */
+  STUCK_T: 3,
+
+  /* Which waypoint they are walking TO, which depends on which way round the
+     loop they are going. */
+  target(ped) { const n = ped.route.length; return ped.route[((ped.leg + ped.way) % n + n) % n]; },
+
+  /* TURN ROUND AND WALK BACK. The backstop, and it is deliberately not the
+     plan: the plan is the dodge ladder, which gets round anything that is an
+     obstruction. This is for the case that is not an obstruction at all — a
+     stretch of pavement that is SHUT, because two things were put on a
+     two-tile footway with less than a person's width of anything between them.
+     There was one, outside the unit that is always being refitted, and a man
+     stood in it on the phone for the rest of the shift.
+     A route is a ring, so this costs one sign: the same waypoints in the other
+     order, which is a person who has found the way blocked going back the way
+     they came. It cannot fail, it cannot strand anybody, and it works for a
+     blockage nobody has thought of yet. */
+  turnBack(ped) {
+    ped.way = -ped.way;
+    ped.dodge = 0; ped.stuck = 0; ped.near = Infinity;
+  },
 
   walk(ped, dt) {
     const R = ped.route, n = R.length;
@@ -103,18 +150,26 @@ const Peds = {
       ped.walking = false;
       return;
     }
-    const to = R[(ped.leg + 1) % n];
+    const to = this.target(ped);
     let dx = to.x - ped.x, dy = to.y - ped.y;
     const dist = Math.hypot(dx, dy);
     if (dist < 6) {
-      ped.leg = (ped.leg + 1) % n;
-      ped.dodge = 0;
+      ped.leg = ((ped.leg + ped.way) % n + n) % n;
+      ped.dodge = 0; ped.near = Infinity; ped.stuck = 0;
       /* The waypoint's own pause, and only where it is safe to take one. */
       if (to.wait && World.surfAt(Math.floor(ped.x / TILE), Math.floor(ped.y / TILE)) !== 'tarmac') {
         ped.wait = to.wait;
       }
       return;
     }
+    /* GETTING NOWHERE. Not a collision — a collision is one frame, and this is
+       the shape of a whole minute: somebody who has not closed on their next
+       waypoint at all for three seconds is not walking round something, they
+       are standing in a pocket. Measured against the CLOSEST they have got
+       rather than against last frame's distance, or a dodge that legitimately
+       takes them sideways for most of a second reads as the same fault. */
+    if (dist < ped.near - 1) { ped.near = dist; ped.stuck = 0; }
+    else if ((ped.stuck += dt) > this.STUCK_T) { this.turnBack(ped); return; }
     dx /= dist; dy /= dist;
     const sp = ped.speed * dt;
     const rot = a => { const c = Math.cos(a), s = Math.sin(a); return [dx * c - dy * s, dx * s + dy * c]; };
@@ -137,12 +192,16 @@ const Peds = {
     else {
       const look = TILE * 1.1;
       if (!Collide.walk(ped.x + dx * look, ped.y + dy * look)) {
-        ped.side = this.pickSide(ped, dx, dy, look);
+        /* How far round, not just which way round — and zero for "there is no
+           way round", which is a fact the old one could not express and so
+           never reported. */
+        ped.turn = this.pickTurn(ped, dx, dy, look);
+        if (!ped.turn) { this.turnBack(ped); return; }
         ped.dodge = this.DODGE_T;
       }
     }
     let hx = dx, hy = dy;
-    if (ped.dodge > 0) { const h = rot(ped.side * this.DODGE_A); hx = h[0]; hy = h[1]; }
+    if (ped.dodge > 0) { const h = rot(ped.turn); hx = h[0]; hy = h[1]; }
 
     let nx = ped.x + hx * sp, ny = ped.y + hy * sp;
     if (!Collide.walk(nx, ny)) {
@@ -152,14 +211,14 @@ const Peds = {
          the wide end of the ladder leans BACK off the obstacle, which is the
          one thing the old version could not do and the only thing that gets
          somebody off a thing they are flush against. */
-      const s = ped.side;
+      const s = ped.turn >= 0 ? 1 : -1;
       let got = false;
       for (const a of [s * this.DODGE_A, s * 1.6, s * 2.2, -s * this.DODGE_A, -s * 1.6, -s * 2.2]) {
         const h = rot(a);
         const tx = ped.x + h[0] * sp, ty = ped.y + h[1] * sp;
         if (!Collide.walk(tx, ty)) continue;
         nx = tx; ny = ty; hx = h[0]; hy = h[1];
-        ped.side = a > 0 ? 1 : -1; ped.dodge = this.DODGE_T;
+        ped.turn = a; ped.dodge = this.DODGE_T;
         got = true; break;
       }
       if (!got) {
@@ -181,24 +240,36 @@ const Peds = {
     ped.step += sp / TILE * 2.6;
   },
 
-  /* Which way round. Both sides get the same stride-ahead probe, and a side
-     with a wall in it is not a side. Between two that both work, take the one
-     that keeps them off the road: somebody who steps into a live lane to get
-     round a bin is somebody the traffic then has to stop for, and the traffic
-     is polite enough that they would get away with it. */
-  pickSide(ped, dx, dy, look) {
-    const score = side => {
-      const a = side * this.DODGE_A, c = Math.cos(a), s = Math.sin(a);
+  /* HOW FAR ROUND, and which way, as a signed angle off the heading — or 0 for
+     "there is no way round this", which is the answer that matters and the one
+     the old version had no way of giving. It scored both sides at a single
+     angle and returned a side no matter what, so a stretch of pavement that
+     was shut came back as a confident lean into the thing shutting it.
+
+     The ladder is walked from the narrowest angle out: the first rung where
+     either side is open wins, because getting round a lamppost by leaning is a
+     person and getting round a lamppost by turning ninety degrees is not. A
+     side with a wall in it is not a side. Between two that both work at the
+     same angle, take the one that keeps them off the road — somebody who steps
+     into a live lane to get round a bin is somebody the traffic then has to
+     stop for, and the traffic is polite enough that they would get away with
+     it. Between two that are equally good, choose the same way every time: a
+     pedestrian who picks a side at random picks a different one next lap and
+     reads as broken rather than as a person. */
+  pickTurn(ped, dx, dy, look) {
+    const score = a => {
+      const c = Math.cos(a), s = Math.sin(a);
       const px = ped.x + (dx * c - dy * s) * look, py = ped.y + (dx * s + dy * c) * look;
       if (!Collide.walk(px, py)) return -1;
       return World.surfAt(Math.floor(px / TILE), Math.floor(py / TILE)) === 'tarmac' ? 1 : 2;
     };
-    const a = score(1), b = score(-1);
-    if (a !== b) return a > b ? 1 : -1;
-    /* Nothing to choose between them, so choose the same way every time: a
-       pedestrian who picks a side at random picks a different one next lap and
-       reads as broken rather than as a person. */
-    return ((ped.id.charCodeAt(1) || 0) & 1) ? 1 : -1;
+    const first = ((ped.id.charCodeAt(1) || 0) & 1) ? 1 : -1;
+    for (const w of this.DODGE_LADDER) {
+      const a = score(first * w), b = score(-first * w);
+      if (a < 0 && b < 0) continue;
+      return (a >= b ? first : -first) * w;
+    }
+    return 0;
   },
 
   /* Somebody sounded a horn near them. The one thing on this street that gets

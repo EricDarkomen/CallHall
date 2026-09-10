@@ -325,7 +325,12 @@ const FURN = {
      both are things you get round the end of rather than square blocks. */
   bench: { size: 30, ground: [0.86, 0.4] }, barrier: { size: 26, ground: [0.8, 0.34] },
   puddle: { size: 22 },
-  shop: { mount: 'wall', size: 27 },
+  /* THE SIGN OVER THE DOOR, which is what a shop's emoji has always been and
+     what `high` finally says out loud. It hangs on the fascia rather than at
+     handle height, because there is a door under it now — see LEVELS.outside's
+     doors and the `high` test in R's object pass. Before those, the whole
+     frontage was this emoji and it could hang wherever it liked. */
+  shop: { mount: 'wall', size: 27, high: 1.78 },
   /* THE GLASS. Not the shop — the shop is the sign over the door and it keeps
      the emoji that says which shop it is, because a sash window does not tell
      you whether you are outside a launderette or a bookmaker's. This is the

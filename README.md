@@ -98,6 +98,19 @@ than into it, and have no schedule, no memory and no name of their own — they 
 somebody with a Greggs bag. Press `E` and you get a stranger's half-sentence.
 Sound the horn at one and you get the entire British response to being honked at.
 
+Going round a lamppost is a lean. Going round a skip is most of a right angle,
+and that is what the man on the phone outside the unit that is always being
+refitted found out: the footway there is two tiles wide, the skip took one row
+and a lamppost took the other, and eleven pixels is not a person. He walked into
+it on the first lap of the first shift and stood there for the rest of the day.
+The skip is at the kerb now, where a skip goes and where the lorry can get a
+chain on it, and the lane in front of the windows is clear the length of the
+parade. And nobody can be pinned like that again by any arrangement of street
+furniture anybody thinks of next: a stranger who finds no way round at any angle,
+or who has not got any closer to where they are going for three seconds, turns
+round and walks the loop the other way, which is what a person does and which is
+one sign flip on a route that was always a ring.
+
 They are also the other half of the traffic rule. Cars have always stopped for
 anybody on foot; until there was somebody on foot, that only ever applied to you.
 
@@ -111,7 +124,28 @@ everything else. The cars are not, and could not be: the set this game pins is
 mediaeval-through-Victorian and the only wheeled things in the whole repository
 are a wheelchair and a shopping trolley. They are drawn by the renderer instead,
 which is also what lets one turn through any angle rather than through the eight
-a sprite sheet would give it.
+a sprite sheet would give it — and what lets the eight models come out of a table
+of numbers and colours rather than out of eight drawings.
+
+Each of them is built in layers, and that is what stops a car in plan view being
+a lozenge with two dark windows in it. Underneath: a cast shadow that goes soft
+at the edge instead of being a copy of the car in black, and a tight contact
+shadow under the sills that is what actually puts it on the road. Over the paint:
+wheel arches, flanks that fall away from the crown, the panel gaps — a bonnet, a
+boot and two doors a side, each a dark line with a lit one against it — and one
+raking highlight down the length that comes up hard when the paint is wet,
+because the polish is the one part of a car that knows what the weather is doing.
+Then the glass, which is a gradient with the sky in the top of it rather than a
+flat dark shape, and side windows down each flank so there is a cabin between the
+screens.
+
+All of it is baked. Twenty paths per vehicle per frame is the arithmetic that
+decides whether this runs on a phone, so a model's body is drawn once into a
+small canvas and blitted after that, exactly as the floor tiles are. What is
+still drawn live is the four things that actually move: the wheels, because the
+front pair steer; the lights, because they come on; the indicators, because they
+blink; and whoever is in it. The layered car costs less per frame than the flat
+one did.
 
 ## Fourteen doors, and who is behind them
 
@@ -120,6 +154,24 @@ a post office, a charity shop, a kebab shop, a vape shop, a nail bar, a tyre
 place, an empty unit, a working men's club, a tanning salon — and a door between
 the launderette and the post office with six bells and no sign, which is the
 stairs up to the flats above the parade.
+
+**And you can see them now.** For a long time every frontage out here was a brick
+wall with a sign hanging on it: the glass was there, the awnings were there, the
+way in worked — press `E` — and there was not a door anywhere on any of the four
+parades. Somebody standing on the pavement outside fourteen businesses could not
+see one. There is a door in every frontage now, cut into the wall course above
+it, with the sign moved up onto the fascia where a sign over a door goes. The
+ones with a floor behind them stand open; the empty unit, the cash and carry and
+the four sheds on Corven Way are shut, because a door you cannot go through is a
+shut door rather than a missing one.
+
+And when you look through an open one you see the room. A doorway cut into wall
+mass has brick under it, so what showed between the jambs was brick — the front
+doors of your own office were two leaves hung on a car park wall with the same
+car park wall behind them. The catalogue already knows where every door goes, so
+the renderer asks it, and paints that room's own floor in the gap with the head
+of the opening in shadow above it: a foot of dark and then a floor, seen from a
+street at noon.
 
 Six people work out there and are not your colleagues, which the profile panel is
 careful about. Pat has run the launderette for nineteen years and knows more
