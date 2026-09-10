@@ -1605,7 +1605,17 @@ const R = {
         : n.walking ? Sprites.frame(n.id, this.animate, n.step)
         : this.animate ? Sprites.breath(n.id) : 0;
       const nlift = seat && this.animate ? Sprites.breathLift(n.id) : 0;
-      Sprites.draw(c, n.id, seat ? 0 : n.dir ?? 2, nf, at.x, at.y - nlift);
+      /* WHICH WAY A SEATED PERSON POINTS, and it is the CHAIR that decides.
+         This used to be a hard 0 — facing away — which was true of every chair
+         in the game for as long as every chair in the game was at a desk with
+         a monitor on the far side of it. It stopped being true the moment
+         there were chairs in a nail bar on the High Street, where the whole
+         joke is three colleagues who can see you come in, and it was drawing
+         them with their backs to the door.
+
+         `face` on the chair object, 0 up / 1 left / 2 down / 3 right, and
+         absent means 0, so nothing on the fourth floor moves a pixel. */
+      Sprites.draw(c, n.id, seat ? (seat.face ?? 0) : n.dir ?? 2, nf, at.x, at.y - nlift);
     } else this.emoji(n.face, at.x, at.y - bob, 29);
     /* NB: canvas font strings cannot contain CSS custom properties — an
        invalid string is ignored and the previous (emoji-sized) font sticks. */
@@ -2411,7 +2421,9 @@ const R = {
             : P.moving ? Sprites.frame('player', this.animate, P.step, P.fast)
             : this.animate ? Sprites.breath('player') : 0;
           const plift = seat && this.animate ? Sprites.breathLift('player') : 0;
-          Sprites.draw(c, 'player', seat ? 0 : P.dir ?? 2, pf, at.x, at.y - plift);
+          /* Same rule as the colleagues above: the chair points, not the
+             sitter. Sit on the bench in Nailed It and you face the room. */
+          Sprites.draw(c, 'player', seat ? (seat.face ?? 0) : P.dir ?? 2, pf, at.x, at.y - plift);
         } else this.emoji(P.face, at.x, at.y - bob, 30);
         c.restore();
       }

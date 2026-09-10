@@ -880,6 +880,16 @@ const Acts = {
       'A poster showing the helicopter, the crew, and a number that is what one flight costs, printed in a size that makes the number the whole poster.']);
   },
   charityMugs() {
+    /* The one shelf in this game that changes because somebody else did
+       something, rather than because you did — see marjorie's `shop_buy` in
+       data/npcs.js, which happens whether or not you are standing in here. */
+    if (G.flags.marjorieBought) {
+      return insp('☕', 'The shelf of mugs', 'One short', [
+        'A shelf of mugs, and a gap in it at the near end where something was taken this afternoon.',
+        'Fifteen now. Well — fourteen, and one of them three times, which is not the same fourteen, and the woman who did it knows it is not the same fourteen better than anybody alive.',
+        'Everything else on this shelf came out of a cupboard in a house where somebody has died or has moved or has finally admitted they have too many mugs, and the one that left today is going back into a cupboard it came out of nine years ago.']);
+    }
+
     insp('\u2615', 'The shelf of mugs', 'Fourteen, once', [
       'Two shelves of mugs, which is the single most reliable shelf in the whole of the retail sector: everybody donates mugs and nobody stops owning them.',
       'Marjorie donated fourteen here in 2016 and has bought four of them back since, twice knowingly. The one facing the wall is facing the wall for a reason, and the reason is on the other side of it.'],
@@ -1136,41 +1146,19 @@ const Acts = {
   /* The three of them. Each one has a before and an after, and the after is
      not embarrassment — it is the far more British thing, which is an
      agreement arrived at in total silence and honoured for years. */
-  nailsKaren() {
-    if (!G.flags.sawKaren) {
-      Acts.nailsSpotted('sawKaren');
-      return insp('👩‍💼', 'Karen', 'Team Leader · in back-to-backs', [
-        'Karen is in the first chair with both hands flat on a towel and her phone face-down beside them, which is a thing her phone has never been in four years.',
-        'She sees you. There is a moment. It is not a long moment, because Karen has managed people for eleven years and has a procedure for everything.',
-        '“I’m working from a different location this afternoon,” she says, to a woman holding her little finger.']);
+  /* THE CHAIRS. Empty most of the day, and between twelve and one they have
+     Karen, Sarah and Gary in them — who are not acts, because they are people:
+     see `out:` in data/npcs.js and NPCM.runErrands(). A person standing on a
+     chair tile is drawn sitting in it and beats the chair for the E key, so
+     this is only ever read when the chair is genuinely empty. */
+  nailsChair() {
+    if (Sky.m() >= 720 && Sky.m() < 780) {
+      return insp('🪑', 'The chairs', 'All three taken', [
+        'All three are occupied. You know all three of them. Two of them have not looked up and one of them very much has.']);
     }
-    insp('👩‍💼', 'Karen', 'Team Leader · a different location', [
-      'She has gone back to looking at the middle distance with the enormous dignity of somebody who has decided that this is now simply a thing that is true.',
-      'Neither of you will bring it up. Not today, not at her one-to-one, not in six years. It will however be very slightly harder for her to say no to you, forever, and she knows that, and she knows you know.']);
-  },
-  nailsSarah() {
-    if (!G.flags.sawSarah) {
-      Acts.nailsSpotted('sawSarah');
-      return insp('👩', 'Sarah', 'Agent · keeper of #general', [
-        'Sarah is in the middle chair and has clocked you in the mirror before you are three feet into the room, because Sarah clocks everything, which is the entire basis of her authority.',
-        '“Right,” she says. “So. This is a rest day.”',
-        'It is Wednesday. You have both been on the same shift rota since March.']);
-    }
-    insp('👩', 'Sarah', 'Agent · documenting', [
-      'She has not gone quiet. Sarah does not go quiet. She has instead started telling you, at length and with real warmth, about a completely different subject, and she will keep doing this until you leave.',
-      'You are now, without anything having been signed, jointly responsible for a secret. This is the closest thing to a promotion the fourth floor offers.']);
-  },
-  nailsGary() {
-    if (!G.flags.sawGary) {
-      Acts.nailsSpotted('sawGary');
-      return insp('🧑‍🦱', 'Gary', 'Agent · leaving (est. 2022)', [
-        'Gary is in the third chair, gets exactly one hand’s worth done every six weeks, and is the only person in this room not pretending.',
-        '“Alright,” says Gary. “Yeah. I get it done. It’s twenty-two quid and it’s the best twenty-two quid I spend.”',
-        'He does not lower his voice. He has never lowered his voice. It is genuinely possible that Gary is the healthiest person in this postcode.']);
-    }
-    insp('🧑‍🦱', 'Gary', 'Agent · unbothered', [
-      '“You want to get it done,” says Gary. “Honestly. You’d be surprised.”',
-      'He is going to say this to you again on the fourth floor, at his desk, at volume, on a Tuesday, in front of Karen. He does not know that. You do.']);
+    insp('🪑', 'The chairs', 'Empty until twelve', [
+      'A padded chair on a chrome base with a small table beside it and a lamp on a hinged arm, all of it pointed at where a hand would be.',
+      'Empty. The lunchtime lot are not in yet, and if you have never been in here at lunchtime then you do not know who the lunchtime lot are, and there is an argument that you are better off.']);
   },
   nailsBasin() {
     insp('🚰', 'The basin', 'Warm water, twice', [

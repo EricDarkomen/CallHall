@@ -246,7 +246,11 @@ const NPCM = {
         errand: null,
         /* Standing somewhere on purpose, rather than merely being near it. */
         parked: false, waitDoor: 0, holdWant: null, holdFor: 0, lastAim: 'desk', retry: 0,
-        queued: 0, waitingFor: null, wayBack: null, wayFor: 0, squeeze: 0
+        queued: 0, waitingFor: null, wayBack: null, wayFor: 0, squeeze: 0,
+        /* When they set off for the door on an errand. Null when they are not
+           on one — see runErrands(). Not saved, like everything else here
+           about where somebody is standing. */
+        outAt: null
       };
     });
     this.enter(World.level);
@@ -276,6 +280,16 @@ const NPCM = {
       if (!n.away) return;
       n.away = false; n.level = n.def.level || hub;
       n.x = (n.def.desk[0] + .5) * TILE; n.y = (n.def.desk[1] + .5) * TILE;
+      /* And if the clock says they are out, they are out — a shift loaded at
+         ten past twelve should not put Karen at her desk for three seconds and
+         then walk her to the door. Same reasoning as the whole of this
+         function: the clock jumped, so nobody walks. */
+      const out = this.errandFor(n);
+      if (out) {
+        n.level = out.level;
+        n.x = (out.tile[0] + .5) * TILE; n.y = (out.tile[1] + .5) * TILE;
+        if (out.face !== undefined) n.dir = out.face;
+      }
       n.callOut = null; n.post = null; n.errand = null; n.next = null; n.walking = false;
       n.destKey = ''; n.best = 1e9; n.noProg = 0; n.gaveUp = null;
     });
@@ -394,6 +408,29 @@ const NPCM = {
      A desk is not an errand. Going back to your desk is what you do when there
      is nothing else, and it can be interrupted by anything. */
   destTile(n) {
+    /* OUT OF THE BUILDING, which outranks the timetable for the plainest
+       possible reason: the timetable is a floor plan of the FOURTH FLOOR, and
+       somebody standing in a nail bar on the High Street is not on it.
+
+       Without this they keep their office schedule while they are out, and
+       every part of that is wrong. `dest` stays 'desk', so the facing rule
+       below points them at a monitor that is not there and three colleagues
+       sit with their backs to a room whose entire joke is being seen. And at
+       noon the timetable hands them a break-room waypoint, so somebody sitting
+       in a shop fifteen tiles wide is holding an errand to tile [8,22] of a
+       different map — which the routing cannot reach and therefore never
+       resolves, which is a bug that happens to look like nothing.
+
+       So while the errand window is open they are AT the errand, full stop:
+       their own tile, no schedule, no waypoint, and the facing that
+       data/npcs.js asked for. See runErrands() and `out:` over there. */
+    const out = this.errandFor(n);
+    if (out && n.level === out.level) {
+      n.errand = null; n.callOut = null; n.holdWant = null;
+      n.dest = 'out';
+      if (out.face !== undefined) n.dir = out.face;
+      return out.tile;
+    }
     /* Called away. An override on everything, with an expiry on it, set by
        watchFloor() when something happens to the building — see REACT.
 
@@ -776,9 +813,14 @@ const NPCM = {
   /* Moved by the drill rather than by walking: through a door, onto a floor
      that may not even be loaded. Everything about the walk they were in the
      middle of is dropped, because it was about a map they are no longer on. */
-  stepThrough(n, level, tile) {
+  stepThrough(n, level, tile, face) {
     n.level = level;
     n.x = (tile[0] + .5) * TILE; n.y = (tile[1] + .5) * TILE;
+    /* Which way they are pointing when they get there, where the caller cares.
+       0 up, 1 left, 2 down, 3 right — the order of `dirs` on the sheet. A
+       drill does not care and does not pass one; an errand does, because who
+       has their back to the door is the whole of some of these jokes. */
+    if (face !== undefined) n.dir = face;
     n.post = null; n.next = null; n.walking = false; n.errand = null;
     n.destKey = ''; n.best = 1e9; n.noProg = 0; n.gaveUp = null;
     this.hangUp(n);
@@ -990,6 +1032,108 @@ const NPCM = {
     if (moved) this.refresh();
   },
 
+  /* ---- OUT OF THE BUILDING, AND BACK ----------------------------------
+     The other reason somebody is not at their desk, and the one the office
+     never had: they have gone out. Not home — out, to a named tile on a named
+     level, between two times, and back afterwards.
+
+     It exists because the street was built and then furnished with strangers.
+     There are twenty-one people in this game with faces, expressions, moods
+     and dialogue of their own, and the shops behind that street were filled
+     with emoji standing on furniture — so a nail bar on the High Street had
+     three anonymous heads in it when what it obviously wanted was three
+     colleagues who would all rather you had not come in.
+
+     A TABLE, not a special case: `out:` on a def in data/npcs.js says where
+     and when, and this is the whole of the engine's half. See the note above
+     OUT in that file.
+
+     Modelled on runHome() directly above and sharing its rules, because they
+     are the same problem — somebody who should not be standing where they are
+     standing — and the rules are what stop it looking like a bug:
+
+       an evacuation and five o'clock both outrank an errand;
+       nobody leaves in the middle of a sentence you are having with them;
+       and nobody EVER blinks out of existence in front of you. Off camera
+       it costs nothing, which is the whole trick, and on camera on the hub
+       they walk to the door like people and step through it there.
+
+     What it deliberately does NOT do is walk them along the street. There is
+     no route from the fourth floor to a nail bar four levels away that any of
+     the pathing here could hold, and there does not need to be one: what a
+     player can observe is that Karen left, and that Karen is in there. The bit
+     in between is the bit nobody ever watches. */
+  errandFor(n) {
+    const o = n.def.out;
+    if (!o) return null;
+    const m = typeof Sky !== 'undefined' ? Sky.m() : 0;
+    /* Written the obvious way round and read the wrapping way, so a window
+       that crosses midnight — a kebab shop, one day — needs no second entry. */
+    const on = o.from <= o.to ? (m >= o.from && m < o.to) : (m >= o.from || m < o.to);
+    return on ? o : null;
+  },
+  runErrands() {
+    if (this.drill) return;
+    if (typeof Sky === 'undefined') return;
+    /* Cheap first, as runHome() does: nothing to do on almost every frame. */
+    if (!this.all.some(n => n.def.out && !n.away
+      && (n.level === n.def.out.level) !== !!this.errandFor(n))) return;
+
+    const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
+    const rec = Levels.ensure(hub);
+    if (!rec) return;
+    /* A SQUARE EACH at the doors, for runHome()'s reason and not a new one:
+       three people out of the same room at the same minute all steering for
+       one door tile is not a queue, it is a knot, and Karen, Sarah and Gary go
+       to lunch together whether or not any of them would say so. */
+    if (this._outRec !== rec) {
+      this._outRec = rec;
+      this._outDoor = this.doorSide(rec, 'exit');
+      this._outSpots = this._outDoor
+        ? this.crowdSpots(rec, this._outDoor[0], this._outDoor[1], this.all.length) : null;
+    }
+    const door = this._outDoor;
+    if (!door) return;
+    const spots = this._outSpots && this._outSpots.length ? this._outSpots : [door];
+    const talkingTo = (Dialogue.on && Dialogue.npc && Dialogue.npc.id) || null;
+    const reached = (n, t) => Math.hypot((t[0] + .5) * TILE - n.x, (t[1] + .5) * TILE - n.y) < TILE * 1.4;
+    const onScreen = n => n.level === World.level
+      && typeof Cam !== 'undefined' && Cam.visible && Cam.visible(n.x, n.y);
+    let moved = false;
+    for (const n of this.all) {
+      if (!n.def.out || n.away) continue;
+      if (n.id === talkingTo) continue;
+      const want = this.errandFor(n);
+      const there = n.level === n.def.out.level;
+      if (want && !there) {
+        /* On the way out. Off the hub — or off camera on it — they are simply
+           there; on it and in view they walk to the front doors first. */
+        if (n.level !== hub || !onScreen(n)) { this.stepThrough(n, want.level, want.tile, want.face); moved = true; continue; }
+        if (n.outAt === undefined || n.outAt === null) n.outAt = this.now;
+        n.post = null; n.errand = null;
+        const spot = spots[this.hash(n.id) % spots.length] || door;
+        n.callOut = { tile: spot, until: this.now + 2, haste: 1.2 };
+        /* The same two deadlines home time keeps, and for the same reason: the
+           walk is in real seconds and lunch is not, so they give up on it —
+           but never in view, unless they have been stuck long enough that
+           standing and watching it is worse than the blink. */
+        if (reached(n, spot) || (this.now > n.outAt + 16 && !onScreen(n)) || this.now > n.outAt + 40) {
+          n.outAt = null; n.callOut = null;
+          this.stepThrough(n, want.level, want.tile, want.face); moved = true;
+        }
+      } else if (!want && there) {
+        /* And back. Through the lobby, exactly as somebody arriving in the
+           morning does, so the schedule picks them up and walks them to their
+           own desk — unless you are standing in the shop watching, in which
+           case they are allowed to finish their coffee until you look away. */
+        if (onScreen(n)) continue;
+        n.outAt = null;
+        this.stepThrough(n, hub, door); moved = true;
+      } else if (!want) { n.outAt = null; }
+    }
+    if (moved) this.refresh();
+  },
+
   /* Hand the routes the people. Three times a second rather than sixty: a crowd
      shuffling about would otherwise rebuild every route on the floor every
      frame, and none of this changes fast enough to notice.
@@ -1041,6 +1185,9 @@ const NPCM = {
        after the drill, because it stands down for one. */
     this.runDrill();
     this.runHome();
+    /* After home time, which outranks it: somebody who has gone home has not
+       nipped out to the shops, whatever the table says. */
+    this.runErrands();
     this.dynamics();
     /* Where everybody who is standing still is standing, once per frame, as
        tile keys. The walk below prices these up so a knot of people is walked

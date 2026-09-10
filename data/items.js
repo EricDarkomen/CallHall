@@ -257,6 +257,9 @@ const ACHS = {
   a_minutes: { n: 'Matters Arising', e: '📌', d: 'Read every one of the committee\u2019s minutes on the noticeboard. All of it. Including item 7.' },
   a_booth:   { n: 'Twelve Minutes Of Nothing', e: '🌞', d: 'Go in a booth at Sunseekers. See nothing. Hear everything.' },
   a_carwash: { n: 'Six Lads, One Astroturf', e: '🧼', d: 'Get the pool car washed without getting out of the pool car.' },
+  /* ---- the four colleagues who are not at their desks ---- */
+  a_knowingly: { n: 'Knowingly, For The Third Time', e: '☕', d: 'Be in the charity shop at one o\u2019clock and tell Marjorie to buy it.' },
+  a_nigelkebab: { n: 'Don\u2019t Correct It', e: '🖼️', d: 'Find out what the photograph of Nigel in that doorway is actually a photograph of.' },
   a_biscuits: { n: 'Nobody Will Ever Know It Was You', e: '🎁', d: 'Buy the biscuits with your own money and say nothing.' },
   a_mo:      { n: 'Nobody Asks', e: '🧑‍🎓', d: 'Ask Mo whether he is actually alright, and mean it.' },
   a_poop:    { n: 'Listed Building', e: '🧻', d: 'Pay your respects to the only piece of writing in this building that outlived its author’s career.' },

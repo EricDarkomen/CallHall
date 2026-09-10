@@ -604,7 +604,9 @@ const LEVELS = {
       A({ x: 9, y: 3, e: '🥤', name: 'The drinks fridge', kind: 'fridge', solid: true, use: 'kebabFridge' });
       A({ x: 4, y: 2, e: '🖼️', name: 'The photograph', kind: 'poster', solid: true, use: 'kebabPhoto' });
       A({ x: 9, y: 2, e: '🪧', name: 'UNDER NEW MANAGEMENT', kind: 'sign', solid: true, use: 'kebabSign' });
-      A({ x: 4, y: 6, e: '🪑', name: 'The two stools nobody sits on', kind: 'chair', solid: true, use: 'kebabStools' });
+      /* `solid: false` since Nigel started sitting on one of them after four —
+         see `out:` in data/npcs.js. The name is now, gloriously, wrong. */
+      A({ x: 4, y: 6, e: '🪑', name: 'The two stools nobody sits on', kind: 'chair', solid: false, use: 'kebabStools' });
       A({ x: 10, y: 6, e: '🗑️', name: 'The bin by the door', kind: 'bin', solid: true, use: 'kebabBin' });
     }
   },
@@ -670,11 +672,22 @@ const LEVELS = {
       A({ x: 6, y: 2, e: '📋', name: 'The price list', kind: 'poster', solid: true, use: 'nailsPrices' });
       A({ x: 9, y: 2, e: '📷', name: 'The photograph of a hand', kind: 'poster', solid: true, use: 'nailsPhoto' });
       A({ x: 12, y: 2, e: '📖', name: 'The appointment book', kind: 'board', solid: true, use: 'nailsBook' });
-      /* THE THREE STATIONS. In the order you pass them, which is the order
-         they find out. */
-      A({ x: 4, y: 3, e: '👩‍💼', name: 'Karen, in the first chair', kind: 'view', solid: true, use: 'nailsKaren' });
-      A({ x: 7, y: 3, e: '👩', name: 'Sarah, in the second chair', kind: 'view', solid: true, use: 'nailsSarah' });
-      A({ x: 10, y: 3, e: '🧑‍🦱', name: 'Gary, in the third chair', kind: 'view', solid: true, use: 'nailsGary' });
+      /* THE THREE STATIONS, and they are CHAIRS rather than people, because the
+         people are people: Karen, Sarah and Gary come here at lunch under
+         `out:` in data/npcs.js and stand on these three tiles, and anybody
+         standing still on a `chair` tile is drawn sitting in it — see
+         Sprites.seatedAt(), which the fourth floor has used for its own desks
+         since the day it had chairs.
+
+         `solid: false` for the same reason the office's are: a chair nobody
+         can stand on is a chair nobody can sit in. Between one and two they
+         are three empty chairs, and the act says so. */
+      /* `face: 2` — these three point INTO the room. A chair with no `face`
+         is a desk chair pointing at a monitor, which is every other chair in
+         this game; see the note in R.drawNPC. */
+      A({ x: 4, y: 3, e: '🪑', name: 'The first chair', kind: 'chair', solid: false, face: 2, use: 'nailsChair' });
+      A({ x: 7, y: 3, e: '🪑', name: 'The second chair', kind: 'chair', solid: false, face: 2, use: 'nailsChair' });
+      A({ x: 10, y: 3, e: '🪑', name: 'The third chair', kind: 'chair', solid: false, face: 2, use: 'nailsChair' });
       A({ x: 13, y: 3, e: '🚰', name: 'The basin', kind: 'sink', solid: true, use: 'nailsBasin' });
       /* And the side of the room you are meant to wait on and nobody does. */
       /* Nothing on tile (8,5): that is the tile you arrive on, and a solid
