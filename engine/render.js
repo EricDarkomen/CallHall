@@ -126,7 +126,13 @@ const R = {
      thing that ever reaches the screen, and an editor that lets somebody repaint
      a room has to be able to say so. Without this, changing a zone's colour
      changes nothing at all and the preview quietly lies. */
-  rebake() { if (this._tiles) this._tiles.clear(); },
+  rebake() {
+    if (this._tiles) this._tiles.clear();
+    /* The vehicles are baked too — see carArt() — and for the same reason: the
+       baked bitmap is the only thing that reaches the screen, so an editor that
+       can change what a thing looks like has to be able to say so. */
+    if (this._cars) this._cars.clear();
+  },
   _bake(key, draw) {
     this._tiles = this._tiles || new Map();
     let cv = this._tiles.get(key);
@@ -552,18 +558,6 @@ const R = {
       }
     }
   },
-  /* One car, drawn from above: a body, a roof with the glass either end of it,
-     four wheels with the front pair turned to wherever the steering is, and
-     the lights that say what it is doing. All of it from the four numbers and
-     three colours in its CARS entry, so a new model is an entry in a table and
-     not a new drawing.
-
-     Nothing here is a sprite, and that is not for want of looking: the kit
-     this game pins is a mediaeval-through-Victorian tile set with a wheelchair
-     and a shopping trolley in it as the only wheeled things in the whole
-     repository. A car in that style would have to be drawn, and a car that is
-     drawn may as well be drawn by the renderer, where it can turn through any
-     angle rather than the eight a sprite sheet would give it. */
   /* WHAT SHAPE A VEHICLE IS, as six numbers, so that a bus and a hatchback are
      not the same drawing at two sizes — which is what they were, and which is
      why the 41 read as a very long car.
@@ -586,28 +580,56 @@ const R = {
     van: { nose: .97, tail: .99, belly: 1.0, base: .64, rear: -.68, cab: 'van' },
     bus: { nose: .98, tail: .99, belly: 1.0, base: .70, rear: -.74, cab: 'bus' },
   },
-  /* One vehicle, from above: the body, the glass, four wheels with the front
-     pair turned to wherever the steering is, and the lights that say what it
-     is doing.
+  /* THE BAKED HALF OF A VEHICLE.
 
-     Nothing here is a sprite, and that is not for want of looking: the kit
-     this game pins is a mediaeval-through-Victorian tile set with a wheelchair
-     and a shopping trolley in it as the only wheeled things in the whole
-     repository. A car in that style would have to be drawn, and a car that is
-     drawn may as well be drawn by the renderer, where it can turn through any
-     angle rather than the eight a sprite sheet would give it. */
-  car(car) {
-    const c = this.ctx, d = car.def;
-    const hl = d.len / 2, hw = d.wid / 2;
+     Everything about one that is the same from frame to frame — the body, the
+     arches, the flanks, the panel gaps, the polish, the glass, the bumpers,
+     the mirrors, the door sign — is about twenty paths, and twenty paths times
+     eleven vehicles times sixty frames is the arithmetic that decides whether
+     this game runs on a phone. Drawn live, the layered body cost three and a
+     half times what the flat one did.
+
+     So it is baked, exactly as the floor tiles are: drawn flat into a small
+     canvas the first time it is asked for and blitted after that, which turns
+     twenty paths into one drawImage and leaves the layering free. What is left
+     to draw live is the four things that actually change — the wheels, because
+     the front pair steer; the lights, because they come on; the indicators,
+     because they blink; and whoever is in it.
+
+     Baked at 2x for the reason R._bake() is: the canvas is scaled by the device
+     pixel ratio and a sprite blown up is a smear. Keyed by the model and by how
+     wet the paint is — the polish is the one part of a car that knows what the
+     weather is doing — and the wet is quantised, so drizzle turning into rain
+     does not rebake eleven vehicles a frame. */
+  CAR_PAD: 10,
+  carArt(d) {
     const S = this.CARSHAPES[d.shape] || this.CARSHAPES.car;
+    const wet = Math.round((((typeof Sky !== 'undefined' && Sky.wet()) || 0)) * 4) / 4;
+    const key = d.len + ':' + d.wid + ':' + (d.shape || 'car') + ':' + d.body + d.roof + d.trim
+      + (d.sign ? 'S' : '') + (d.roofSign ? 'R' : '') + ':' + wet;
+    this._cars = this._cars || new Map();
+    const had = this._cars.get(key);
+    if (had) return had;
+
+    const P = this.CAR_PAD, Z = 2;
+    const w = d.len + P * 2, h = d.wid + P * 2;
+    const surface = () => {
+      const cv = document.createElement('canvas');
+      cv.width = w * Z; cv.height = h * Z;
+      const g = cv.getContext('2d');
+      g.scale(Z, Z); g.translate(w / 2, h / 2);
+      return { cv, g };
+    };
+
+    const hl = d.len / 2, hw = d.wid / 2;
     const fw = hw * S.nose, rw = hw * S.tail, bel = hw * S.belly;
 
     /* The outline, and it is a PATH rather than a rounded rectangle. A rect is
        a slab: the whole reason a car reads as a car from directly above is that
        it is narrower at the nose than across the doors, and a bus reads as a
-       bus because it is not. Built once and laid down twice — the shadow
-       and the body — so the two can never disagree about the shape. */
-    const outline = () => {
+       bus because it is not. One function, laid down by both the shadow and the
+       body, so the two can never disagree about the shape. */
+    const outline = c => {
       c.beginPath();
       c.moveTo(-hl + rw * .45, -rw);
       c.quadraticCurveTo(0, -bel, hl - fw * .5, -fw);
@@ -619,47 +641,128 @@ const R = {
       c.closePath();
     };
 
-    /* The shadow is the ground's, so it is offset in the WORLD (down and a
-       little right, like every other shadow in this game) and only then turned
-       to match the body. */
+    /* ---- THE SHADOW ----
+       Two shadows in one sprite, because a car casts two and only one of them
+       is the shape of the car. THE CAST one is soft and offset down and a
+       little right like every other shadow in this game, and it is three
+       passes rather than one: a flat copy of the outline six pixels down is a
+       stencil, and a shadow has an edge that goes soft. THE CONTACT one is
+       tight, dark and barely offset — the dark under the sills where no light
+       gets in at all, and the one that puts the car ON the road rather than
+       above it.
+       Their offset from each other is baked in; the sprite is blitted at the
+       contact one's own place. */
+    const sh = surface();
+    for (const [s, a] of [[1.13, .09], [1.06, .12], [1, .20]]) {
+      sh.g.save(); sh.g.translate(2, 4.5); sh.g.scale(s, s);
+      sh.g.fillStyle = 'rgba(0,0,0,' + a + ')';
+      outline(sh.g); sh.g.fill();
+      sh.g.restore();
+    }
+    sh.g.save(); sh.g.scale(.93, .93);
+    sh.g.fillStyle = 'rgba(0,0,0,.30)';
+    outline(sh.g); sh.g.fill();
+    sh.g.restore();
+
+    /* ---- THE BODY ---- */
+    const bd = surface(), c = bd.g;
+    const gr = c.createLinearGradient(0, -hw, 0, hw);
+    gr.addColorStop(0, this.shade(d.body, .16));
+    gr.addColorStop(.45, d.body);
+    gr.addColorStop(1, this.shade(d.body, -.28));
+    c.fillStyle = gr;
+    outline(c); c.fill();
+
+    /* Everything from here to the stroke is painted INSIDE the body, so none
+       of it has to know the outline's shape — it is clipped to it. Four layers,
+       and they are four separate facts about a car seen from above: the arches
+       are holes cut in it, the flanks fall away from the crown, the panels are
+       separate pieces of metal, and the whole of it is polished.
+
+       This is what the body was missing. A gradient across the width says the
+       roof is curved and says nothing else at all, so a hatchback and a skip
+       lid were the same drawing in two colours. */
+    const tw = Math.max(11, d.wid * .44), th = Math.max(5, d.wid * .21);
     c.save();
-    c.translate(car.x + 2, car.y + 6); c.rotate(car.a);
-    c.fillStyle = 'rgba(0,0,0,.32)';
-    outline(); c.fill();
+    outline(c); c.clip();
+
+    /* THE ARCHES. A wheel comes out of a hole, and the hole is darker than
+       anything else on the car. Without them the wheels read as four things
+       stuck to the sides rather than as four things it is standing on. */
+    c.fillStyle = 'rgba(0,0,0,.34)';
+    for (const u of [hl * S.base, hl * S.rear]) {
+      for (const v of [-1, 1]) {
+        c.beginPath();
+        c.ellipse(u, v * (hw + 1), tw * .58, th * 1.15, 0, 0, 6.3);
+        c.fill();
+      }
+    }
+    /* THE FLANKS. The sides of a car turn away from the light before the edge
+       does, and a hard rim with no fall-off before it is what makes a drawn car
+       look like a sticker of one. Darker on the low side, because that is where
+       every other shadow in this game falls. */
+    const flankT = c.createLinearGradient(0, -hw, 0, -hw * .42);
+    flankT.addColorStop(0, 'rgba(0,0,0,.15)'); flankT.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = flankT; c.fillRect(-hl, -hw, d.len, hw * .58);
+    const flankB = c.createLinearGradient(0, hw, 0, hw * .34);
+    flankB.addColorStop(0, 'rgba(0,0,0,.26)'); flankB.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = flankB; c.fillRect(-hl, hw * .34, d.len, hw * .66);
+
+    /* THE PANEL GAPS. The single biggest reason a car reads as a car from
+       directly above, and the one thing this drawing had none of: a bonnet, a
+       boot and two doors a side, each a dark line with a lit one against it,
+       because a shut line is a groove and a groove has two sides. Placed off
+       the cabin rather than off the length, so a van's bonnet is where a van's
+       bonnet is. */
+    const seam = (u, v0, v1) => {
+      c.fillStyle = 'rgba(0,0,0,.34)'; c.fillRect(u, v0, 1, v1 - v0);
+      c.fillStyle = 'rgba(255,255,255,.09)'; c.fillRect(u + 1, v0, 1, v1 - v0);
+    };
+    if (S.cab === 'bus') {
+      /* A bus is panelled the other way about: bays, all the way down, and the
+         gaps between them are what you see of it from up here. */
+      for (let i = -3; i <= 3; i++) seam(hl * (i * .22), -hw + 1, hw - 1);
+    } else {
+      const nose = S.cab === 'van' ? hl * .42 : hl * .14;    /* bonnet shut line */
+      const tail = S.cab === 'van' ? -hl * .86 : -hl * .5;   /* boot, or the back doors */
+      seam(nose, -hw + 2, hw - 2);
+      seam(tail, -hw + 2, hw - 2);
+      /* The doors: two a side on a car, one a side on a van, and only down the
+         flanks — the middle of a roof has no shut line on it. */
+      for (const u of (S.cab === 'van' ? [hl * .1] : [-hl * .06, -hl * .34])) {
+        seam(u, -hw + 1, -hw * .3);
+        seam(u, hw * .3, hw - 1);
+      }
+    }
+
+    /* THE POLISH. One long raking highlight down the length, off-centre, which
+       is a car under a sky rather than a car under a lamp — and the one thing
+       on it that knows what the weather is doing. Wet paint is a mirror, so the
+       same sheen comes up hard in the rain. */
+    const sheen = c.createLinearGradient(0, -hw * .9, 0, hw * .2);
+    sheen.addColorStop(0, 'rgba(255,255,255,0)');
+    sheen.addColorStop(.5, 'rgba(255,255,255,' + (.10 + wet * .14).toFixed(3) + ')');
+    sheen.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = sheen;
+    c.fillRect(-hl * .96, -hw * .9, d.len * .96, hw * 1.1);
     c.restore();
 
+    /* The edge, and then the light along the top of it. A single dark stroke
+       all the way round is a cut-out; a car has a lit rim on the side facing
+       the sky and a dark one under, which is two strokes and the reason the
+       body finally has a thickness. The lit one is CLIPPED, so it lands on the
+       inside of the edge and reads as the top of a panel rather than as a
+       white halo, and GRADED, so only the sky-facing side gets it. */
+    c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 1.5;
+    outline(c); c.stroke();
     c.save();
-    c.translate(car.x, car.y); c.rotate(car.a);
-
-    /* Wheels first: they are under the arches. The front pair turn, which is
-       four pixels of movement and the single thing that most makes the car
-       look like it is being driven rather than slid. Sized off the vehicle
-       rather than fixed at twelve by six — a bus on a hatchback's tyres was
-       the other half of why it looked wrong. */
-    const tw = Math.max(11, d.wid * .44), th = Math.max(5, d.wid * .21);
-    c.fillStyle = '#16181c';
-    const wheel = (u, turn) => {
-      c.save(); c.translate(u, 0);
-      for (const v of [-hw - 1, hw + 1]) {
-        c.save(); c.translate(0, v); if (turn) c.rotate(turn);
-        c.beginPath(); c.roundRect(-tw / 2, -th / 2, tw, th, 2); c.fill();
-        c.restore();
-      }
-      c.restore();
-    };
-    wheel(hl * S.base, (car.wheel || 0) * 0.5);
-    wheel(hl * S.rear, 0);
-
-    /* The body. A flat fill would read as a card: the gradient across it is
-       the light coming off a curved roof, which is the only reason a car in
-       plan view looks like a car at all. */
-    const g = c.createLinearGradient(0, -hw, 0, hw);
-    g.addColorStop(0, this.shade(d.body, .16));
-    g.addColorStop(.45, d.body);
-    g.addColorStop(1, this.shade(d.body, -.28));
-    c.fillStyle = g;
-    outline(); c.fill();
-    c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 1.5; c.stroke();
+    outline(c); c.clip();
+    const rim = c.createLinearGradient(0, -hw, 0, hw * .1);
+    rim.addColorStop(0, 'rgba(255,255,255,.26)');
+    rim.addColorStop(1, 'rgba(255,255,255,0)');
+    c.strokeStyle = rim; c.lineWidth = 1.6;
+    outline(c); c.stroke();
+    c.restore();
 
     /* BUMPERS, which is what `trim` was for. It has been on every entry in the
        CARS table since the table existed and was read by nothing at all. */
@@ -669,7 +772,14 @@ const R = {
       c.beginPath(); c.roundRect(-hl + .5, -rw * .82, 3, rw * 1.64, 1.5); c.fill();
     }
 
-    const glass = 'rgba(30,38,50,.85)';
+    /* THE GLASS, and it is a gradient rather than a colour for the same reason
+       the body is: a flat dark shape is a hole, and a windscreen seen from
+       above is a sloped mirror with the sky in the top of it. Steeper than the
+       body's, because glass reflects harder than paint does. */
+    const glass = c.createLinearGradient(0, -hw, 0, hw);
+    glass.addColorStop(0, 'rgba(96,116,142,.92)');
+    glass.addColorStop(.34, 'rgba(44,55,72,.90)');
+    glass.addColorStop(1, 'rgba(22,28,38,.92)');
     if (S.cab === 'bus') {
       /* A BUS IS A ROW OF WINDOWS. That is the whole of what one looks like
          from above and it is what tells you, at a glance and from the far end
@@ -691,8 +801,8 @@ const R = {
       c.beginPath(); c.roundRect(hl * .38, hw - 2 - gh - .7, span / n + 1, gh + 1.4, 1.5); c.fill();
     } else if (S.cab === 'van') {
       /* A cab at the very front, a bulkhead, and then a box with nothing in
-         it. No side glass at all, which is the entire visual difference
-         between a van and an estate car and is why one of them is a van. */
+         it. No side glass at all, which is the entire visual difference between
+         a van and an estate car and is why one of them is a van. */
       c.fillStyle = glass;
       c.beginPath(); c.roundRect(hl * .52, -hw + 3, hl * .3, d.wid - 6, 3); c.fill();
       c.strokeStyle = 'rgba(0,0,0,.22)'; c.lineWidth = 1;
@@ -707,9 +817,9 @@ const R = {
       /* Roof and glass. The windscreen is the bigger of the two and it is at
          the front, which is how you can tell at a glance which way a stationary
          car is pointing — the thing GTA got right and nobody has improved on.
-         Both panes are TAPERED now: glass in a car is raked, so from above it
-         is a trapezium and never a rectangle, and the two of them leaning
-         towards each other is most of what makes the roof look curved. */
+         Both screens are TAPERED: glass in a car is raked, so from above it is
+         a trapezium and never a rectangle, and the two of them leaning towards
+         each other is most of what makes the roof look curved. */
       const pane = (x0, x1, w0, w1) => {
         c.beginPath();
         c.moveTo(x0, -w0); c.lineTo(x1, -w1); c.lineTo(x1, w1); c.lineTo(x0, w0);
@@ -718,12 +828,34 @@ const R = {
       c.fillStyle = glass;
       pane(hl * .18, hl * .54, hw - 3.2, hw - 5.4);          /* windscreen */
       pane(-hl * .46, -hl * .72, hw - 3.6, hw - 5.8);        /* rear screen */
+      /* SIDE GLASS. Two windows a side between the screens, which is what the
+         cabin of a car has and what this drawing did without — the roof ran
+         straight down to the sills and the whole middle of the car was one
+         unbroken panel of paint. They are narrow because you are looking at
+         them nearly edge-on, and that is exactly why they are needed: it is the
+         strip of dark down each flank that says there is a cabin here. */
+      for (const v of [-1, 1]) {
+        for (const [x0, x1] of [[hl * .04, -hl * .2], [-hl * .24, -hl * .43]]) {
+          c.beginPath();
+          c.moveTo(x0, v * (hw - 1.6)); c.lineTo(x1, v * (hw - 1.6));
+          c.lineTo(x1 + hl * .02, v * (hw - 4.4)); c.lineTo(x0 - hl * .02, v * (hw - 4.4));
+          c.closePath(); c.fill();
+        }
+      }
       c.fillStyle = this.shade(d.roof, .04);
-      c.beginPath(); c.roundRect(-hl * .44, -hw + 2.6, hl * .62, d.wid - 5.2, 4); c.fill();
+      c.beginPath(); c.roundRect(-hl * .44, -hw + 4.2, hl * .62, d.wid - 8.4, 4); c.fill();
       /* One specular line down the centre of the roof rather than a band along
          its edge: a car in the rain has a highlight where the crown is. */
       c.fillStyle = 'rgba(255,255,255,.13)';
       c.beginPath(); c.roundRect(-hl * .40, -1.6, hl * .54, 3.2, 1.6); c.fill();
+      /* And the sky in the top of the windscreen, which is the one reflection
+         worth drawing: it is what tells you the glass is glass and not a hole
+         cut in the roof. A streak, off-centre, across the rake. */
+      c.fillStyle = 'rgba(214,230,248,.20)';
+      c.beginPath();
+      c.moveTo(hl * .22, -hw + 3.6); c.lineTo(hl * .5, -hw + 5.6);
+      c.lineTo(hl * .5, -hw + 7.4); c.lineTo(hl * .22, -hw + 5.4);
+      c.closePath(); c.fill();
     }
 
     /* WING MIRRORS. Four pixels each, and they do more for the silhouette than
@@ -757,32 +889,107 @@ const R = {
       c.beginPath(); c.roundRect(-4, -hw * .5, 8, hw, 1.5); c.fill();
     }
 
-    /* Somebody in it. A head, at the right-hand seat, because this is
-       Bellhaven and not Bellhaven, Ohio. */
-    if (car === Cars.driving || car.traffic) {
-      c.fillStyle = car === Cars.driving ? 'rgba(233,214,190,.95)' : 'rgba(60,66,78,.9)';
-      c.beginPath(); c.arc(-hl * 0.1 + (S.cab === 'bus' ? hl * .62 : 0), hw * 0.42, 3.4, 0, 6.3); c.fill();
-    }
-
-    /* Lights. Two at each end; the back pair come up when the brakes are on or
-       when it is reversing, which are the two times a car behind you needs to
-       know. */
-    const lit = car.braking || car.fwd < -4;
+    /* Headlights, and the tail lights as they are when nothing is happening.
+       Both are baked because both are always there; the RED tail light is
+       painted live over the top of this one when the brakes go on. */
     for (const v of [-fw + 3.5, fw - 3.5]) {
       c.fillStyle = 'rgba(255,244,214,.85)';
       c.beginPath(); c.roundRect(hl - 5, v - 2.5, 3, 5, 1.5); c.fill();
     }
     for (const v of [-rw + 3.5, rw - 3.5]) {
-      c.fillStyle = lit ? '#ff5f56' : 'rgba(150,52,48,.9)';
+      c.fillStyle = 'rgba(150,52,48,.9)';
       c.beginPath(); c.roundRect(-hl + 2, v - 2.5, 3, 5, 1.5); c.fill();
     }
-    /* INDICATORS, and they are real: `wheel` is where the steering actually
-       is, so the amber that comes on is the corner the vehicle is genuinely
-       turning towards. Every car at every junction in this town now signals,
-       correctly, without a line of the traffic code changing — and the 41
-       pulling away from a stop has its indicator on, which is a thing the bus
-       stop's act claims about it. Off with Animation, along with everything
-       else that blinks. */
+
+    const art = { w, h, body: bd.cv, shadow: sh.cv };
+    /* One entry per model per quarter-step of wet, so the map is bounded by the
+       CARS table and cannot grow with the traffic. */
+    this._cars.set(key, art);
+    return art;
+  },
+
+  /* One vehicle, from above: the body, the glass, four wheels with the front
+     pair turned to wherever the steering is, and the lights that say what it is
+     doing.
+
+     Nothing here is a sprite, and that is not for want of looking: the kit this
+     game pins is a mediaeval-through-Victorian tile set with a wheelchair and a
+     shopping trolley in it as the only wheeled things in the whole repository.
+     A car in that style would have to be drawn, and a car that is drawn may as
+     well be drawn by the renderer, where it can turn through any angle rather
+     than the eight a sprite sheet would give it.
+
+     What this function does now is the four things about a vehicle that move.
+     The rest of it is carArt(), baked. */
+  car(car) {
+    const c = this.ctx, d = car.def;
+    const hl = d.len / 2, hw = d.wid / 2;
+    const S = this.CARSHAPES[d.shape] || this.CARSHAPES.car;
+    const fw = hw * S.nose, rw = hw * S.tail;
+    const art = this.carArt(d);
+    const ax = -art.w / 2, ay = -art.h / 2;
+
+    /* The shadow is the ground's, so it is placed in the WORLD and only then
+       turned to match the body. */
+    c.save();
+    c.translate(car.x, car.y + 1.5); c.rotate(car.a);
+    c.drawImage(art.shadow, ax, ay, art.w, art.h);
+    c.restore();
+
+    c.save();
+    c.translate(car.x, car.y); c.rotate(car.a);
+
+    /* Wheels first: they are under the arches. The front pair turn, which is
+       four pixels of movement and the single thing that most makes the car look
+       like it is being driven rather than slid. Sized off the vehicle rather
+       than fixed at twelve by six — a bus on a hatchback's tyres was the other
+       half of why it looked wrong. */
+    const tw = Math.max(11, d.wid * .44), th = Math.max(5, d.wid * .21);
+    const wheel = (u, turn) => {
+      c.save(); c.translate(u, 0);
+      for (const v of [-hw - 1, hw + 1]) {
+        c.save(); c.translate(0, v); if (turn) c.rotate(turn);
+        /* The tyre, then the tread edge, so a wheel is not one black lozenge.
+           Two pixels of grey along the outer face is the only part of a tyre
+           you can actually see from up here. */
+        c.fillStyle = '#0e1013';
+        c.beginPath(); c.roundRect(-tw / 2, -th / 2, tw, th, 2); c.fill();
+        c.fillStyle = 'rgba(190,196,206,.16)';
+        c.beginPath(); c.roundRect(-tw / 2 + 1, v < 0 ? -th / 2 : th / 2 - 1.6, tw - 2, 1.6, .8); c.fill();
+        c.restore();
+      }
+      c.restore();
+    };
+    wheel(hl * S.base, (car.wheel || 0) * 0.5);
+    wheel(hl * S.rear, 0);
+
+    /* Everything the vehicle IS, in one blit. */
+    c.drawImage(art.body, ax, ay, art.w, art.h);
+
+    /* Somebody in it. A head, at the right-hand seat, because this is Bellhaven
+       and not Bellhaven, Ohio. */
+    if (car === Cars.driving || car.traffic) {
+      c.fillStyle = car === Cars.driving ? 'rgba(233,214,190,.95)' : 'rgba(60,66,78,.9)';
+      c.beginPath(); c.arc(-hl * 0.1 + (S.cab === 'bus' ? hl * .62 : 0), hw * 0.42, 3.4, 0, 6.3); c.fill();
+    }
+
+    /* The back pair come up when the brakes are on or when it is reversing,
+       which are the two times a car behind you needs to know. Painted over the
+       dull pair the sprite already carries. */
+    const lit = car.braking || car.fwd < -4;
+    if (lit) {
+      c.fillStyle = '#ff5f56';
+      for (const v of [-rw + 3.5, rw - 3.5]) {
+        c.beginPath(); c.roundRect(-hl + 2, v - 2.5, 3, 5, 1.5); c.fill();
+      }
+    }
+    /* INDICATORS, and they are real: `wheel` is where the steering actually is,
+       so the amber that comes on is the corner the vehicle is genuinely turning
+       towards. Every car at every junction in this town signals, correctly,
+       without a line of the traffic code changing — and the 41 pulling away
+       from a stop has its indicator on, which is a thing the bus stop's act
+       claims about it. Off with Animation, along with everything else that
+       blinks. */
     const turn = car.wheel || 0;
     if (this.animate && Math.abs(turn) > .22 && Math.floor(this.t * 2.6) % 2 === 0) {
       const v = turn < 0 ? -1 : 1;
@@ -835,6 +1042,83 @@ const R = {
     c.save(); c.scale(TILE / this.REF_TILE, TILE / this.REF_TILE);
     fn(this.REF_TILE);
     c.restore();
+  },
+  /* WHAT YOU SEE THROUGH AN OPEN DOOR.
+
+     A doorway in a wall you can walk through has floor under it already and
+     wants nothing from this. A doorway cut into wall MASS does not: the room
+     behind it is a whole other level, the tile is brick, and what showed
+     between the jambs was that brick. Every frontage in this town read as a
+     door stuck on a wall, and the front of this building read as two doors
+     stuck on a car park wall, because looking through one of them found
+     exactly what looking at the wall beside it found.
+
+     World.behind() has already asked the catalogue which room is on the other
+     side. This paints that room's own floor into the gap and drops the light
+     off towards the head, which is the part furthest under the lintel — a foot
+     of shadow and then a floor, seen from a street at noon. One borrowed tile,
+     and it is the whole difference between a shop with a way in and a sticker
+     of a shop.
+
+     Before R.doorways(), which lays the jambs, the threshold and the leaf over
+     the top of it. */
+  thresholds(x0, y0, x1, y1) {
+    const list = World.doorways; if (!list) return;
+    const c = this.ctx;
+    /* The jamb, in real tiles: R.doorways() counts it in the 44px units it was
+       drawn in, and this is the same number seen from outside that wrapper. */
+    const J = TILE * (9 / this.REF_TILE);
+    for (const d of list) {
+      if (!d.into || !ZONES[d.into]) continue;
+      if (d.x < x0 - 1 || d.x > x1 + 1 || d.y < y0 - 1 || d.y > y1 + 1) continue;
+      /* Only where the tile really is wall. An opening in a room already has a
+         floor and does not want a second one laid over it. */
+      if (!World.solid[d.y] || !World.solid[d.y][d.x]) continue;
+      /* A two-tile opening is ONE opening, so the jamb between its halves is
+         not there — the same question R.doorways() asks of its own reveal, and
+         it has to be the same answer or the borrowed floor stops half a jamb
+         short of the wall it is set into. */
+      const wOpen = list.some(o => o.y === d.y && o.x === d.x - 1);
+      const eOpen = list.some(o => o.y === d.y && o.x === d.x + 1);
+      const nOpen = list.some(o => o.x === d.x && o.y === d.y - 1);
+      const sOpen = list.some(o => o.x === d.x && o.y === d.y + 1);
+      const px = d.x * TILE, py = d.y * TILE;
+      let ox = px, oy = py, ow = TILE, oh = TILE;
+      if (d.axis === 'h') {
+        if (!wOpen) { ox += J; ow -= J; }
+        if (!eOpen) ow -= J;
+      } else {
+        if (!nOpen) { oy += J; oh -= J; }
+        if (!sOpen) oh -= J;
+      }
+      if (ow < 1 || oh < 1) continue;
+      c.save();
+      c.beginPath(); c.rect(ox, oy, ow, oh); c.clip();
+      c.drawImage(this.floorTile(d.into, (d.x + d.y) & 1), px, py, TILE, TILE);
+      /* Deepest at the head and lifting towards the threshold, so the opening
+         reads as something with depth rather than as a picture of a floor
+         pasted into a hole. Far enough down to be a lintel and no further: at
+         three quarters the whole opening went to black and the doorway read as
+         a hole knocked in a wall rather than as a shop with its lights on. */
+      const g = c.createLinearGradient(0, py, 0, py + TILE);
+      g.addColorStop(0, 'rgba(0,0,0,.62)');
+      g.addColorStop(.55, 'rgba(0,0,0,.22)');
+      g.addColorStop(1, 'rgba(0,0,0,.06)');
+      c.fillStyle = g; c.fillRect(ox, oy, ow, oh);
+      /* And the two shadows the jambs throw across it, which are what say the
+         wall has a thickness. Without them the borrowed floor meets the brick
+         at a hard edge and the opening reads as flat. */
+      const rv = Math.min(J, ow / 3);
+      if (rv > 0.5) {
+        const l = c.createLinearGradient(ox, 0, ox + rv, 0);
+        l.addColorStop(0, 'rgba(0,0,0,.45)'); l.addColorStop(1, 'rgba(0,0,0,0)');
+        c.fillStyle = l; c.fillRect(ox, oy, rv, oh);
+        const r = c.createLinearGradient(ox + ow, 0, ox + ow - rv, 0);
+        r.addColorStop(0, 'rgba(0,0,0,.45)'); r.addColorStop(1, 'rgba(0,0,0,0)');
+        c.fillStyle = r; c.fillRect(ox + ow - rv, oy, rv, oh);
+      }
+      c.restore();
+    }
   },
   /* Doorways, built into the wall rather than floating in the gap. The tile
      stays walkable — nothing here touches World.solid — so a doorway is purely
@@ -2282,7 +2566,10 @@ const R = {
     }
 
     /* Doorways sit in the wall band, so they are drawn straight after the walls
-       and before anything that stands in front of them. */
+       and before anything that stands in front of them. The floor behind them
+       goes first, because the jambs and the leaf are what stand in front of
+       THAT. */
+    this.thresholds(x0, y0, x1, y1);
     this.doorways(x0, y0, x1, y1);
     this.doorLeaves(x0, y0, x1, y1);
 
@@ -2414,8 +2701,19 @@ const R = {
              television bracketed level with the skirting board is not mounted,
              it is leaning. Anything that hangs hangs. */
           const wallSprite = fsprite && Tiles.anchors && Tiles.anchors[fsprite] === 'wall';
-          const high = s === 'n' && (o.art || wallSprite);
-          ey += s === 'n' ? (high ? -TILE * 1.45 : -TILE * .72) : s === 's' ? (f.paint ? TILE : TILE * .68) : 0;
+          /* `high` is opt-in for a kind that hangs but draws no art of its own,
+             and the shop signs are why it exists. A frontage's emoji IS its
+             sign, and a sign goes on the fascia over the door — which nobody
+             had to say while there was no door under it and the whole wall was
+             free. There is one now, and at handle height the sign was hanging
+             on the leaf of it. */
+          const high = s === 'n' && (o.art || wallSprite || f.high);
+          /* A number says HOW high, in tiles, for the one case where the
+             picture-rail height is not enough: a shop sign has a door under it
+             and has to clear the head of it. Everything else is 1.45, which is
+             where every poster and chart in the building has always hung. */
+          const lift = typeof f.high === 'number' ? f.high : 1.45;
+          ey += s === 'n' ? (high ? -TILE * lift : -TILE * .72) : s === 's' ? (f.paint ? TILE : TILE * .68) : 0;
           onFloor = false;
         } else if (o.onTable) {
           /* Before the worktop case: the jug and the biscuits are `surface`

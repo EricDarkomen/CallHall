@@ -223,13 +223,45 @@ const World = {
         if (axis === 'h') face = !at(o.x, o.y + 1) ? 1 : -1;
         else face = !at(o.x + 1, o.y) ? 1 : -1;
       }
-      this.doorways.push({ x: o.x, y: o.y, axis, face,
+      this.doorways.push({ x: o.x, y: o.y, axis, face, into: this.behind(o),
         locked: !!o.locked, solid: !!o.solid, kind: o.kind });
       /* The drawn doorway replaces the emoji; two doors on one tile is worse
          than none. The object itself stays exactly as it was, so interaction,
          the minimap and every Act are untouched. */
       o.noEmoji = true;
     });
+  },
+  /* WHAT IS ON THE OTHER SIDE OF IT, as a zone.
+
+     A doorway cut into wall MASS — the front doors of this building, and every
+     shopfront on the parade — is not an opening anything walks through: the
+     room behind it is a different level and the tile the leaf hangs on is a
+     foot of brick. Drawn as it stood, you looked through an open door at a
+     wall, which is the one thing a door must never show you.
+
+     So ask the catalogue. `via` names a link, or the handler does its own
+     naming where a way out and its link are the same word; the link names a
+     level and an entry; the entry stands somewhere, and somewhere is in a room
+     with a floor. That zone is what R.thresholds() paints in the gap. Answered
+     once per build rather than once per frame, and null for every doorway that
+     leads nowhere in particular — a cupboard, a fire escape, the hatch — which
+     is exactly the set that should go on showing what it always showed. */
+  behind(o) {
+    const via = o.via || o.use;
+    const links = (this.def && this.def.links) || [];
+    const link = links.find(l => l.via === via);
+    const def = link && typeof LEVELS !== 'undefined' ? LEVELS[link.to] : null;
+    if (!def || !def.rooms || !def.rooms.length) return null;
+    /* The room the arrival point stands in, which is the floor you would see
+       first. A level whose entry has drifted off its own rooms still has a
+       first room, and the first room of a shop is the shop. */
+    const at = (def.entries || {})[link.entry];
+    if (at) {
+      const tx = Math.floor(at[0]), ty = Math.floor(at[1]);
+      const rm = def.rooms.find(r => tx >= r.r[0] && ty >= r.r[1] && tx <= r.r[2] && ty <= r.r[3]);
+      if (rm) return rm.z;
+    }
+    return def.rooms[0].z;
   },
   /* Precompute, per open tile, which sides touch a wall. Used to lay a contact
      shadow along those edges — the cheapest way to stop the floor and the walls
