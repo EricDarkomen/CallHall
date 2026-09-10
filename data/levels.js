@@ -1195,19 +1195,26 @@ const LEVELS = {
        Positions are in TILES and may be fractional, like `entries` above, and
        for the same reason: this file is data and loads before engine/core.js
        declares TILE. A bay is two tiles wide, so a car centred on a bay is
-       centred on a whole number. */
+       centred on a whole number.
+
+       DOWN THE BAY is the other half of that, and it moved when the vehicles
+       did. A bay is three tiles deep and a car used to be a tile and three
+       quarters long, so where it sat in one barely mattered; at full size it
+       very nearly fills one, and the same numbers put its nose in the car park
+       wall. These are the middle of the bay rather than the head of it, which
+       is where a parked car is. */
     cars: [
-      { x: 8, y: 4.1, face: 'n', model: 'hatch', name: 'A hatchback', use: 'someHatchback' },
-      { x: 12, y: 4.1, face: 'n', model: 'estate', name: 'An estate car with a roof box', use: 'roofBox' },
-      { x: 16, y: 4.1, face: 'n', model: 'pool', name: 'The pool car', use: 'poolCar', drive: true },
+      { x: 8, y: 4.5, face: 'n', model: 'hatch', name: 'A hatchback', use: 'someHatchback' },
+      { x: 12, y: 4.5, face: 'n', model: 'estate', name: 'An estate car with a roof box', use: 'roofBox' },
+      { x: 16, y: 4.5, face: 'n', model: 'pool', name: 'The pool car', use: 'poolCar', drive: true },
       /* x=18 is Nigel's, and it is empty. That is the joke and it only works
          if nothing is parked in it. */
-      { x: 26, y: 4.1, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      { x: 26, y: 4.5, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
       /* On the line, across two of them, at the one time of day when the car
          park is full. Nobody has ever seen it arrive. */
-      { x: 11, y: 11, face: 's', model: 'van', name: 'The contractor’s van', use: 'contractorVan' },
-      { x: 20, y: 11, face: 's', model: 'saloon', name: 'A green saloon', use: 'someoneElsesCar' },
-      { x: 24, y: 11, face: 's', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      { x: 11, y: 11.35, face: 's', model: 'van', name: 'The contractor’s van', use: 'contractorVan' },
+      { x: 20, y: 11.5, face: 's', model: 'saloon', name: 'A green saloon', use: 'someoneElsesCar' },
+      { x: 24, y: 11.5, face: 's', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
       /* Two wheels up on the pavement outside the nail bar, which is why the
          lane past it is clear and the footway is not. Deliberate, on both
          counts: it keeps the traffic moving, and it is a more accurate
@@ -1218,10 +1225,10 @@ const LEVELS = {
       /* ---- the retail park ----
          Four in the bays and one across two of them, because that is a retail
          park car park at any hour of any day. */
-      { x: 22, y: 44.2, face: 'n', model: 'hatch', body: '#2f4a3a', roof: '#25392d', name: 'A green hatchback', use: 'someoneElsesCar' },
-      { x: 28, y: 44.2, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
-      { x: 42, y: 44.2, face: 'n', model: 'estate', body: '#6d6f74', roof: '#54565a', name: 'A grey estate', use: 'someoneElsesCar' },
-      { x: 48, y: 44.2, face: 'n', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'someoneElsesCar' },
+      { x: 22, y: 44.5, face: 'n', model: 'hatch', body: '#2f4a3a', roof: '#25392d', name: 'A green hatchback', use: 'someoneElsesCar' },
+      { x: 28, y: 44.5, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      { x: 42, y: 44.5, face: 'n', model: 'estate', body: '#6d6f74', roof: '#54565a', name: 'A grey estate', use: 'someoneElsesCar' },
+      { x: 48, y: 44.5, face: 'n', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'someoneElsesCar' },
       { x: 48, y: 47.6, face: 'w', model: 'van', name: 'A van, waiting', use: 'waitingVan' },
 
       /* ---- TRAFFIC ----

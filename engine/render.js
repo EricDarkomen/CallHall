@@ -1069,11 +1069,15 @@ const R = {
        drawn in, and this is the same number seen from outside that wrapper. */
     const J = TILE * (9 / this.REF_TILE);
     for (const d of list) {
-      if (!d.into || !ZONES[d.into]) continue;
       if (d.x < x0 - 1 || d.x > x1 + 1 || d.y < y0 - 1 || d.y > y1 + 1) continue;
       /* Only where the tile really is wall. An opening in a room already has a
          floor and does not want a second one laid over it. */
       if (!World.solid[d.y] || !World.solid[d.y][d.x]) continue;
+      /* A room to show, or nothing behind it. A shut door still gets a recess —
+         the reveal it stands in is what makes it a door SET INTO a wall rather
+         than a door painted on one — it just has no floor to show through,
+         because there is no floor: nobody goes into the cash and carry. */
+      const room = d.into && ZONES[d.into] ? d.into : null;
       /* A two-tile opening is ONE opening, so the jamb between its halves is
          not there — the same question R.doorways() asks of its own reveal, and
          it has to be the same answer or the borrowed floor stops half a jamb
@@ -1094,7 +1098,15 @@ const R = {
       if (ow < 1 || oh < 1) continue;
       c.save();
       c.beginPath(); c.rect(ox, oy, ow, oh); c.clip();
-      c.drawImage(this.floorTile(d.into, (d.x + d.y) & 1), px, py, TILE, TILE);
+      if (room) c.drawImage(this.floorTile(room, (d.x + d.y) & 1), px, py, TILE, TILE);
+      else {
+        /* Nothing behind it, so the reveal is the reveal and stops there: the
+           wall's own colour, sunk, which is what the inside of a frame looks
+           like when the thing filling it is a shut door. */
+        const z = World.zone[d.y] && World.zone[d.y][d.x];
+        c.fillStyle = this.shade((ZONES[z] && ZONES[z].wall) || '#1a212e', -.35);
+        c.fillRect(ox, oy, ow, oh);
+      }
       /* Deepest at the head and lifting towards the threshold, so the opening
          reads as something with depth rather than as a picture of a floor
          pasted into a hole. Far enough down to be a lintel and no further: at
@@ -1136,8 +1148,19 @@ const R = {
         const px = d.x * TILE, py = d.y * TILE;
         const JAMB = 9;                     /* how far the wall reaches in */
         c.save();
-        if (!d.solid) {
-          /* The reveal: the cut face of the wall, darker than the wall itself. */
+        {
+          /* THE REVEAL: the cut face of the wall, darker than the wall itself.
+
+             Drawn for a SHUT door as well as an open one, and that is the whole
+             of what a shut door was missing. A door in a wall is set INTO the
+             wall — jambs either side, a frame round it, and the leaf standing
+             back from the face — and a leaf drawn straight onto the brick with
+             none of that is a door stuck on, not a door shut. The empty unit,
+             the cash and carry and the four sheds on Corven Way all had one,
+             and so did the two inside the building. The only part of this that
+             an opening you can walk through gets to itself is the threshold,
+             because a threshold is the floor of it and a shut door has no
+             floor to show. */
           c.fillStyle = wall;
           if (d.axis === 'h') {
             /* Only where there is a wall to carry in. A two-tile opening is
@@ -1153,11 +1176,13 @@ const R = {
             c.fillStyle = 'rgba(0,0,0,.45)';
             if (!wOpen) c.fillRect(px + JAMB - 2, py, 2, TILE);
             if (!eOpen) c.fillRect(px + TILE - JAMB, py, 2, TILE);
-            /* Threshold: a strip of a different material underfoot. */
-            c.fillStyle = 'rgba(140,150,170,.16)';
-            c.fillRect(px + JAMB, py + TILE / 2 - 4, TILE - JAMB * 2, 8);
-            c.fillStyle = 'rgba(0,0,0,.25)';
-            c.fillRect(px + JAMB, py + TILE / 2 - 4, TILE - JAMB * 2, 1.5);
+            if (!d.solid) {
+              /* Threshold: a strip of a different material underfoot. */
+              c.fillStyle = 'rgba(140,150,170,.16)';
+              c.fillRect(px + JAMB, py + TILE / 2 - 4, TILE - JAMB * 2, 8);
+              c.fillStyle = 'rgba(0,0,0,.25)';
+              c.fillRect(px + JAMB, py + TILE / 2 - 4, TILE - JAMB * 2, 1.5);
+            }
           } else {
             c.fillRect(px, py, TILE, JAMB);
             c.fillRect(px, py + TILE - JAMB, TILE, JAMB);
@@ -1166,10 +1191,12 @@ const R = {
             c.fillStyle = 'rgba(0,0,0,.45)';
             c.fillRect(px, py + JAMB - 2, TILE, 2);
             c.fillRect(px, py + TILE - JAMB, TILE, 2);
-            c.fillStyle = 'rgba(140,150,170,.16)';
-            c.fillRect(px + TILE / 2 - 4, py + JAMB, 8, TILE - JAMB * 2);
-            c.fillStyle = 'rgba(0,0,0,.25)';
-            c.fillRect(px + TILE / 2 - 4, py + JAMB, 1.5, TILE - JAMB * 2);
+            if (!d.solid) {
+              c.fillStyle = 'rgba(140,150,170,.16)';
+              c.fillRect(px + TILE / 2 - 4, py + JAMB, 8, TILE - JAMB * 2);
+              c.fillStyle = 'rgba(0,0,0,.25)';
+              c.fillRect(px + TILE / 2 - 4, py + JAMB, 1.5, TILE - JAMB * 2);
+            }
           }
         }
         /* The leaf. Locked is shut across the opening with a reader beside it,
@@ -1217,9 +1244,11 @@ const R = {
           if (vert) c.fillRect(lx + lw * .18, ly + lh - 7, lw * .64, 2.5);
           else c.fillRect(lx + lw - 7, ly + lh * .18, 2.5, lh * .64);
         };
-        /* Architrave: the frame the leaf hangs in. Only on an opening you can
-           walk through — a door set into a solid wall has no reveal to trim. */
-        if (!d.solid) {
+        /* Architrave: the frame the leaf hangs in. Every doorway gets one now,
+           shut or open — a shut door has exactly as much frame round it as an
+           open one, and the version that trimmed only the openings is what left
+           the shut ones looking stuck on. */
+        {
           c.fillStyle = 'rgba(255,255,255,.05)';
           if (d.axis === 'h') {
             if (!list.some(o => o.y === d.y && o.x === d.x - 1)) c.fillRect(px + JAMB - 3, py, 3, TILE);

@@ -83,7 +83,7 @@ const Cars = {
            road, how long it has left of a reverse, how many shunts it has had
            at the same thing, and how long it has left of going round something
            and on which side. See the note above steerTraffic(). */
-        stuck: 0, lost: 0, back: 0, shunt: 0, pull: 0, pullSide: 1, rerouted: false,
+        stuck: 0, lost: 0, back: 0, shunt: 0, pull: 0, pullBy: 0, rerouted: false,
         /* What is holding it up, published for the car behind: the give-way
            rule is the only thing out there that needs to know what somebody
            ELSE can see. */
@@ -551,8 +551,15 @@ const Cars = {
        a new route and it does not need one. */
     if (car.pull > 0) {
       car.pull -= dt;
-      tx += -uy * car.pullSide * TILE * 1.6;
-      ty += ux * car.pullSide * TILE * 1.6;
+      /* AS FAR OVER AS ROOMTOPASS SAID, and a little further, because a car
+         steering at a target does not arrive at it — it leans towards it and
+         gets most of the way. Never tighter than the tile and a half this was
+         before, so nothing that used to clear a wheelie bin has stopped
+         clearing it. */
+      const by = car.pullBy || 0;
+      const want = Math.sign(by) * Math.max(TILE * 1.6, Math.abs(by) * 1.15);
+      tx += -uy * want;
+      ty += ux * want;
     }
 
     /* Turn towards it, by the shortest way round. */
@@ -642,8 +649,8 @@ const Cars = {
          genuinely clear. Committed to for a few seconds: a pull-out
          reconsidered every frame is a car twitching at a kerb. */
       if (car.pull <= 0 && Math.abs(block.fwd) < 6 && car.stopped > 3.4) {
-        const side = this.roomToPass(car, block);
-        if (side) { car.pull = 3.2; car.pullSide = side; }
+        const by = this.roomToPass(car, block);
+        if (by) { car.pull = 3.2; car.pullBy = by; }
       }
       if (car.pull > 0) want = Math.max(want, 34);
     }
@@ -785,13 +792,35 @@ const Cars = {
      the nearside only if the offside will not have it. */
   roomToPass(car, block) {
     const c = Math.cos(car.a), s = Math.sin(car.a);
-    const u = car.def.len * 0.5 + block.def.len * 0.9;
+    /* HOW BIG THE THING IN FRONT IS IN THIS CAR'S FRAME, which is not the same
+       as how big it is. A car lying broadside across a lane is its own LENGTH
+       wide to somebody coming up behind it and its own width long, and this
+       asked for `block.def.wid` either way — so it offered to pass a car that
+       was lying across the road at an offset that would have driven through the
+       middle of it, found it did not fit, and queued instead. blocker() has
+       always projected the same two numbers the same way; this is that
+       projection, and the two now agree about the shape of the same obstacle.
+       Invisible while every vehicle was about a tile wide and the length and
+       the width were within a whisker of each other. Not invisible the moment
+       they were not. */
+    const rel = block.a - car.a;
+    const cr = Math.abs(Math.cos(rel)), sr = Math.abs(Math.sin(rel));
+    const across = cr * block.def.wid / 2 + sr * block.def.len / 2;
+    const along = cr * block.def.len / 2 + sr * block.def.wid / 2;
+    const u = car.def.len * 0.5 + along * 1.8;
     for (const side of [1, -1]) {
-      const k = side * (car.def.wid * 0.5 + block.def.wid * 0.5 + 8);
+      const k = side * (car.def.wid * 0.5 + across + 8);
       const px = car.x + c * u - s * k, py = car.y + s * u + c * k;
       if (this.routeIsRoad(car) && !this.onRoad(px, py)) continue;
       if (!Collide.carFits(car, px, py)) continue;
-      return side;
+      /* HOW FAR OVER, in pixels, and not merely which way. This used to answer
+         a side and the manoeuvre used to go a flat tile and a half, which are
+         two different numbers about the same thing — so a car would check that
+         it fitted two tiles out, steer one and a half, and drive into the
+         thing it had just proved it could get round. Fine for a car parked at
+         a kerb, where the two are within a few pixels; a hard queue behind
+         anything lying across a lane, where they are not. */
+      return k;
     }
     return 0;
   },

@@ -127,6 +127,27 @@ which is also what lets one turn through any angle rather than through the eight
 a sprite sheet would give it — and what lets the eight models come out of a table
 of numbers and colours rather than out of eight drawings.
 
+They are also the size of cars, which they were not. A hatchback used to be a
+tile and three quarters long — very slightly longer than a person is tall — so
+the street read as a street with toys parked on it, and standing next to the 41
+you were about a fifth of its length rather than a tenth. Everything on four
+wheels is half as long again and a third wider now, which is roughly a person to
+a third of a car, and that is what a person next to a car looks like. The bays
+they park in are three tiles deep and a car very nearly fills one, which is also
+what a car in a bay looks like; the contractor's van does not fit in one at all
+and sticks out into the aisle, which is the most accurate thing on this map.
+
+Two things in the driving had to be told about it, and both were wrong before and
+only got away with it because a car was nearly as wide as it was long. Working
+out whether there is room to get past something in front measured that something
+by its WIDTH, whichever way round it was lying — so a car abandoned broadside
+across a lane, which is its own length wide to anybody coming up behind it, was
+measured as a car's width and the town queued behind it until five. And the
+pull-out itself always went a flat tile and a half sideways, however far out the
+check had said there was room: a car would prove it could get round something and
+then steer into it. It goes as far over as the check said, now, and the check
+measures the obstacle the way the thing that found it always did.
+
 Each of them is built in layers, and that is what stops a car in plan view being
 a lozenge with two dark windows in it. Underneath: a cast shadow that goes soft
 at the edge instead of being a copy of the car in black, and a tight contact
@@ -164,6 +185,14 @@ it, with the sign moved up onto the fascia where a sign over a door goes. The
 ones with a floor behind them stand open; the empty unit, the cash and carry and
 the four sheds on Corven Way are shut, because a door you cannot go through is a
 shut door rather than a missing one.
+
+A shut one is set into the wall exactly as far as an open one is. It was not, at
+first: only the openings got the jambs carrying the wall in and the frame round
+them, so the shut ones were a leaf drawn flat on the brick — a door stuck on
+rather than a door shut, and next to the ajar ones the difference was the only
+thing you could see. They all get the reveal now. The only part an opening keeps
+to itself is the threshold, because a threshold is the floor of it and a shut
+door has no floor to show.
 
 And when you look through an open one you see the room. A doorway cut into wall
 mass has brick under it, so what showed between the jambs was brick — the front

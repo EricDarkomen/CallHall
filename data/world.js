@@ -172,21 +172,21 @@ const SURFACES = {
 const CARS = {
   /* The pool car. The only one in the county with a magnetic door sign that
      has slid, and the only one in this car park you are allowed to move. */
-  pool:  { len: 56, wid: 27, top: 232, acc: 150, grip: 5.5, turn: 2.5, body: '#b9bec4', roof: '#8d949c', trim: '#33383e', sign: true },
-  hatch: { len: 52, wid: 26, top: 265, acc: 190, grip: 6.2, turn: 2.9, body: '#7d2f34', roof: '#5e2327', trim: '#2b2f33' },
-  estate:{ len: 62, wid: 28, top: 245, acc: 160, grip: 5.2, turn: 2.3, body: '#2f4a6b', roof: '#243a54', trim: '#2b2f33' },
-  van:   { len: 70, wid: 30, top: 210, acc: 120, grip: 4.4, turn: 2.0, body: '#d8d5cc', roof: '#c2bfb5', trim: '#3a3a38', shape: 'van' },
+  pool:  { len: 84, wid: 35, top: 232, acc: 150, grip: 5.5, turn: 2.5, body: '#b9bec4', roof: '#8d949c', trim: '#33383e', sign: true },
+  hatch: { len: 78, wid: 34, top: 265, acc: 190, grip: 6.2, turn: 2.9, body: '#7d2f34', roof: '#5e2327', trim: '#2b2f33' },
+  estate:{ len: 93, wid: 36, top: 245, acc: 160, grip: 5.2, turn: 2.3, body: '#2f4a6b', roof: '#243a54', trim: '#2b2f33' },
+  van:   { len: 105, wid: 39, top: 210, acc: 120, grip: 4.4, turn: 2.0, body: '#d8d5cc', roof: '#c2bfb5', trim: '#3a3a38', shape: 'van' },
   /* Traffic. Ordinary cars in ordinary colours, so that what goes past the
      Greggs is not obviously the same car eight times. */
-  saloon:{ len: 56, wid: 27, top: 220, acc: 150, grip: 5.5, turn: 2.4, body: '#3f5a44', roof: '#31462f', trim: '#2b2f33' },
-  taxi:  { len: 56, wid: 27, top: 230, acc: 165, grip: 5.5, turn: 2.5, body: '#c9a227', roof: '#a8871f', trim: '#2b2f33', roofSign: true },
-  small: { len: 46, wid: 25, top: 250, acc: 200, grip: 6.5, turn: 3.1, body: '#5a5f8a', roof: '#464a6b', trim: '#2b2f33' },
+  saloon:{ len: 84, wid: 35, top: 220, acc: 150, grip: 5.5, turn: 2.4, body: '#3f5a44', roof: '#31462f', trim: '#2b2f33' },
+  taxi:  { len: 84, wid: 35, top: 230, acc: 165, grip: 5.5, turn: 2.5, body: '#c9a227', roof: '#a8871f', trim: '#2b2f33', roofSign: true },
+  small: { len: 69, wid: 33, top: 250, acc: 200, grip: 6.5, turn: 3.1, body: '#5a5f8a', roof: '#464a6b', trim: '#2b2f33' },
   /* The 41A. Long enough that it has to slow right down for a corner and take
      the whole width of the junction to get round one, which is the point of
      having one on the network at all — and it does not stop at the bus stop,
      which is the thing the bus stop has said about the 41A since long before
      there was a road for it to not stop on. */
-  bus:   { len: 96, wid: 32, top: 175, acc: 95, grip: 3.6, turn: 1.9, body: '#8d3a3f', roof: '#f0ece2', trim: '#2b2f33', shape: 'bus' }
+  bus:   { len: 144, wid: 42, top: 175, acc: 95, grip: 3.6, turn: 1.9, body: '#8d3a3f', roof: '#f0ece2', trim: '#2b2f33', shape: 'bus' }
 };
 
 /* How each kind of object is furnished, keyed by `kind`.
