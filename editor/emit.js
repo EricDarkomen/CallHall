@@ -373,6 +373,14 @@ const Emit = {
     L.push(i + 'id: ' + this.str(Talk.id) + ', name: ' + this.str(Talk.name)
       + ', face: ' + this.str(Talk.face) + ', role: ' + this.str(Talk.role) + ',');
     L.push(i + 'desk: ' + this.lit(Talk.desk) + ', colour: ' + this.str(Talk.colour) + ',');
+    /* Fields this editor does not model, written back exactly as they were
+       read — `level`, `dir`, `hours`, `look`, `out` and whatever comes next.
+       See Talk.load(): without this, saving the roster silently deletes them
+       and six people stop existing. One line each, because each of them is one
+       fact about a person. */
+    Object.keys(Talk.extra || {}).forEach(k => {
+      L.push(i + this.key(k) + ': ' + this.lit(Talk.extra[k]) + ',');
+    });
     /* One line, however long. The file writes a schedule as one line because it
        is one fact — a day — and eight lines of two-element arrays reads as
        eight facts. */

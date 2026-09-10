@@ -328,11 +328,21 @@ const Panels = {
      ['🖨️ Printer incidents', t.printer], ['💼 Phrases deployed', t.bullshit], ['⭐ Reputation', Math.round(P.rep)]].forEach(([k, v]) => {
       h += '<div class="stat-box"><div class="sk">' + k + '</div><div class="sv">' + v + '</div></div>';
     });
+    /* TWO LISTS, because they are two different things. A colleague is
+       somebody on the fourth floor; a person whose def names a `level` runs a
+       shop on a street outside and is not your colleague, however well the two
+       of you are getting on. Filing Pat under Colleagues would be the panel
+       telling you something about your job that is not true. */
+    const box = n => '<div class="stat-box"><div class="sk">' + n.face + ' ' + esc(n.name)
+      + '</div><div class="sn">' + Rel.label(G.rel[n.id]) + '</div></div>';
+    const known = NPCS.filter(n => G.rel[n.id] !== undefined);
+    const staff = known.filter(n => !n.level), town = known.filter(n => n.level);
     h += '</div><div class="h2">Colleagues</div><div class="stat-grid">';
-    NPCS.forEach(n => {
-      if (G.rel[n.id] === undefined) return;
-      h += '<div class="stat-box"><div class="sk">' + n.face + ' ' + esc(n.name) + '</div><div class="sn">' + Rel.label(G.rel[n.id]) + '</div></div>';
-    });
+    staff.forEach(n => { h += box(n); });
+    if (town.length) {
+      h += '</div><div class="h2">Bellhaven</div><div class="stat-grid">';
+      town.forEach(n => { h += box(n); });
+    }
     return h + '</div>';
   },
   r_settings() {

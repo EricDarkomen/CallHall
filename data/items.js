@@ -260,6 +260,12 @@ const ACHS = {
   /* ---- the four colleagues who are not at their desks ---- */
   a_knowingly: { n: 'Knowingly, For The Third Time', e: '☕', d: 'Be in the charity shop at one o\u2019clock and tell Marjorie to buy it.' },
   a_nigelkebab: { n: 'Don\u2019t Correct It', e: '🖼️', d: 'Find out what the photograph of Nigel in that doorway is actually a photograph of.' },
+  /* ---- the six people who do not work here ---- */
+  a_towels:  { n: 'Ready Since April', e: '🧺', d: 'Find out who has been doing the fourth floor\u2019s laundry, for nothing, for years.' },
+  a_thecheck:{ n: 'That\u2019s Always Been The Check', e: '📖', d: 'Ask Norman whether he ever actually checks. Get a better door policy than your own building has.' },
+  a_nothing: { n: 'Forty-One Years, And Now This', e: '🍺', d: 'Ask the man at the end of the bar what he is doing, and hear him say it without flinching.' },
+  a_thehand: { n: 'Two Hundred And Eighty Pound', e: '📷', d: 'Ask Jules about the photograph of the hand. Nobody has asked in eleven years.' },
+  a_thecard: { n: 'From The Fourth Floor', e: '🎄', d: 'Find out why Bellhaven Tyre & Exhaust keeps doing the work.' },
   a_biscuits: { n: 'Nobody Will Ever Know It Was You', e: '🎁', d: 'Buy the biscuits with your own money and say nothing.' },
   a_mo:      { n: 'Nobody Asks', e: '🧑‍🎓', d: 'Ask Mo whether he is actually alright, and mean it.' },
   a_poop:    { n: 'Listed Building', e: '🧻', d: 'Pay your respects to the only piece of writing in this building that outlived its author’s career.' },

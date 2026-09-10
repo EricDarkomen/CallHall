@@ -214,7 +214,12 @@ const NPCM = {
            not, every reader of `list` is already correct. */
         level: def.level || 'office',
         x: (def.desk[0] + .5) * TILE, y: (def.desk[1] + .5) * TILE,
-        step: 0, speed: TILE * t.pace, bob: rnd(0, 6.3), dir: 2,
+        step: 0, speed: TILE * t.pace, bob: rnd(0, 6.3),
+        /* Which way they stand when they are where they belong. Two on the
+           fourth floor means facing the camera; a def may say otherwise, and
+           the people behind counters in Bellhaven do — see `dir:` in
+           data/npcs.js. */
+        dir: def.dir === undefined ? 2 : def.dir,
         say: '', sayT: 0, nextSay: rnd(6, 22), stunTimer: 0, dest: 'desk', destKey: '', stuck: 0,
         /* The square of carpet they have claimed, who they are talking to,
            what they are looking at and for how long, and when they may next
@@ -275,11 +280,12 @@ const NPCM = {
     this._homeSpots = null; this._homeRec = null; this._homeDoor = null;
     const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
     this.all.forEach(n => {
-      const stay = this.HOME_STAY.includes(n.id);
-      if (after && !stay) { n.away = true; n.level = 'away'; n.callOut = null; return; }
+      /* Their own hours, not the building's — see offDuty(). */
+      if (this.offDuty(n)) { n.away = true; n.level = 'away'; n.callOut = null; return; }
       if (!n.away) return;
       n.away = false; n.level = n.def.level || hub;
       n.x = (n.def.desk[0] + .5) * TILE; n.y = (n.def.desk[1] + .5) * TILE;
+      if (n.def.dir !== undefined) n.dir = n.def.dir;
       /* And if the clock says they are out, they are out — a shift loaded at
          ten past twelve should not put Karen at her desk for three seconds and
          then walk her to the door. Same reasoning as the whole of this
@@ -921,6 +927,24 @@ const NPCM = {
      building is a set; an empty building with two people still in it is this
      building. */
   HOME_STAY: ['ron', 'bev'],
+  /* IS THIS PERSON DONE FOR THE DAY.
+     It used to be one question with one answer — Sky.staffed(), the fourth
+     floor's own hours — because everybody in the roster worked on the fourth
+     floor. They do not now: a launderette is open eight till seven and a
+     working men's club does not start until noon, and neither of them cares
+     what a call centre does at five.
+
+     So a def may carry `hours: [from, to]`, minutes past midnight, wrapping
+     over midnight the way `out:` does. Saying nothing still means the office's
+     day, which is what twenty of the twenty-one say. HOME_STAY still overrules
+     everything: Ron and Bev are in that building whatever the clock does. */
+  offDuty(n) {
+    if (this.HOME_STAY.includes(n.id)) return false;
+    const h = n.def.hours;
+    if (!h) return typeof Sky === 'undefined' ? false : !Sky.staffed();
+    const m = Sky.m();
+    return h[0] <= h[1] ? (m < h[0] || m >= h[1]) : (m < h[0] && m >= h[1]);
+  },
   runHome() {
     /* An evacuation outranks the end of a shift, and they can overlap: the
        alarm can go at ten to five. Whoever is in a drill is in a drill. */
@@ -939,7 +963,7 @@ const NPCM = {
        everybody who should be here is, or everybody who has gone has. Checked
        BEFORE the level and the door are looked up, because those are a scan of
        a few hundred objects and this is twenty-one boolean comparisons. */
-    if (!this.all.some(n => (this.HOME_STAY.includes(n.id) ? false : after) !== !!n.away)) return;
+    if (!this.all.some(n => this.offDuty(n) !== !!n.away)) return;
 
     const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
     const rec = Levels.ensure(hub);
@@ -983,10 +1007,14 @@ const NPCM = {
          Going is spread wider than coming back, and that is not symmetry gone
          wrong: leaving is a decision each of them makes separately, and
          arriving is a car park emptying into a lobby. */
-      const order = (this.hash(n.id) % 13) * (after ? .5 : .3);
-      const due = this._homeAt + order;
+      const off = this.offDuty(n);
+      const order = (this.hash(n.id) % 13) * (off ? .5 : .3);
+      /* The floor turns at one instant and _homeAt is that instant. Anybody on
+         their own hours turns on their own, so they keep their own. */
+      if (n.def.hours) { if (off !== n._offWas) { n._offWas = off; n._offAt = this.now; } }
+      const due = (n.def.hours ? (n._offAt === undefined ? this.now : n._offAt) : this._homeAt) + order;
       if (this.now < due) continue;
-      if (after) {
+      if (off) {
         if (n.away) continue;
         /* Not while you are talking to them. Nobody walks out mid-sentence —
            and the clock does not stop for it either, so they go the moment you
@@ -1024,8 +1052,15 @@ const NPCM = {
       } else if (n.away) {
         /* Back in through the lobby, one at a time, and they walk to their
            desks from there like people — the schedule takes over the moment
-           they are standing on the floor again. */
-        this.stepThrough(n, hub, door);
+           they are standing on the floor again.
+
+           Unless the building they work in is not this one. Somebody who opens
+           a launderette does not arrive through the lobby of a call centre;
+           they are simply behind their counter, which is what opening up looks
+           like from the street. */
+        const home = n.def.level || hub;
+        if (home === hub) this.stepThrough(n, hub, door);
+        else this.stepThrough(n, home, n.def.desk, n.def.dir);
         n.away = false; moved = true;
       }
     }
@@ -1837,7 +1872,11 @@ const NPCM = {
        are now looking at their screen. */
     else if (n.dest === 'desk' && this.lookBusy(n)) n.dir = 0;
     else if (n.lookT > 0 && n.lookAt) n.dir = this.face(n, n.lookAt.x - n.x, n.lookAt.y - n.y);
-    else if (n.dest === 'desk') n.dir = 0;    /* the screen is on the far side of the desk */
+    /* A colleague at a desk faces the monitor, which is away from you. That
+       was written as a bare 0 because for a long time everybody in the game
+       had a desk; somebody whose `desk` is a spot behind a counter in a shop
+       faces the room instead, and says so with `dir:`. */
+    else if (n.dest === 'desk') n.dir = n.def.dir === undefined ? 0 : n.def.dir;
     else if (n.post && (n.post[0] !== dx || n.post[1] !== dy)) n.dir = this.face(n, dx - n.post[0], dy - n.post[1]);
 
     /* Standing somewhere is not standing on one tile for four hours. The

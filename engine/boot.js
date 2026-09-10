@@ -426,6 +426,13 @@ const Trial = {
 const Boot = {
   init() {
     R.init(); Sprites.load(); Tiles.load();
+    /* Anybody in the roster with a `look:` is composed from the creator's
+       parts rather than baked into the pinned character sheet — see
+       Look.dressCast(). Asynchronous and never blocking: until the parts are
+       in they are their emoji, which is the same fallback a sheet that will
+       not decode has always had. Costs nothing at all in a build where nobody
+       has a `look:`. */
+    if (typeof Look !== 'undefined') Look.dressCast();
     /* One level is built here — the fourth floor, because that is where the
        game starts. The rest of the catalogue is built the first time somebody
        goes there, which is what keeps this line the same length however many

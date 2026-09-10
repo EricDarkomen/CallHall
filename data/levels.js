@@ -569,7 +569,9 @@ const LEVELS = {
       const A = o => this.add(o);
       A({ x: 7, y: 9, e: '🚪', name: 'The door out', kind: 'exit', solid: false, use: 'charityOut' });
       A({ x: 6, y: 3, e: '🧾', name: 'The till', kind: 'cab', solid: true, use: 'charityTill' });
-      A({ x: 7, y: 3, e: '🧓', name: 'The volunteer', kind: 'view', solid: true, use: 'charityVolunteer' });
+      /* Iris stands at (7,3) and she is a PERSON — see data/npcs.js. She was
+         an emoji on a solid object here until the roster stopped being twenty
+         one people long. */
       A({ x: 4, y: 2, e: '🚑', name: 'The air ambulance poster', kind: 'poster', solid: true, use: 'charityPoster' });
       /* THE SHELF OF MUGS, which is the reason this room exists. */
       A({ x: 10, y: 3, e: '☕', name: 'The shelf of mugs', kind: 'book', solid: true, use: 'charityMugs' });
@@ -832,7 +834,8 @@ const LEVELS = {
       A({ x: 3, y: 9, e: '🍺', name: 'The bar', kind: 'cab', solid: true, use: 'clubBar' });
       A({ x: 4, y: 9, e: '🍺', name: 'The bar', kind: 'cab', solid: true, use: 'clubBar' });
       A({ x: 5, y: 9, e: '💷', name: 'The till, which is a drawer', kind: 'pc', solid: true, use: 'clubTill' });
-      A({ x: 7, y: 9, e: '🧓', name: 'The man at the end of the bar', kind: 'view', solid: true, use: 'clubMan' });
+      /* Stan is at (7,9), with his back to the room, and Norman is at (12,13)
+         beside his booth. Both are people now rather than furniture. */
       A({ x: 4, y: 11, e: '🪑', name: 'The chairs nobody moves', kind: 'chair', solid: true, use: 'clubChairs' });
       A({ x: 5, y: 11, e: '🪑', name: 'The chairs nobody moves', kind: 'chair', solid: true, use: 'clubChairs' });
       /* The far end: the function room, and everything waiting to go into it. */

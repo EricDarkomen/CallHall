@@ -133,8 +133,16 @@ const Faces = {
   row(id) {
     if (!this.sheet) return -1;
     const rows = this.sheet.rows;
-    if (id === 'player' && typeof G !== 'undefined' && G.look && G.look.base
-      && Sprites.composed('player') && rows[G.look.base] !== undefined) return rows[G.look.base];
+    /* Anybody composed is on the sheet by the BASE THEY WERE STACKED FROM,
+       because a composed person has no baked row and the face that goes with
+       them is the face of the head underneath.
+
+       This tested `id === 'player'` and read G.look, which was true of the one
+       composed person there used to be. Sprites.baseOf() answers it for any of
+       them, so a shopkeeper written into data/npcs.js with a `look:` blinks
+       and frowns like the rest of the cast. */
+    const base = Sprites.composed(id) && Sprites.baseOf(id);
+    if (base && rows[base] !== undefined) return rows[base];
     return rows[id] !== undefined ? rows[id] : -1;
   },
 

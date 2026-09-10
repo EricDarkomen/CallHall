@@ -117,6 +117,30 @@ const Sprites = {
     const sh = { id: 'composed:' + id, src: null, img: cv, ok: true, composed: true,
       fw: m.fw, fh: m.fh, frames: m.frames, sit: m.sit, dirs: m.dirs, ids: [id],
       breath: m.breath, run: m.run };
+    /* WHICH HEAD IS UNDER ALL THAT. An expression is a patch drawn over a
+       specific head at a specific skin tone — see engine/faces.js — and a
+       composed person has no baked row to look that up by, so the base they
+       were stacked from is remembered here. It used to be read off G.look,
+       which worked for exactly as long as the player was the only composed
+       person in the game. */
+    if (!this._bases) this._bases = new Map();
+    const base = (picks || []).find(v => typeof v === 'string' && v.startsWith('base:'));
+    if (base) this._bases.set(id, base); else this._bases.delete(id);
+    /* A PORTRAIT NEEDS A URL. The dialogue box is CSS — a window onto a
+       background-image — and a composed sheet is a canvas, so until now
+       portrait() simply refused and anybody composed talked to you with no
+       picture. That was tolerable while the only composed person was the
+       player, who is never the one being talked to, and is not tolerable now
+       that a shopkeeper can be composed.
+
+       toDataURL() READS THE CANVAS BACK, which is the one thing this file
+       otherwise never does: the part sheets sit beside index.html and a
+       file:// page taints every canvas they are drawn into, so this throws
+       there. That is exactly the right behaviour and it is caught — no url,
+       portrait() refuses as before, and the game still opens off disk with
+       everybody's dialogue face on the emoji. Done once per compose, not per
+       frame: it is a few hundred KB of base64 and it is cached on the sheet. */
+    try { sh.src = cv.toDataURL('image/png'); } catch (e) { sh.src = null; }
     this.rows.set(id, { sheet: sh, row: 0 });
     this.ready = true;
     return sh;
@@ -130,13 +154,33 @@ const Sprites = {
     if (!was) return false;
     this.rows.set(id, was);
     this._baked.delete(id);
+    /* And forget the base, or somebody handed back their baked row keeps
+       wearing the expressions of the head they were composed from. */
+    if (this._bases) this._bases.delete(id);
     return true;
   },
   /* Whether somebody is a stack of chosen parts rather than a row the build
-     baked. Only the player is ever either, and only Faces asks — a composed
-     person's face comes from the base they chose and a baked one's from the
-     row they are. */
-  composed(id) { return !!(this._baked && this._baked.has(id)); },
+     baked, and which base they were stacked from. Only Faces asks — a composed
+     person's face comes from the base underneath and a baked one's from the
+     row they are.
+
+     It was the player and nobody else for as long as the cast was the
+     twenty-one rows the build bakes. It is not any more: the character sheet
+     is pinned and cannot grow, but the creator's parts can make as many people
+     as anybody cares to write, so a person in data/npcs.js may carry a `look:`
+     and be composed exactly as the player is. See Look.dressCast(). */
+  /* Asked of the SHEET, not of what was underneath it. This used to test
+     _baked — "is there a row we shadowed" — which is the right question for
+     uncompose() and the wrong one for everybody else: the player has a baked
+     row to hand back and a shopkeeper composed out of nothing at all does not,
+     so six people came out of compose() perfectly well and then answered "no"
+     when Faces asked whether they were composed, and stood there expressionless
+     with a face row of -1. */
+  composed(id) {
+    const r = this.rows.get(id);
+    return !!(r && r.sheet && r.sheet.composed);
+  },
+  baseOf(id) { return (this._bases && this._bases.get(id)) || null; },
   /* One sheet, by id. Re-callable with the same id, which is how a sheet whose
      geometry is still being worked out — the editor's importer — is re-read
      without a second copy of its bitmap: the game never does that, and a load()
@@ -255,9 +299,12 @@ const Sprites = {
   HEAD_W: 28, HEAD_H: 30, HEAD_TOP: 0,
   portrait(id, scale) {
     const r = this.at(id);
-    /* A composed sheet is a canvas, not a file, and this hands CSS a url() —
-       there is nothing to point at. Only ever asked of the person being talked
-       to, which is never the player, so the honest answer is "no picture". */
+    /* No `src` is no url() for CSS to point at, and the honest answer is "no
+       picture". A composed sheet USED to be exactly that — a canvas with
+       nothing to link to — and now carries a data url baked at compose time,
+       so a composed shopkeeper has a portrait like anybody else. It is still
+       null from a file:// page, where reading the canvas back throws: see
+       compose(). */
     if (!r || !r.sheet.src) return null;
     const m = r.sheet;
     /* dir 2 = facing the camera, frame 0 = standing still. */
