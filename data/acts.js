@@ -1611,6 +1611,130 @@ const Acts = {
       'It has never been full and it has never been empty. Two men come, and it goes, and an identical one is there the following morning, and this has now happened enough times that it has stopped being a coincidence and started being the business.']);
   },
 
+  /* ---- THE FLATS ABOVE THE PARADE -------------------------------------
+     A landing, six doors, and the outside of three homes belonging to people
+     you work with or buy things from. Nothing in here is a transaction and
+     nothing in here is open, which is the point: this is the amount of
+     somebody's home you are entitled to, and it turns out to be quite a lot.
+
+     Acts.homeOf() is the one join: a person's `home.where` in data/npcs.js is
+     written once and read here, so a door and a profile panel can never
+     disagree about where somebody lives. */
+  homeOf(id) {
+    const d = typeof NPCS !== 'undefined' && NPCS.find(p => p.id === id);
+    return (d && d.home && d.home.where) || '';
+  },
+  flatsDoorway() {
+    insp('\ud83d\udeaa', 'The door beside the launderette', 'Nos. 1\u20136', [
+      'Not a shop. A door, between two shops, painted a colour that was chosen and has not been chosen since, with six bells beside it and no sign anywhere saying what it is.',
+      'Every parade in this country has one of these and nobody who does not live behind one has ever once looked at it.',
+      'Three of the bells have names on. Two have had names on and now have the shape of a name on. The sixth has never had anything on it at all.'],
+      [{ t: 'Go up.', to: null, do() { Levels.take('flatsDoor'); } },
+       { t: 'It is not your building.', to: null }]);
+  },
+  flatsOut() { Sfx.door(); Levels.take('flatsOut'); },
+
+  /* THE SIX DOORS. Three are somebody's and three are the parade's. */
+  flat1() {
+    insp('\ud83d\udeaa', 'Flat 1', 'Nineteen years', [
+      'A mat that has been hoovered. Nobody hoovers a communal mat.',
+      'Through the door, very faintly, a radio that is not the tyre place\u2019s station, and underneath the radio, through the floor, the sound of eight machines on the last cycle of the day.',
+      'Pat lives four stairs and a fire door above her own launderette. ' + Acts.homeOf('pat').replace(/^./, c => c.toUpperCase()) + '.']);
+  },
+  flat2() {
+    insp('\ud83d\udeaa', 'Flat 2', 'Nobody\u2019s, for two years', [
+      'No mat. Four screw holes where a mat used to be gripped down, which is a thing you only do if somebody keeps moving your mat.',
+      'A card from a letting agent wedged in the frame, curled, with a date on it from a spring that is not this one.',
+      'Flat 2 has been empty for two years and is advertised at a rent that would take somebody on the fourth floor eleven days of every month.']);
+  },
+  flat3() {
+    insp('\ud83d\udeaa', 'Flat 3', 'Do not knock', [
+      'A laminated sheet at eye height: NIGHTS \u2014 PLEASE DO NOT KNOCK BETWEEN 9 AND 4. It is laminated in the same laminator as everything else on this street.',
+      'Underneath it, in biro, on a Post-it, in different handwriting: \u201cwe never do x\u201d.',
+      'Nobody on this landing has met them. Everybody on this landing is extremely careful on the stairs.']);
+  },
+  flat4() {
+    insp('\ud83d\udeaa', 'Flat 4', 'Steve, IT', [
+      'Four parcels. Four. On a Tuesday. Stacked with the labels turned in, which is either security-mindedness or shame and is, knowing him, both.',
+      'A smell of solder that this landing has smelled every evening for six years and has stopped noticing.',
+      'Steve from IT lives eleven feet above a vape shop that was a phone repair shop, and has never once mentioned that he could have done the phone repair shop\u2019s entire job, because Steve does not mention things.']);
+  },
+  flat5() {
+    insp('\ud83d\udeaa', 'Flat 5', 'Still being written to', [
+      'The busiest door on this landing and nobody has lived behind it since 2014.',
+      'The post is redirected, then it stops being redirected, then it starts again, and somewhere a computer has this address as true and will have it as true for ever.',
+      'Today: a bank, a dentist, a garden centre, and one addressed to a business that shut in 2011, which is being written to at a flat above a shop that was never its premises. There is no explanation and there is not going to be one.']);
+  },
+  flat6() {
+    if (!G.flags.knowMoFlat) {
+      G.flags.knowMoFlat = true;
+      Ach.get('a_flat6');
+      return insp('\ud83d\udeaa', 'Flat 6', 'Mo', [
+        'A mat, new, still with the fold in it from the packaging.',
+        'One letter, opened and put back, which is what people do when a letter is good.',
+        'And on the door itself, at exactly the height of a person\u2019s eye, a small brass number 6, screwed on, straight, by somebody who bought a screwdriver for it.',
+        'Nobody on the fourth floor knows this is his first place. He has not said. He has done the number, and he has done the mat, and he is twenty-three and he is doing it entirely on his own, and neither of you is ever going to raise it.']);
+    }
+    insp('\ud83d\udeaa', 'Flat 6', 'Mo', [
+      'The number is still straight. It is going to stay straight, because he checks it, because it is his.']);
+  },
+  flatsWindow() {
+    insp('\ud83e\ude9f', 'The window over the High Street', 'Sash, painted shut', [
+      'A sash window painted shut by four separate landlords, looking straight down the High Street at the whole parade at once: the awnings, the bins, the bench, the one lit shopfront.',
+      'This is the view somebody has had every morning for nineteen years. From here you can see six businesses that have changed hands and one that has not.',
+      'It is, from up here, quite a good street. That is a genuinely surprising thing to find out about it.']);
+  },
+  /* THE POST. The mechanism of this room: a pile on a windowsill that reads
+     the whole parade backwards. Different letter every time and it never
+     repeats the KIND of thing — same idea as the tyre place's radio and a
+     different shape, because a pile is not a running order. */
+  flatsPost() {
+    const bit = pick([
+      'A brown envelope for a man who moved out in 2016, which the whole landing has agreed, without discussing it, not to write NOT KNOWN on, because writing NOT KNOWN on it would end something.',
+      'A wedding invitation, addressed by hand, to Flat 2, which has been empty for two years. Somebody has stood it upright against the glass so it can be seen from the stairs. It has been standing there a while.',
+      'A takeaway menu for a takeaway that is four doors down and has been four doors down for eleven years, delivered by hand, by somebody who could have shouted.',
+      'A letter from the council to \u201cThe Occupier\u201d, which is the only piece of post on this sill addressed to somebody who definitely exists.',
+      'A postcard. Actual postcard, actual stamp, a beach nobody in this building has been to, and four lines of handwriting that end \u201canyway. see you tuesday\u201d, and it is not addressed to any of the six flats.',
+      'Two bank letters for Flat 5, one dentist for Flat 5, and a garden centre for Flat 5, who has not lived here since 2014 and whose name everybody on this landing could tell you.',
+    ]);
+    insp('\ud83d\udcec', 'The post on the windowsill', 'Since about 2015', [
+      'A drift of post on the sill by the window, propped, stacked and fanned by eleven years of people picking through it for their own and putting everybody else\u2019s back tidily.',
+      bit,
+      'Nobody throws any of it away. Six people have independently decided that throwing away somebody else\u2019s post is a thing they are not prepared to be.']);
+  },
+  flatsBike() {
+    insp('\ud83d\udeb2', 'The bike', 'Nobody\u2019s', [
+      'A bike against the wall of the landing with two flat tyres and a chain the colour of the radiator.',
+      'It belonged to somebody in Flat 3, or Flat 5, or to the man who moved out in 2016. Nobody remembers. Everybody squeezes past it.',
+      'Moving it would require a decision about whose it is, and nobody is going to be the one who makes that, so it will be here when the building comes down.']);
+  },
+  flatsMeters() {
+    insp('\u26a1', 'The meters', 'Six, and a seventh', [
+      'Six electricity meters in a cupboard with a door that does not shut, labelled 1 to 6 in three different hands.',
+      'There is a seventh. It is not labelled. It is not on any of the six bills and it has never been on any of the six bills, and it is going round.',
+      'Every tenant since 2009 has noticed the seventh meter, decided to look into it, and not looked into it.']);
+  },
+  flatsTimer() {
+    insp('\ud83d\udd58', 'The light on the timer', 'Eleven seconds short', [
+      'A push-button timer for the landing light, set to a duration that is, by common agreement, eleven seconds shorter than the walk from the street door to Flat 6.',
+      'Everybody who lives here knows exactly where on the stairs it goes out. Nobody has ever adjusted it. Two of them have got quite good at the last bit in the dark.'],
+      [{ t: 'Press it.', to: null, do() {
+          Player.mod({ patience: 2 });
+          UI.toast('\ud83d\udd58', 'It comes on with a clunk you can feel through the wall. You have eleven seconds fewer than you need and you are not going anywhere, so for once it is plenty.');
+        } },
+       { t: 'Leave it.', to: null }]);
+  },
+  flatsRad() {
+    insp('\u2668\ufe0f', 'The radiator', 'Communal', [
+      'A radiator on a communal landing, which is a radiator nobody pays for and therefore a radiator nobody controls.',
+      'It is on. It is October and it is on and it has been on since August, and it will be on in June, and the valve is painted into the position it was painted into.']);
+  },
+  flatsBags() {
+    insp('\ud83d\uddd1\ufe0f', 'The bin bags by the stairs', 'Going down tonight', [
+      'Two bags at the top of the stairs, tied properly, put where somebody will trip over them, which is exactly where you put a bag you intend to take down and exactly where you put a bag you do not.',
+      'One of them has been there since Sunday. One of them is going down tonight. They are identical and everybody on this landing knows which is which.']);
+  },
+
   /* --- THE HIGH STREET --- */
   nailedIt() {
     insp('💅', 'Nailed It', 'Open till six', [

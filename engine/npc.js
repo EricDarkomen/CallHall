@@ -255,7 +255,10 @@ const NPCM = {
         /* When they set off for the door on an errand. Null when they are not
            on one — see runErrands(). Not saved, like everything else here
            about where somebody is standing. */
-        outAt: null
+        outAt: null,
+        /* When they stepped out of the front doors on the way home, or 0 when
+           they are not on their way anywhere. See runHome()'s second leg. */
+        homeward: 0
       };
     });
     this.enter(World.level);
@@ -281,7 +284,7 @@ const NPCM = {
     const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
     this.all.forEach(n => {
       /* Their own hours, not the building's — see offDuty(). */
-      if (this.offDuty(n)) { n.away = true; n.level = 'away'; n.callOut = null; return; }
+      if (this.offDuty(n)) { n.away = true; n.level = 'away'; n.callOut = null; n.homeward = 0; return; }
       if (!n.away) return;
       n.away = false; n.level = n.def.level || hub;
       n.x = (n.def.desk[0] + .5) * TILE; n.y = (n.def.desk[1] + .5) * TILE;
@@ -1008,7 +1011,25 @@ const NPCM = {
          wrong: leaving is a decision each of them makes separately, and
          arriving is a car park emptying into a lobby. */
       const off = this.offDuty(n);
-      const order = (this.hash(n.id) % 13) * (off ? .5 : .3);
+      /* HOW LONG AN OFFICE TAKES TO EMPTY. Stable per person, so the same
+         people are always first out of the door and the same people are always
+         last, which is the single most true thing about an office at five
+         o'clock.
+
+         Leaving used to be spread over six seconds, which was fine while the
+         only thing on the other side of the front doors was a level called
+         'away': the whole exodus was over before anybody could have got down
+         four floors to look at it. There is a car park out there now, and the
+         report screen stands between five o'clock and the player being able to
+         move at all — so by the time you are through the doors the building
+         would already be empty, and the one moment the town most wanted would
+         have happened without you.
+
+         Forty seconds instead, which is also simply truer: nobody has ever
+         seen an office empty in twenty. Arriving is still tight, because that
+         is a car park draining into a lobby rather than twenty separate
+         decisions. */
+      const order = (this.hash(n.id) % 13) * (off ? 3.2 : .3);
       /* The floor turns at one instant and _homeAt is that instant. Anybody on
          their own hours turns on their own, so they keep their own. */
       if (n.def.hours) { if (off !== n._offWas) { n._offWas = off; n._offAt = this.now; } }
@@ -1037,10 +1058,41 @@ const NPCM = {
            backstop for the case that beats the first: a colleague wedged in a
            doorway in full view is not a person going home, it is a bug you are
            standing and watching. */
-        const gone = () => { n.level = 'away'; n.away = true; n.callOut = null; this.hangUp(n); moved = true; };
+        const gone = () => { n.level = 'away'; n.away = true; n.callOut = null; n.homeward = 0; this.hangUp(n); moved = true; };
+        /* ---- THE SECOND HALF OF GOING HOME ----------------------------
+           Everybody who goes home goes home SOMEWHERE, and until now the
+           somewhere was a level called 'away' that is not in the catalogue.
+           That was the honest answer while the only room in the game was the
+           fourth floor: what happens to people after they leave a room you are
+           in is exactly nothing.
+
+           There is a town out there now, and standing in it at five past five
+           and watching nothing come out of that building was the one moment
+           the whole map stopped being convincing. So a def carries a `home:`
+           — a spot on the street and a way of getting to it — and leaving is
+           two legs rather than one: out through the lobby, then across the car
+           park and off in their own direction, and gone when they get there.
+
+           The machinery is the drill's, and the drill is what proves it works:
+           startDrill() has been walking this entire floor out onto `outside`
+           since long before this. Somebody with no `home:` behaves exactly as
+           everybody did before — the front doors and then nothing. */
+        if (n.homeward) {
+          /* Leg two. They are on the street, walking to a bus stop or a car or
+             a door above a shop, and the same two deadlines apply: give up off
+             camera, and give up in view only when standing and watching it has
+             become worse than the blink. */
+          const at = n.def.home && n.def.home.at;
+          if (!at) { gone(); continue; }
+          n.callOut = { tile: at, until: this.now + 2, haste: 1.35 };
+          if (reached(n, at) || (this.now > n.homeward + 20 && !onScreen(n)) || this.now > n.homeward + 60) gone();
+          continue;
+        }
         if (n.level !== hub) {
           /* Somebody in the basement cannot walk to the office's front doors,
-             so they are simply not there any more — once nobody is looking. */
+             so they are simply not there any more — once nobody is looking.
+             Same for a shopkeeper closing up: a launderette shutting is one
+             person turning a sign round, not a walk across a car park. */
           if (!onScreen(n) || this.now > due + 40) gone();
           continue;
         }
@@ -1048,7 +1100,21 @@ const NPCM = {
         n.post = null; n.errand = null;
         /* Faster than they came in. Everybody walks faster at five. */
         n.callOut = { tile: spot, until: this.now + 2, haste: 1.5 };
-        if (reached(n, spot) || (this.now > due + 16 && !onScreen(n)) || this.now > due + 40) gone();
+        if (reached(n, spot) || (this.now > due + 16 && !onScreen(n)) || this.now > due + 40) {
+          /* Out of the door. If they have somewhere to be, they are on the
+             street now and leg two takes over; if they have not, they are
+             simply gone, which is what this has always done. */
+          const h = n.def.home;
+          const street = h && h.at && this.streetSpot(n);
+          if (street) {
+            this.stepThrough(n, 'outside', street); n.homeward = this.now; moved = true;
+            /* You were there when they came out. The profile panel only tells
+               you where anybody lives once this is true, because that is when
+               you found out: by standing in a car park at five past five and
+               watching, rather than by being handed a directory. */
+            if (World.level === 'outside') G.flags.sawThemGo = true;
+          } else gone();
+        }
       } else if (n.away) {
         /* Back in through the lobby, one at a time, and they walk to their
            desks from there like people — the schedule takes over the moment
@@ -1061,10 +1127,30 @@ const NPCM = {
         const home = n.def.level || hub;
         if (home === hub) this.stepThrough(n, hub, door);
         else this.stepThrough(n, home, n.def.desk, n.def.dir);
-        n.away = false; moved = true;
+        n.away = false; n.homeward = 0; moved = true;
       }
     }
     if (moved) this.refresh();
+  },
+
+  /* WHERE ON THE STREET SOMEBODY COMES OUT. A square each in front of the
+     office's own doors, from the same crowdSpots() that keeps twenty people
+     leaving at once from arriving at one tile in a knot — worked out here
+     rather than written into each person's `home:`, because it is a fact about
+     the building's front door and not about any of them. Null when the street
+     will not build, and then going home is what it always was. */
+  streetSpot(n) {
+    const rec = Levels.ensure('outside');
+    if (!rec) return null;
+    const at = (Levels.def('outside') || {}).entries;
+    const door = at && at.doors ? [Math.floor(at.doors[0]), Math.floor(at.doors[1])] : null;
+    if (!door) return null;
+    if (this._streetRec !== rec) {
+      this._streetRec = rec;
+      this._streetSpots = this.crowdSpots(rec, door[0], door[1], this.all.length);
+    }
+    const spots = this._streetSpots && this._streetSpots.length ? this._streetSpots : [door];
+    return spots[this.hash(n.id) % spots.length] || door;
   },
 
   /* ---- OUT OF THE BUILDING, AND BACK ----------------------------------
