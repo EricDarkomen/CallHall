@@ -88,6 +88,13 @@ const ZONES = {
   unitsix:   { name: 'Unit 6',           floor: '#454749', alt: '#404244', wall: '#28292b', tint: '#9fb3c8', surf: 'vinyl', tile: 'floor.sub', wtile: 'wall.drywall' },
   club:      { name: 'The Working Men\u2019s Club', floor: '#4a3328', alt: '#452f24', wall: '#2a1d16', tint: '#ffb347', tile: 'floor.carpet', wtile: 'wall.drywall' },
   tan:       { name: 'Sunseekers',       floor: '#4d4534', alt: '#484030', wall: '#2c271d', tint: '#ffb347', surf: 'vinyl', tile: 'floor.diamond', wtile: 'wall.drywall' },
+  /* NOT A SHOP. The landing of the flats above the parade, and the only room
+     out here that is somebody's home rather than somebody's trade — so it is
+     the one interior with a carpet that was chosen by a landlord, lit by a
+     bulb on a timer that is eleven seconds too short, and painted the colour
+     every communal stairwell in England is painted, which is a colour with no
+     name that everybody would recognise instantly. */
+  flats:     { name: 'The flats above the parade', floor: '#4a4a44', alt: '#454540', wall: '#2a2a26', tint: '#ffb347', tile: 'floor.carpet.dim', wtile: 'wall.drywall' },
   /* Not a street: a walled car park with one way in, like the forecourt at the
      other end of town, and the only place out here big enough to find out what
      the pool car does above thirty. */

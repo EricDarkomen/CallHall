@@ -7,6 +7,28 @@
  * exclusive `if:` guards.
  */
 
+/* WHERE EVERYBODY GOES AT FIVE.
+ *
+ * `home: { at: [x, y], where: '...' }` — a spot on the `outside` map and a
+ * sentence about it. When somebody's day ends they walk out through the lobby
+ * as they always have, and then, instead of becoming a level called 'away'
+ * that is not in the catalogue, they step onto the street and make for that
+ * spot: the bus stop, their own car in the bays, a door between the launderette
+ * and the post office, the subway under the railway, or west past the
+ * multi-storey in no hurry at all. They are gone when they get there.
+ *
+ * It is one line each and it is the whole of the fiction of a town: stand
+ * outside that building at five past five and twenty people come out of it and
+ * go twenty different ways, and three of them go upstairs, above the shops they
+ * have walked past every day for years. See runHome()'s second leg.
+ *
+ * Two of them have no `home:` and that is written rather than missed. Colin
+ * does not go home. Ron is on the door until the last of them is out, which is
+ * what HOME_STAY has always meant and what it has never once said out loud.
+ *
+ * `where` is prose and is read by the profile panel and by the doors on the
+ * parade. Nothing in the engine reads it. */
+
 /* OUT OF THE BUILDING.
  *
  * `out: { from, to, level, tile }` on a person means: between those two times
@@ -37,6 +59,7 @@
 const NPCS = [
 {
   id: 'dave', name: 'Dave', face: '🧔', role: 'Senior Agent · 17 years served',
+  home: { at: [6, 30], where: 'Aldergate Rise, twenty-two minutes on foot, the same twenty-two minutes for seventeen years' },
   desk: [21, 19], colour: '#4da3ff',
   schedule: [[540,'desk'],[615,'coffee'],[630,'desk'],[720,'breakTable'],[765,'looDoor'],[780,'desk'],[900,'coffee'],[915,'desk']],
   lines: ["Mm.", "Have you tried not caring? It works.", "That’ll be the printer.", "It’s always the printer.", "Seventeen years.", "No, I don’t want the team leader job."],
@@ -109,6 +132,7 @@ const NPCS = [
 },
 {
   id: 'karen', name: 'Karen', face: '👩‍💼', role: 'Team Leader · 47 tabs open',
+  home: { at: [30, 8], where: 'forty minutes out and forty minutes back, in a car, on a road she could drive asleep and once nearly did' },
   desk: [33, 19], colour: '#ff5f56',
   /* Twelve till one, in the first chair at Nailed It, having told the floor
      she is working from a different location this afternoon. She is. */
@@ -361,6 +385,7 @@ const NPCS = [
 },
 {
   id: 'steve', name: 'Steve', face: '🧑‍🔧', role: 'IT · appears when things break',
+  home: { at: [96, 15], where: 'Flat 4, above the parade, eleven feet over a vape shop that was a bakery' },
   desk: [53, 32], colour: '#5ad48a',
   schedule: [[540,'serverRoom'],[600,'printer'],[615,'serverRoom'],[720,'breakTable'],[750,'serverRoom'],[900,'printer'],[930,'serverRoom']],
   lines: ["Have you tried restarting it?", "It’s not a network issue.", "That’s a hardware thing, that.", "I’ve logged it."],
@@ -428,6 +453,7 @@ const NPCS = [
 },
 {
   id: 'marjorie', name: 'Marjorie', face: '👩‍🦰', role: 'Agent · custodian of fourteen mugs',
+  home: { at: [25, 15], where: 'the 41, from the stop outside, with fourteen mugs unaccounted for at home' },
   desk: [29, 23], colour: '#ffb347',
   /* One till two, in front of the shelf of mugs in the charity shop, in her
      coat, holding one. She donated fourteen in 2016 and has bought four
@@ -516,6 +542,7 @@ const NPCS = [
 },
 {
   id: 'gary', name: 'Gary', face: '🧑‍🦱', role: 'Agent · leaving (est. 2022)',
+  home: { at: [108, 30], where: 'his mum’s, on Marlow Street, since 2019, and he is entirely fine about it and says so first' },
   desk: [37, 19], colour: '#b48cff',
   /* Third chair, every six weeks, and he would tell you the date. Gary is
      the only one of the three not pretending, which is why he is last:
@@ -624,6 +651,7 @@ const NPCS = [
 },
 {
   id: 'sarah', name: 'Sarah', face: '👩', role: 'Agent · keeper of #general',
+  home: { at: [25, 15], where: 'the 41, three stops, and she knows everybody who gets on at all three' },
   desk: [25, 23], colour: '#5ad48a',
   /* Second chair. She is the hardest of the three to walk in on and the
      easiest of the three to catch, which are not the same thing. */
@@ -708,6 +736,7 @@ const NPCS = [
 },
 {
   id: 'kevin', name: 'Kevin', face: '🧑‍💻', role: 'Agent · wearing a headset',
+  home: { at: [30, 8], where: 'the bike rack, on a bike, in weather that has never once been suitable' },
   desk: [41, 19], colour: '#4da3ff',
   schedule: [[540,'desk'],[640,'coffee'],[655,'desk'],[720,'breakTable2'],[780,'desk'],[900,'desk']],
   lines: ["Has anyone seen my headset?", "I definitely had it.", "It’s not in the drawer.", "I can hear you, weirdly."],
@@ -754,6 +783,7 @@ const NPCS = [
 },
 {
   id: 'priya', name: 'Priya', face: '👩‍💻', role: 'Subject Matter Expert · knows everything, tells no one',
+  home: { at: [30, 8], where: 'a village with a shop that shuts at one, which she chose on purpose' },
   desk: [45, 19], colour: '#b48cff',
   schedule: [[540,'desk'],[600,'printer'],[620,'desk'],[720,'breakTable'],[770,'desk'],[860,'archive'],[900,'desk']],
   lines: ["That’s a known issue.", "It’s in the knowledge base. Nobody reads the knowledge base.", "I wrote that article. In 2021.", "Escalate it to me and I’ll do it properly."],
@@ -797,6 +827,7 @@ const NPCS = [
 },
 {
   id: 'terry', name: 'Terry', face: '👴', role: 'Facilities · has every key ever made',
+  home: { at: [70, 58], where: 'the far side of the railway, through the subway, and he walked it before it was lit' },
   desk: [6, 9], colour: '#ffb347',
   schedule: [[540,'archive'],[660,'coffee'],[680,'archive'],[720,'breakTable2'],[780,'archive'],[900,'training'],[930,'archive']],
   lines: ["Mind the boxes.", "That door’s not a door.", "I’ve got a key for that.", "Nobody comes down here.", "I’m not replacing that flap a third time."],
@@ -842,6 +873,7 @@ const NPCS = [
 },
 {
   id: 'janet', name: 'Janet', face: '👩‍🏫', role: 'Learning & Development',
+  home: { at: [25, 15], where: 'the 41A, which does not stop here, so she walks to the stop that it does' },
   desk: [7, 32], colour: '#5ad48a',
   schedule: [[540,'training'],[720,'breakTable'],[770,'training']],
   lines: ["Smile while being insulted!", "That’s a learning opportunity.", "Let’s put a pin in that.", "There are no wrong answers. There are wrong answers."],
@@ -891,6 +923,7 @@ const NPCS = [
 },
 {
   id: 'mo', name: 'Mo', face: '🧑‍🎓', role: 'Trainee · started the same day as you',
+  home: { at: [96, 15], where: 'Flat 6, above the parade, the first place that has ever been his' },
   desk: [17, 19], colour: '#4da3ff',
   schedule: [[540,'desk'],[600,'looDoor'],[615,'desk'],[720,'breakTable2'],[780,'desk'],[840,'coffee'],[860,'desk']],
   lines: ["Do we get lunch? Like, an actual lunch?", "I’ve just been shouted at about a boiler.", "Is it always like this?", "I like it here. Is that bad?"],
@@ -944,6 +977,7 @@ const NPCS = [
 },
 {
   id: 'colin', name: 'Colin', face: '🧑‍💼', role: 'Synergy',
+  /* No `home:`, and it is written rather than missed — see the note above. */
   desk: [60, 6], colour: '#b48cff',
   schedule: [[540,'synergy'],[720,'breakTable'],[760,'synergy']],
   lines: ["Synergy.", "We’re aligning.", "There are four of us. There have always been four of us.", "Circling."],
@@ -973,6 +1007,7 @@ const NPCS = [
 },
 {
   id: 'ron', name: 'Big Ron', face: '💂', role: 'Security · sees everything',
+  /* No `home:`, and it is written rather than missed — see the note above. */
   /* Behind the counter, not in front of it. The counter stops people now, and
      it stopped Ron too — he spawned on the visitors' side and spent the
      morning shouldering his own desk. */
@@ -1004,6 +1039,7 @@ const NPCS = [
 },
 {
   id: 'nigel', name: 'Nigel', face: '👔', role: 'Area Manager',
+  home: { at: [30, 8], where: 'four sites and a car, and a stool in a kebab shop on the way to none of them' },
   desk: [46, 3], colour: '#ff5f56',
   /* Four o'clock, when the spit goes on, on one of the two stools nobody
      sits on in Bellhaven Kebab. There has been a photograph of Nigel in
@@ -1085,6 +1121,7 @@ const NPCS = [
 },
 {
   id: 'alan', name: 'Alan', face: '🧓', role: 'Escalations · takes the ones nobody else can',
+  home: { at: [3, 22], where: 'west, on foot, past the multi-storey, in no hurry whatsoever' },
   desk: [37, 23], colour: '#5ad48a',
   schedule: [[540,'desk'],[610,'fireEsc'],[625,'desk'],[720,'step'],[755,'desk'],[880,'fireEsc'],[900,'desk']],
   lines: ["Mm. Yes. Go on.", "No, you’re quite right to be angry.", "I’ve got all day.", "Let’s start at the beginning.", "It’s not a technique. It’s just listening."],
@@ -1163,6 +1200,7 @@ const NPCS = [
 },
 {
   id: 'sandra', name: 'Sandra', face: '👩‍⚖️', role: 'Quality & Compliance · has heard you',
+  home: { at: [25, 15], where: 'the 41, with a book, and she has never once been asked what it is' },
   desk: [29, 27], colour: '#b48cff',
   schedule: [[540,'desk'],[600,'booth'],[660,'desk'],[720,'breakTable'],[760,'booth'],[840,'desk'],[930,'booth']],
   lines: ["I’m scoring, not judging.", "It’s a framework, not an opinion.", "You did say ‘no worries’ eleven times.", "That was a good call, actually."],
@@ -1238,6 +1276,7 @@ const NPCS = [
 },
 {
   id: 'fiona', name: 'Fiona', face: '👩‍🦳', role: 'People Partner · 0.6 FTE · the entire People Team',
+  home: { at: [30, 8], where: 'two other sites and a car boot with three lanyards in it' },
   desk: [26, 12], colour: '#ffb347',
   schedule: [[540,'hrCorner'],[620,'corridor'],[660,'hrCorner'],[720,'breakTable2'],[780,'meetRoom'],[840,'hrCorner'],[930,'lobby']],
   lines: ["I’m only in Tuesdays and Thursdays.", "That’s a conversation for your line manager.", "I don’t have an office, no.", "Have you done your 30/60/90?"],
@@ -1317,6 +1356,7 @@ const NPCS = [
 },
 {
   id: 'tomasz', name: 'Tomasz', face: '🧑‍🍳', role: 'Agency · 3-month contract (since 2019)',
+  home: { at: [25, 15], where: 'the last bus, every night, and he has never once been on the first' },
   desk: [21, 23], colour: '#4da3ff',
   schedule: [[540,'desk'],[600,'desk'],[720,'fireEsc'],[750,'desk'],[860,'coffee'],[880,'desk']],
   lines: ["I don’t get the emails.", "I’m agency, so.", "It’s fine. It’s a job.", "Do not ask me about the pension.", "I have no lanyard. Nobody has noticed."],
@@ -1437,6 +1477,7 @@ const NPCS = [
 },
 {
   id: 'bev', name: 'Bev', face: '👩‍🔧', role: 'Cleaning · in at six · sees everything',
+  home: { at: [108, 30], where: 'Marlow Street, and she is back before any of them, which is the whole of the arrangement' },
   desk: [9, 18], colour: '#5ad48a',
   schedule: [[540,'kettle'],[560,'corridor'],[600,'trolleyPark'],[660,'looSink'],[720,'breakTable'],[780,'archive'],[860,'corridor'],[920,'tin']],
   lines: ["Mind your feet, love.", "I’ve done that floor twice.", "Six o’clock start, me.", "I know whose that is.", "Don’t worry about it, I’ll get it."],
@@ -1546,6 +1587,7 @@ const NPCS = [
 },
 {
   id: 'marcus', name: 'Marcus', face: '🧔‍♂️', role: 'Agent · it is, apparently, his birthday',
+  home: { at: [30, 8], where: 'furthest of anybody, and he leaves last, and nobody has ever put those two facts together' },
   desk: [45, 31], colour: '#ffb347',
   schedule: [[540,'desk'],[720,'desk'],[780,'desk'],[900,'desk']],
   lines: ["...", "Morning.", "It’s fine.", "No, nobody’s said anything.", "I did get the card, yeah."],
@@ -1660,6 +1702,7 @@ const NPCS = [
  */
 {
   id: 'pat', name: 'Pat', face: '🧑‍🦳', role: 'The launderette · nineteen years',
+  home: { at: [96, 15], where: 'Flat 1, above her own launderette, nineteen years, four stairs and a fire door' },
   level: 'laund', desk: [9, 5], dir: 2, colour: '#4da3ff',
   hours: [480, 1140],
   look: { base: 'base:fem/Ivory', eyes: 'eyes:Blue', hair: 'hair:Short 05 - Natural/Gray',
@@ -1698,6 +1741,7 @@ const NPCS = [
 },
 {
   id: 'iris', name: 'Iris', face: '👵', role: 'The charity shop · Tuesdays and Fridays',
+  home: { at: [25, 15], where: 'the 41, Tuesdays and Fridays, and she is at the stop twenty minutes early both days' },
   level: 'charity', desk: [7, 3], dir: 2, colour: '#ffb347',
   hours: [540, 1020],
   look: { base: 'base:fem/Porcelain', eyes: 'eyes:Hazel', hair: 'hair:Medium 07 - Bob, Side Part/Gray',
@@ -1738,6 +1782,7 @@ const NPCS = [
 },
 {
   id: 'norman', name: 'Norman', face: '🧔‍♂️', role: 'The club · on the door since 2006',
+  home: { at: [110, 22], where: 'two streets, on foot, since 2006, and he does the crossword on the way' },
   level: 'club', desk: [12, 13], dir: 2, colour: '#ffb347',
   hours: [720, 1380],
   look: { base: 'base:masc/Tawny', eyes: 'eyes:Brown', hair: 'hair:Short 06 - Balding/Gray',
@@ -1773,6 +1818,7 @@ const NPCS = [
 },
 {
   id: 'stan', name: 'Stan', face: '🧓', role: 'The club · the end of the bar',
+  home: { at: [86, 15], where: 'about forty feet, which is why he is in no rush at all to do it' },
   level: 'club', desk: [7, 9], dir: 0, colour: '#9fb3c8',
   hours: [720, 1380],
   look: { base: 'base:masc/Ivory', eyes: 'eyes:Gray', hair: 'hair:Short 06 - Balding/Gray',
@@ -1808,6 +1854,7 @@ const NPCS = [
 },
 {
   id: 'jules', name: 'Jules', face: '💅', role: 'Nailed It · the hand in the photograph',
+  home: { at: [30, 8], where: 'out of town, in a car, because nobody who owns a shop on this parade lives on it except Pat' },
   level: 'nails', desk: [5, 4], dir: 2, colour: '#ff5f56',
   hours: [540, 1080],
   look: { base: 'base:fem/Coffee', eyes: 'eyes:Black', hair: 'hair:Medium 09 - Twists/Black',
@@ -1843,6 +1890,7 @@ const NPCS = [
 },
 {
   id: 'wes', name: 'Wes', face: '🧑‍🔧', role: 'Bellhaven Tyre & Exhaust · Unit 4',
+  home: { at: [3, 22], where: 'over the road from the unit, so he can see the shutter from his kitchen and has never once needed to' },
   level: 'tyre', desk: [12, 4], dir: 2, colour: '#ffb347',
   hours: [480, 1080],
   look: { base: 'base:masc/Brown', eyes: 'eyes:Brown', hair: 'hair:Short 01 - Buzzcut/Black',

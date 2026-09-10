@@ -333,8 +333,13 @@ const Panels = {
        shop on a street outside and is not your colleague, however well the two
        of you are getting on. Filing Pat under Colleagues would be the panel
        telling you something about your job that is not true. */
+    /* Where somebody lives, under how they feel about you, and only once you
+       have actually watched them go — `home.where` is a fact about a person
+       and this panel is not a staff directory you were handed on day one. */
     const box = n => '<div class="stat-box"><div class="sk">' + n.face + ' ' + esc(n.name)
-      + '</div><div class="sn">' + Rel.label(G.rel[n.id]) + '</div></div>';
+      + '</div><div class="sn">' + Rel.label(G.rel[n.id])
+      + (G.flags.sawThemGo && n.home ? '<br><i>' + esc(n.home.where) + '</i>' : '')
+      + '</div></div>';
     const known = NPCS.filter(n => G.rel[n.id] !== undefined);
     const staff = known.filter(n => !n.level), town = known.filter(n => n.level);
     h += '</div><div class="h2">Colleagues</div><div class="stat-grid">';

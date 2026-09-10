@@ -884,6 +884,59 @@ const LEVELS = {
     }
   },
 
+  /* ---- THE FLATS ABOVE THE PARADE -------------------------------------
+     The only interior out here that is somebody's HOME, and the reason there
+     is one rather than twenty-six.
+
+     Everybody in this game has a `home:` now — see data/npcs.js — and most of
+     those homes are a direction and a sentence: the 41, the car park, west
+     past the multi-storey, the subway under the railway. That is the honest
+     amount of home for somebody you watch leave. Twenty-six visitable flats
+     would be twenty-six of the same room, which is the exact thing this
+     project keeps having to be told not to do.
+
+     So there is ONE, and it is a landing rather than a flat: a corridor of
+     numbered doors above shops you have walked past all game, three of which
+     belong to people you know. What you can read is the OUTSIDE of a home —
+     the mats, the post, what is on the door, what you can hear through it —
+     which is the only part of anybody's home you are ever actually entitled
+     to, and is a great deal more than nothing.
+
+     The mechanism, and it is not one this game has used: the POST. There is a
+     pile of it on the windowsill going back years, and reading it is reading
+     the whole parade backwards — who moved out, who never told anybody, and
+     which business is still being written to eleven years after it shut. */
+  flats: {
+    name: 'The flats above the parade',
+    w: 17, h: 12,
+    rooms: [{ z: 'flats', r: [2, 2, 14, 9] }],
+    doors: [],
+    entries: { door: [8.5, 8.5] },
+    links: [{ via: 'flatsOut', to: 'outside', entry: 'flats' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 8, y: 9, e: '\ud83e\ude9c', name: 'The stairs down', kind: 'exit', solid: false, use: 'flatsOut' });
+      /* SIX DOORS, along the one wall the landing has. Three of them are
+         somebody's, and the other three are the parade. */
+      A({ x: 3, y: 2, e: '\ud83d\udeaa', name: 'Flat 1', kind: 'view', solid: true, use: 'flat1' });
+      A({ x: 5, y: 2, e: '\ud83d\udeaa', name: 'Flat 2', kind: 'view', solid: true, use: 'flat2' });
+      A({ x: 7, y: 2, e: '\ud83d\udeaa', name: 'Flat 3', kind: 'view', solid: true, use: 'flat3' });
+      A({ x: 9, y: 2, e: '\ud83d\udeaa', name: 'Flat 4', kind: 'view', solid: true, use: 'flat4' });
+      A({ x: 11, y: 2, e: '\ud83d\udeaa', name: 'Flat 5', kind: 'view', solid: true, use: 'flat5' });
+      A({ x: 13, y: 2, e: '\ud83d\udeaa', name: 'Flat 6', kind: 'view', solid: true, use: 'flat6' });
+      /* The window at the end, which looks down on the street you came off. */
+      A({ x: 14, y: 4, e: '\ud83e\ude9f', name: 'The window over the High Street', kind: 'view', solid: true, use: 'flatsWindow' });
+      /* And the landing itself: the post nobody has claimed, the bike nobody
+         owns, the meters, the timer, and the radiator. */
+      A({ x: 12, y: 5, e: '\ud83d\udcec', name: 'The post on the windowsill', kind: 'paper', solid: true, use: 'flatsPost' });
+      A({ x: 4, y: 5, e: '\ud83d\udeb2', name: 'The bike', kind: 'bike', solid: true, use: 'flatsBike' });
+      A({ x: 3, y: 7, e: '\u26a1', name: 'The meters', kind: 'server', solid: true, use: 'flatsMeters' });
+      A({ x: 6, y: 7, e: '\ud83d\udd58', name: 'The light on the timer', kind: 'therm', solid: true, use: 'flatsTimer' });
+      A({ x: 11, y: 7, e: '\u2668\ufe0f', name: 'The radiator', kind: 'cooler', solid: true, use: 'flatsRad' });
+      A({ x: 13, y: 8, e: '\ud83d\uddd1\ufe0f', name: 'The bin bags by the stairs', kind: 'bin', solid: true, use: 'flatsBags' });
+    }
+  },
+
   /* ---- OUTSIDE --------------------------------------------------------
      The forecourt and the streets, which is the only level with a sky over it.
      `indoors: false` is what the renderer reads: no strip lights, daylight
@@ -1096,6 +1149,9 @@ const LEVELS = {
       pub: [86.5, 15.5], bookies: [54.5, 15.5], laund: [92.5, 15.5],
       postoff: [98.5, 15.5], charity: [60.5, 15.5], kebab: [104.5, 15.5], vapour: [66.5, 15.5],
       nails: [46.5, 15.5],
+      /* The door between the launderette and the post office, which is where
+         the door to the flats above a parade always is. */
+      flats: [96.5, 15.5],
       /* And five on Fenn Street, where the pavement is row 33 rather than row
          15 because the parade faces the other way round the block. */
       tyre: [20.5, 33.5], unitsix: [30.5, 33.5], club: [72.5, 33.5], tan: [82.5, 33.5],
@@ -1112,6 +1168,7 @@ const LEVELS = {
       { via: 'kebabDoor', to: 'kebab', entry: 'door' },
       { via: 'vapourDoor', to: 'vapour', entry: 'door' },
       { via: 'nailsDoor', to: 'nails', entry: 'door' },
+      { via: 'flatsDoor', to: 'flats', entry: 'door' },
       /* The back of the block. The car wash is deliberately not among them:
          it has no door, because it is not a building you go into — see the
          `fromCar` furnishing on its frontage below. */
@@ -1428,6 +1485,10 @@ const LEVELS = {
         furn: { sprite: 'shop.awning.amber' } });
       A({ x: 88, y: 14, e: '🪧', name: 'The pub sign', kind: 'shopsign', solid: true, use: 'pubSign' });
       A({ x: 92, y: 14, e: '🧺', name: 'The launderette', kind: 'shop', solid: true, use: 'launderette' });
+      /* THE OTHER KIND OF DOOR ON A HIGH STREET, and there is one on every
+         parade in the country: not a shop at all, just a door, between two
+         shops, with six bells beside it and no sign saying what it is. */
+      A({ x: 96, y: 14, e: '\ud83d\udeaa', name: 'The door beside the launderette', kind: 'shop', solid: true, use: 'flatsDoorway' });
       A({ x: 98, y: 14, e: '📮', name: 'The post office', kind: 'shop', solid: true, use: 'postOffice',
         furn: { sprite: 'shop.awning' } });
       A({ x: 104, y: 14, e: '🌯', name: 'Bellhaven Kebab', kind: 'shop', solid: true, use: 'kebab',
