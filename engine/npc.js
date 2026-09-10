@@ -252,10 +252,17 @@ const NPCM = {
         /* Standing somewhere on purpose, rather than merely being near it. */
         parked: false, waitDoor: 0, holdWant: null, holdFor: 0, lastAim: 'desk', retry: 0,
         queued: 0, waitingFor: null, wayBack: null, wayFor: 0, squeeze: 0,
-        /* When they set off for the door on an errand. Null when they are not
-           on one — see runErrands(). Not saved, like everything else here
-           about where somebody is standing. */
-        outAt: null,
+        /* When they set off for the door on an errand, and which window they
+           set off FOR — because the clock can close it while they are still in
+           the corridor and they are going anyway. Null when they are not on
+           one. `leaving` is the same clock for the other direction: walking out
+           of a shop at closing time. See runErrands(). Not saved, like
+           everything else here about where somebody is standing. */
+        outAt: null, outFor: null, leaving: 0,
+        /* And the square of pavement they are crossing the town towards, when
+           somebody is out there to watch them do it. Null the rest of the time,
+           which is nearly all of it. See ACROSS THE TOWN in runErrands(). */
+        outward: null,
         /* When they stepped out of the front doors on the way home, or 0 when
            they are not on their way anywhere. See runHome()'s second leg. */
         homeward: 0
@@ -283,24 +290,34 @@ const NPCM = {
     this._homeSpots = null; this._homeRec = null; this._homeDoor = null;
     const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
     this.all.forEach(n => {
-      /* Their own hours, not the building's — see offDuty(). */
-      if (this.offDuty(n)) { n.away = true; n.level = 'away'; n.callOut = null; n.homeward = 0; return; }
-      if (!n.away) return;
-      n.away = false; n.level = n.def.level || hub;
-      n.x = (n.def.desk[0] + .5) * TILE; n.y = (n.def.desk[1] + .5) * TILE;
-      if (n.def.dir !== undefined) n.dir = n.def.dir;
-      /* And if the clock says they are out, they are out — a shift loaded at
-         ten past twelve should not put Karen at her desk for three seconds and
-         then walk her to the door. Same reasoning as the whole of this
-         function: the clock jumped, so nobody walks. */
+      /* If the clock says they are out, they are OUT, and that is asked before
+         anything else — an evening outranks the end of a shift here for the
+         same reason it does in runHome(), and a save loaded at half seven
+         should find whoever is in the Arms in the Arms.
+
+         It is asked before `away` as well, which it was not. A fresh roster is
+         always built at its desks with nobody away, so the window below the
+         old early-out could never fire on one: loading at ten past twelve put
+         Karen at her desk and then walked her to the door, which is the exact
+         thing the note under it says it is there to prevent. */
       const out = this.errandFor(n);
+      /* Their own hours, not the building's — see offDuty(). */
+      if (!out && this.offDuty(n)) { n.away = true; n.level = 'away'; n.callOut = null; n.homeward = 0; return; }
+      if (!out && !n.away) return;
+      n.away = false; n.homeward = 0;
       if (out) {
         n.level = out.level;
         n.x = (out.tile[0] + .5) * TILE; n.y = (out.tile[1] + .5) * TILE;
         if (out.face !== undefined) n.dir = out.face;
+      } else {
+        n.level = n.def.level || hub;
+        n.x = (n.def.desk[0] + .5) * TILE; n.y = (n.def.desk[1] + .5) * TILE;
+        if (n.def.dir !== undefined) n.dir = n.def.dir;
       }
       n.callOut = null; n.post = null; n.errand = null; n.next = null; n.walking = false;
       n.destKey = ''; n.best = 1e9; n.noProg = 0; n.gaveUp = null;
+      /* Nobody is half way to anywhere after the clock has jumped. */
+      n.outAt = null; n.outFor = null; n.leaving = 0; n.outward = null;
     });
     this.refresh();
   },
@@ -577,6 +594,15 @@ const NPCM = {
        around the target would put half the floor in the lobby waiting for a
        door nobody was walking to. */
     if (n.drill) return (n.post = [dx, dy]);
+    /* AND AN ERRAND'S TILE IS EXACTLY ITSELF, for the same reason and one more.
+       destTile() says of a window that they are AT it, full stop — their own
+       tile, no schedule, no waypoint — and the table writes those tiles on
+       purpose: who is in which chair, who has their back to the door, who is
+       fourth in the queue. The chair rule below is written for a break room
+       with eight empty chairs round a table and it would go and sit somebody in
+       the nearest one it could find, which in the Bellhaven Arms put Dave in
+       Sarah's seat from three squares away and Sarah on the floor beside it. */
+    if (n.dest === 'out') return (n.post = [dx, dy]);
     const taken = new Set();
     for (const o of this.list) if (o !== n && o.post) taken.add(o.post[0] + ',' + o.post[1]);
     /* The square they just walked away from because they could not get to it.
@@ -948,6 +974,23 @@ const NPCM = {
     const m = Sky.m();
     return h[0] <= h[1] ? (m < h[0] || m >= h[1]) : (m < h[0] && m >= h[1]);
   },
+  /* WHOSE TURN IT IS TO WALK OUT, in real seconds since the tide turned.
+     Stable per person, so the same people are always first out of the door and
+     the same people are always last, which is the single most true thing about
+     an office at five o'clock — and going is spread far wider than coming back,
+     which is not symmetry gone wrong: leaving is twenty separate decisions and
+     arriving is a car park draining into a lobby.
+
+     Read by runHome() and by the walk across the town in runErrands(), because
+     those are two halves of one exodus and an order they disagreed about would
+     be twenty people leaving in one order and arriving in another. */
+  leaveDue(n, off) {
+    const order = (this.hash(n.id) % 13) * (off ? 3.2 : .3);
+    /* The floor turns at one instant and _homeAt is that instant. Anybody on
+       their own hours turns on their own, so they keep their own. */
+    if (n.def.hours) return (n._offAt === undefined ? this.now : n._offAt) + order;
+    return (this._homeAt === undefined ? this.now : this._homeAt) + order;
+  },
   runHome() {
     /* An evacuation outranks the end of a shift, and they can overlap: the
        alarm can go at ten to five. Whoever is in a drill is in a drill. */
@@ -1011,6 +1054,18 @@ const NPCM = {
          wrong: leaving is a decision each of them makes separately, and
          arriving is a car park emptying into a lobby. */
       const off = this.offDuty(n);
+      /* AN EVENING OUTRANKS GOING HOME, which is the whole of what an evening
+         is. Five o'clock used to be the last thing that ever happened to
+         anybody: the doors, the street, their own direction, gone — and a town
+         with fourteen rooms in it went dark at the exact hour a town starts.
+
+         Somebody with a window open at five is not going home. They are going
+         OUT, and runErrands() below walks them to these same front doors and
+         through them to a pub, a club, a bookmaker's or a kebab shop; when it
+         shuts, they go home FROM there, which is the other half and is down in
+         runErrands() under CLOSING TIME. Nobody with an empty evening notices
+         any of this. */
+      if (off && this.errandFor(n)) continue;
       /* HOW LONG AN OFFICE TAKES TO EMPTY. Stable per person, so the same
          people are always first out of the door and the same people are always
          last, which is the single most true thing about an office at five
@@ -1029,11 +1084,8 @@ const NPCM = {
          seen an office empty in twenty. Arriving is still tight, because that
          is a car park draining into a lobby rather than twenty separate
          decisions. */
-      const order = (this.hash(n.id) % 13) * (off ? 3.2 : .3);
-      /* The floor turns at one instant and _homeAt is that instant. Anybody on
-         their own hours turns on their own, so they keep their own. */
       if (n.def.hours) { if (off !== n._offWas) { n._offWas = off; n._offAt = this.now; } }
-      const due = (n.def.hours ? (n._offAt === undefined ? this.now : n._offAt) : this._homeAt) + order;
+      const due = this.leaveDue(n, off);
       if (this.now < due) continue;
       if (off) {
         if (n.away) continue;
@@ -1142,6 +1194,24 @@ const NPCM = {
         if (home === hub) this.stepThrough(n, hub, door);
         else this.stepThrough(n, home, n.def.desk, n.def.dir);
         n.away = false; n.homeward = 0; moved = true;
+      } else if (n.level !== (n.def.level || hub) && !this.onErrand(n) && !this.errandFor(n)) {
+        /* ON DUTY AND NOWHERE THEY ARE MEANT TO BE, which was the one gap
+           between the two branches above. `away` is how somebody who has gone
+           home comes back, and somebody the morning caught out on the street —
+           halfway across the town on an errand, or halfway home from one, when
+           a clock that runs at twelve times the day's rate overtook the walk —
+           is not away. Nothing here had anything to say about them, so they
+           stood on that pavement through the whole of the next shift.
+
+           Off camera, as everything of this kind is; the forty seconds is the
+           backstop for the case where you are standing looking at them. */
+        if (!onScreen(n) || this.now > due + 40) {
+          n.homeward = 0; n.callOut = null; n.outward = null;
+          const back = n.def.level || hub;
+          if (back === hub) this.stepThrough(n, hub, door);
+          else this.stepThrough(n, back, n.def.desk, n.def.dir);
+          moved = true;
+        }
       }
     }
     if (moved) this.refresh();
@@ -1198,21 +1268,123 @@ const NPCM = {
      the pathing here could hold, and there does not need to be one: what a
      player can observe is that Karen left, and that Karen is in there. The bit
      in between is the bit nobody ever watches. */
-  errandFor(n) {
+  /* THE WINDOWS IN SOMEBODY'S DAY, always as a list, because a day has more
+     than one hole in it. `out:` was a single window for as long as every
+     window in the table was lunch, and lunch is one window; a person who has a
+     bacon roll at twenty past eight, a nail bar at one and the Bellhaven Arms
+     from ten past five is three, and writing three people to say that was
+     never going to be the answer. A def may still write one object and mean
+     exactly what it always meant. */
+  NO_WINDOWS: [],
+  windows(n) {
     const o = n.def.out;
-    if (!o) return null;
+    if (!o) return this.NO_WINDOWS;
+    if (Array.isArray(o)) return o;
+    /* Wrapped once per person rather than once per frame: this is read by
+       errandFor(), and errandFor() is read by destTile() for everybody on the
+       floor sixty times a second. */
+    return n._windows || (n._windows = [o]);
+  },
+  errandFor(n) {
+    if (!n.def.out) return null;
     const m = typeof Sky !== 'undefined' ? Sky.m() : 0;
     /* Written the obvious way round and read the wrapping way, so a window
-       that crosses midnight — a kebab shop, one day — needs no second entry. */
-    const on = o.from <= o.to ? (m >= o.from && m < o.to) : (m >= o.from || m < o.to);
-    return on ? o : null;
+       that crosses midnight — a kebab shop, which is most of what a kebab shop
+       is — needs no second entry. First match rather than best: two windows
+       that overlap are a mistake in the table, and the table is checked. */
+    for (const o of this.windows(n))
+      if (o.from <= o.to ? (m >= o.from && m < o.to) : (m >= o.from || m < o.to)) return o;
+    return null;
+  },
+  /* Is this person standing somewhere only an errand would have put them?
+     Asked instead of comparing against the one window's level, because there
+     is more than one window now and they are in different rooms. */
+  onErrand(n) {
+    for (const o of this.windows(n)) if (o.level === n.level) return true;
+    return false;
+  },
+  /* WHAT SOMEBODY SAYS WHERE THEY ARE. A window may carry its own `lines:`,
+     and while they are standing in it those are what they say instead of their
+     own — because six colleagues in a pub at half five are not still talking
+     about the printer, and if they were, the pub would not have been worth
+     walking to. */
+  linesFor(n) {
+    const o = this.errandFor(n);
+    return (o && o.lines && o.lines.length && n.level === o.level) ? o.lines : n.def.lines;
+  },
+  /* THE WAY OUT OF A ROOM THAT IS NOT THE OFFICE: the square in front of its
+     own door, and the square of pavement on the other side of it. Both are
+     read out of the catalogue rather than written down anywhere — a shop that
+     moves takes its own doorway with it — by following the level's link back
+     to the street and the entry that link lands on. One-deep cache, which is
+     all it needs: it is consulted while ONE person is being watched leaving
+     ONE room at closing time. */
+  _ways: new Map(),
+  wayOut(id) {
+    if (this._ways.has(id)) return this._ways.get(id);
+    let v = null;
+    const def = Levels.def(id);
+    const link = def && (def.links || []).find(l => l.to === 'outside');
+    if (link) {
+      const rec = Levels.ensure(id);
+      const tile = rec && this.doorSide(rec, link.via);
+      const e = ((Levels.def('outside') || {}).entries || {})[link.entry];
+      if (tile && e) v = {
+        tile, street: [Math.floor(e[0]), Math.floor(e[1])],
+        /* A SQUARE EACH, which is the front doors' rule and is needed here for
+           the front doors' reason: one doorway tile holds one person. Three
+           colleagues leaving a nail bar seventeen tiles wide all steered for
+           the same square, one of them got it, and the other two stood in the
+           chairs for the whole of the afternoon — the walk parks somebody on
+           the free square it can claim near where they are going, which was
+           never within reach of the tile itself, so only the backstop ever
+           freed them. Reaching YOUR square is close enough to the door to have
+           gone through it.
+
+           AS MANY AS COULD BE IN THE ROOM and no more. crowdSpots() rings
+           outward, so asking for twenty-six of them in a shop fifteen tiles
+           wide hands the twenty-sixth a square at the back of it — and walking
+           AWAY from a door and then vanishing is a worse thing to watch than
+           the knot this is here to prevent. The table knows how many people
+           this room can hold: it is how many windows name it. */
+        spots: this.crowdSpots(rec, tile[0], tile[1], this.roomFor(id))
+      };
+    }
+    this._ways.set(id, v);
+    return v;
+  },
+  /* How many people the table can put in one room at once. Counted rather
+     than guessed, and never fewer than four so a room with one visitor still
+     has somewhere to stand when the player is in the doorway. */
+  roomFor(id) {
+    let k = 0;
+    for (const n of this.all) for (const o of this.windows(n)) if (o.level === id) k++;
+    return Math.max(4, k);
+  },
+  /* Which of them is this person's. Stable, so the same people are always
+     nearest the door. */
+  waySpot(way, n) {
+    const sp = way.spots && way.spots.length ? way.spots : [way.tile];
+    return sp[this.hash(n.id) % sp.length] || way.tile;
   },
   runErrands() {
     if (this.drill) return;
     if (typeof Sky === 'undefined') return;
-    /* Cheap first, as runHome() does: nothing to do on almost every frame. */
-    if (!this.all.some(n => n.def.out && !n.away
-      && (n.level === n.def.out.level) !== !!this.errandFor(n))) return;
+    /* Cheap first, as runHome() does: nothing to do on almost every frame.
+       Somebody needs moving if a window is open and they are not standing in
+       it, or no window is open and they are still standing in one. `away` is
+       no longer a reason to skip them — an evening is a window that opens
+       AFTER they have gone home, and coming back out is the whole of it. */
+    if (!this.all.some(n => {
+      if (!n.def.out) return false;
+      /* Anybody already walking out is work to do whatever the clock says —
+         see the commitment below, which is the whole reason this cannot ask
+         about the current minute alone. */
+      if (n.outAt !== null && n.outAt !== undefined) return true;
+      if (n.leaving || n.outward) return true;
+      const want = this.errandFor(n);
+      return want ? n.level !== want.level : (!n.away && this.onErrand(n));
+    })) return;
 
     const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
     const rec = Levels.ensure(hub);
@@ -1236,35 +1408,223 @@ const NPCM = {
       && typeof Cam !== 'undefined' && Cam.visible && Cam.visible(n.x, n.y);
     let moved = false;
     for (const n of this.all) {
-      if (!n.def.out || n.away) continue;
+      if (!n.def.out) continue;
       if (n.id === talkingTo) continue;
-      const want = this.errandFor(n);
-      const there = n.level === n.def.out.level;
+      /* SETTING OFF IS A COMMITMENT, which is the rule destTile() already
+         keeps about the timetable, for exactly the reason it keeps it: the
+         window is written in game minutes and the office is crossed in real
+         ones. Watched, the walk from a desk to the front doors is fifteen or
+         twenty seconds and a lunch hour is twenty-six, so a window that shut
+         while somebody was still in the corridor used to turn them round in it
+         — and the one person you were actually watching was the one person who
+         never once got to go. They go. The forty-second backstop below is
+         still the outside edge of it. */
+      const open = this.errandFor(n);
+      const want = open || (n.outAt === null || n.outAt === undefined ? null : n.outFor);
+      const there = !!want && n.level === want.level;
       if (want && !there) {
-        /* On the way out. Off the hub — or off camera on it — they are simply
-           there; on it and in view they walk to the front doors first. */
-        if (n.level !== hub || !onScreen(n)) { this.stepThrough(n, want.level, want.tile, want.face); moved = true; continue; }
-        if (n.outAt === undefined || n.outAt === null) n.outAt = this.now;
-        n.post = null; n.errand = null;
-        const spot = spots[this.hash(n.id) % spots.length] || door;
-        n.callOut = { tile: spot, until: this.now + 2, haste: 1.2 };
-        /* The same two deadlines home time keeps, and for the same reason: the
-           walk is in real seconds and lunch is not, so they give up on it —
-           but never in view, unless they have been stuck long enough that
-           standing and watching it is worse than the blink. */
-        if (reached(n, spot) || (this.now > n.outAt + 16 && !onScreen(n)) || this.now > n.outAt + 40) {
-          n.outAt = null; n.callOut = null;
-          this.stepThrough(n, want.level, want.tile, want.face); moved = true;
+        /* ALREADY GONE, AND COMING BACK OUT. Somebody who went home at five and
+           is due in the club at seven is not standing on any floor to be walked
+           off: they are nowhere, and a walk to the front doors has nothing to
+           set off from. So they are simply there — which is what every trip
+           made off camera has always been, and this is the one where off camera
+           is the entire map. */
+        if (n.away) {
+          n.away = false; n.homeward = 0; n.outAt = null; n.outFor = null; n.outward = null;
+          this.stepThrough(n, want.level, want.tile, want.face); moved = true; continue;
         }
-      } else if (!want && there) {
-        /* And back. Through the lobby, exactly as somebody arriving in the
-           morning does, so the schedule picks them up and walks them to their
-           own desk — unless you are standing in the shop watching, in which
-           case they are allowed to finish their coffee until you look away. */
-        if (onScreen(n)) continue;
-        n.outAt = null;
-        this.stepThrough(n, hub, door); moved = true;
-      } else if (!want) { n.outAt = null; }
+        /* ---- ACROSS THE TOWN ----------------------------------------------
+           Leg two, and it exists for one scene. At five o'clock ten of the
+           twenty are going somewhere rather than home, and until this they
+           left the fourth floor and arrived in a pub without ever having been
+           on the street in between — which was right while nobody could
+           possibly be watching both ends, and wrong the moment there was a car
+           park to stand in at five past five. Half the exodus stopped coming
+           out of the building.
+
+           So when the player is on the street, they come out of the doors like
+           everybody else and walk up it, to the pavement outside the place they
+           are going, and go in there. It is the same walk as going home — the
+           same map, the same deadlines, the same giving up off camera — and
+           the same reason: what is worth paying for is the bit somebody can
+           see. When nobody is out there this never runs and they are simply
+           in the shop, which is what every trip made off camera has always
+           been.
+
+           If the window shuts while they are still walking it, they are on a
+           street at the end of the day with nowhere to be, and going home is
+           exactly what that is: runHome's own second leg takes them. */
+        if (n.outward) {
+          if (!open) {
+            n.outward = null; n.outAt = null; n.outFor = null; n.callOut = null;
+            /* Off duty they are on a street at the end of the day with nowhere
+               to be, and going home is exactly what that is: runHome's own
+               second leg takes them. On duty they are on a street in the middle
+               of a shift, which is a different problem with the same shape, and
+               they go back to work. */
+            if (this.offDuty(n)) n.homeward = this.now;
+            else {
+              const back = n.def.level || hub;
+              if (back === hub) this.stepThrough(n, hub, door);
+              else this.stepThrough(n, back, n.def.desk, n.def.dir);
+            }
+            moved = true;
+            continue;
+          }
+          n.callOut = { tile: n.outward, until: this.now + 2, haste: 1.35 };
+          /* A SHORT LEAD, and shorter than going home's. What is worth watching
+             is somebody coming out of that building and setting off up the High
+             Street; the sixty tiles after that are the bit nobody watches, and
+             every second spent on them is charged at the evening's clock, which
+             is running at four times the day's. Walk it out in full and the
+             last of them reaches the pub at half eleven and it has shut. So
+             they are gone a few strides after they leave the frame — which is
+             also what happens to anybody you watch walk off up a road. */
+          if (reached(n, n.outward) || (this.now > n.outAt + 8 && !onScreen(n))
+              || this.now > n.outAt + 30) {
+            n.outward = null; n.outAt = null; n.outFor = null; n.callOut = null;
+            this.stepThrough(n, want.level, want.tile, want.face); moved = true;
+          }
+          continue;
+        }
+        /* On the way out. Off camera they are simply there, which is the whole
+           trick and costs nothing; in view they walk to a door and go through
+           it there.
+
+           WHICH DOOR is no longer only the office's. It was, because every
+           window in the table started on the fourth floor and ended on the
+           fourth floor; a launderette has a door too, and Pat leaving hers for
+           the post office at one o'clock in front of somebody standing in it is
+           the same bug as anybody blinking out of anywhere. wayOut() gives any
+           room on the street its own, out of the catalogue. */
+        /* Setting off across it. Asked BEFORE the off-camera shortcut below,
+           because somebody on the fourth floor is never on camera to a player
+           standing in the car park and the walk that is worth watching starts
+           at the front doors rather than at a desk: crossing the office is the
+           invisible half and is skipped, exactly as it always was.
+
+           In their own turn, in the same order as the people going home, from
+           the same table — see leaveDue(). At five that is a building emptying
+           over forty seconds; at lunch the tide turned hours ago and three
+           people who go to the nail bar together go together. */
+        const across = open && n.level === hub && World.level === 'outside'
+          && this.wayOut(want.level);
+        if (across) {
+          /* And they WAIT for their turn rather than being let past it. This
+             is a `continue` and not a condition on `across` for the reason the
+             whole scene exists: falling past it lands on the off-camera
+             shortcut below, which is instant, so every one of them was in the
+             pub within four seconds of five o'clock and the doors they were
+             supposed to come out of stayed shut. */
+          if (this.now < this.leaveDue(n, this.offDuty(n))) continue;
+          const street = this.streetSpot(n);
+          if (street) {
+            this.stepThrough(n, 'outside', street);
+            n.outward = across.street; n.outAt = this.now; n.outFor = want; moved = true;
+            /* Out of those doors in front of you is how you find out where
+               somebody goes, whether where they go is home or the Arms. */
+            G.flags.sawThemGo = true;
+            continue;
+          }
+        }
+        if (!onScreen(n)) { n.outAt = null; n.outFor = null; this.stepThrough(n, want.level, want.tile, want.face); moved = true; continue; }
+        const way = n.level === hub ? null : this.wayOut(n.level);
+        const leave = n.level === hub
+          ? (spots[this.hash(n.id) % spots.length] || door) : (way && this.waySpot(way, n));
+        if (!leave) { n.outAt = null; n.outFor = null; this.stepThrough(n, want.level, want.tile, want.face); moved = true; continue; }
+        if (n.outAt === undefined || n.outAt === null) n.outAt = this.now;
+        n.outFor = want;
+        n.post = null; n.errand = null;
+        n.callOut = { tile: leave, until: this.now + 2, haste: 1.2 };
+        /* The backstop that home time keeps, and for its reason: the walk is in
+           real seconds and lunch is not, so a colleague wedged in a doorway in
+           full view is not a person going to lunch, it is a bug you are stood
+           watching. The off-camera deadline it used to have alongside this can
+           no longer fire — going off camera is caught a few lines above and
+           takes them immediately. */
+        if (reached(n, leave) || this.now > n.outAt + 40) {
+          n.callOut = null;
+          n.outAt = null; n.outFor = null;
+          /* AND THE CLOCK MAY HAVE BEATEN THEM TO IT, in which case they do not
+             go: arriving somewhere as it shuts and turning round in its doorway
+             is a worse thing to have watched than not setting off. Which is the
+             honest edge of all of this and is worth writing down. Watched, a
+             walk across this floor is fifteen seconds and Bev's is thirty-five;
+             a window is between nineteen and thirty real seconds during the
+             shift and a great deal less in the compressed hours, so somebody
+             far enough from the doors at a fast enough hour can set off, walk
+             the whole way, and be too late. Off camera — which is very nearly
+             always, since this asks whether they are in the VIEWPORT and not
+             whether you are on the same floor — none of it happens at all: they
+             are simply there. It degrades to somebody who nearly went out, and
+             an office is full of those. */
+          if (open) { this.stepThrough(n, want.level, want.tile, want.face); moved = true; }
+        }
+      } else if (!want && this.onErrand(n)) {
+        /* ---- IT IS OVER, ONE WAY OR THE OTHER -----------------------------
+           Two endings, and the same walk to the same door serves both.
+
+           BACK TO WORK is the one this always had. Through the lobby, exactly
+           as somebody arriving in the morning does, so the timetable picks them
+           up and walks them to their own desk. Not always the lobby of a call
+           centre, since the six people who do not work in one go out too:
+           somebody whose own building is a launderette comes back to her own
+           counter, because reopening is one person turning a sign round and not
+           a walk through anybody's reception.
+
+           CLOSING TIME is the new one, and it is where an evening ends. Until
+           this, the only way out of a window was back to the fourth floor,
+           which was right while every window in the table was lunch and is
+           nonsense at half ten at night: it walked somebody out of a pub,
+           across a town and into an empty building, so that five o'clock could
+           then send them home from it. Somebody off duty goes home from HERE —
+           onto the pavement outside the door they are standing at, where
+           runHome()'s second leg takes them the rest of the way, to the stop,
+           to a car, to a door beside the post office. Which means the last you
+           ever see of anybody is the same whether they have just left a
+           building or a bar. runHome() can reach them at all only because the
+           window that was holding it off has this minute closed.
+
+           And in view they WALK OUT, either way. That is not a flourish: it
+           used to be a wait — they stood in the shop until you looked away,
+           because nothing here could walk somebody out of one — so standing in
+           the nail bar all afternoon kept Karen in it all afternoon, and cost
+           her the post office at half two as well. */
+        const off = this.offDuty(n);
+        const exit = onScreen(n) ? this.wayOut(n.level) : null;
+        if (exit) {
+          if (!n.leaving) n.leaving = this.now;
+          n.outAt = null; n.outFor = null; n.post = null; n.errand = null;
+          /* Faster on the way home than on the way back to work, which is the
+             one thing everybody in this game agrees about. */
+          const spot = this.waySpot(exit, n);
+          n.callOut = { tile: spot, until: this.now + 2, haste: off ? 1.35 : 1 };
+          /* The backstop only, and no off-camera deadline beside it: going off
+             camera is caught by the line above and takes them immediately. */
+          if (!reached(n, spot) && this.now < n.leaving + 40) continue;
+          n.leaving = 0; n.callOut = null;
+          if (off) {
+            this.stepThrough(n, 'outside', exit.street);
+            n.homeward = this.now; moved = true;
+            /* You were there when they went. Which is the same discovery as
+               standing in the car park at five past five and is allowed to
+               unlock the same line in the profile panel: you found out where
+               somebody lives by being in the room they left. */
+            G.flags.sawThemGo = true;
+            continue;
+          }
+        }
+        n.outAt = null; n.outFor = null; n.leaving = 0;
+        if (off) {
+          n.callOut = null;
+          n.level = 'away'; n.away = true; n.homeward = 0; this.hangUp(n); moved = true;
+          continue;
+        }
+        const back = n.def.level || hub;
+        if (back === hub) this.stepThrough(n, hub, door);
+        else this.stepThrough(n, back, n.def.desk, n.def.dir);
+        moved = true;
+      } else if (!want) { n.outAt = null; n.outFor = null; n.leaving = 0; n.outward = null; }
     }
     if (moved) this.refresh();
   },
@@ -1420,11 +1780,13 @@ const NPCM = {
 
       /* The one-liners. Unchanged in what they are and when they fire, except
          that somebody already talking to a colleague does not also mutter to
-         themselves over the top of it. */
+         themselves over the top of it — and that what they have to say now
+         depends on where they are standing. See linesFor(). */
       n.nextSay -= dt;
-      if (n.nextSay <= 0 && n.def.lines) {
+      const said = this.linesFor(n);
+      if (n.nextSay <= 0 && said) {
         n.nextSay = rnd(14, 40);
-        if (!n.chat && Cam.visible(n.x, n.y) && chance(.6)) { n.say = pick(n.def.lines); n.sayT = 4.2; }
+        if (!n.chat && Cam.visible(n.x, n.y) && chance(.6)) { n.say = pick(said); n.sayT = 4.2; }
       }
     });
   },
@@ -2010,7 +2372,15 @@ const NPCM = {
       if (!ox && !oy) continue;
       const x = hx + ox, y = hy + oy;
       if (World.isSolid(x, y) || this.inDoorway(x, y)) continue;
-      if (Math.max(Math.abs(x - dx), Math.abs(y - dy)) > 3) continue;
+      /* How far they are allowed to end up from where they were sent. Three
+         squares is right for a waypoint, which names a part of a room — the
+         kettle, the printer, the fax table — and wrong for an errand, which
+         names a tile: standing at the bar and standing three squares into the
+         middle of the pub are not the same thing, and in this table which tile
+         somebody is on is frequently the whole joke. So they still shift about,
+         because a room of statues is not a room, and they do it on a shorter
+         lead. */
+      if (Math.max(Math.abs(x - dx), Math.abs(y - dy)) > (n.dest === 'out' ? 1 : 3)) continue;
       if (f && Nav.at(f, x, y) < 0) continue;
       if (this.list.some(o => o !== n && o.post && o.post[0] === x && o.post[1] === y)) continue;
       out.push([x, y]);
@@ -2046,8 +2416,11 @@ const NPCM = {
       n.chat.t = rnd(3.2, 5);
       const who = n.chat.lead ? n : o;
       n.chat.lead = !n.chat.lead;
-      if (who.def.lines && who.def.lines.length) {
-        who.say = pick(who.def.lines); who.sayT = 3.4;
+      /* What they have between them is what the room has, so two people who
+         are both in the pub talk about the pub. See linesFor(). */
+      const said = this.linesFor(who);
+      if (said && said.length) {
+        who.say = pick(said); who.sayT = 3.4;
         /* They have just said something. Not twice. */
         who.nextSay = Math.max(who.nextSay, rnd(18, 45));
       }
@@ -2055,10 +2428,11 @@ const NPCM = {
     }
     if (!playing || n.walking || n.chatCool > 0 || n.stunTimer > 0) return;
     if (this.lookBusy(n)) return;
-    if (!n.def.lines || !n.def.lines.length) return;
+    const mine = this.linesFor(n);
+    if (!mine || !mine.length) return;
     if (!chance(dt * n.t.social * .55)) return;
     const o = this.list.find(o => o !== n && !o.walking && !o.chat && o.chatCool <= 0
-      && o.stunTimer <= 0 && o.id !== talkingTo && o.def.lines && o.def.lines.length
+      && o.stunTimer <= 0 && o.id !== talkingTo && this.linesFor(o) && this.linesFor(o).length
       && Math.hypot(o.x - n.x, o.y - n.y) < TILE * 2.6);
     if (!o) return;
     n.chat = { with: o.id, host: true, t: .5, turns: ri(2, 5), lead: true };

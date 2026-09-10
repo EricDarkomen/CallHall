@@ -113,6 +113,45 @@ are a wheelchair and a shopping trolley. They are drawn by the renderer instead,
 which is also what lets one turn through any angle rather than through the eight
 a sprite sheet would give it.
 
+## Fourteen doors, and who is behind them
+
+Fourteen of those frontages open. A Greggs, a pub, a bookmaker's, a launderette,
+a post office, a charity shop, a kebab shop, a vape shop, a nail bar, a tyre
+place, an empty unit, a working men's club, a tanning salon — and a door between
+the launderette and the post office with six bells and no sign, which is the
+stairs up to the flats above the parade.
+
+Six people work out there and are not your colleagues, which the profile panel is
+careful about. Pat has run the launderette for nineteen years and knows more
+about this street than the council does. Iris is in the charity shop on Tuesdays
+and Fridays and is not paid. Norman has been on the club door since 2006 and
+Stan is at the end of its bar. Jules is the hand in the photograph in the nail
+bar. Wes has your pool car up on a ramp and eleven unpaid invoices for it on a
+spike by the door. They keep their own hours rather than the call centre's: a
+launderette opens at eight and a club does not start until noon.
+
+**And your colleagues go out.** A person's day may have windows in it — an hour
+somewhere that is not the fourth floor — and there are thirty-seven of them
+across twelve of those rooms. Karen, Sarah and Gary are in the nail bar at noon,
+each having told the floor something different about where they are. Marjorie is
+in front of the shelf of mugs she donated in 2016, losing an argument with
+herself. Priya's favourite part of her day is being fourth in a queue in the post
+office, because for nine minutes nobody asks her anything. Nigel is in the tyre
+place putting it on an account that does not exist. Terry is in the bookmaker's
+at lunch and has not put a bet on since 1998 — it is the warmest building on that
+street and the only one with chairs you can sit in without buying anything. And
+Bev, who has been in since six, takes her break in a Greggs at twenty to eight
+with nobody else in it.
+
+They say different things in different rooms, and that is the whole reason the
+rooms are worth walking to: six colleagues in a pub still talking about the
+printer are six colleagues at their desks.
+
+Three rooms are deliberately empty and stay that way. There is nobody in Unit 6,
+and that is the first thing about Unit 6. Sunseekers is a room you cannot see,
+because everything that happens in Sunseekers happens behind a door with a light
+over it. And Colin does not go anywhere, ever, which is Colin.
+
 ## The day, the night, and the weather
 
 The shift runs 09:00 to 17:00. The day does not.
@@ -162,14 +201,30 @@ decoration. In summer it is light until half nine. In winter the sun sets at
 dark and you leave in the dark, which is the single most accurate thing this
 game says about working indoors.
 
-**The floor empties.** At five they go, and they go at their own pace and in
-their own order — the same people first every time, the same people last. They
-walk to the lobby, and once they are through it they are simply not anywhere,
-which is what happens to people after they leave a room you are in. Between
-quarter past eight and nine the next morning they come back the same way and walk
-to their desks. Two of them never leave: Ron is on the desk, and Bev has been
-here since six and will be here at six tomorrow. An empty building is a set; an
-empty building with two people still in it is this building.
+**The floor empties, and the town fills up.** At five they go, and they go at
+their own pace and in their own order — the same people first every time, the
+same people last. They walk to the lobby, and then out onto the street and off in
+their own direction: the bus stop, their own car in the bays, the subway under
+the railway, a door above the shops, west past the multi-storey in no hurry
+whatsoever. Stand in the car park at five past five and twenty people come out of
+that building and go twenty different ways. Six of them wait at the stop, because
+the 41 is a bus that stops, and they get on it when it comes and not before.
+
+Not all of them go home. From ten past five there are six in the Bellhaven Arms,
+one of them in the only chair; Marjorie is in the launderette with a service wash
+on the way to her bus; Steve and Mo are on their own landing above the parade,
+one sorting post addressed to people who left years ago and the other stood
+outside his own front door for a minute before he goes in. Later there is a man
+in the working men's club who was at the meeting where item seven was first
+carried forward, and a man in the kebab shop waiting for the last bus, which he
+catches every night and has never once caught the first of. When an evening
+finishes they go home from where they are — out of that door, onto that pavement
+— rather than from a desk they left hours ago.
+
+Between quarter past eight and nine the next morning they come back the same way
+and walk to their desks. Two of them never leave: Ron is on the desk, and Bev has
+been here since six and will be here at six tomorrow. An empty building is a set;
+an empty building with two people still in it is this building.
 
 ## Faces
 
