@@ -186,13 +186,41 @@ ones with a floor behind them stand open; the empty unit, the cash and carry and
 the four sheds on Corven Way are shut, because a door you cannot go through is a
 shut door rather than a missing one.
 
-A shut one is set into the wall exactly as far as an open one is. It was not, at
-first: only the openings got the jambs carrying the wall in and the frame round
-them, so the shut ones were a leaf drawn flat on the brick — a door stuck on
-rather than a door shut, and next to the ajar ones the difference was the only
-thing you could see. They all get the reveal now. The only part an opening keeps
-to itself is the threshold, because a threshold is the floor of it and a shut
-door has no floor to show.
+The glass beside them is PLATE glass, and it is the office's mirror. Which is not
+a joke: the kit's `wall.mirror` is a dark frame round a pale pane with a diagonal
+reflection across it, landscape rather than portrait, and that is a shop window.
+What was there before was a sash — tall, white, glazing bars — so the parade read
+as a terrace somebody had cut doors into. Nothing about the sheets changed to fix
+it; the mirror was already packed and already licensed, and this names it.
+
+And there are FOUR awnings on the whole map, where there used to be fourteen. One
+on very nearly every frontage is not a street, it is a pattern — and an awning is
+opaque, so it replaces the frontage's emoji: fourteen of them meant fourteen
+units identified by nothing but the colour of their canopy. The four left are the
+ones that would have one — a nail bar, a charity shop, a pub and a takeaway — and
+everything else has its sign back. A tyre bay has a roller shutter, a working
+men's club has a door, and a retail shed has a fascia the size of a bus.
+
+**The door is the kit's door, and only the kit's door.** The engine has always
+had a drawn doorway of its own — two jambs, a frame, a threshold strip and a
+leaf — from before there was any door art at all, and it went on drawing all of
+it underneath the real one. So every frontage on the parade was a crude open
+doorway with a nicely drawn ajar door superimposed on it, the crude one showing
+round the edges: a pale bar across the middle, a dark post down each side. It
+draws none of that now where the kit has a door, and the pale bar is gone from
+every opening that has one. The jambs survive on a doorway you can walk THROUGH,
+indoors, where they are doing structural work — the tile there is floor, the wall
+run has a tile-wide hole in it, and the jambs are what carry the wall in far
+enough for the hole to read as a doorway. On a door set into wall mass the wall
+is already there and they were drawing a second one.
+
+The kit has three doors and this uses all three: ajar for a unit you can go into,
+shut for one you cannot, and the red one for a door that is locked. They are the
+same leaf swung towards you, which is why a shut shop and an open one read as
+different doors rather than as the same sticker twice — and each hangs on
+whichever jamb its own tile says, so fourteen frontages are not fourteen copies
+of one door. A pair of doors is still hinged at opposite jambs and opens
+outwards, which was never a choice.
 
 And when you look through an open one you see the room. A doorway cut into wall
 mass has brick under it, so what showed between the jambs was brick — the front
@@ -201,6 +229,12 @@ car park wall behind them. The catalogue already knows where every door goes, so
 the renderer asks it, and paints that room's own floor in the gap with the head
 of the opening in shadow above it: a foot of dark and then a floor, seen from a
 street at noon.
+
+That is also what lights the parade at dusk. It used to light up by swapping
+every sash window for a lit one; the sashes have gone, and what comes on now is
+the warm light in the doorways of the units that are still open — brightest at
+the threshold, which is the way light falls out of a door. Nothing at two in the
+afternoon, the same as the streetlights.
 
 Six people work out there and are not your colleagues, which the profile panel is
 careful about. Pat has run the launderette for nineteen years and knows more

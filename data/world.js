@@ -331,14 +331,25 @@ const FURN = {
      doors and the `high` test in R's object pass. Before those, the whole
      frontage was this emoji and it could hang wherever it liked. */
   shop: { mount: 'wall', size: 27, high: 1.78 },
-  /* THE GLASS. Not the shop — the shop is the sign over the door and it keeps
-     the emoji that says which shop it is, because a sash window does not tell
-     you whether you are outside a launderette or a bookmaker's. This is the
-     frontage either side of it: a window in the wall, and the same window lit
-     from inside once the streetlights come on, which R.spriteOf() swaps in.
-     Walk back up the High Street at half four in December and the parade is
-     lit. Scenery, so it never blocks the pavement. */
-  shopwin: { mount: 'wall', size: 20, sprite: 'shop.window', lit: 'shop.window.lit' },
+  /* THE GLASS, and it is the office's MIRROR. Which sounds like a joke and is
+     not: the kit's `wall.mirror` is a dark frame round a pale pane with a
+     diagonal reflection across it, landscape rather than portrait, and that is
+     a shop window. What was here before was `shop.window`, which is a sash — a
+     tall thing in a white frame with glazing bars, and it read as the front of
+     a terraced house every time. A parade at street level is plate glass.
+     Nothing about the sheets changed to do this: the mirror was already packed
+     in world.png and already licensed, and this names it.
+     Not the shop — the shop is the sign over the door, and a pane of glass does
+     not tell you whether you are outside a launderette or a bookmaker's. This
+     is the frontage either side of it. Scenery, so it never blocks the
+     pavement, and hung a little lower than picture height so the glass and the
+     door read as one shopfront rather than as two unrelated things.
+     The sash is not gone from the game — `shop.window` and its lit and dark
+     variants are still in the atlas, and the lit one is what the parade used
+     to come on with at dusk. The parade still comes on: it is the light out of
+     the open doorways now, which is warmer, is in the right place, and is
+     drawn by R.thresholds() over the floor it already borrows. */
+  shopwin: { mount: 'wall', size: 20, sprite: 'wall.mirror', high: 0.82 },
   /* Redeclared from the wall-mounted block at the top of this table, and only
      to add a footprint: a sign with a wall behind it hangs on the wall, and a
      sign with nothing behind it — a bus stop, a car park sign — stands on a

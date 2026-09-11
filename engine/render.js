@@ -1062,40 +1062,44 @@ const R = {
 
      Before R.doorways(), which lays the jambs, the threshold and the leaf over
      the top of it. */
+  /* THE GAP BETWEEN THE JAMBS, in world pixels, for a doorway cut into wall
+     mass — or null for anything else. Two passes want it, and they must not
+     work it out separately: R.thresholds() paints the room behind it and
+     R.lamps() puts the light on in it, and a rect computed twice is a rect
+     that will disagree with itself one day.
+     A two-tile opening is ONE opening, so the jamb between its halves is not
+     there. That is the same question R.doorways() asks of its own reveal, and
+     it has to get the same answer or the borrowed floor stops half a jamb short
+     of the wall it is set into. */
+  doorOpening(d, list) {
+    if (!World.solid[d.y] || !World.solid[d.y][d.x]) return null;
+    const J = TILE * (9 / this.REF_TILE);
+    const px = d.x * TILE, py = d.y * TILE;
+    let x = px, y = py, w = TILE, h = TILE;
+    if (d.axis === 'h') {
+      if (!list.some(o => o.y === d.y && o.x === d.x - 1)) { x += J; w -= J; }
+      if (!list.some(o => o.y === d.y && o.x === d.x + 1)) w -= J;
+    } else {
+      if (!list.some(o => o.x === d.x && o.y === d.y - 1)) { y += J; h -= J; }
+      if (!list.some(o => o.x === d.x && o.y === d.y + 1)) h -= J;
+    }
+    return (w < 1 || h < 1) ? null : { x, y, w, h, px, py, J };
+  },
   thresholds(x0, y0, x1, y1) {
     const list = World.doorways; if (!list) return;
     const c = this.ctx;
-    /* The jamb, in real tiles: R.doorways() counts it in the 44px units it was
-       drawn in, and this is the same number seen from outside that wrapper. */
-    const J = TILE * (9 / this.REF_TILE);
     for (const d of list) {
       if (d.x < x0 - 1 || d.x > x1 + 1 || d.y < y0 - 1 || d.y > y1 + 1) continue;
       /* Only where the tile really is wall. An opening in a room already has a
          floor and does not want a second one laid over it. */
-      if (!World.solid[d.y] || !World.solid[d.y][d.x]) continue;
+      const op = this.doorOpening(d, list); if (!op) continue;
       /* A room to show, or nothing behind it. A shut door still gets a recess —
          the reveal it stands in is what makes it a door SET INTO a wall rather
          than a door painted on one — it just has no floor to show through,
          because there is no floor: nobody goes into the cash and carry. */
       const room = d.into && ZONES[d.into] ? d.into : null;
-      /* A two-tile opening is ONE opening, so the jamb between its halves is
-         not there — the same question R.doorways() asks of its own reveal, and
-         it has to be the same answer or the borrowed floor stops half a jamb
-         short of the wall it is set into. */
-      const wOpen = list.some(o => o.y === d.y && o.x === d.x - 1);
-      const eOpen = list.some(o => o.y === d.y && o.x === d.x + 1);
-      const nOpen = list.some(o => o.x === d.x && o.y === d.y - 1);
-      const sOpen = list.some(o => o.x === d.x && o.y === d.y + 1);
-      const px = d.x * TILE, py = d.y * TILE;
-      let ox = px, oy = py, ow = TILE, oh = TILE;
-      if (d.axis === 'h') {
-        if (!wOpen) { ox += J; ow -= J; }
-        if (!eOpen) ow -= J;
-      } else {
-        if (!nOpen) { oy += J; oh -= J; }
-        if (!sOpen) oh -= J;
-      }
-      if (ow < 1 || oh < 1) continue;
+      const px = op.px, py = op.py, J = op.J;
+      const ox = op.x, oy = op.y, ow = op.w, oh = op.h;
       c.save();
       c.beginPath(); c.rect(ox, oy, ow, oh); c.clip();
       if (room) c.drawImage(this.floorTile(room, (d.x + d.y) & 1), px, py, TILE, TILE);
@@ -1132,10 +1136,24 @@ const R = {
       c.restore();
     }
   },
-  /* Doorways, built into the wall rather than floating in the gap. The tile
-     stays walkable — nothing here touches World.solid — so a doorway is purely
-     what it looks like: two jambs carrying the wall into the opening, a
-     threshold strip across the floor, and a leaf on the hinge side. */
+  /* THE DRAWN DOORWAY, which is what an opening gets where the kit has no door
+     for it: two jambs carrying the wall into the opening, a threshold strip
+     across the floor, and a leaf on the hinge side. Nothing here touches
+     World.solid — a doorway is purely what it looks like.
+
+     WHAT IT NO LONGER DOES is draw any of that behind a door the kit HAS art
+     for. It used to draw all of it and then let R.doorLeaves() put the good
+     leaf on top, which came out as exactly what it was: a crude open doorway
+     with a nicely drawn ajar door superimposed on it, the crude one showing
+     round the edges. The pale threshold bar across the middle was the worst of
+     it and it is gone from every opening with a real door in it.
+
+     The jambs survive on a walkable opening, because there they are doing
+     structural work: the tile is FLOOR, the wall run has a tile-wide hole in
+     it, and the jambs are what carry the wall in far enough for the hole to
+     read as a doorway. On a door set into wall MASS — every shopfront, and the
+     front doors of this building — the wall is already there and they were
+     drawing a second one. */
   doorways(x0, y0, x1, y1) {
     this.legacy(TILE => {
       const list = World.doorways; if (!list) return;
@@ -1143,6 +1161,16 @@ const R = {
       for (let i = 0; i < list.length; i++) {
         const d = list[i];
         if (d.x < x0 - 1 || d.x > x1 + 1 || d.y < y0 - 1 || d.y > y1 + 1) continue;
+        const kit = this.kitDoor(d);
+        /* A door in wall MASS that the kit draws needs nothing at all from
+           here: the sprite is the whole doorway and R.thresholds() has already
+           put the room behind it.
+           The test is the TILE and not `d.solid`. Those are two different
+           facts wearing one word: `d.solid` says the door was declared a shut
+           one, and every shopfront on the parade is declared open while
+           standing in a foot of brick. Asking the wrong one drew the jambs
+           back onto all fourteen of them. */
+        if (kit && World.solid[d.y] && World.solid[d.y][d.x]) continue;
         const z = World.zone[d.y] && World.zone[d.y][d.x];
         const wall = (ZONES[z] && ZONES[z].wall) || '#1a212e';
         const px = d.x * TILE, py = d.y * TILE;
@@ -1176,8 +1204,11 @@ const R = {
             c.fillStyle = 'rgba(0,0,0,.45)';
             if (!wOpen) c.fillRect(px + JAMB - 2, py, 2, TILE);
             if (!eOpen) c.fillRect(px + TILE - JAMB, py, 2, TILE);
-            if (!d.solid) {
-              /* Threshold: a strip of a different material underfoot. */
+            if (!d.solid && !kit) {
+              /* Threshold: a strip of a different material underfoot. Only
+                 where no real door stands in the opening — beside one it is a
+                 pale bar across the middle of a drawn door, and it was the
+                 single most artificial mark on the whole parade. */
               c.fillStyle = 'rgba(140,150,170,.16)';
               c.fillRect(px + JAMB, py + TILE / 2 - 4, TILE - JAMB * 2, 8);
               c.fillStyle = 'rgba(0,0,0,.25)';
@@ -1191,7 +1222,7 @@ const R = {
             c.fillStyle = 'rgba(0,0,0,.45)';
             c.fillRect(px, py + JAMB - 2, TILE, 2);
             c.fillRect(px, py + TILE - JAMB, TILE, 2);
-            if (!d.solid) {
+            if (!d.solid && !kit) {
               c.fillStyle = 'rgba(140,150,170,.16)';
               c.fillRect(px + TILE / 2 - 4, py + JAMB, 8, TILE - JAMB * 2);
               c.fillStyle = 'rgba(0,0,0,.25)';
@@ -1210,8 +1241,8 @@ const R = {
         /* A vertical opening you can walk through gets no leaf at all (see
            doorLeaves); one set into a solid wall still needs something to show
            for itself, so it keeps the drawn leaf. */
-        const kitLeaf = Tiles.has(d.locked ? 'door.shut.locked' : 'door.open')
-          && (d.axis === 'h' || !d.solid);
+        /* One question, asked once, in one place — see R.kitDoor(). */
+        const kitLeaf = !!kit;
         const leaf = (lx, ly, lw, lh, vert) => {
           /* `vert` says which way the leaf runs. Hinges go at the near end of its
              long edge and the handle at the far end, so a shut door and an open
@@ -1280,28 +1311,45 @@ const R = {
       }
     });
   },
+  /* WHICH OF THE KIT'S DOORS THIS OPENING WEARS, or null for the ones it has
+     no art for. Asked in one place because two places used to ask it slightly
+     differently and disagree: R.doorways() decided whether to draw its own leaf
+     from one condition and R.doorLeaves() decided what to blit from another, so
+     a door set into a wall you walk through SIDEWAYS got neither.
+
+     Three states, and the kit has exactly three: shut, ajar, and the red one
+     that is shut and locked. All three are the same leaf seen swung towards
+     you — the difference is how far, and what colour — which is why a shut shop
+     and an open one read as different doors and not as the same sticker twice.
+
+     Nothing for an opening in a vertical wall: the kit draws a door face-on,
+     which is what you see of a wall running left to right, and turning one on
+     its side reads as decking. Those keep the drawn doorway below. */
+  kitDoor(d) {
+    if (!Tiles.ready || d.axis !== 'h') return null;
+    const n = d.locked ? 'door.shut.locked' : d.solid ? 'door.shut' : 'door.open';
+    return Tiles.has(n) ? n : null;
+  },
+  /* WHICH JAMB IT IS HUNG ON. The far half of a two-tile opening is the other
+     leaf of a pair, so it is hinged on the other side and mirrored — that one
+     is not a choice. The rest is: fourteen frontages all hinged the same way is
+     fourteen copies of one sticker, and a real parade is not. Seeded off the
+     tile, so a door does not change which way it opens when the camera moves. */
+  doorFlip(d, list) {
+    if (list.some(o => o.y === d.y && o.x === d.x - 1 && o.axis === 'h')) return true;
+    if (list.some(o => o.y === d.y && o.x === d.x + 1 && o.axis === 'h')) return false;
+    return ((d.x * 7 + d.y * 13) & 1) === 1;
+  },
   /* The kit's door leaves, drawn at true scale — outside legacy(), because a
-     32px sprite scaled by 32/44 is not pixel art any more. Only openings in a
-     horizontal wall: the kit draws a door face-on, which is what you see of a
-     wall running left to right, and R.doorways() still draws the rest. */
+     32px sprite scaled by 32/44 is not pixel art any more. */
   doorLeaves(x0, y0, x1, y1) {
     const list = World.doorways; if (!list || !Tiles.ready) return;
     const c = this.ctx;
     for (const d of list) {
       if (d.x < x0 - 1 || d.x > x1 + 1 || d.y < y0 - 1 || d.y > y1 + 1) continue;
-      const n = d.locked ? 'door.shut.locked' : d.solid ? 'door.shut' : 'door.open';
-      if (!Tiles.has(n)) continue;
-      /* The far half of a two-tile opening is the other leaf of a pair, so it
-         is hinged on the other jamb and mirrored. Detected by asking whether
-         the tile to the west is also part of this opening. */
-      /* Nothing for a walkable opening in a vertical wall. The kit draws doors
-         face-on and turning one on its side reads as decking, not as a door;
-         an opening you walk through sideways is a gap with the leaf swung back
-         out of sight, and jambs and a threshold say that on their own. */
-      if (d.axis !== 'h') continue;
-      const pair = list.some(o => o.y === d.y && o.x === d.x - 1 && o.axis === 'h');
+      const n = this.kitDoor(d); if (!n) continue;
       /* Hung in the wall band, standing on the threshold. */
-      Tiles.draw(c, n, (d.x + .5) * TILE, (d.y + .5) * TILE - TILE * .18, pair);
+      Tiles.draw(c, n, (d.x + .5) * TILE, (d.y + .5) * TILE - TILE * .18, this.doorFlip(d, list));
     }
   },
   /* Strip lighting: the only thing breaking up an acre of identical carpet.
@@ -1547,6 +1595,31 @@ const R = {
       c.fillStyle = '#ffe6b0';
       c.beginPath(); c.arc(fx, (o.y - 1.7) * TILE, 6, 0, 6.3); c.fill();
     });
+    /* THE SHOPS, and this is what lights the parade. It used to light up by
+       swapping every sash window for a lit one; the sashes have gone — a sash
+       is a house window and a parade is plate glass, see FURN.shopwin — and
+       what comes on now is the light in the doorways of the units that have a
+       floor behind them. Brightest at the threshold and falling away towards
+       the lintel, which is the way light comes OUT of a door rather than the
+       way shadow goes into one.
+       Here rather than in R.thresholds() for the reason at the top of this
+       function: down there it would be painted under the grade and the night
+       would crush it. Light is put back, not left out. */
+    const doors = World.doorways || [];
+    for (const d of doors) {
+      if (!d.into || !ZONES[d.into]) continue;
+      if (d.x < x0 - 2 || d.x > x1 + 2 || d.y < y0 - 2 || d.y > y1 + 2) continue;
+      const op = this.doorOpening(d, doors); if (!op) continue;
+      const warm = c.createLinearGradient(0, op.py, 0, op.py + TILE);
+      warm.addColorStop(0, 'rgba(255,206,140,0)');
+      warm.addColorStop(.4, 'rgba(255,206,140,.22)');
+      warm.addColorStop(1, 'rgba(255,220,164,.62)');
+      c.globalAlpha = night;
+      c.fillStyle = warm;
+      c.fillRect(op.x, op.y, op.w, op.h);
+    }
+    c.globalAlpha = 1;
+
     /* Headlights. Only on something that is being driven — a car parked in a
        bay with its lights on all night is a flat battery, and the pool car has
        enough wrong with it. */

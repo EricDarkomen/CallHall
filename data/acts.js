@@ -1133,7 +1133,7 @@ const Acts = {
   },
   shopWindow(o) {
     insp('\ud83e\ude9f', o.name, 'Shopfront', [
-      'A shop window with a sash frame that predates every business that has ever traded behind it.',
+      'A single sheet of plate glass in a frame that predates every business that has ever traded behind it. Cleaned on the outside by a man with a ladder on a Thursday and on the inside by nobody.',
       'There is a sticker in the corner from an alarm company, a faded card for a taxi firm, and a smaller one for a locksmith who is either very good or has been putting cards up for twenty years.']);
   },
   cones() {
