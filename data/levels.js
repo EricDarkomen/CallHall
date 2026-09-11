@@ -1195,19 +1195,26 @@ const LEVELS = {
        Positions are in TILES and may be fractional, like `entries` above, and
        for the same reason: this file is data and loads before engine/core.js
        declares TILE. A bay is two tiles wide, so a car centred on a bay is
-       centred on a whole number. */
+       centred on a whole number.
+
+       DOWN THE BAY is the other half of that, and it moved when the vehicles
+       did. A bay is three tiles deep and a car used to be a tile and three
+       quarters long, so where it sat in one barely mattered; at full size it
+       very nearly fills one, and the same numbers put its nose in the car park
+       wall. These are the middle of the bay rather than the head of it, which
+       is where a parked car is. */
     cars: [
-      { x: 8, y: 4.1, face: 'n', model: 'hatch', name: 'A hatchback', use: 'someHatchback' },
-      { x: 12, y: 4.1, face: 'n', model: 'estate', name: 'An estate car with a roof box', use: 'roofBox' },
-      { x: 16, y: 4.1, face: 'n', model: 'pool', name: 'The pool car', use: 'poolCar', drive: true },
+      { x: 8, y: 4.5, face: 'n', model: 'hatch', name: 'A hatchback', use: 'someHatchback' },
+      { x: 12, y: 4.5, face: 'n', model: 'estate', name: 'An estate car with a roof box', use: 'roofBox' },
+      { x: 16, y: 4.5, face: 'n', model: 'pool', name: 'The pool car', use: 'poolCar', drive: true },
       /* x=18 is Nigel's, and it is empty. That is the joke and it only works
          if nothing is parked in it. */
-      { x: 26, y: 4.1, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      { x: 26, y: 4.5, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
       /* On the line, across two of them, at the one time of day when the car
          park is full. Nobody has ever seen it arrive. */
-      { x: 11, y: 11, face: 's', model: 'van', name: 'The contractor’s van', use: 'contractorVan' },
-      { x: 20, y: 11, face: 's', model: 'saloon', name: 'A green saloon', use: 'someoneElsesCar' },
-      { x: 24, y: 11, face: 's', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      { x: 11, y: 11.35, face: 's', model: 'van', name: 'The contractor’s van', use: 'contractorVan' },
+      { x: 20, y: 11.5, face: 's', model: 'saloon', name: 'A green saloon', use: 'someoneElsesCar' },
+      { x: 24, y: 11.5, face: 's', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
       /* Two wheels up on the pavement outside the nail bar, which is why the
          lane past it is clear and the footway is not. Deliberate, on both
          counts: it keeps the traffic moving, and it is a more accurate
@@ -1218,10 +1225,10 @@ const LEVELS = {
       /* ---- the retail park ----
          Four in the bays and one across two of them, because that is a retail
          park car park at any hour of any day. */
-      { x: 22, y: 44.2, face: 'n', model: 'hatch', body: '#2f4a3a', roof: '#25392d', name: 'A green hatchback', use: 'someoneElsesCar' },
-      { x: 28, y: 44.2, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
-      { x: 42, y: 44.2, face: 'n', model: 'estate', body: '#6d6f74', roof: '#54565a', name: 'A grey estate', use: 'someoneElsesCar' },
-      { x: 48, y: 44.2, face: 'n', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'someoneElsesCar' },
+      { x: 22, y: 44.5, face: 'n', model: 'hatch', body: '#2f4a3a', roof: '#25392d', name: 'A green hatchback', use: 'someoneElsesCar' },
+      { x: 28, y: 44.5, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      { x: 42, y: 44.5, face: 'n', model: 'estate', body: '#6d6f74', roof: '#54565a', name: 'A grey estate', use: 'someoneElsesCar' },
+      { x: 48, y: 44.5, face: 'n', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'someoneElsesCar' },
       { x: 48, y: 47.6, face: 'w', model: 'van', name: 'A van, waiting', use: 'waitingVan' },
 
       /* ---- TRAFFIC ----
@@ -1449,15 +1456,23 @@ const LEVELS = {
       /* ---- THE HIGH STREET ----
          Row 14, backing onto the parade: the one long wall in this level that
          the kit's shopfront art is drawn to be seen against. */
+      /* FOUR AWNINGS ON THE WHOLE MAP, and there used to be fourteen — one on
+         very nearly every frontage, which is not a street, it is a pattern.
+         They are also opaque: an awning REPLACES the frontage's emoji, so
+         fourteen of them meant fourteen units identified by nothing but the
+         colour of their canopy. These four are the ones that would actually
+         have one — a nail bar, a charity shop, a pub and a takeaway — and
+         everything else has its sign back. A tyre bay has a roller shutter, a
+         working men's club has a door, and a retail shed has a fascia the size
+         of a bus. None of them has a canopy. */
       A({ x: 46, y: 14, e: '💅', name: 'Nailed It', kind: 'shop', solid: true, use: 'nailedIt',
         furn: { sprite: 'shop.awning' } });
       A({ x: 48, y: 14, e: '🪧', name: 'The sign above Nailed It', kind: 'shopsign', solid: true, use: 'shopSign' });
-      A({ x: 54, y: 14, e: '🎰', name: 'Bellhaven Bookmakers', kind: 'shop', solid: true, use: 'bookies',
+      A({ x: 54, y: 14, e: '🎰', name: 'Bellhaven Bookmakers', kind: 'shop', solid: true, use: 'bookies' });
+      A({ x: 60, y: 14, e: '🧦', name: 'The charity shop', kind: 'shop', solid: true, use: 'charityShop',
         furn: { sprite: 'shop.awning.amber' } });
-      A({ x: 60, y: 14, e: '🧦', name: 'The charity shop', kind: 'shop', solid: true, use: 'charityShop' });
       A({ x: 66, y: 14, e: '💨', name: 'Vapour Trail', kind: 'shop', solid: true, use: 'vapeShop' });
-      A({ x: 72, y: 14, e: '🚧', name: 'The unit that is always being refitted', kind: 'shop', solid: true, use: 'refit',
-        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 72, y: 14, e: '🚧', name: 'The unit that is always being refitted', kind: 'shop', solid: true, use: 'refit' });
       A({ x: 78, y: 14, e: '🪧', name: 'TO LET', kind: 'shopsign', solid: true, use: 'toLet' });
       /* THE SKIP, at the KERB, and the row it is on is the whole of the fix.
          It stood at 76,14 — the back half of the footway, against the
@@ -1506,8 +1521,7 @@ const LEVELS = {
       /* ---- FENN STREET ----
          The units along the back of the block, on the one other north wall out
          here — so these are shopfronts that actually draw as shopfronts. */
-      A({ x: 20, y: 32, e: '🛞', name: 'Bellhaven Tyre & Exhaust', kind: 'shop', solid: true, use: 'tyres',
-        furn: { sprite: 'shop.awning.amber' } });
+      A({ x: 20, y: 32, e: '🛞', name: 'Bellhaven Tyre & Exhaust', kind: 'shop', solid: true, use: 'tyres' });
       A({ x: 30, y: 32, e: '🏋️', name: 'Unit 6', kind: 'shop', solid: true, use: 'unitSix' });
       /* The second `fromCar` thing on this map, and the one FURN.drivethru's
          note said would come: a car wash is not a shop you walk into, it is a
@@ -1515,7 +1529,7 @@ const LEVELS = {
          you; from the pool car it is a transaction. Furnished rather than
          given a kind of its own — see Object.assign in World.build. */
       A({ x: 40, y: 32, e: '🧼', name: 'The hand car wash', kind: 'shop', solid: true, use: 'carWash',
-        furn: { sprite: 'shop.awning.green', fromCar: true } });
+        furn: { fromCar: true } });
       A({ x: 50, y: 32, e: '🥪', name: 'The sandwich van’s pitch', kind: 'sign', solid: true, use: 'sandwichVan' });
       A({ x: 16, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 36, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
@@ -1537,15 +1551,14 @@ const LEVELS = {
          Past the last of the shops the parade keeps going, because a high
          street does. Same north wall the rest of it hangs on. */
       A({ x: 86, y: 14, e: '🍺', name: 'The Bellhaven Arms', kind: 'shop', solid: true, use: 'thePub',
-        furn: { sprite: 'shop.awning.amber' } });
+        furn: { sprite: 'shop.awning' } });
       A({ x: 88, y: 14, e: '🪧', name: 'The pub sign', kind: 'shopsign', solid: true, use: 'pubSign' });
       A({ x: 92, y: 14, e: '🧺', name: 'The launderette', kind: 'shop', solid: true, use: 'launderette' });
       /* THE OTHER KIND OF DOOR ON A HIGH STREET, and there is one on every
          parade in the country: not a shop at all, just a door, between two
          shops, with six bells beside it and no sign saying what it is. */
       A({ x: 96, y: 14, e: '\ud83d\udeaa', name: 'The door beside the launderette', kind: 'shop', solid: true, use: 'flatsDoorway' });
-      A({ x: 98, y: 14, e: '📮', name: 'The post office', kind: 'shop', solid: true, use: 'postOffice',
-        furn: { sprite: 'shop.awning' } });
+      A({ x: 98, y: 14, e: '📮', name: 'The post office', kind: 'shop', solid: true, use: 'postOffice' });
       A({ x: 104, y: 14, e: '🌯', name: 'Bellhaven Kebab', kind: 'shop', solid: true, use: 'kebab',
         furn: { sprite: 'shop.awning.green' } });
       A({ x: 109, y: 14, e: '📞', name: 'The phone box', kind: 'booth', solid: true, use: 'phoneBox' });
@@ -1560,11 +1573,9 @@ const LEVELS = {
          The second block's back, which is where its bins and its fire doors
          are, and — because the rent is lower on a back street — three of the
          four businesses on it. */
-      A({ x: 72, y: 32, e: '🎱', name: 'The Working Men’s Club', kind: 'shop', solid: true, use: 'club',
-        furn: { sprite: 'shop.awning' } });
+      A({ x: 72, y: 32, e: '🎱', name: 'The Working Men’s Club', kind: 'shop', solid: true, use: 'club' });
       A({ x: 82, y: 32, e: '🌞', name: 'Sunseekers', kind: 'shop', solid: true, use: 'tanning' });
-      A({ x: 92, y: 32, e: '📦', name: 'The cash and carry', kind: 'shop', solid: true, use: 'cashAndCarry',
-        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 92, y: 32, e: '📦', name: 'The cash and carry', kind: 'shop', solid: true, use: 'cashAndCarry' });
       A({ x: 78, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 96, y: 33, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 86, y: 33, e: '🗑️', name: 'Bin, Fenn Street', kind: 'bin', solid: false, use: 'streetBin',
@@ -1589,15 +1600,11 @@ const LEVELS = {
          here is a shed with a sign on it, and the railway is behind the fence
          on the other side. The parade backs onto the retail park's own wall,
          which is the one long north wall the shopfront art has down here. */
-      A({ x: 24, y: 50, e: '🛒', name: 'The superstore', kind: 'shop', solid: true, use: 'superstore',
-        furn: { sprite: 'shop.awning' } });
-      A({ x: 34, y: 50, e: '🔩', name: 'Screw & Fix', kind: 'shop', solid: true, use: 'screwfix',
-        furn: { sprite: 'shop.awning.amber' } });
-      A({ x: 44, y: 50, e: '🐕', name: 'The pet superstore', kind: 'shop', solid: true, use: 'petStore',
-        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 24, y: 50, e: '🛒', name: 'The superstore', kind: 'shop', solid: true, use: 'superstore' });
+      A({ x: 34, y: 50, e: '🔩', name: 'Screw & Fix', kind: 'shop', solid: true, use: 'screwfix' });
+      A({ x: 44, y: 50, e: '🐕', name: 'The pet superstore', kind: 'shop', solid: true, use: 'petStore' });
       A({ x: 52, y: 50, e: '🪧', name: 'BELLHAVEN RETAIL PARK', kind: 'shopsign', solid: true, use: 'retailSign' });
-      A({ x: 74, y: 50, e: '🧶', name: 'The carpet warehouse', kind: 'shop', solid: true, use: 'carpets',
-        furn: { sprite: 'shop.awning' } });
+      A({ x: 74, y: 50, e: '🧶', name: 'The carpet warehouse', kind: 'shop', solid: true, use: 'carpets' });
       /* The one thing out here you are meant to reach WITHOUT getting out —
          see `fromCar` in data/world.js and Interact.scan. Press E at the
          window from behind the wheel and it serves you; walk up to it on foot
@@ -1691,9 +1698,16 @@ const LEVELS = {
       A({ x: 44, y: 49, e: '🚪', name: 'The pet superstore', kind: 'exit', solid: true, use: 'petStore' });
       A({ x: 74, y: 49, e: '🚪', name: 'The carpet warehouse', kind: 'exit', solid: true, use: 'carpets' });
 
-      /* THE GLASS, one pane beside each frontage. Scenery: it is the
-         window of the unit whose sign is next to it, and after dark it is
-         the only thing on this parade that is on. */
+      /* THE GLASS, one pane beside each frontage. Scenery: it is the window
+         of the unit whose sign is next to it.
+         PLATE glass now, which is what a shop has, rather than the sash it was
+         drawn with until this — see FURN.shopwin. A sash is a house window and
+         it read as one every time: the parade looked like a terrace somebody
+         had cut doors into. It was tried on the course above as the flats over
+         the shops, which is where a sash belongs, and it does not fit: the
+         drawn wall is two courses tall and a sash is nearly all of it, so the
+         parade came out as a wall of windows with a shopfront squeezed under
+         them. One storey of glass, at street level, where the shop is. */
       A({ x: 48, y: 14, e: '\ud83e\ude9f', name: 'The window of Nailed It', kind: 'shopwin', solid: false, use: 'shopWindow' });
       A({ x: 56, y: 14, e: '\ud83e\ude9f', name: 'The window of Bellhaven Bookmakers', kind: 'shopwin', solid: false, use: 'shopWindow' });
       A({ x: 62, y: 14, e: '\ud83e\ude9f', name: 'The window of The charity shop', kind: 'shopwin', solid: false, use: 'shopWindow' });

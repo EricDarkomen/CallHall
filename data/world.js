@@ -172,21 +172,21 @@ const SURFACES = {
 const CARS = {
   /* The pool car. The only one in the county with a magnetic door sign that
      has slid, and the only one in this car park you are allowed to move. */
-  pool:  { len: 56, wid: 27, top: 232, acc: 150, grip: 5.5, turn: 2.5, body: '#b9bec4', roof: '#8d949c', trim: '#33383e', sign: true },
-  hatch: { len: 52, wid: 26, top: 265, acc: 190, grip: 6.2, turn: 2.9, body: '#7d2f34', roof: '#5e2327', trim: '#2b2f33' },
-  estate:{ len: 62, wid: 28, top: 245, acc: 160, grip: 5.2, turn: 2.3, body: '#2f4a6b', roof: '#243a54', trim: '#2b2f33' },
-  van:   { len: 70, wid: 30, top: 210, acc: 120, grip: 4.4, turn: 2.0, body: '#d8d5cc', roof: '#c2bfb5', trim: '#3a3a38', shape: 'van' },
+  pool:  { len: 84, wid: 35, top: 232, acc: 150, grip: 5.5, turn: 2.5, body: '#b9bec4', roof: '#8d949c', trim: '#33383e', sign: true },
+  hatch: { len: 78, wid: 34, top: 265, acc: 190, grip: 6.2, turn: 2.9, body: '#7d2f34', roof: '#5e2327', trim: '#2b2f33' },
+  estate:{ len: 93, wid: 36, top: 245, acc: 160, grip: 5.2, turn: 2.3, body: '#2f4a6b', roof: '#243a54', trim: '#2b2f33' },
+  van:   { len: 105, wid: 39, top: 210, acc: 120, grip: 4.4, turn: 2.0, body: '#d8d5cc', roof: '#c2bfb5', trim: '#3a3a38', shape: 'van' },
   /* Traffic. Ordinary cars in ordinary colours, so that what goes past the
      Greggs is not obviously the same car eight times. */
-  saloon:{ len: 56, wid: 27, top: 220, acc: 150, grip: 5.5, turn: 2.4, body: '#3f5a44', roof: '#31462f', trim: '#2b2f33' },
-  taxi:  { len: 56, wid: 27, top: 230, acc: 165, grip: 5.5, turn: 2.5, body: '#c9a227', roof: '#a8871f', trim: '#2b2f33', roofSign: true },
-  small: { len: 46, wid: 25, top: 250, acc: 200, grip: 6.5, turn: 3.1, body: '#5a5f8a', roof: '#464a6b', trim: '#2b2f33' },
+  saloon:{ len: 84, wid: 35, top: 220, acc: 150, grip: 5.5, turn: 2.4, body: '#3f5a44', roof: '#31462f', trim: '#2b2f33' },
+  taxi:  { len: 84, wid: 35, top: 230, acc: 165, grip: 5.5, turn: 2.5, body: '#c9a227', roof: '#a8871f', trim: '#2b2f33', roofSign: true },
+  small: { len: 69, wid: 33, top: 250, acc: 200, grip: 6.5, turn: 3.1, body: '#5a5f8a', roof: '#464a6b', trim: '#2b2f33' },
   /* The 41A. Long enough that it has to slow right down for a corner and take
      the whole width of the junction to get round one, which is the point of
      having one on the network at all — and it does not stop at the bus stop,
      which is the thing the bus stop has said about the 41A since long before
      there was a road for it to not stop on. */
-  bus:   { len: 96, wid: 32, top: 175, acc: 95, grip: 3.6, turn: 1.9, body: '#8d3a3f', roof: '#f0ece2', trim: '#2b2f33', shape: 'bus' }
+  bus:   { len: 144, wid: 42, top: 175, acc: 95, grip: 3.6, turn: 1.9, body: '#8d3a3f', roof: '#f0ece2', trim: '#2b2f33', shape: 'bus' }
 };
 
 /* How each kind of object is furnished, keyed by `kind`.
@@ -331,14 +331,25 @@ const FURN = {
      doors and the `high` test in R's object pass. Before those, the whole
      frontage was this emoji and it could hang wherever it liked. */
   shop: { mount: 'wall', size: 27, high: 1.78 },
-  /* THE GLASS. Not the shop — the shop is the sign over the door and it keeps
-     the emoji that says which shop it is, because a sash window does not tell
-     you whether you are outside a launderette or a bookmaker's. This is the
-     frontage either side of it: a window in the wall, and the same window lit
-     from inside once the streetlights come on, which R.spriteOf() swaps in.
-     Walk back up the High Street at half four in December and the parade is
-     lit. Scenery, so it never blocks the pavement. */
-  shopwin: { mount: 'wall', size: 20, sprite: 'shop.window', lit: 'shop.window.lit' },
+  /* THE GLASS, and it is the office's MIRROR. Which sounds like a joke and is
+     not: the kit's `wall.mirror` is a dark frame round a pale pane with a
+     diagonal reflection across it, landscape rather than portrait, and that is
+     a shop window. What was here before was `shop.window`, which is a sash — a
+     tall thing in a white frame with glazing bars, and it read as the front of
+     a terraced house every time. A parade at street level is plate glass.
+     Nothing about the sheets changed to do this: the mirror was already packed
+     in world.png and already licensed, and this names it.
+     Not the shop — the shop is the sign over the door, and a pane of glass does
+     not tell you whether you are outside a launderette or a bookmaker's. This
+     is the frontage either side of it. Scenery, so it never blocks the
+     pavement, and hung a little lower than picture height so the glass and the
+     door read as one shopfront rather than as two unrelated things.
+     The sash is not gone from the game — `shop.window` and its lit and dark
+     variants are still in the atlas, and the lit one is what the parade used
+     to come on with at dusk. The parade still comes on: it is the light out of
+     the open doorways now, which is warmer, is in the right place, and is
+     drawn by R.thresholds() over the floor it already borrows. */
+  shopwin: { mount: 'wall', size: 20, sprite: 'wall.mirror', high: 0.82 },
   /* Redeclared from the wall-mounted block at the top of this table, and only
      to add a footprint: a sign with a wall behind it hangs on the wall, and a
      sign with nothing behind it — a bus stop, a car park sign — stands on a
