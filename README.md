@@ -28,7 +28,7 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 | Drive      | `W` go · `S` brake, then reverse · `A D` steer · `H` horn | **two sticks**: left steers, right is the throttle |
 | Get out    | `E`                             | `OUT`                          |
 | Take it out | `G` · `Q` swaps · `R` reloads   | grab the green stick           |
-| Aim & fire | the mouse and its button, or the arrows | **two sticks**: left walks, right aims and fires |
+| Aim, fire, swing | the mouse and its button, or the arrows | **two sticks**: left walks, right aims and fires |
 | Dialogue   | `Space`, `1`–`9` to choose      | tap the box, tap a reply       |
 | Panels     | `J I K C M P L`, `Esc` for menu | `☰`                            |
 | Save/load  | `F5` / `F9`                     | `☰` · Menu                     |
@@ -51,18 +51,20 @@ The button you have been pressing all along stays exactly where it is and says
 
 Find the away-day box and a **third stick** appears in that same corner, in
 green, on exactly the throttle's terms: only while there is something in your
-pocket to fire, never at the same time as the throttle, and gone again the
-moment you get into a car. Push it and you aim; push it past halfway and you
-fire where you are pushing. Let go and the thing goes back in your pocket a
-couple of seconds later, because a phone has no spare corner for a holster
-button and does not need one.
+pocket, never at the same time as the throttle, and gone again the moment you
+get into a car. Push it and you aim; push it past halfway and it goes off —
+which is a dart, a band, a jet of water, or a foam sword through ninety degrees
+of somebody's morning, depending on what is in your hand. Let go and the thing
+goes back in your pocket a couple of seconds later, because a phone has no
+spare corner for a holster button and does not need one.
 
 On a keyboard the arrows become the right hand while something is out — `W A S
 D` walks you about and the arrows aim and fire, which is how Robotron did it in
 1982 and is still the only way two directions fit on one keyboard. The mouse
 does the same job more directly: where the pointer is is where you are aiming,
-and the button is the trigger. Nobody has to choose: whichever of the three
-moved last is the one the game believes.
+and the button is the trigger. Nobody has to choose: the stick is asked first,
+then the arrows, then the mouse, so picking one up never means putting another
+down.
 
 The game saves itself, and detects touch devices to show the right controls and
 the right instructions.
@@ -190,14 +192,16 @@ one did.
 The game is called Call of Duty: Customer Service, and for eleven months the only
 thing in it you could point at anybody was a policy. There is a box in the
 archive with AWAY DAY 2019 on the side in marker, under a laminated sheet of the
-values, and it has three things in it: a foam dart blaster with six darts, a
-water pistol with the price sticker still on the tank, and a thing somebody made
-out of a post tray and four elastic bands, which is on the evidence the only
-object in this building anyone has ever built for pleasure. Nobody has opened it
-since the coach got back.
+values, and it has four things in it: a foam dart blaster with six darts, a
+water pistol with the price sticker still on the tank, a foam sword with LOOK
+ALIVE printed down the blade, and a thing somebody made out of a post tray and
+four elastic bands, which is on the evidence the only object in this building
+anyone has ever built for pleasure. Nobody has opened it since the coach got
+back. There is a fifth thing under the paper tray by the printer: a compliance
+pack, five hundred and one pages, which rolls up into a length of pipe.
 
-Nothing in it hurts anybody. What it does is make thirty-one adults react, which
-is the only ammunition this game has ever had. Hit a colleague and they stop dead,
+Nothing in any of it hurts anybody. What it does is make twenty adults turn
+round, which is the only ammunition this game has ever had. Hit a colleague and they stop dead,
 turn round, and say something; hit somebody on the pavement outside and you get
 the entire British response to being hit by a stranger, which is "Alright." It
 costs you a point of goodwill with that person, once, the first time — a second
@@ -210,12 +214,23 @@ are. Every pixel in `art/` is third-party, licence-checked by the sprite build,
 and the kit this game pins is mediaeval-through-Victorian: there is no blaster in
 it and there was never going to be one. And a twin-stick game aims through every
 angle rather than through the eight a sprite sheet would give it, so the art has
-to be something that can be turned. Each gun in `engine/guns.js` is a grid of
+to be something that can be turned. Each one in `engine/guns.js` is a grid of
 characters and a palette to look them up in — the arrays are pictures, and moving
-the trigger is changing a `t` to an `o` — baked once at 1:1 into a small canvas
-and rotated about its grip after that. Past the vertical it mirrors rather than
+the trigger guard is moving a `g` — baked once at 1:1 into a small canvas and
+rotated about its grip after that. Past the vertical it mirrors rather than
 carrying on round, because a gun turned a hundred and seventy degrees is a gun
 lying on its back and that is not how anybody holds one.
+
+The two you **swing** are in the same table, on the same controls, drawn by the
+same code, because they are the same thing: something in your hands, pointed
+where the right stick is pointed. A magazine becomes an arc, a reach and a
+quarter of a second, and the trigger sweeps that arc through the aim instead of
+sending something down it. The hit test runs per frame rather than at the moment
+the button went down, which is the whole difference between a swing and a shot:
+the sword arrives at the person on the left of the arc before the person on the
+right, it catches each of them once however long it dwells, and it will not
+reach round a corner — the same chest-height question a dart asks of the tile it
+is in, asked halfway along the reach.
 
 A dart goes over a desk, a worktop, a bin and a chair, and stops at a wall, a
 cabinet, a vending machine and a shut door. That is one rule and it is measured
@@ -239,11 +254,83 @@ that exactly never.
 So a person is now drawn in two halves with a joint between them. The legs come
 from the direction they are **walking**; the chest, shoulders and head come from
 the direction they are **looking**; and whatever angle is left over between that
-direction and the real bearing — up to about a quarter of a radian of it — is
-taken up as a lean about the hip, with the shoulders shifting a pixel or two the
-way the lean is going, because a body twisting at the waist moves sideways as
-well as round. One extra blit, and the other three hundred and fifty-six degrees
-come back.
+direction and the real bearing — up to about a third of a radian of it — is taken
+up as a lean about the hip, with the shoulders shifting a pixel or two the way
+the lean is going, because a body twisting at the waist moves sideways as well as
+round. One extra blit, and the other three hundred and fifty-six degrees come
+back.
+
+**A waist is not a swivel, though**, and the first version of this forgot it.
+Letting the legs take the direction of travel whatever the shoulders were doing
+drew somebody walking west while aiming east with their top half turned through a
+hundred and eighty degrees, which is not a pose, it is an injury. The legs may be
+a quarter turn from the shoulders and no more — with four directions, the row
+either side and never the one opposite. Ask for the opposite and the feet give up
+the argument rather than the spine: they take the aim's own row and the walk
+cycle plays **in reverse**, so you back up facing the thing you are pointing at,
+which is what a person does and which is one flag to the frame lookup. There is
+no reverse walk in the art and there does not need to be: a walk cycle run
+backwards is what backing up looks like. Standing still, the feet simply come
+round to the aim, because somebody who has stopped to point at something is
+facing it.
+
+**And the top half holds a pose rather than walking.** It used to take the walk
+frame, which is why the blaster floated in front of somebody strolling along with
+their arms swinging by their sides. The kit's run frames are the only ones in it
+with the elbows bent and, side on, a fist punched out in front — so those are the
+frames, held still rather than played: the legs walk and the shoulders are
+braced, which is what carrying something looks like.
+
+### The pose sheet
+
+Six poses, four directions, baked once into a canvas laid out exactly like a row
+of the character sheet. Everything the top half does — holding, firing, and both
+halves of a swing — is a column number in it, and the renderer blits a rectangle
+out of it exactly as it blits one out of the atlas.
+
+| | |
+| --- | --- |
+| `hold` | braced, weapon up. |
+| `fire` | the same arm two pixels further back. That is the recoil: the kit drew it for a running stride and it reads as a gun going off, because the hand moves the way a hand moves when one does. |
+| `wind` · `strike` | the arm drawn back across the body, and the arm extended. The two ends of a swing. |
+| `windB` · `strikeB` | the same two mirrored, so the next swing comes back the other way. |
+
+**There is no new art in it.** Every cell is a frame the kit already ships, and
+the only thing the sheet does that the kit does not is MIRROR — which is the
+whole reason to bake one rather than read the atlas directly. A left hook and a
+right hook are the same drawing seen from the other side, so the left-facing
+row's backhand is the right-facing row's forehand flipped about its own middle,
+and one table can say so. Six columns out of a kit with two usable arm positions
+a side. The two front-on rows need no mirrored cell at all: a front view flipped
+is still a front view, so they simply run their own pair the other way round.
+
+Mirroring costs one thing and it has to be paid: an expression is a patch
+measured against a specific frame of a specific direction and drawn live over the
+top, so a flipped cell has to say which row its body actually came from and get
+its face flipped with it. Otherwise somebody's mouth ends up on the back of their
+ear.
+
+**Which pixel is the hand** was measured rather than guessed: the skin was
+clustered per frame, and the cluster below the neck that is not the face is the
+hand. The grip of whatever you are holding goes exactly there, so it is IN the
+hand in every pose rather than floating at one average height for all of them —
+two hands where the art shows two and the aim picks which, because front on a
+pistol held out to the right is in the right hand, and none at all in the back
+row, where you are looking at somebody's back and the thing has to be lifted over
+the shoulder to be seen at all. The hand is then put through the same rotation
+the torso is, so the grip stays in the fist at full lean instead of drifting a
+couple of pixels out of it, which is exactly the amount that reads as a gun
+somebody is not quite holding.
+
+The rest of the motion is two numbers and an arc. Firing takes the `fire` column
+for an eighth of a second and pushes the gun four pixels back down its own line
+with ten degrees of muzzle, both decaying — the same `kick` number that shakes the
+screen, rather than a second number saying the same thing in other units. A swing
+sweeps its arc, alternates direction every time, and pushes the weapon two pixels
+further out at the middle of it. Two, and not nine: the first version pushed it
+nine and the sword left the hand entirely, because the arm in the art does not
+straighten and nothing the weapon does can pretend it has. The swing is in the
+arc; the rest is follow-through.
 
 The waist is at row 35 of a 56-row frame, and that is measured rather than
 eyeballed: the character kit ships the body in layers, and `parts-legs` starts on
@@ -550,7 +637,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
 | `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
 | `engine/sky.js` | The clock past five, the light, the weather and the season. Everything that draws asks it what time it is; nothing that draws knows. |
-| `engine/guns.js` | The away-day box: three guns drawn from a grid of characters rather than fetched, what they do to the people they land on, and the twist that lets somebody walk one way and point another. |
+| `engine/guns.js` | The away-day box: five things drawn from a grid of characters rather than fetched — three you fire and two you swing — what they do to the people they land on, the pose sheet the person holding them is drawn from, and the twist that lets somebody walk one way and point another. |
 | `engine/title.js`, `css/title.css` | The title screen: the wallboard, the switchboard behind it, and the menu. |
 | `scripts/release.sh` | Checks the build and moves the version string. Run it before you ship. |
 | `editor.html`, `editor/` | A level editor. Not the game, and never published. |

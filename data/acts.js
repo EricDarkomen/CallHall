@@ -303,7 +303,23 @@ const Acts = {
       'You put it back exactly as it was. You tell nobody. Some things hold a building up.']);
     Ach.get('a_printer'); G.flags.knowUnplugged = true;
   },
-  paperTray() { insp('📄', 'Paper tray', 'Full', ['Full. It is always full. People add paper to it as a form of prayer.']); },
+  paperTray() {
+    if (Item.has('pack')) {
+      return insp('📄', 'Paper tray', 'Full', ['Full. It is always full. People add paper to it as a form of prayer.',
+        'The compliance packs are on the shelf under it. There are nine left, which is eight more than anybody is ever going to read.']);
+    }
+    insp('📄', 'Paper tray', 'Full', ['Full. It is always full. People add paper to it as a form of prayer.',
+      'Underneath it: the compliance packs, printed for a session that was moved and then moved again. Five hundred and one pages each. Ten of them.'],
+      [{ t: 'Take one. Roll it up.', to: null, do() {
+        Item.give('pack');
+        UI.toast('📜', 'Five hundred and one pages, rolled, with a band round it. It is a document and it is also, now, a length of pipe.');
+      } },
+       { t: 'Take one. Read it.', to: null, do() {
+         G.minutes += 6; Player.mod({ patience: -4 }); P.stats.knowledge += .5;
+         UI.toast('📜', 'Six minutes and eleven pages. Page eleven defines “colleague”. You put it back.');
+       } },
+       { t: 'Leave them. They are for a session that has been moved twice.', to: null }]);
+  },
   oldPrinter() { insp('🖨️', 'Printer (deceased)', 'Archive', ['An older printer, in the archive, facing the wall.', 'A note on it in Terry’s handwriting: “DO NOT REVIVE”.']); },
   mgmtPrinter() { insp('🖨️', 'Management printer', 'Works perfectly', ['It works. Instantly. Silently. Duplex, stapled, warm.', 'You stand looking at it for slightly too long.']); },
 
@@ -337,14 +353,14 @@ const Acts = {
     }
     insp('📦', 'The away-day box', 'Marketing, 2019', [
       'A box with AWAY DAY 2019 on the side in marker, under a laminated sheet of the values.',
-      'Inside: a foam dart blaster with six darts in it, a water pistol with the price sticker still on, and a thing somebody made out of a post tray and four elastic bands — which is, on the evidence, the only object in this building anyone has ever built for pleasure.',
+      'Inside: a foam dart blaster with six darts in it, a water pistol with the price sticker still on, a foam sword with LOOK ALIVE printed down it, and a thing somebody made out of a post tray and four elastic bands — which is, on the evidence, the only object in this building anyone has ever built for pleasure.',
       'Nobody has opened this since the coach got back.'],
-      [{ t: 'Take all three. It is a set.', to: null, do() {
-        Item.give('blaster', true); Item.give('bandgun', true); Item.give('squirter', true);
+      [{ t: 'Take all four. It is a set.', to: null, do() {
+        Item.give('blaster', true); Item.give('bandgun', true); Item.give('squirter', true); Item.give('noodle', true);
         Ach.get('a_awayday');
         Player.xp(25);
         P.stats.chaos += 1;
-        UI.toast('📦', 'Three things out of the away-day box. '
+        UI.toast('📦', 'Four things out of the away-day box. '
           + (TOUCH ? 'The stick on the ' + Hand.btnSide() + ' aims, and fires where you push it.'
                    : '<b>G</b> takes one out. The mouse or the arrow keys aim it.'), 'gold');
         Chat.push('#general', 'Gary', '🧑‍🦱', 'someone has been in the archive');

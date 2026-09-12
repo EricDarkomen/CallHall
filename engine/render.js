@@ -2977,31 +2977,34 @@ const R = {
            you — it matters more with sprites than it did with a distinct emoji. */
         c.shadowColor = 'rgba(77,163,255,.55)'; c.shadowBlur = 16;
         if (psprite) {
+          /* WHICH WAY THE TOP HALF IS POINTING, asked FIRST because the
+             answer decides the bottom half as well. Aiming is the one thing
+             in this game where where you are going and where you are looking
+             are two different facts: the shoulders take the bearing of the
+             aim, the leftover angle becomes a lean, and the feet take
+             whichever row is within a quarter turn of the shoulders — which
+             may mean walking backwards. Guns.pose() writes P.dir and sets
+             Guns.back for the two lines below; with nothing in your hands it
+             is null and this is the single blit it has always been. See
+             Sprites.twisted(). */
+          const tw = seat ? null : Guns.pose();
           /* You run when you are actually moving at speed and walk when you
              are easing along on the stick — P.fast is set by movePlayer from
              the size of the movement vector, so the animation and the pace
              can never disagree. */
           const pf = seat ? Sprites.sit('player')
-            : P.moving ? Sprites.frame('player', this.animate, P.step, P.fast)
-            : this.animate ? Sprites.breath('player') : 0;
+            : P.moving ? Sprites.frame('player', this.animate, P.step, P.fast, tw && Guns.back)
+            : this.animate && !tw ? Sprites.breath('player') : 0;
           const plift = seat && this.animate ? Sprites.breathLift('player') : 0;
-          /* WHICH WAY THE TOP HALF IS POINTING. Aiming is the one thing in
-             this game where where you are going and where you are looking are
-             two different facts, so the draw is handed both: the legs take
-             P.dir as they always have, and the shoulders take the bearing of
-             the aim with the leftover angle as a lean. Nothing in your hands
-             and it is null, which is the single blit this has always been —
-             see Sprites.twisted(). */
-          const tw = seat ? null : Guns.pose();
           /* Behind the body when it is pointing away from the camera and in
              front of it otherwise, which is the whole of the depth sorting a
              held object needs. */
           const gun = !seat && Guns.armed;
-          if (gun && Guns.behind()) Guns.paint(c, at.x, at.y - plift, Guns.a);
+          if (gun && Guns.behind()) Guns.held(c, at.x, at.y - plift);
           /* Same rule as the colleagues above: the chair points, not the
              sitter. Sit on the bench in Nailed It and you face the room. */
           Sprites.draw(c, 'player', seat ? (seat.face ?? 0) : P.dir ?? 2, pf, at.x, at.y - plift, tw);
-          if (gun && !Guns.behind()) Guns.paint(c, at.x, at.y - plift, Guns.a);
+          if (gun && !Guns.behind()) Guns.held(c, at.x, at.y - plift);
         } else this.emoji(P.face, at.x, at.y - bob, 30);
         c.restore();
       }

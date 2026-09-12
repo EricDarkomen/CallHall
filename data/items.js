@@ -59,6 +59,8 @@ const ITEMS = {
   blaster:  { n: 'Foam Dart Blaster', e: '🔫', d: 'From the 2019 away day, in the box, under the thing about values. Six darts. Four are the originals; two are from a different set and everybody can tell.', v: 0, r: 'rare', gun: 'dart' },
   bandgun:  { n: 'Elastic Band Pistol', e: '📎', d: 'A post tray, four bands and a bulldog clip, made by somebody who is no longer with the company and left in the box like a message.', v: 0, r: 'rare', gun: 'band' },
   squirter: { n: 'Water Pistol', e: '💦', d: 'Translucent pink, with a 2019 price sticker still on the tank. Fill it at the sink, not at the cooler. Terry has views.', v: 0, r: 'rare', gun: 'water' },
+  noodle:   { n: 'Foam Sword', e: '🗡️', d: 'LOOK ALIVE down the blade, in a typeface that was chosen by somebody, at a computer, for money. Four of these were bought. This is the one that came back.', v: 0, r: 'rare', gun: 'noodle' },
+  pack:     { n: 'Rolled-Up Compliance Pack', e: '📜', d: 'Five hundred and one pages, rolled, with a band round it. The five hundred and first page is the one that says you have read the other five hundred.', v: 0, r: 'common', gun: 'pack' },
   /* Off the High Street, from the four units that now have floors. */
   stamps:   { n: 'A Book of Stamps', e: '\ud83d\udcee', d: 'Bought at a counter, in person, after twenty-two minutes, in a transaction that took ninety seconds. You will use two of them.', v: 4.4, r: 'common' },
   biscuits: { n: 'A Box of Biscuits (bought)', e: '🎁', d: 'The good ones. The foil ones. Bought with your own money for people who will never know it was you.', v: 4, r: 'rare' },
