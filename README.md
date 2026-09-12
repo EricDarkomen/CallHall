@@ -289,70 +289,46 @@ backwards is what backing up looks like. Standing still, the feet simply come
 round to the aim, because somebody who has stopped to point at something is
 facing it.
 
-**And the top half holds a pose rather than walking.** It used to take the walk
-frame, which is why the blaster floated in front of somebody strolling along with
-their arms swinging by their sides. The kit's run frames are the only ones in it
-with the elbows bent and, side on, a fist punched out in front — so those are the
-frames, held still rather than played: the legs walk and the shoulders are
-braced, which is what carrying something looks like.
+The blaster used to float in front of all this, in the middle of the chest,
+because it was drawn at one height for every direction and in nobody's hand at
+all. What fixed that was not a new pose but a measurement — see below.
 
-### The pose sheet
+### Holding it, and the swing sheet
 
-Six poses, four directions, baked once into a canvas laid out exactly like a row
-of the character sheet. Everything the top half does — holding, firing, and both
-halves of a swing — is a column number in it, and the renderer blits a rectangle
-out of it exactly as it blits one out of the atlas.
+**Holding something is the ordinary frame.** The same drawing the game has always
+used, with the arms where the kit put them, and the thing you are holding in the
+hand it drew — down at the hip, pointed wherever you are pointing. The grip goes
+at that hand and the hand was measured, not guessed: the skin clustered per
+frame, and the cluster below the neck that is not the face is a hand. Two where
+the art shows two and the aim picks which; front on, a pistol held out to the
+right is in the right hand.
 
-| | |
-| --- | --- |
-| `hold` | braced, weapon up. |
-| `fire` | the same arm two pixels further back. That is the recoil: the kit drew it for a running stride and it reads as a gun going off, because the hand moves the way a hand moves when one does. |
-| `wind` · `strike` | the arm drawn back across the body, and the arm extended. The two ends of a swing. |
-| `windB` · `strikeB` | the same two mirrored, so the next swing comes back the other way. |
+That is the second answer to this question and the first one was wrong, so it is
+worth writing down what it was. The frames with the elbows bent — the only poses
+in the kit with a fist punched out in front — are its RUN cycle, and a run frame
+is a stride. Measured, the head sits five pixels from the feet in the side rows,
+because the body is pitched forward over a leading leg. Freeze one for somebody
+standing still and their legs are not under them. Compose the top of it over a
+standing pair of legs and the hips have to disagree with either the head or the
+feet, because in the original drawing they disagree with both — which is exactly
+what it looked like: a torso standing next to its own legs. There is no
+arrangement of that frame that is a person standing up, and the way to find that
+out was to build all of them and put a line down the middle.
+
+What the stride is right for is a stride. So the sheet that remains is four cells
+a direction — the two ends of a swing, and the same two mirrored so the next
+swing comes back the other way — baked once into a canvas laid out exactly like a
+row of the character sheet, and used for the quarter of a second in which
+somebody is actually lunging.
 
 **There is no new art in it.** Every cell is a frame the kit already ships, and
-what the sheet does that the kit does not is MIRROR and COMPOSE — which is the
-whole reason to bake one rather than read the atlas directly.
-
-Mirroring first: a left hook and a right hook are the same drawing seen from the
-other side, so the left-facing row's backhand is the right-facing row's forehand
-flipped about its own middle, and one table can say so. Six columns out of a kit
-with two usable arm positions a side. The two front-on rows need no mirrored cell
-at all: a front view flipped is still a front view, so they simply run their own
-pair the other way round.
-
-**And every cell is two frames, joined at row 38** — the pose on top, and frame
-11's legs underneath. Both halves of that are load-bearing.
-
-The first is hands. Every standing and walking frame in this kit draws them
-hanging at the hips, rows 36 to 42, and a pose frame draws a second pair up at
-the chest — so a person holding a blaster in two braced hands had two more
-dangling at their sides, which is one pair too many and impossible to un-see.
-Joining at 38 takes the legs and leaves those hands behind. It is the only pair
-that goes.
-
-The second is that the pose frames are RUNNING. Frames 8 and 10 are the middle of
-a stride: one foot off the floor, the body pitched forward. Frozen for somebody
-standing in an office holding a foam dart blaster they read as a man paused
-mid-sprint. Frame 11 is the passing frame — feet nearly together, both of them
-down — and it is what a person stands like.
-
-The join is ALIGNED, because a runner's hips are not where a standing person's
-are. Measured at the trouser midline just under the join, frames 8 and 10 sit
-five pixels forward of frame 11 in the side rows; composed without the
-correction, the top half overhangs its own legs by five pixels and there is a
-wedge of thigh sticking out behind somebody like a tail. Shifted by the measured
-difference, the join is invisible — and the hand table is shifted with it, or the
-gun stays where the hand used to be.
-
-What is left is one rule for the bottom half. **Both halves out of one cell when
-they agree** — standing still, or walking the way you are pointing — so nothing
-is cut and nothing can disagree. Cut only when the feet and the shoulders
-genuinely differ, strafing or backing away, and then the cut is the low one and
-what comes from the walk is shins. Cutting at the waist between two different
-frames was the other way to get this wrong: a run frame has a foot off the floor
-and the thigh it belongs to lives above the waist, so the foot ends up a boot
-lying on the carpet with no leg attached to it.
+the only thing the sheet does that the kit does not is MIRROR — which is the
+whole reason to bake one rather than read the atlas directly. A left hook and a
+right hook are the same drawing seen from the other side, so the left-facing
+row's backhand is the right-facing row's forehand flipped about its own middle,
+and one table can say so. The two front-on rows need no mirrored cell at all: a
+front view flipped is still a front view, so they simply run their own pair the
+other way round.
 
 Mirroring costs one thing and it has to be paid: an expression is a patch
 measured against a specific frame of a specific direction and drawn live over the
@@ -360,17 +336,29 @@ top, so a flipped cell has to say which row its body actually came from and get
 its face flipped with it. Otherwise somebody's mouth ends up on the back of their
 ear.
 
-**Which pixel is the hand** was measured rather than guessed: the skin was
-clustered per frame, and the cluster below the neck that is not the face is the
-hand. The grip of whatever you are holding goes exactly there, so it is IN the
-hand in every pose rather than floating at one average height for all of them —
-two hands where the art shows two and the aim picks which, because front on a
-pistol held out to the right is in the right hand, and none at all in the back
-row, where you are looking at somebody's back and the thing has to be lifted over
-the shoulder to be seen at all. The hand is then put through the same rotation
-the torso is, so the grip stays in the fist at full lean instead of drifting a
-couple of pixels out of it, which is exactly the amount that reads as a gun
-somebody is not quite holding.
+**The recoil of a shot is in the gun**, not in the body: four pixels back down
+its own line and ten degrees of muzzle, both decaying over an eighth of a second
+and scaled by the same `kick` number that shakes the screen. A body that lunges
+for an eighth of a second three times a second is a body having a fit.
+
+### One pair of hands
+
+Every standing and walking frame in this kit draws them hanging at the hips, rows
+36 to 42, which is BELOW the waist. That is the whole reason there are two cut
+lines.
+
+When both halves of somebody are the same drawing — standing still, or walking
+the way they are pointing — nothing is cut at all: one blit, one frame, and a
+lean at the waist over the top of it. Nothing in the figure can disagree with
+anything else in it.
+
+When they are genuinely different drawings — strafing, or backing away from what
+you are aiming at — the cut is eight rows lower, below every one of those hands
+and above every foot. The arms come whole from the half that is holding
+something and what swings underneath is shins. Cut at the waist there instead and
+the bottom half brings its own pair of hands along, which is one pair too many
+and impossible to un-see once seen.
+
 
 **Turning between the four** is the one place the four-direction art shows, and
 two things soften it. The row is STICKY: it only gives up the one it is on once
@@ -393,15 +381,11 @@ ships four is a different job entirely. What there is instead is a body that
 snaps four ways as late as it can, a waist that covers the difference, and a
 weapon that points at the true angle regardless.
 
-The rest of the motion is two numbers and an arc. Firing takes the `fire` column
-for an eighth of a second and pushes the gun four pixels back down its own line
-with ten degrees of muzzle, both decaying — the same `kick` number that shakes the
-screen, rather than a second number saying the same thing in other units. A swing
-sweeps its arc, alternates direction every time, and pushes the weapon two pixels
-further out at the middle of it. Two, and not nine: the first version pushed it
-nine and the sword left the hand entirely, because the arm in the art does not
-straighten and nothing the weapon does can pretend it has. The swing is in the
-arc; the rest is follow-through.
+A swing sweeps its arc, alternates direction every time, and pushes the weapon
+two pixels further out at the middle of it. Two, and not nine: the first version
+pushed it nine and the sword left the hand entirely, because the arm in the art
+does not straighten and nothing the weapon does can pretend it has. The swing is
+in the arc; the rest is follow-through.
 
 The waist is at row 35 of a 56-row frame, and that is measured rather than
 eyeballed: the character kit ships the body in layers, and `parts-legs` starts on

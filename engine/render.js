@@ -2999,7 +2999,7 @@ const R = {
              while you are not. See Guns.STANCE. */
           const pf = seat ? Sprites.sit('player')
             : P.moving ? Sprites.frame('player', this.animate, P.step, P.fast, tw && Guns.back)
-            : this.animate && !tw ? Sprites.breath('player') : 0;
+            : this.animate ? Sprites.breath('player') : 0;
           const plift = seat && this.animate ? Sprites.breathLift('player') : 0;
           /* Behind the body when it is pointing away from the camera and in
              front of it otherwise, which is the whole of the depth sorting a
