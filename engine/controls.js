@@ -105,16 +105,45 @@ function makeStick(ids) {
   };
 }
 
-/* The left one: walking, and steering. The right one: the throttle, and
-   nothing else — it is hidden by CSS unless you are driving, so nothing on
-   foot can grab it and nothing on foot reads it. */
+/* The left one: walking, and steering. The right-hand corner has two, and
+   never both at once — the throttle while you are driving, the aim while you
+   are carrying something to fire. Both are hidden by CSS unless their moment
+   has come, so nothing on foot can grab the throttle and nothing behind a
+   wheel can grab the aim.
+
+   That is the twin-stick arrangement and it is the same argument the throttle
+   made when it arrived. One stick cannot walk and aim: the direction you are
+   going and the direction you are pointing are two facts, and a single vector
+   carries one of them. With two, the left thumb decides where you are and the
+   right decides what you are looking at, and neither can undo the other. It is
+   also why people can now turn at the waist — see Sprites.twisted(). */
 const Stick = makeStick({ el: '#stick', knob: '#stickKnob', zone: '#stickZone' });
 const Throttle = makeStick({ el: '#throttle', knob: '#throttleKnob', zone: '#throttleZone' });
+const Aim = makeStick({ el: '#aim', knob: '#aimKnob', zone: '#aimZone' });
 
-/* Let go of both. Every place that drops the controls — a panel opening, the
-   tab going away, a level swapping, getting into a car — wants both of them,
-   and naming them one at a time is how one of them gets left held down. */
+/* Let go of all of them. Every place that drops the controls — a panel
+   opening, the tab going away, a level swapping, getting into a car — wants
+   the lot, and naming them one at a time is how one of them gets left held
+   down. */
 function releaseSticks() {
   Stick.release();
   Throttle.release();
+  Aim.release();
 }
+
+/* Which of the two right-hand sticks is on screen, as a body class, decided in
+   one place because it is one question: are you driving, or are you armed. The
+   CSS does the rest. Called every frame from the update — it is two class
+   toggles and the DOM ignores a toggle that changes nothing. */
+function syncControls() {
+  const driving = typeof Cars !== 'undefined' && !!Cars.driving;
+  const armed = !driving && typeof Guns !== 'undefined' && Guns.can();
+  if (syncControls.was === armed) return;    /* one comparison, no DOM */
+  syncControls.was = armed;
+  document.body.classList.toggle('armed', armed);
+  /* A stick that goes off the screen with a thumb still on it is a stick that
+     is still being read — the same failure the throttle has always guarded
+     against on the way out of a car. */
+  if (!armed) Aim.release();
+}
+syncControls.was = null;

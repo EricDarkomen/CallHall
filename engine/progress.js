@@ -63,6 +63,10 @@ const Item = {
   give(id, quiet) {
     if (!ITEMS[id]) return;
     P.inventory.push(id);
+    /* An item carrying a `gun:` is one of the three things in the away-day box,
+       and the thing in your pocket and the thing in your hands are the same
+       object — so arriving with it is also loading it. See data/items.js. */
+    if (ITEMS[id].gun && typeof Guns !== 'undefined') Guns.give(ITEMS[id].gun);
     if (!quiet) { UI.toast(ITEMS[id].e, 'Obtained: <b>' + ITEMS[id].n + '</b>', 'gold'); FX.burst(P.x, P.y, ITEMS[id].e, 6); }
   },
   has(id) { return P.inventory.includes(id); },
@@ -84,6 +88,15 @@ const Item = {
   use(id) {
     const it = ITEMS[id]; if (!it) return;
     if (it.slot) return this.equip(id);
+    /* Using a gun is taking it out, which is also how you choose between the
+       three of them without learning that Q exists. It is not consumed and it
+       does not leave the inventory: it is a thing you are holding. */
+    if (it.gun && typeof Guns !== 'undefined') {
+      if (!Guns.select(it.gun)) return;
+      Panels.close();
+      Guns.arm(true);
+      return;
+    }
     if (!it.use) { UI.toast(it.e, 'You look at it. It looks back. Nothing happens.'); return; }
     this.take(id); Uses[it.use](); Panels.render(); UI.hud();
   },

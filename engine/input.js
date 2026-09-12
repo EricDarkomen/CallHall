@@ -2,6 +2,19 @@
 /* ---------------- Input ---------------- */
 const Keys = { up: 0, down: 0, left: 0, right: 0 };
 const KEYMAP = { KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down', KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right' };
+/* The right hand, on a keyboard. The same four arrows, read as a bearing
+   instead of as a walk, and only while something is out — see the keydown
+   handler. Kept as its own set rather than as a flag on Keys because the two
+   are pressed at the same time and mean different things: W and Left is
+   walking one way and firing the other, which is the whole point. */
+const Aimer = { up: 0, down: 0, left: 0, right: 0 };
+const ARROWS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
+/* Where the pointer is, in WORLD pixels, and whether its button is down. World
+   rather than screen because that is the question being asked — the camera
+   moves under a mouse that has not — and it is worked out once per move rather
+   than once per frame. `seen` because a keyboard-only player has never moved
+   one and aiming at (0, 0) is aiming at the top-left corner of the map. */
+const Mouse = { x: 0, y: 0, down: false, seen: false };
 
 function bindInput() {
   addEventListener('keydown', e => {
@@ -35,6 +48,16 @@ function bindInput() {
       if (k === 'down' || k === 'right') { e.preventDefault(); Title.move(1); return; }
       if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); Title.activate(); return; }
     }
+    /* THE OTHER STICK, ON A KEYBOARD. Armed, the arrows stop being a second
+       set of movement keys and become the right hand: they aim, and they fire
+       where they point, which is Robotron's arrangement and the reason a
+       twin-stick game has ever worked without two thumbs. WASD keeps walking
+       you about, and unarmed the arrows are exactly what they always were —
+       nobody's muscle memory is taken away, it is only borrowed while there is
+       something in your hand. */
+    if (ARROWS[e.code] && Guns.can() && Guns.armed) {
+      Aimer[ARROWS[e.code]] = 1; e.preventDefault(); return;
+    }
     if (KEYMAP[e.code]) { Keys[KEYMAP[e.code]] = 1; e.preventDefault(); return; }
     if (e.code === 'Space' || e.code === 'Enter') {
       e.preventDefault();
@@ -66,6 +89,13 @@ function bindInput() {
     }
     if (G.state !== 'play' && !Panels.on) return;
     if (e.code === 'KeyE') { if (!Panels.on) Interact.go(); return; }
+    /* Out, and away again. The one control on the keyboard that has no
+       equivalent on a phone, where letting go of the stick IS putting it away
+       — a phone has no spare corner for a holster button and does not need
+       one. */
+    if (e.code === 'KeyG') { if (!Panels.on && Guns.any()) { Guns.toggle(); if (!Guns.armed) Sfx.blip(); } else if (!Panels.on) Sfx.deny(); return; }
+    if (e.code === 'KeyR') { if (!Panels.on && Guns.armed && !Guns.reload()) Sfx.deny(); return; }
+    if (e.code === 'KeyQ') { if (!Panels.on && Guns.armed) Guns.next(); return; }
     /* The horn, and only while you are in something that has one. Held rather
        than pressed — Cars.update sounds it once on the way down and leaves it
        leaning on it after that. */
@@ -98,9 +128,14 @@ function bindInput() {
        a.held() gets a key that is never let go of otherwise. */
     if (Arcade.on) { Arcade.key({ code: e.code, down: false }); return; }
     if (e.code === 'KeyH') Cars.horn = false;
+    if (ARROWS[e.code]) Aimer[ARROWS[e.code]] = 0;
     if (KEYMAP[e.code]) Keys[KEYMAP[e.code]] = 0;
   });
-  addEventListener('blur', () => { Keys.up = Keys.down = Keys.left = Keys.right = 0; Cars.horn = false; releaseSticks(); });
+  addEventListener('blur', () => {
+    Keys.up = Keys.down = Keys.left = Keys.right = 0;
+    Aimer.up = Aimer.down = Aimer.left = Aimer.right = 0;
+    Cars.horn = false; Guns.trigger(false); releaseSticks();
+  });
 
   /* Leaving the tab should not cost you the shift: stop the clock, drop the
      held keys, and hush the hold music until you come back. */
@@ -108,6 +143,8 @@ function bindInput() {
     if (document.hidden) {
       Game.paused = true;
       Keys.up = Keys.down = Keys.left = Keys.right = 0;
+      Aimer.up = Aimer.down = Aimer.left = Aimer.right = 0;
+      Guns.trigger(false);
       releaseSticks();
       Sfx.holdMusic(false);
       if (Sfx.ctx && Sfx.ctx.state === 'running') Sfx.ctx.suspend().catch(() => {});
@@ -148,6 +185,38 @@ function bindInput() {
     UI.toastWake(9000);
     toasts.scrollTop = toasts.scrollHeight;
   });
+
+  /* ---- the mouse, which is the other stick on a desktop ----
+     A pointer is a bearing that is already on the screen: where it is IS where
+     you are aiming, and the button is the trigger. Nothing here does anything
+     until something is out, so a click on the office is the nothing it has
+     always been — and the arrows and the mouse do not fight, because readAim()
+     asks them in a fixed order and the arrows are asked first: press one and
+     the mouse stops being consulted until you let go of it.
+
+     Bound to the window rather than to the canvas for the release, for the
+     reason the sticks are: a button let go of over the HUD, the tracker or the
+     edge of the screen is still a button let go of, and a trigger that misses
+     its own release empties the magazine into a wall. */
+  addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch') return;
+    Mouse.seen = true;
+    const r = R.cv.getBoundingClientRect();
+    Mouse.x = Cam.x + (e.clientX - r.left);
+    Mouse.y = Cam.y + (e.clientY - r.top);
+  }, { passive: true });
+  R.cv.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch' || e.button !== 0) return;
+    if (!Guns.armed || !Guns.can()) return;
+    e.preventDefault(); Sfx.init();
+    Mouse.down = true;
+  });
+  addEventListener('pointerup', e => { if (e.pointerType !== 'touch') Mouse.down = false; });
+  addEventListener('pointercancel', () => { Mouse.down = false; });
+  /* A held right-click is not a second trigger and a context menu over a
+     firefight is nobody's idea of a control, but the canvas is the one surface
+     you are allowed to drag on, so only the canvas's own menu goes. */
+  R.cv.addEventListener('contextmenu', e => { if (Guns.armed) e.preventDefault(); });
 
   /* touch */
   if (TOUCH) {
@@ -225,7 +294,7 @@ function bindInput() {
        if it throws on some browser this file has never met, that must cost you
        the stick and not E, ☰ and the d-pad along with it — which is what
        happens when it is wired first and takes the rest of the block down. */
-    try { Stick.init(); Throttle.init(); } catch (err) {
+    try { Stick.init(); Throttle.init(); Aim.init(); } catch (err) {
       console.warn('thumbstick unavailable, falling back to the d-pad', err);
       Hand.pad = 'dpad'; Hand.apply();
     }
@@ -266,12 +335,17 @@ function movePlayer(dt) {
      a nudge walks, a full push is the keyboard's own pace. */
   if (Stick.on) { dx = Stick.x; dy = Stick.y; }
   const tired = P.energy < 25 ? .72 : 1;
-  const sp = TILE * 3.45 * tired * dt;
+  /* Something in your hands is something you walk with rather than run with.
+     Twelve per cent, which is not a penalty anybody would notice as a number
+     and is exactly enough to feel the difference between crossing the floor
+     and crossing it with a foam dart blaster out. */
+  const held = (typeof Guns !== 'undefined' && Guns.armed) ? .88 : 1;
+  const sp = TILE * 3.45 * tired * held * dt;
   P.moving = !!(dx || dy);
   /* Run is chosen by the size of the movement vector, not a button, so the
      animation cannot disagree with the pace. An arrow key is a whole unit, so
      the desktop always runs — which it always has. */
-  P.fast = P.moving && Math.hypot(dx, dy) > 0.86;
+  P.fast = P.moving && Math.hypot(dx, dy) > 0.86 && !(typeof Guns !== 'undefined' && Guns.armed);
   if (P.moving) {
     P.dir = Sprites.dirOf(dx, dy);
     P.bob += dt * 9;
@@ -311,6 +385,31 @@ function movePlayer(dt) {
   P.x = clamp(P.x, 20, MAPW * TILE - 20); P.y = clamp(P.y, 20, MAPH * TILE - 20);
 
   zoneCheck();
+}
+
+/* ---------------- Aiming ----------------
+
+   The right hand, whichever hand it turns out to be. One function, called once
+   a frame from the loop, that asks the three controls in the order of "which
+   one is the player actually using" — a thumb on the stick beats the arrow
+   keys beats where the mouse happens to be sitting — and hands the answer to
+   Guns as a direction and a trigger.
+
+   It is written this way round because the three are not modes. Nobody chooses
+   between a stick and a mouse; a device has what it has, and a desk with both
+   should let you pick up either without telling anything. */
+function readAim() {
+  if (typeof Guns === 'undefined') return;
+  if (!Guns.can()) { Guns.trigger(false); return; }
+  /* A thumb on the aim stick: a bearing and a trigger in one gesture. */
+  if (Aim.on) { Guns.point(Aim.x, Aim.y); return; }
+  const ax = (Aimer.right - Aimer.left), ay = (Aimer.down - Aimer.up);
+  if (ax || ay) { Guns.point(ax, ay); return; }
+  /* Otherwise the mouse, which aims continuously while something is out — the
+     bearing changes when the player walks, not only when the mouse moves — and
+     fires on its own button. */
+  if (Mouse.seen && Guns.armed) Guns.at(Mouse.x, Mouse.y);
+  Guns.trigger(Mouse.down && Guns.armed);
 }
 
 /* Which room — or which street — the player is standing in, and what that is

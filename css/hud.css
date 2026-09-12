@@ -191,6 +191,21 @@ canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block;image
 #minimapWrap{position:absolute;right:12px;bottom:96px;z-index:5}
 #minimap{display:block;border-radius:8px;border:1px solid var(--line);background:rgba(11,15,22,.85)}
 #hudBottom{left:0;right:0;bottom:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
+/* ---- the gun readout ----
+   One line above the prompt: what is in your hand, and what is left in it. It
+   is `hidden` for all but a few minutes of a shift, so it is laid out to sit
+   in the same column as everything else in #hudBottom and take no space when
+   it is not there. */
+/* `display:flex` beats the `hidden` attribute's own `display:none`, which is
+   how an empty pill ends up sitting over the office for the whole shift. */
+#gunHud[hidden]{display:none}
+#gunHud{display:flex;align-items:center;gap:8px;pointer-events:none;
+  background:rgba(21,27,37,.9);border:1px solid var(--line-soft);border-radius:999px;
+  padding:5px 12px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.gh-e{font-size:13px;line-height:1}
+.gh-n{color:var(--text)}
+.gh-a{letter-spacing:.12em;color:var(--good)}
+.gh-a.rl{color:var(--hold);letter-spacing:.04em}
 #prompt{opacity:0;transform:translateY(8px);transition:.18s;font-size:14px;padding:8px 14px;
   background:rgba(21,27,37,.94);border:1px solid var(--brand);border-radius:999px;
   box-shadow:0 0 24px -6px var(--brand);pointer-events:none}

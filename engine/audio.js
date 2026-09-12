@@ -101,6 +101,23 @@ const Sfx = {
     this.eng.f.frequency.setTargetAtTime(420 + r * 900, t, 0.12);
     this.eng.g.gain.setTargetAtTime(0.035 + r * 0.045, t, 0.12);
   },
+  /* ---- the away-day box ----
+     Three guns, three noises, none of them a gunshot: a dart blaster is a
+     spring and a thump of air, a band is a snap, and a water pistol is a hiss
+     with nothing behind it. The whole joke is in the sound, so it is written
+     out here beside everything else rather than hidden in engine/guns.js. */
+  gun(id) {
+    if (id === 'band') { this.tone(900, 0.04, 'square', 0.16, 0, -500); this.noise(0.04, 0.08); return; }
+    if (id === 'water') { this.noise(0.09, 0.055); this.tone(320, 0.05, 'sine', 0.05, 0, 180); return; }
+    this.noise(0.06, 0.13); this.tone(220, 0.09, 'square', 0.13, 0, -90);
+  },
+  /* Something soft arriving on something that is not. */
+  plink() { this.tone(ri(420, 620), 0.04, 'triangle', 0.12); this.noise(0.04, 0.05); },
+  splat() { this.noise(0.12, 0.09); },
+  /* The fumbling. Two clicks and a clunk, which is six darts going back in. */
+  reload() { this.tone(170, 0.05, 'square', 0.12); this.tone(140, 0.06, 'square', 0.1, 0.14); this.noise(0.06, 0.06, 0.28); },
+  /* Taking it out of a drawer it should not be in. */
+  draw() { this.tone(300, 0.05, 'triangle', 0.14); this.tone(460, 0.06, 'triangle', 0.12, 0.05); },
   horn() { this.tone(392, 0.3, 'sawtooth', 0.16); this.tone(330, 0.3, 'sawtooth', 0.14, 0.01); },
   thud(force) {
     const v = clamp(force || 0.5, 0.1, 1);

@@ -323,6 +323,37 @@ const Acts = {
   lanyards() { insp('📦', 'Box of lanyards', 'Unclaimed', ['Forty lanyards for people who never started, or started and stopped, or started and are still here but got another one.'],
     [{ t: 'Take one.', to: null, do() { Item.give('lanyard'); } }, { t: 'Leave them.', to: null }]); },
 
+  /* THE AWAY-DAY BOX. The one place in the building the three guns come from,
+     and the reason they are in a building at all: somebody's budget, a Friday
+     in 2019, and a box that came back on the coach and went into the archive
+     because there was nowhere else for it. Taking the lot is the point — they
+     are a set and they have been in the dark for six years. */
+  awayday() {
+    const got = Item.has('blaster') || Item.has('bandgun') || Item.has('squirter');
+    if (got) {
+      return insp('📦', 'The away-day box', 'Marketing, 2019', [
+        'The lid is off it now. What is left is a banner, a bag of branded pens that have all dried up, and a laminated sheet of the values.',
+        'Four values. One of them is “Fun”.']);
+    }
+    insp('📦', 'The away-day box', 'Marketing, 2019', [
+      'A box with AWAY DAY 2019 on the side in marker, under a laminated sheet of the values.',
+      'Inside: a foam dart blaster with six darts in it, a water pistol with the price sticker still on, and a thing somebody made out of a post tray and four elastic bands — which is, on the evidence, the only object in this building anyone has ever built for pleasure.',
+      'Nobody has opened this since the coach got back.'],
+      [{ t: 'Take all three. It is a set.', to: null, do() {
+        Item.give('blaster', true); Item.give('bandgun', true); Item.give('squirter', true);
+        Ach.get('a_awayday');
+        Player.xp(25);
+        P.stats.chaos += 1;
+        UI.toast('📦', 'Three things out of the away-day box. '
+          + (TOUCH ? 'The stick on the ' + Hand.btnSide() + ' aims, and fires where you push it.'
+                   : '<b>G</b> takes one out. The mouse or the arrow keys aim it.'), 'gold');
+        Chat.push('#general', 'Gary', '🧑‍🦱', 'someone has been in the archive');
+        Chat.push('#general', 'Marjorie', '👩‍🦰', 'the box?');
+        Chat.push('#general', 'Gary', '🧑‍🦱', 'the box');
+      } },
+       { t: 'Close it. There is a reason it is in here.', to: null, do() { Player.mod({ rep: 2 }); } }]);
+  },
+
   /* --- archive --- */
   archiveBox(o) { insp('📦', 'Archive box ' + (o.n + 1), 'Marked “MISC 2011–2016”', [pick([
     'Headsets. Forty of them. All with one working ear. Statistically that should not be possible.',

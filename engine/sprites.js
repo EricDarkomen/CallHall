@@ -326,7 +326,82 @@ const Sprites = {
     const m = r.sheet;
     return { x: x - m.fw / 2, y: y + this.FOOT - m.fh, w: m.fw, h: m.fh };
   },
-  draw(c, id, dir, frame, x, y) {
+  /* ---- where a person bends ----
+     Thirty-five rows down a fifty-six row frame, which is not a guess: the
+     character kit ships the body in layers, and `parts-legs` starts at row 35
+     of the frame on the same row `parts-torso` stops. So the waist is where
+     the trousers begin, measured off the art rather than eyeballed, and it is
+     kept as a FRACTION of the frame so a sheet from another project at another
+     size bends in the right place too. */
+  WAIST: 35 / 56,
+  waistOf(m) { return Math.round(m.fh * this.WAIST); },
+
+  /* ---- the twist ----
+     One person, drawn twice, cut in half at the waist: the legs from the row
+     they are WALKING in, the torso and head from the row they are LOOKING in,
+     and whatever angle is left over between that row and the real bearing
+     taken up as a lean about the hip.
+
+     This is the whole of aiming one way and walking another. A sprite sheet
+     has four directions and a thumb has three hundred and sixty degrees, and
+     for as long as a person was one bitmap the only thing the game could do
+     with the difference was throw it away — you walked backwards up a corridor
+     with your whole body turned round, which is a thing people do exactly
+     never. Cutting at the hip costs one extra blit and gets the other three
+     hundred and fifty-six degrees back.
+
+     The clip rectangles OVERLAP by a row on purpose. Two halves butted exactly
+     against each other leave a seam the width of nothing at all, which on a
+     screen scaled by devicePixelRatio is a bright line across somebody's hips
+     on about half of all phones.
+
+     Nobody is obliged to use it: `twist` is optional and every existing call
+     passes nothing, so a colleague at a printer is the single blit they have
+     always been. */
+  twisted(c, id, r, legDir, legFrame, b, tw) {
+    const m = r.sheet;
+    const waist = this.waistOf(m);
+    const cut = (dir, frame) => {
+      if (!(dir >= 0 && dir < m.dirs.length)) dir = 2;
+      c.drawImage(m.img, (dir * m.frames + frame) * m.fw, r.row * m.fh, m.fw, m.fh,
+        Math.round(b.x), Math.round(b.y), m.fw, m.fh);
+    };
+    const tdir = tw.dir, tframe = tw.frame === undefined ? legFrame : tw.frame;
+    const lean = tw.lean || 0;
+
+    /* The legs, from the hip down, exactly where they always were. */
+    c.save();
+    c.beginPath(); c.rect(b.x - m.fw, b.y + waist, m.fw * 3, m.fh);
+    c.clip();
+    cut(legDir, legFrame);
+    c.restore();
+
+    /* The torso, from the hip up, turned about the hip. The shoulders also
+       shift a pixel or two the way the lean is going — a body twisting at the
+       waist moves sideways as well as round, and without it the rotation reads
+       as the head swivelling on a post. */
+    c.save();
+    /* The cut is clipped BEFORE the rotation and the rotation happens inside
+       it, which is the way round that matters: a clip applied after would turn
+       with the torso, and a tilted cut line takes a wedge out of one hip and
+       leaves a gap at the other. The line across the body stays level; what
+       rotates below it is simply hidden behind the legs, which is where it
+       has gone. */
+    c.beginPath(); c.rect(b.x - m.fw, b.y - m.fh, m.fw * 3, m.fh + waist + 1);
+    c.clip();
+    const px = b.x + m.fw / 2, py = b.y + waist;
+    c.translate(px, py);
+    c.rotate(lean);
+    c.translate(-px + Math.round(Math.sin(lean) * 3), -py);
+    cut(tdir, tframe);
+    /* The face belongs to the half the face is on, and it is drawn inside the
+       same transform — an expression is part of the head and the head has just
+       turned. */
+    if (typeof Faces !== 'undefined') Faces.paint(c, id, tdir, tframe, b.x, b.y);
+    c.restore();
+  },
+
+  draw(c, id, dir, frame, x, y, twist) {
     const r = this.at(id);
     if (!r) return;
     const m = r.sheet, b = this.box(id, x, y);
@@ -341,6 +416,7 @@ const Sprites = {
        sprite only; the emoji and the baked gradients still want it. */
     const smooth = c.imageSmoothingEnabled;
     c.imageSmoothingEnabled = false;
+    if (twist && twist.dir !== undefined) { this.twisted(c, id, r, dir, frame, b, twist); c.imageSmoothingEnabled = smooth; return; }
     c.drawImage(m.img, (dir * m.frames + frame) * m.fw, r.row * m.fh, m.fw, m.fh,
       Math.round(b.x), Math.round(b.y), m.fw, m.fh);
     /* Whatever their face is doing, over the top of the person and inside the

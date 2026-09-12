@@ -189,6 +189,13 @@ const LEVELS = {
       A({ x: 2, y: 10, e: '🖼️', name: 'The old company photograph', kind: 'poster', solid: true, use: 'oldPhoto' });
       A({ x: 6, y: 13, e: '📼', name: 'Training videos (VHS)', kind: 'box', solid: true, use: 'vhs', furn: { sprite: null } });
       A({ x: 10, y: 13, e: '🪑', name: 'The chair from 2011', kind: 'chair', solid: false, use: 'oldChair' });
+      /* Marketing's, from the away day, and the only three things in this
+         building you can point at anybody — see Acts.awayday(). In the middle
+         of the room rather than against a wall, because it was put down where
+         the coach unloaded it and nobody has moved it since; clear of the
+         door, of the hatch and of the nine boxes the archive already has, so
+         the room stays a room you can get across. */
+      A({ x: 10, y: 10, e: '📦', name: 'The away-day box', kind: 'box', solid: true, use: 'awayday', furn: { sprite: null } });
       A({ x: 12, y: 3, e: '📇', name: 'The card index', kind: 'cab', solid: true, use: 'cardIndex', furn: { size: 30, sprite: 'obj.bookcase' } });
 
       /* ---- MANAGEMENT ---- */

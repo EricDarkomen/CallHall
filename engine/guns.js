@@ -1,0 +1,648 @@
+'use strict';
+/* ---------------- The guns ----------------
+
+   The game is called Call of Duty: Customer Service and for eleven months the
+   only thing in it you could point at anybody was a policy. This is the rest of
+   the joke: there ARE guns in this building, and they are the guns an office
+   actually has — a foam dart blaster, a water pistol and a thing somebody made
+   out of a post tray and four elastic bands — all three of them from the box
+   Marketing brought back from the 2019 away day and nobody has opened since.
+   Nothing in here hurts anybody. What it does is make twenty adults turn round,
+   which is the only ammunition this game has ever had.
+
+   ---- THEY ARE DRAWN, NOT FETCHED ----
+
+   Every gun below is a picture written out in the source: a grid of characters
+   and a palette to look them up in. That is the same decision the cars made and
+   it is made for the same two reasons. The first is the licence — every pixel
+   in art/ is third-party, fetched and licence-checked by the sprite build, and
+   the kit this game pins is mediaeval-through-Victorian: there is no blaster in
+   it and there was never going to be one. The second is rotation. A twin-stick
+   game aims through every angle, not through the eight a sprite sheet would
+   give it, so the art has to be something that can be turned — and a bitmap
+   baked once at 1:1 and rotated about its grip is exactly that.
+
+   Read the arrays. They are pictures. That is the point of writing them this
+   way: moving the trigger guard is moving a `g`.
+
+   ---- WHAT A GUN IS ----
+
+     n, e, d       what it is called, its emoji, and what it is when you look
+                   at it in the inventory.
+     mag, reload   how many, and how long the fumbling takes.
+     rate          shots per second, held down.
+     speed, range  tiles per second, and how many tiles before it is spent.
+     spread        radians of inaccuracy per shot. A water pistol has a lot.
+     kick          pixels of screen shake.
+     shot          how the thing in the air is drawn.
+     art           the picture, facing right, with its grip and muzzle marked.
+
+   The binding to the thing in your pocket runs the OTHER way, from data: an
+   entry in ITEMS carries a `gun:` naming its key here, and that is the whole
+   of it — see Item.give(). Nothing in this file has to keep a second list of
+   what the player is carrying.
+
+   Everything else — the aiming, the firing, the flying and the reacting — is
+   one object below, because there is exactly one of these in the world at a
+   time and it is in the player's hands. */
+
+const GUNS = {
+  /* Orange, enormous, and the only one of the three that came out of a box
+     with a brand on it. Six darts, a proper clunk, and slow enough across a
+     room that you can watch one go. */
+  dart: {
+    n: 'Foam Dart Blaster', e: '🔫',
+    d: 'Six darts. Four are the originals. Two are from a different set and everybody can tell.',
+    mag: 6, reload: 1.7, rate: 3.1, speed: 9.4, range: 7.6, spread: 0.05, kick: 1.8,
+    shot: { len: 7, w: 3, body: '#ff8a3d', tip: '#ffe27a', trail: 0 },
+    art: {
+      pivot: [6, 10], muzzle: [17, 4],
+      pal: { o: '#1d2230', O: '#ff7a2f', w: '#9fb0c9', W: '#e8eef7', Y: '#ffe27a', B: '#2f6fd0', g: '#151922' },
+      px: [
+        '.....ooooooo......',
+        '....oOOOOOOOoo....',
+        '...oOOOOOOOOOOooo.',
+        '...oOOOOOOOOOOOOOo',
+        '...oOOOwWWWWWWWWWY',
+        '...oOOOwWWWWWWWWWY',
+        '...oOOOOOOOOOOOOOo',
+        '...oOOOOOOOoooooo.',
+        '....oOOgggo.......',
+        '....oBBBBo........',
+        '.....oBBo.........',
+        '.....oBBo.........',
+        '......oo..........'
+      ]
+    }
+  },
+  /* A post tray, four bands and a bulldog clip. Nobody remembers who made it.
+     It is the fastest thing in the box and it holds four. */
+  band: {
+    n: 'Elastic Band Pistol', e: '📎',
+    d: 'Made out of a post tray, four bands and a bulldog clip by somebody who is no longer with the company.',
+    mag: 4, reload: 1.1, rate: 2.4, speed: 13.5, range: 5.4, spread: 0.02, kick: 1.2,
+    shot: { len: 5, w: 2, body: '#e2554f', tip: '#e2554f', trail: 4 },
+    art: {
+      pivot: [3, 8], muzzle: [17, 3],
+      pal: { o: '#1d2230', B: '#c9a06a', b: '#8d6a42', r: '#e2554f', K: '#2a2f3a' },
+      px: [
+        '....rrrrrrrrrrrrrr',
+        '..................',
+        '..ooooooooooooooo.',
+        '.oBBBBBBBBBBBBBBBo',
+        '.oBbbbbbbbbbbbbbBo',
+        '.oBBBBooooooooooo.',
+        '.oBBBo............',
+        'oKKKKo............',
+        'oKKKKo............',
+        'oKKKo.............',
+        '.ooo..............'
+      ]
+    }
+  },
+  /* From the same box, still with a 2019 price sticker on the tank. It holds
+     forty and it carries about three tiles, which is the whole personality. */
+  water: {
+    n: 'Water Pistol', e: '💦',
+    d: 'Translucent pink. A 2019 price sticker on the tank. Fill it at the sink, not at the cooler — Terry has views.',
+    mag: 40, reload: 2.4, rate: 11, speed: 7.2, range: 3.6, spread: 0.17, kick: 0.5,
+    shot: { len: 3, w: 2, body: '#7fd8ff', tip: '#dff4ff', trail: 0 },
+    art: {
+      pivot: [5, 9], muzzle: [17, 3],
+      pal: { o: '#1d2230', C: '#6fd0f2', c: '#a9e7fb', P: '#e46ba8', n: '#c9d6e8' },
+      px: [
+        '......ooooooo.....',
+        '.....oCCCCCCCoo...',
+        '...ooCCcccCCCCCoo.',
+        '..oCCCCCCCCCCCCCCo',
+        '..onnnnnnnnnnnnnno',
+        '..oCCCCCCCCCCCCCCo',
+        '...ooCCCCCCCCCooo.',
+        '.....oCCCCCCo.....',
+        '.....oCCPPCo......',
+        '.....oPPPPo.......',
+        '......oPPo........',
+        '......oPo.........',
+        '......oo..........'
+      ]
+    }
+  }
+};
+
+const Guns = {
+  /* The order Q walks, and the order the box hands them over in. */
+  ORDER: ['dart', 'band', 'water'],
+
+  /* ---- state ----
+     What is OWNED is in G.guns and is saved: which ones you have, which is in
+     your hand, how much is left in each, and who you have already hit today.
+     What is HAPPENING is here and is not saved — coming back to a shift with
+     the gun still up and the trigger still held would be a strange way to
+     rejoin an office. */
+  shots: [],
+  armed: false,      /* is it out */
+  a: 0,              /* where it is pointing, radians, screen space */
+  want: false,       /* is the trigger held */
+  cool: 0, reloadT: 0, flash: 0, holster: 0, hint: 0,
+
+  /* How far the shoulders may turn past the direction the sprite is drawn
+     facing before the sprite gives up and faces the other way. Four rows of
+     art and any angle of aim: the difference between the two is taken up at
+     the waist, and this is the cap on it. The head is twenty-five pixels above
+     the hip, so every tenth of a radian moves it two and a half pixels
+     sideways — which on a body fourteen pixels wide is a great deal further
+     than it sounds, and past about a third of a radian a person stops reading
+     as twisting and starts reading as falling over. */
+  TWIST: 0.30,
+  /* Where the hands are, relative to the point the sprite stands on. Thirteen
+     up is the middle of the chest on a 56-row frame and five out is far enough
+     that the barrel clears the body.
+
+     RISE is the vertical half of that reach and it is deliberately not the
+     same number. This is a three-quarter view: pointing away from the camera
+     is pointing UP the screen, and a gun held at a flat chest height while
+     aiming that way disappears behind its owner entirely — aimed at the far
+     wall, the blaster was simply not on the screen. Lifting it as it turns
+     away puts it back over the shoulder, where you can see what you are
+     holding, and drops it below the hands on the way down. */
+  HAND_Y: -13, HAND_OUT: 5, RISE: 9, RISE_UP: 13,
+  /* Where a shot is born and how high it is drawn. It travels on the GROUND
+     plane like everything else in this game — that is what lets it be tested
+     against people and walls with the same arithmetic everything else uses —
+     and is simply drawn at chest height, which is where the muzzle is. */
+  SPAWN_R: 15, SHOT_Z: -11,
+  /* Taller than a desk. A dart goes over a desk, a worktop, a bin and a chair,
+     because it is thrown at chest height and those are not chest height; it
+     stops at a wall, a cabinet, a vending machine and a shut door. The drawn
+     size is the only height this game has ever had, and it turns out to be
+     enough to answer the question. */
+  STOP_H: 24,
+
+  /* ---- what you own ---- */
+  state() {
+    if (!G.guns) G.guns = { have: [], gun: null, ammo: {}, hit: {} };
+    const g = G.guns;
+    if (!Array.isArray(g.have)) g.have = [];
+    if (!g.ammo) g.ammo = {};
+    if (!g.hit) g.hit = {};
+    return g;
+  },
+  have() { return this.state().have.filter(id => GUNS[id]); },
+  any() { return this.have().length > 0; },
+  id() {
+    const g = this.state();
+    if (g.gun && GUNS[g.gun] && g.have.indexOf(g.gun) >= 0) return g.gun;
+    return this.have()[0] || null;
+  },
+  def() { return GUNS[this.id()] || null; },
+  ammo() { const id = this.id(); return id ? (this.state().ammo[id] || 0) : 0; },
+
+  give(id) {
+    if (!GUNS[id]) return false;
+    const g = this.state();
+    if (g.have.indexOf(id) < 0) g.have.push(id);
+    g.ammo[id] = GUNS[id].mag;
+    /* The first one you pick up is the one in your hand, and the second and
+       third do not take it off you. Taking all three out of the away-day box
+       is three calls to this in one line, and the last of them used to win —
+       so opening the box left you holding the water pistol, which is the
+       third-funniest of the three and not the one anybody reached for. */
+    if (!g.gun || !GUNS[g.gun] || g.have.indexOf(g.gun) < 0) g.gun = id;
+    return true;
+  },
+  /* Put one of them in your hand by name. Refuses one you do not have, which
+     is the only way this can be asked wrongly. */
+  select(id) {
+    if (!GUNS[id] || this.have().indexOf(id) < 0) { Sfx.deny(); return false; }
+    this.state().gun = id;
+    this.reloadT = 0; this.cool = 0.15;
+    return true;
+  },
+  /* Walk the ones you actually have, in catalogue order, so Q is the same
+     three in the same order every time rather than the order you found them. */
+  next() {
+    const list = this.ORDER.filter(k => this.have().indexOf(k) >= 0);
+    if (list.length < 2) return false;
+    const g = this.state();
+    g.gun = list[(list.indexOf(this.id()) + 1) % list.length];
+    this.reloadT = 0; this.cool = 0.2;
+    UI.toast(GUNS[g.gun].e, GUNS[g.gun].n + ' — ' + this.ammo() + '/' + GUNS[g.gun].mag);
+    Sfx.blip();
+    return true;
+  },
+
+  /* ---- may it be out at all ----
+     One question, asked by everything: the keyboard, the stick, the update and
+     the renderer. A gun is a thing you are holding in the world, so anything
+     that takes the world away takes it with them — and that includes being
+     behind a wheel, where both hands are already spoken for and where the
+     right-hand stick is the throttle. */
+  can() {
+    return G.state === 'play' && this.any()
+      && !(typeof Cars !== 'undefined' && Cars.driving)
+      && !Dialogue.on && !Panels.on && !Arcade.on && !(typeof Combat !== 'undefined' && Combat.E);
+  },
+
+  arm(on) {
+    on = !!on && this.can();
+    if (on === this.armed) { if (on) this.holster = this.HOLSTER; return; }
+    this.armed = on;
+    this.want = false;
+    this.holster = this.HOLSTER;
+    if (on) {
+      this.cool = Math.max(this.cool, 0.12);
+      /* Out with nothing in it is out with nothing in it: start the fumbling
+         now rather than on a trigger pull that cannot happen. Without this, a
+         gun put away halfway through a reload — which is what letting go of
+         the stick with an empty magazine does — came back out empty for ever,
+         because reloading is only ever started by firing. */
+      if (this.ammo() <= 0) this.reload();
+      Sfx.draw();
+      /* Said once, the first time, and said in whichever words this device
+         deserves — the same rule every other instruction in this game follows. */
+      if (!G.flags.gunHint) {
+        G.flags.gunHint = true;
+        UI.toast(this.def().e, TOUCH
+          ? 'The <b>' + this.def().n + '</b> is out. The stick on the ' + Hand.btnSide()
+            + ' aims it, and it fires where you push it.'
+          : '<b>' + this.def().n + '</b> out. The mouse or the arrow keys aim it, and it fires '
+            + 'where you point. <b>R</b> reloads, <b>Q</b> swaps, <b>G</b> puts it away.');
+      }
+    } else {
+      this.reloadT = 0;
+    }
+  },
+  /* Seconds of nobody touching the aim before it goes back in your pocket. It
+     exists for the thumb: on a phone there is no "holster" button and there
+     should not be one — you let go of the stick, and a moment later you are
+     somebody walking through an office again. */
+  HOLSTER: 2.6,
+  toggle() { this.arm(!this.armed); },
+
+  /* ---- pointing it ----
+     Two ways in, and they mean slightly different things. `point` is a vector
+     from a stick or a pair of arrow keys: it aims AND it pulls the trigger,
+     which is what a twin-stick right hand does. `at` is a place on the map —
+     the mouse — which aims and nothing else, because a mouse has its own
+     button and taking the click away from it would be rude. */
+  point(dx, dy) {
+    const m = Math.hypot(dx, dy);
+    if (m < 0.001) { this.want = false; return; }
+    this.arm(true);
+    if (!this.armed) return;
+    this.a = Math.atan2(dy, dx);
+    this.holster = this.HOLSTER;
+    /* Past half a push is a shot. Below it you are turning to face something,
+       which is a thing people do with a gun in their hand and which should not
+       cost a dart. */
+    this.want = m > 0.52;
+  },
+  at(wx, wy) {
+    if (!this.armed) return;
+    this.a = Math.atan2(wy - (P.y + this.HAND_Y), wx - P.x);
+    this.holster = this.HOLSTER;
+  },
+  trigger(on) {
+    if (on && !this.armed) this.arm(true);
+    this.want = !!on && this.armed;
+    if (this.want) this.holster = this.HOLSTER;
+  },
+
+  /* ---- the twist ----
+     The one piece of this that everybody in the building gets and not just the
+     person holding the gun. A sprite sheet has four directions; an aim has
+     every angle; a person resolves the difference by turning their shoulders
+     and leaving their feet where they are. So the renderer is told two things
+     rather than one — which row the LEGS are drawn from, and which row the
+     TORSO is — and the leftover angle between the aim and the row it picked is
+     handed over as a lean. Sprites.draw() takes it and Sprites.twisted() does
+     the cutting.
+
+     Anyone can be handed one. The player twists because they are aiming;
+     a colleague twists because somebody has just hit them with a foam dart and
+     they are turning round to find out who, which is the same movement and the
+     same three lines of code. */
+  twist(angle) {
+    const dir = Sprites.dirOf(Math.cos(angle), Math.sin(angle));
+    const card = [-Math.PI / 2, Math.PI, Math.PI / 2, 0][dir];
+    let d = angle - card;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    /* Facing the camera, a turn to the aimer's right is a lean to the screen's
+       right; facing away it is the other way round. Left and right take the
+       residual as it comes, because there it is simply the barrel rising and
+       falling and the shoulders go with it. */
+    if (dir === 2) d = -d;
+    return { dir, lean: clamp(d, -this.TWIST, this.TWIST) };
+  },
+  /* The player's own, or null when there is nothing to twist about. */
+  pose() { return this.armed ? this.twist(this.a) : null; },
+  /* Somebody else's: they have `watch` set to a bearing and a moment to hold
+     it for. Set by a dart landing on them. */
+  watchOf(who) {
+    if (!who || !who.watch || who.watch.till < R.t) return null;
+    return this.twist(who.watch.a);
+  },
+  watch(who, x, y, secs) {
+    if (!who) return;
+    who.watch = { a: Math.atan2(y - who.y, x - who.x), till: R.t + (secs || 2.2) };
+  },
+
+  /* ---- firing ---- */
+  ready() { return this.armed && this.cool <= 0 && this.reloadT <= 0 && this.ammo() > 0; },
+  reload() {
+    const d = this.def(); if (!d || !this.armed) return false;
+    if (this.reloadT > 0 || this.ammo() >= d.mag) return false;
+    this.reloadT = d.reload;
+    Sfx.reload();
+    return true;
+  },
+  fill() {
+    const id = this.id(); if (!id) return;
+    this.state().ammo[id] = GUNS[id].mag;
+    UI.hudDirty();
+  },
+  shoot() {
+    const d = this.def(); if (!d) return;
+    const g = this.state(), id = this.id();
+    g.ammo[id] = Math.max(0, (g.ammo[id] || 0) - 1);
+    this.cool = 1 / d.rate;
+    this.flash = 0.06;
+    const a = this.a + rnd(-d.spread, d.spread);
+    const sp = d.speed * TILE;
+    this.shots.push({
+      x: P.x + Math.cos(a) * this.SPAWN_R, y: P.y + Math.sin(a) * this.SPAWN_R,
+      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, a,
+      left: d.range * TILE, gun: id, t: 0
+    });
+    if (d.kick) FX.shake(d.kick);
+    Sfx.gun(id);
+    /* Empty is not a failure state to be announced, it is a click and then the
+       fumbling. Reloading itself is automatic because the alternative on a
+       phone is a fourth control for a thing that has exactly one answer. */
+    if (!g.ammo[id]) this.reload();
+    UI.hudDirty();
+  },
+
+  /* ---- what is in the way ----
+     Walls, and anything solid that is drawn taller than a desk. Deliberately
+     NOT Collide.free(): that is the question a pair of feet asks, and a foot
+     box is stopped by every bin, chair and worktop in the building — none of
+     which is at chest height, and all of which a dart sails over. */
+  stopped(x, y) {
+    const tx = Math.floor(x / TILE), ty = Math.floor(y / TILE);
+    if (tx < 0 || ty < 0 || tx >= MAPW || ty >= MAPH) return true;
+    if (World.solid[ty][tx]) return true;
+    const here = World.at(tx, ty);
+    for (let i = 0; i < here.length; i++) {
+      const o = here[i];
+      if (!o.solid) continue;
+      const f = o.fdef || FURN[o.kind] || {};
+      if (f.mount === 'surface') continue;      /* it is standing on a worktop */
+      if ((f.size || TILE) >= this.STOP_H) return true;
+    }
+    return false;
+  },
+
+  /* ---- the frame ---- */
+  update(dt) {
+    if (!this.can() && this.armed) this.arm(false);
+    if (this.flash > 0) this.flash -= dt;
+    if (this.armed) {
+      if (this.reloadT > 0 && (this.reloadT -= dt) <= 0) { this.reloadT = 0; this.fill(); }
+      if (this.cool > 0) this.cool -= dt;
+      if (this.want && this.ready()) this.shoot();
+      /* Nothing has touched the aim for a while: put it away. The keyboard
+         refreshes this on every aim and the stick on every frame it is held,
+         so this only ever runs out when somebody has genuinely stopped. */
+      if ((this.holster -= dt) <= 0) this.arm(false);
+    }
+    this.step(dt);
+    this.hud();
+  },
+
+  /* The things in the air. Stepped in pieces no longer than a third of a tile:
+     a dart at thirteen tiles a second covers most of a person in one frame,
+     and a hit test that only looks at where it ENDED UP is a dart that goes
+     through people and walls at exactly the speeds that matter. */
+  step(dt) {
+    for (let i = this.shots.length - 1; i >= 0; i--) {
+      const s = this.shots[i];
+      s.t += dt;
+      const dist = Math.hypot(s.vx, s.vy) * dt;
+      const steps = Math.max(1, Math.ceil(dist / (TILE / 3)));
+      let gone = false;
+      for (let k = 0; k < steps && !gone; k++) {
+        s.x += s.vx * dt / steps; s.y += s.vy * dt / steps;
+        s.left -= dist / steps;
+        if (this.stopped(s.x, s.y)) { this.splat(s, null); gone = true; break; }
+        const who = this.whoIsThere(s);
+        if (who) { this.land(s, who.o, who.kind); gone = true; break; }
+        if (s.left <= 0) { this.splat(s, null); gone = true; }
+      }
+      if (gone) this.shots.splice(i, 1);
+    }
+  },
+  /* Everybody a shot could be touching, in the order the game already draws
+     them: the twenty colleagues, then whoever is walking past outside. */
+  whoIsThere(s) {
+    const r = TILE * 0.42;
+    if (typeof NPCM !== 'undefined' && NPCM.list) {
+      for (const n of NPCM.list) {
+        if (Math.abs(n.x - s.x) < r && Math.abs(n.y - s.y) < r) return { o: n, kind: 'npc' };
+      }
+    }
+    if (typeof Peds !== 'undefined') {
+      for (const p of Peds.list()) {
+        if (Math.abs(p.x - s.x) < r && Math.abs(p.y - s.y) < r) return { o: p, kind: 'ped' };
+      }
+    }
+    return null;
+  },
+
+  /* ---- and what everybody does about it ---- */
+  NPC_LINES: {
+    dart: ['Oi.', 'Right.', 'That was my ear.', 'Very mature.', 'Is that from the away day?',
+      'You are aware we have visitors.', 'I felt that through the headset.', 'Put it back in the box.'],
+    band: ['OW.', 'That actually stings.', 'That is not a toy, that is stationery.',
+      'Right, who — oh. Of course.', 'That is coming out of somebody’s wellbeing budget.'],
+    water: ['Do you mind.', 'That is my keyboard.', 'It is a work laptop.', 'Lovely. Thank you.',
+      'I have a call in four minutes.', 'That had better be water.']
+  },
+  PED_LINES: ['Alright.', 'Excuse me?', 'Yes, thank you.', 'I saw that.', 'Mate.',
+    'On a Tuesday as well.', 'Wonderful.'],
+
+  land(s, who, kind) {
+    const d = GUNS[s.gun] || GUNS.dart;
+    this.splat(s, who);
+    /* They turn to look at whoever did it, upper body first, feet later, which
+       is the same twist the player is using to aim and the reason it lives in
+       one place. */
+    this.watch(who, P.x, P.y, 2.6);
+    if (kind === 'ped') {
+      if (who.sayT <= 0) { who.say = pick(this.PED_LINES); who.sayT = 2.4; }
+      return;
+    }
+    who.stunTimer = Math.max(who.stunTimer || 0, 0.9);
+    if (who.sayT <= 0) { who.say = pick(this.NPC_LINES[s.gun] || this.NPC_LINES.dart); who.sayT = 3.2; }
+    if (typeof Faces !== 'undefined') Faces.flash(who.id, s.gun === 'band' ? 'anger' : 'shock', 1.6);
+    /* It costs you something, once per person per shift. A second dart at the
+       same person is the same joke and should not be a second grudge — and
+       forty darts at Marjorie should not put her below anything a conversation
+       can recover. */
+    const hit = this.state().hit;
+    if (!hit[who.id]) {
+      hit[who.id] = true;
+      Rel.add(who.id, -1);
+      P.stats.chaos = (P.stats.chaos || 0) + 0.5;
+      const n = Object.keys(hit).length;
+      if (n >= 5) Ach.get('a_foamwar');
+    }
+  },
+  /* The end of a shot, wherever it ended. A dart bounces and lies there for a
+     moment, water goes everywhere, a band simply stops existing. */
+  splat(s, who) {
+    const d = GUNS[s.gun] || GUNS.dart;
+    const x = s.x, y = s.y + this.SHOT_Z;
+    if (s.gun === 'water') { FX.parts.push(...this.spray(x, y, 5, d.shot.body)); Sfx.splat(); }
+    else { FX.parts.push(...this.spray(x, y, 3, d.shot.body)); Sfx.plink(); }
+    if (who && typeof FX !== 'undefined') FX.burst(who.x, who.y - 18, d.e, 3, d.shot.body);
+  },
+  spray(x, y, n, colour) {
+    const out = [];
+    /* Nothing at all when Motion is off. Every other particle in the game is
+       gated on that setting inside FX.burst(); these are pushed straight into
+       the list, so they have to ask for themselves. */
+    if (!FX.motion) return out;
+    for (let i = 0; i < n; i++) {
+      out.push({ x, y, vx: rnd(-40, 40), vy: rnd(-50, 10), t: 0, life: rnd(.25, .5), c: colour, sz: 3 });
+    }
+    return out;
+  },
+
+  /* ---- the picture ----
+     Baked once per gun at 1:1 and kept. A grid of characters into a canvas of
+     pixels: nothing here is clever, and the only rule is that `.` is nothing
+     and every other character must be in the palette, or it is nothing too. */
+  art(id) {
+    this._art = this._art || new Map();
+    const had = this._art.get(id);
+    if (had) return had;
+    const a = GUNS[id] && GUNS[id].art;
+    if (!a) return null;
+    const w = a.px[0].length, h = a.px.length;
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const g = cv.getContext('2d');
+    for (let y = 0; y < h; y++) {
+      const row = a.px[y];
+      for (let x = 0; x < row.length; x++) {
+        const col = a.pal[row[x]];
+        if (!col) continue;
+        g.fillStyle = col;
+        g.fillRect(x, y, 1, 1);
+      }
+    }
+    const out = { cv, w, h, pivot: a.pivot, muzzle: a.muzzle };
+    this._art.set(id, out);
+    return out;
+  },
+
+  /* One gun, in one pair of hands, pointing wherever it is pointing. `x, y` is
+     the point the person stands on; everything else is worked out from there.
+
+     Mirrored rather than rotated past the vertical: a gun turned 170 degrees is
+     a gun lying on its back, which is not how anybody holds one. Flipping it
+     about the barrel instead keeps the grip under the hand and the sights on
+     top, which is what a side-on gun does when its owner turns round. */
+  paint(c, x, y, ang, id) {
+    const art = this.art(id || this.id());
+    if (!art) return;
+    const flip = Math.abs(ang) > Math.PI / 2;
+    const ax = x + Math.cos(ang) * this.HAND_OUT;
+    /* Asymmetric on purpose. Downwards the gun only has to clear the hands;
+       upwards it has to clear the HEAD, or the one thing you are holding is
+       behind the one thing that is always drawn on top. Thirteen puts the
+       muzzle a pixel or two above the hair of somebody aiming at the far wall,
+       which is what "over the shoulder" looks like from up here. */
+    const ay = y + this.HAND_Y + Math.sin(ang) * (Math.sin(ang) < 0 ? this.RISE_UP : this.RISE);
+    const sm = c.imageSmoothingEnabled;
+    c.imageSmoothingEnabled = false;
+    c.save();
+    c.translate(Math.round(ax), Math.round(ay));
+    c.rotate(ang);
+    if (flip) c.scale(1, -1);
+    c.drawImage(art.cv, -art.pivot[0], -art.pivot[1]);
+    /* The flash, at the muzzle, in the muzzle's own frame — which is why it is
+       inside the transform rather than worked out in world coordinates. */
+    if (this.flash > 0 && this.armed) {
+      const d = GUNS[id || this.id()];
+      c.globalAlpha = clamp(this.flash / 0.06, 0, 1);
+      c.fillStyle = d && d.shot ? d.shot.tip : '#ffe27a';
+      c.fillRect(art.muzzle[0], art.muzzle[1] - 1, 4, 3);
+      c.fillRect(art.muzzle[0] + 2, art.muzzle[1] - 2, 2, 5);
+      c.globalAlpha = 1;
+    }
+    c.restore();
+    c.imageSmoothingEnabled = sm;
+  },
+  /* In front of somebody or behind them, which is the whole of the depth
+     sorting a held object needs: aiming away from the camera puts the gun on
+     the far side of the body, and it is drawn first. */
+  behind() { return this.armed && Math.sin(this.a) < -0.34; },
+
+  /* Everything in the air. Drawn as pixels rather than as sprites — a dart is
+     seven pixels by three and a rectangle at an angle is exactly that. */
+  paintShots(c) {
+    for (const s of this.shots) {
+      const d = GUNS[s.gun] || GUNS.dart, sh = d.shot;
+      const x = s.x, y = s.y + this.SHOT_Z;
+      c.save();
+      c.translate(x, y);
+      c.rotate(s.a);
+      if (sh.trail) {
+        c.globalAlpha = 0.35; c.fillStyle = sh.body;
+        c.fillRect(-sh.len - sh.trail, -sh.w / 2 + 0.5, sh.trail, 1);
+        c.globalAlpha = 1;
+      }
+      c.fillStyle = sh.body;
+      c.fillRect(-sh.len / 2, -sh.w / 2, sh.len, sh.w);
+      c.fillStyle = sh.tip;
+      c.fillRect(sh.len / 2 - 2, -sh.w / 2, 2, sh.w);
+      c.restore();
+    }
+  },
+
+  /* ---- the readout ----
+     What is in your hand and what is left in it, as one line. Only while it is
+     out: a magazine count on the screen of an office simulator the rest of the
+     time would be the game telling you what it thinks it is about. */
+  hud() {
+    const el = $('#gunHud');
+    if (!el) return;
+    const on = this.armed && this.can();
+    /* Called every frame from update(), so it is written as a comparison and
+       not as a DOM write: the readout changes about six times a magazine and
+       rewriting it sixty times a second would be innerHTML churn under the one
+       thing in this game that has to stay at sixty. */
+    const sig = on ? this.id() + ':' + this.ammo() + ':' + (this.reloadT > 0 ? 'r' : '') : '';
+    if (sig === this._hudSig) return;
+    this._hudSig = sig;
+    el.hidden = !on;
+    if (!on) return;
+    const d = this.def(), n = this.ammo();
+    let pips = '';
+    for (let i = 0; i < Math.min(d.mag, 12); i++) pips += i < n ? '▮' : '▯';
+    if (d.mag > 12) pips = n + '/' + d.mag;
+    el.innerHTML = '<span class="gh-e">' + d.e + '</span><span class="gh-n">' + esc(d.n) + '</span>'
+      + '<span class="gh-a' + (this.reloadT > 0 ? ' rl' : '') + '">'
+      + (this.reloadT > 0 ? 'reloading' : pips) + '</span>';
+  },
+
+  /* A level swap, a save being loaded, a shift ending: the things in the air
+     belong to the room they were fired in. */
+  clear() {
+    this.shots.length = 0;
+    this.armed = false; this.want = false; this.reloadT = 0; this.cool = 0;
+  }
+};
