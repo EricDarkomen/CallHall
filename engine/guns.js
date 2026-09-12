@@ -280,6 +280,49 @@ const Guns = {
     /* down  */ [[[13, 35], [26, 35]], [[11, 35], [24, 35]], [11, 32], [26, 32], [26, 32], [11, 32]],
     /* right */ [[30, 30], [28, 30], [28, 30], [30, 30], [28, 30], [30, 30]]
   ],
+  /* ---- WHAT THE BOTTOM HALF OF A POSE IS ----
+     Every cell of the sheet is composed of TWO frames, and this is the second
+     one: from row 38 down, every pose gets the legs of frame 11.
+
+     It is there for two reasons, and the first is hands. Every standing and
+     walking frame in this kit draws them hanging at the hips, rows 36 to 42,
+     and the pose frames draw a second pair up at the chest — so a person
+     holding a blaster in two braced hands had two more dangling at their
+     sides. Composing at 38 takes the stance's legs and leaves its hands
+     behind, which is the only pair that goes.
+
+     The second is that the pose frames are RUNNING. Frames 8 and 10 are the
+     middle of a stride: one foot off the floor, the body pitched forward, and
+     frozen for an idle they read as somebody paused mid-run rather than
+     somebody standing holding something. Frame 11 is the passing frame — feet
+     nearly together, both of them down — and it is what a person stands like.
+
+     And the two halves are ALIGNED, because a runner's hips are not where a
+     standing person's are: measured at the trouser midline just under the
+     join, frames 8 and 10 sit five pixels forward of frame 11 in the side
+     rows. Composed without that correction the top half overhangs the legs by
+     five pixels, which is a wedge of thigh sticking out behind somebody like a
+     tail. Shifted, the join is invisible. */
+  STANCE: 11, JOIN: 38 / 56,
+  /* The trouser midline at rows 38-41, per direction, per frame. Measured off
+     the art. Only the four run frames are here because they are the only ones
+     the sheet is composed from. */
+  HIPMID: {
+    8: [18, 23.5, 17.5, 13.5],
+    9: [18.5, 17.5, 17.5, 19.5],
+    10: [19, 23, 19.5, 14],
+    11: [18.5, 18, 19.5, 19]
+  },
+  /* How far to shove a pose sideways so its hips land on the stance's. A
+     mirrored cell is measured mirrored: its midline is the frame width less
+     the source's. */
+  hipShift(dir, spec, fw) {
+    const src = spec[1] ? (dir === 1 ? 3 : dir === 3 ? 1 : dir) : dir;
+    const mid = this.HIPMID[spec[0]] ? this.HIPMID[spec[0]][src] : this.HIPMID[11][src];
+    const mine = spec[1] ? (fw - 1) - mid : mid;
+    return Math.round(this.HIPMID[this.STANCE][dir] - mine);
+  },
+
   /* The back row again: this lifts what is in that invisible hand over the
      shoulder, where you can see what you are holding. Without it, aimed at the
      far wall, the blaster was simply not on the screen. */
@@ -525,15 +568,32 @@ const Guns = {
     cv.width = m.fw * n; cv.height = m.fh * 4;
     const g = cv.getContext('2d');
     g.imageSmoothingEnabled = false;
+    const join = Math.round(m.fh * this.JOIN);
+    this._shift = [];
     for (let d = 0; d < 4; d++) {
+      this._shift[d] = [];
       for (let i = 0; i < n; i++) {
         const spec = this.POSE[d][i];
         /* Whose row a mirrored cell comes from: the one facing the other way
            for the two side rows, and its own for the two front-on ones. */
         const src = spec[1] ? (d === 1 ? 3 : d === 3 ? 1 : d) : d;
+        const sh = this.hipShift(d, spec, m.fw);
+        this._shift[d][i] = sh;
+
+        /* THE LEGS FIRST, from row 38 down: this direction's own passing
+           frame, square on, carrying no hands. */
         g.save();
-        if (spec[1]) { g.translate((i + 1) * m.fw, 0); g.scale(-1, 1); }
-        else g.translate(i * m.fw, 0);
+        g.beginPath(); g.rect(i * m.fw, d * m.fh + join, m.fw, m.fh - join); g.clip();
+        g.drawImage(m.img, (d * m.frames + this.STANCE) * m.fw, r.row * m.fh, m.fw, m.fh,
+          i * m.fw, d * m.fh, m.fw, m.fh);
+        g.restore();
+
+        /* THEN THE POSE OVER THE TOP of it, above the join, mirrored if the
+           table says so and shoved sideways so its hips land on the legs'. */
+        g.save();
+        g.beginPath(); g.rect(i * m.fw, d * m.fh, m.fw, join); g.clip();
+        if (spec[1]) { g.translate((i + 1) * m.fw + sh, 0); g.scale(-1, 1); }
+        else g.translate(i * m.fw + sh, 0);
         g.drawImage(m.img, (src * m.frames + spec[0]) * m.fw, r.row * m.fh, m.fw, m.fh,
           0, d * m.fh, m.fw, m.fh);
         g.restore();
@@ -608,6 +668,13 @@ const Guns = {
       ? 0 : Sprites.breathLift('player');
     const l = this.legs(t.dir);
     P.dir = l.dir; this.back = l.back;
+    /* WHEN BOTH HALVES WANT THE SAME THING they are one frame and not two:
+       standing still, or walking the way you are pointing. Nothing is cut,
+       nothing can disagree, and the stance is whatever that frame's stance is.
+       It is only when the feet and the shoulders genuinely differ — strafing,
+       or backing away from what you are aiming at — that the body is cut in
+       half, and then the legs take one of the two passing frames. */
+    t.whole = !P.moving && l.dir === t.dir;
     this._pose = t;
     return t;
   },
@@ -631,6 +698,10 @@ const Guns = {
     let h = this.HANDS[t.dir][t.col];
     /* Two hands: the one on the side the aim is leaning. */
     if (Array.isArray(h[0])) h = h[Math.cos(ang) < 0 ? 0 : 1];
+    /* Measured on the frame, drawn on the cell, and the cell shoved sideways
+       to put its hips over its legs — so the hand went with it. */
+    const shift = (this._shift && this._shift[t.dir]) ? (this._shift[t.dir][t.col] || 0) : 0;
+    h = [h[0] + shift, h[1]];
     const waist = Sprites.waistOf(m);
     const px = b.x + m.fw / 2, py = b.y + waist;
     const sh = Math.round(Math.sin(t.lean) * 3);

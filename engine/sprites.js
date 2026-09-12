@@ -345,6 +345,26 @@ const Sprites = {
      size bends in the right place too. */
   WAIST: 35 / 56,
   waistOf(m) { return Math.round(m.fh * this.WAIST); },
+  /* ---- and where a person is CUT, which is not always the same line ----
+     The waist is where a body bends, so it is where the TURN happens, always.
+     Where the CUT goes depends on whether the two halves are the same drawing.
+
+     Same drawing — both halves out of one cell, which is what standing still
+     or walking the way you are pointing means — and the cut is the waist too:
+     nothing can disagree, because there is only one frame.
+
+     DIFFERENT drawings and the waist is the wrong line, for one reason: hands.
+     Every standing and walking frame in this kit hangs them at the hips, rows
+     36 to 42, BELOW the waist — so a top half holding a blaster in two braced
+     hands got another two dangling at its sides, which is one pair too many.
+     Eight rows lower is below every one of them and above every foot: the arms
+     come whole from the half that is holding something, the hips come with
+     them, and what swings underneath is shins.
+
+     Measured, like the waist: hands end at row 42 in the lowest frame that has
+     them, and no foot starts above 44. */
+  HIP: 43 / 56,
+  hipOf(m) { return Math.round(m.fh * this.HIP); },
 
   /* ---- the twist ----
      One person, drawn twice, cut in half at the waist: the legs from the row
@@ -371,6 +391,7 @@ const Sprites = {
   twisted(c, id, r, legDir, legFrame, b, tw) {
     const m = r.sheet;
     const waist = this.waistOf(m);
+    const hip = this.hipOf(m);
     const cut = (dir, frame) => {
       if (!(dir >= 0 && dir < m.dirs.length)) dir = 2;
       c.drawImage(m.img, (dir * m.frames + frame) * m.fw, r.row * m.fh, m.fw, m.fh,
@@ -396,17 +417,32 @@ const Sprites = {
     const tdir = tw.dir, tframe = tw.frame === undefined ? legFrame : tw.frame;
     const lean = tw.lean || 0;
 
-    /* The legs, from the hip down, exactly where they always were. */
+    /* ---- the legs ----
+       A separate blit, and one that takes neither the lean nor the breath: a
+       lean is a bend at the waist, and applied to the whole figure it is a
+       bowling pin going over, feet and all. The feet stay where they were put.
+
+       `whole` says they come out of the SAME CELL as the top half — both
+       halves wanting the same direction — and then the cut is the waist and
+       the legs are that frame's own legs, which is as consistent as a person
+       can be. Otherwise the cut is the low one and what comes from the walk is
+       shins only: a run frame has a foot off the floor and the thigh it
+       belongs to lives above the waist, so cutting there between two different
+       frames leaves a boot lying on the carpet with no leg attached to it. */
+    const line = (tw.whole && cell) ? waist : hip;
     c.save();
-    c.beginPath(); c.rect(b.x - m.fw, b.y + waist, m.fw * 3, m.fh);
+    c.beginPath(); c.rect(b.x - m.fw, b.y + line, m.fw * 3, m.fh);
     c.clip();
-    cut(legDir, legFrame);
+    if (tw.whole && cell) {
+      c.drawImage(cell.img, cell.sx, cell.sy, m.fw, m.fh,
+        Math.round(b.x), Math.round(b.y), m.fw, m.fh);
+    } else cut(legDir, legFrame);
     c.restore();
 
-    /* The torso, from the hip up, turned about the hip. The shoulders also
-       shift a pixel or two the way the lean is going — a body twisting at the
-       waist moves sideways as well as round, and without it the rotation reads
-       as the head swivelling on a post. */
+    /* The torso, from the waist up, turned about it. The shoulders also shift
+       a pixel or two the way the lean is going, because a body twisting at the
+       waist moves sideways as well as round, and without that the rotation
+       reads as a head swivelling on a post. */
     c.save();
     /* The cut is clipped BEFORE the rotation and the rotation happens inside
        it, which is the way round that matters: a clip applied after would turn
@@ -414,32 +450,33 @@ const Sprites = {
        leaves a gap at the other. The line across the body stays level; what
        rotates below it is simply hidden behind the legs, which is where it
        has gone. */
-    c.beginPath(); c.rect(b.x - m.fw, b.y - m.fh, m.fw * 3, m.fh + waist + 1);
+    c.beginPath(); c.rect(b.x - m.fw, b.y - m.fh, m.fw * 3, m.fh + line + 1);
     c.clip();
     const px = b.x + m.fw / 2, py = b.y + waist;
     c.translate(px, py);
     c.rotate(lean);
     c.translate(-px + Math.round(Math.sin(lean) * 3), -py);
     top();
-    /* The face belongs to the half the face is on, and it is drawn inside the
-       same transform — an expression is part of the head and the head has just
-       turned.
-
-       A mirrored cell needs it mirrored too, and needs to be told which row
-       the body underneath actually came from: the patch is measured against a
-       specific frame of a specific direction, and drawing a left-facing mouth
-       over a right-facing head that has been flipped into place puts somebody's
-       expression on the back of their ear. */
-    if (typeof Faces !== 'undefined') {
-      if (cell && cell.flip) {
-        c.save();
-        c.translate(2 * (b.x + m.fw / 2), 0); c.scale(-1, 1);
-        Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y - lift);
-        c.restore();
-      } else if (cell) Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y - lift);
-      else Faces.paint(c, id, tdir, tframe, b.x, b.y);
-    }
+    /* And the face, inside the same transform: an expression is part of the
+       head and the head has just turned. */
+    if (typeof Faces !== 'undefined') this.faceOn(c, id, b, m, cell, tdir, tframe, lift);
     c.restore();
+  },
+
+  /* Whatever their face is doing, onto the half the face is on. A mirrored
+     cell needs it mirrored too, and needs to be told which row the body
+     underneath actually came from: the patch is measured against a specific
+     frame of a specific direction, and drawing a left-facing mouth over a
+     right-facing head that has been flipped into place puts somebody's
+     expression on the back of their ear. */
+  faceOn(c, id, b, m, cell, tdir, tframe, lift) {
+    if (cell && cell.flip) {
+      c.save();
+      c.translate(2 * (b.x + m.fw / 2), 0); c.scale(-1, 1);
+      Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y - lift);
+      c.restore();
+    } else if (cell) Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y - lift);
+    else Faces.paint(c, id, tdir, tframe, b.x, b.y);
   },
 
   draw(c, id, dir, frame, x, y, twist) {

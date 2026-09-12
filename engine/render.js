@@ -2992,6 +2992,11 @@ const R = {
              are easing along on the stick — P.fast is set by movePlayer from
              the size of the movement vector, so the animation and the pace
              can never disagree. */
+          /* WHICH FRAME THE LEGS ARE. With something in your hands they come
+             out of the run cycle — the only frames in the kit with no hands at
+             the hips, and so the only ones that leave you with one pair — held
+             at the stance frame while you are standing and played through
+             while you are not. See Guns.STANCE. */
           const pf = seat ? Sprites.sit('player')
             : P.moving ? Sprites.frame('player', this.animate, P.step, P.fast, tw && Guns.back)
             : this.animate && !tw ? Sprites.breath('player') : 0;
