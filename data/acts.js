@@ -357,6 +357,10 @@ const Acts = {
       'Nobody has opened this since the coach got back.'],
       [{ t: 'Take all four. It is a set.', to: null, do() {
         Item.give('blaster', true); Item.give('bandgun', true); Item.give('squirter', true); Item.give('noodle', true);
+        /* Found. The pin in zoneCheck() stops pointing at it now, and so does
+           the toast the first time you walk in. */
+        G.flags.awayBox = true;
+        if (typeof Guide !== 'undefined' && Guide.label === 'The away-day box') Guide.clear();
         Ach.get('a_awayday');
         Player.xp(25);
         P.stats.chaos += 1;
@@ -367,7 +371,14 @@ const Acts = {
         Chat.push('#general', 'Marjorie', '👩‍🦰', 'the box?');
         Chat.push('#general', 'Gary', '🧑‍🦱', 'the box');
       } },
-       { t: 'Close it. There is a reason it is in here.', to: null, do() { Player.mod({ rep: 2 }); } }]);
+       { t: 'Close it. There is a reason it is in here.', to: null, do() {
+         /* Closed is an answer too, and the guide stops nagging about it — the
+            box is still there, and so is the line in the chat, for whenever
+            you change your mind. */
+         G.flags.awayBox = true;
+         if (typeof Guide !== 'undefined' && Guide.label === 'The away-day box') Guide.clear();
+         Player.mod({ rep: 2 });
+       } }]);
   },
 
   /* --- archive --- */

@@ -382,9 +382,16 @@ const Sprites = {
        size of a frame, so it is still one blit; all this has to know is where
        to read it from. */
     const cell = tw.cell;
+    /* One pixel of breath, when the caller asks for it. A braced top half that
+       never moves at all is the thing that gives a sprite away as furniture,
+       and this is the same pixel and the same rhythm every seated person in
+       the building already breathes on. The clip does not move with it: the
+       row it uncovers at the waist is a row of legs, which is what is behind
+       it anyway. */
+    const lift = tw.lift || 0;
     const top = cell
       ? () => c.drawImage(cell.img, cell.sx, cell.sy, m.fw, m.fh,
-          Math.round(b.x), Math.round(b.y), m.fw, m.fh)
+          Math.round(b.x), Math.round(b.y) - lift, m.fw, m.fh)
       : () => cut(tw.dir, tw.frame === undefined ? legFrame : tw.frame);
     const tdir = tw.dir, tframe = tw.frame === undefined ? legFrame : tw.frame;
     const lean = tw.lean || 0;
@@ -427,9 +434,9 @@ const Sprites = {
       if (cell && cell.flip) {
         c.save();
         c.translate(2 * (b.x + m.fw / 2), 0); c.scale(-1, 1);
-        Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y);
+        Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y - lift);
         c.restore();
-      } else if (cell) Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y);
+      } else if (cell) Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y - lift);
       else Faces.paint(c, id, tdir, tframe, b.x, b.y);
     }
     c.restore();

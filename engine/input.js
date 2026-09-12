@@ -426,4 +426,17 @@ function zoneCheck() {
     if (Object.keys(ZONES).every(k => G.discovered[k])) Ach.get('a_allthree');
   }
   if (z === 'main' && !G.flags.tut2) { G.flags.tut2 = true; UI.objective('Find your workstation (🖥️) and say hello to somebody.'); }
+  /* THE ONE THING IN THIS BUILDING NOBODY CAN FIND BY WALKING PAST IT. The
+     away-day box is a box in a room with nine identical boxes in it, and the
+     only thing that distinguishes it is the name on the prompt when you are
+     already standing on top of it. The chat at 09:34 says which room; this
+     points at the box once you are in the room, and stops the day it is
+     opened. Pinned every time until then, said once. */
+  if (z === 'archive' && !G.flags.awayBox && typeof Guide !== 'undefined'
+      && Guide.setObject('awayday', 'The away-day box')) {
+    if (!G.flags.sawBox) {
+      G.flags.sawBox = true;
+      UI.toast('📦', 'One of these boxes has AWAY DAY 2019 on the side. The other nine do not.');
+    }
+  }
 }

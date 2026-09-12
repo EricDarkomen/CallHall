@@ -207,6 +207,10 @@ const Guns = {
      that the third dart of a magazine is not fired out of a pose left over
      from the first. */
   KICK_S: 0.13, kickT: 0,
+  /* The eased lean, and how fast it catches up. A fraction per frame rather
+     than a rate per second on purpose: it is a smoothing filter on something
+     that is only ever drawn, not a thing in the world with a speed. */
+  smooth: 0, EASE: 0.28,
 
   /* How far the shoulders may turn past the direction the sprite is drawn
      facing before the sprite gives up and faces the other way. Four rows of
@@ -287,11 +291,12 @@ const Guns = {
      a pixel of daylight between a grip and the fist holding it. */
   REACH: 2,
 
-  /* Where a shot is born and how high it is drawn. It travels on the GROUND
-     plane like everything else in this game — that is what lets it be tested
-     against people and walls with the same arithmetic everything else uses —
-     and is simply drawn at chest height, which is where the muzzle is. */
-  SPAWN_R: 15, SHOT_Z: -11,
+  /* How high a shot is drawn. It travels on the GROUND plane like everything
+     else in this game — that is what lets it be tested against people and
+     walls with the same arithmetic everything else uses — and is drawn eleven
+     pixels up, which is where a chest is. Where it is born is not a constant
+     any more: it is the muzzle, wherever the pose has put that. */
+  SHOT_Z: -11,
   /* Taller than a desk. A dart goes over a desk, a worktop, a bin and a chair,
      because it is thrown at chest height and those are not chest height; it
      stops at a wall, a cabinet, a vending machine and a shut door. The drawn
@@ -371,6 +376,9 @@ const Guns = {
     this.armed = on;
     this.want = false;
     this.holster = this.HOLSTER;
+    /* Whatever the shoulders were doing when it went away is not where they
+       are when it comes back out. */
+    if (on) { this._dir = null; this.smooth = this.twist(this.a).lean; }
     if (on) {
       this.cool = Math.max(this.cool, 0.12);
       /* Out with nothing in it is out with nothing in it: start the fumbling
@@ -444,12 +452,22 @@ const Guns = {
      a colleague twists because somebody has just hit them with a foam dart and
      they are turning round to find out who, which is the same movement and the
      same three lines of code. */
-  twist(angle) {
-    const dir = Sprites.dirOf(Math.cos(angle), Math.sin(angle));
-    const card = [-Math.PI / 2, Math.PI, Math.PI / 2, 0][dir];
-    let d = angle - card;
-    while (d > Math.PI) d -= Math.PI * 2;
-    while (d < -Math.PI) d += Math.PI * 2;
+  CARD: [-Math.PI / 2, Math.PI, Math.PI / 2, 0],
+  /* How far past the halfway line the aim has to go before the shoulders give
+     up the row they are on. Without it, an aim sitting exactly on a diagonal —
+     which is where a thumb naturally rests — flickers between two rows every
+     frame, and a person who cannot decide which way they are facing is worse
+     than one facing slightly the wrong way. Eight degrees of stickiness. */
+  HYST: 0.14,
+  twist(angle, sticky) {
+    let dir = Sprites.dirOf(Math.cos(angle), Math.sin(angle));
+    /* Keep the row we are on while the aim is still anywhere near it. Only the
+       player asks for this — a colleague turning to see who hit them is
+       answering once and has no row to keep. */
+    if (sticky && this._dir !== null && this._dir !== undefined && this._dir !== dir
+        && Math.abs(this.off(angle, this._dir)) < Math.PI / 4 + this.HYST) dir = this._dir;
+    if (sticky) this._dir = dir;
+    let d = this.off(angle, dir);
     /* Facing the camera, a turn to the aimer's right is a lean to the screen's
        right; facing away it is the other way round. Left and right take the
        residual as it comes, because there it is simply the barrel rising and
@@ -457,6 +475,14 @@ const Guns = {
     if (dir === 2) d = -d;
     return { dir, lean: clamp(d, -this.TWIST, this.TWIST) };
   },
+  /* The signed angle between a bearing and the cardinal a row faces. */
+  off(angle, dir) {
+    let d = angle - this.CARD[dir];
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    return d;
+  },
+  _dir: null,
   /* ---- and how far the feet are allowed to disagree with it ----
      A waist is not a swivel. The first version of this let the legs take the
      direction of travel whatever the shoulders were doing, and walking west
@@ -543,7 +569,16 @@ const Guns = {
      that knows travel is no longer the only thing pointing it. */
   pose() {
     if (!this.armed) return null;
-    const t = this.twist(this.a);
+    const t = this.twist(this.a, true);
+    /* THE LEAN IS EASED, the row is not. A row can only change in one step —
+       there are four of them and no drawing in between — but the lean can, and
+       it is the lean that carries most of the jump: crossing a boundary flips
+       it from one extreme to the other, thirty-odd degrees in a single frame,
+       on top of the art changing underneath. Easing it turns that into
+       something that reads as somebody turning round rather than as a glitch.
+       The eased value is kept here rather than recomputed, because what is
+       being smoothed is the thing that was drawn last frame. */
+    t.lean = this.smooth = this.smooth + (t.lean - this.smooth) * this.EASE;
     const sh = this.sheet('player');
     t.col = this.column();
     if (sh) {
@@ -563,6 +598,14 @@ const Guns = {
          still exactly right, because there is nothing to draw either way. */
       t.frame = 0;
     }
+    /* A BRACED TOP HALF IS NOT A FROZEN ONE. The pose is held rather than
+       played, which is right, and for the first few builds meant the shoulders
+       did not move at all while you stood there — the one thing that gives a
+       sprite away as furniture. This is the same one pixel, on the same
+       rhythm, that every seated person in the building breathes on. Not while
+       swinging or recoiling: those are already moving. */
+    t.lift = (this.swingT > 0 || this.kickT > 0 || !(typeof R !== 'undefined' && R.animate))
+      ? 0 : Sprites.breathLift('player');
     const l = this.legs(t.dir);
     P.dir = l.dir; this.back = l.back;
     this._pose = t;
@@ -642,8 +685,25 @@ const Guns = {
     this.kickT = this.KICK_S;
     const a = this.a + rnd(-d.spread, d.spread);
     const sp = d.speed * TILE;
+    /* OUT OF THE BARREL, not out of the middle of the chest. It used to be a
+       flat fifteen pixels along the aim from the body, which was near enough
+       while the gun was drawn at one height for every direction and plainly
+       wrong the moment it was not: aimed down, the gun is at the hip and the
+       dart appeared from the collarbone.
+
+       Two numbers come out of the muzzle and they are different questions. HOW
+       FAR IN FRONT is a distance in the ground plane, and it is the muzzle's
+       offset from the chest projected onto the aim — take the drawn y at face
+       value instead and a shot fired dead level starts eight pixels north of
+       the person firing it, which is most of the margin the hit test has. HOW
+       HIGH is what is left over, and it is carried on the shot, so the dart
+       leaves the barrel it is drawn coming out of instead of appearing at a
+       standard chest height an inch below it. */
+    const m = this.muzzleAt(a);
+    const reach = clamp((m.x - P.x) * Math.cos(a) + (m.y - (P.y + this.SHOT_Z)) * Math.sin(a), 12, 22);
+    const sx = P.x + Math.cos(a) * reach, sy = P.y + Math.sin(a) * reach;
     this.shots.push({
-      x: P.x + Math.cos(a) * this.SPAWN_R, y: P.y + Math.sin(a) * this.SPAWN_R,
+      x: sx, y: sy, z: clamp(m.y - sy, -30, 0),
       vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, a,
       left: d.range * TILE, gun: id, t: 0
     });
@@ -712,6 +772,21 @@ const Guns = {
     if (typeof Peds !== 'undefined') Peds.list().forEach(q => test(q, 'ped'));
   },
 
+  /* Where the end of the barrel is, in drawn pixels: the hand, plus the muzzle
+     offset from the grip turned through the aim. The same arithmetic paint()
+     does, which is the point — a dart that leaves from anywhere else is a dart
+     that leaves from somewhere you can see it did not. */
+  muzzleAt(ang, id) {
+    const art = this.art(id || this.id());
+    const h = this.hand(P.x, P.y, ang);
+    if (!art) return h;
+    const mx = art.muzzle[0] - art.pivot[0];
+    /* Mirrored past the vertical, exactly as the drawing is. */
+    const my = (art.muzzle[1] - art.pivot[1]) * (Math.abs(ang) > Math.PI / 2 ? -1 : 1);
+    const c = Math.cos(ang), s = Math.sin(ang);
+    return { x: h.x + mx * c - my * s, y: h.y + mx * s + my * c };
+  },
+
   /* ---- what is in the way ----
      Walls, and anything solid that is drawn taller than a desk. Deliberately
      NOT Collide.free(): that is the question a pair of feet asks, and a foot
@@ -769,7 +844,7 @@ const Guns = {
         s.left -= dist / steps;
         if (this.stopped(s.x, s.y)) { this.splat(s, null); gone = true; break; }
         const who = this.whoIsThere(s);
-        if (who) { this.splat(s, who.o); this.land(s.gun, who.o, who.kind, s.x, s.y + this.SHOT_Z); gone = true; break; }
+        if (who) { this.splat(s, who.o); this.land(s.gun, who.o, who.kind, s.x, s.y + (s.z || this.SHOT_Z)); gone = true; break; }
         if (s.left <= 0) { this.splat(s, null); gone = true; }
       }
       if (gone) this.shots.splice(i, 1);
@@ -844,7 +919,7 @@ const Guns = {
      moment, water goes everywhere, a band simply stops existing. */
   splat(s, who) {
     const d = GUNS[s.gun] || GUNS.dart;
-    const x = s.x, y = s.y + this.SHOT_Z;
+    const x = s.x, y = s.y + (s.z === undefined ? this.SHOT_Z : s.z);
     if (s.gun === 'water') { FX.parts.push(...this.spray(x, y, 5, d.shot.body)); Sfx.splat(); }
     else { FX.parts.push(...this.spray(x, y, 3, d.shot.body)); Sfx.plink(); }
     /* What it did to the person it hit is land()'s: a dart that stops at a
@@ -980,7 +1055,7 @@ const Guns = {
   paintShots(c) {
     for (const s of this.shots) {
       const d = GUNS[s.gun] || GUNS.dart, sh = d.shot;
-      const x = s.x, y = s.y + this.SHOT_Z;
+      const x = s.x, y = s.y + (s.z === undefined ? this.SHOT_Z : s.z);
       c.save();
       c.translate(x, y);
       c.rotate(s.a);
@@ -1035,6 +1110,6 @@ const Guns = {
   clear() {
     this.shots.length = 0;
     this.armed = false; this.want = false; this.reloadT = 0; this.cool = 0;
-    this.swingT = 0; this.swingHit = null; this.kickT = 0;
+    this.swingT = 0; this.swingHit = null; this.kickT = 0; this._dir = null; this.smooth = 0;
   }
 };
