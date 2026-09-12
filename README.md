@@ -27,6 +27,8 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 | Interact   | `E`                             | `E` button                     |
 | Drive      | `W` go · `S` brake, then reverse · `A D` steer · `H` horn | **two sticks**: left steers, right is the throttle |
 | Get out    | `E`                             | `OUT`                          |
+| Take it out | `G` · `Q` swaps · `R` reloads   | grab the green stick           |
+| Aim & fire | the mouse and its button, or the arrows | **two sticks**: left walks, right aims and fires |
 | Dialogue   | `Space`, `1`–`9` to choose      | tap the box, tap a reply       |
 | Panels     | `J I K C M P L`, `Esc` for menu | `☰`                            |
 | Save/load  | `F5` / `F9`                     | `☰` · Menu                     |
@@ -46,6 +48,21 @@ vector, and less speed means less steering bite — so the harder you asked it t
 turn, the less it turned. Two thumbs, two jobs, neither able to undo the other.
 The button you have been pressing all along stays exactly where it is and says
 `OUT`.
+
+Find the away-day box and a **third stick** appears in that same corner, in
+green, on exactly the throttle's terms: only while there is something in your
+pocket to fire, never at the same time as the throttle, and gone again the
+moment you get into a car. Push it and you aim; push it past halfway and you
+fire where you are pushing. Let go and the thing goes back in your pocket a
+couple of seconds later, because a phone has no spare corner for a holster
+button and does not need one.
+
+On a keyboard the arrows become the right hand while something is out — `W A S
+D` walks you about and the arrows aim and fire, which is how Robotron did it in
+1982 and is still the only way two directions fit on one keyboard. The mouse
+does the same job more directly: where the pointer is is where you are aiming,
+and the button is the trigger. Nobody has to choose: whichever of the three
+moved last is the one the game believes.
 
 The game saves itself, and detects touch devices to show the right controls and
 the right instructions.
@@ -167,6 +184,88 @@ still drawn live is the four things that actually move: the wheels, because the
 front pair steer; the lights, because they come on; the indicators, because they
 blink; and whoever is in it. The layered car costs less per frame than the flat
 one did.
+
+## The away-day box
+
+The game is called Call of Duty: Customer Service, and for eleven months the only
+thing in it you could point at anybody was a policy. There is a box in the
+archive with AWAY DAY 2019 on the side in marker, under a laminated sheet of the
+values, and it has three things in it: a foam dart blaster with six darts, a
+water pistol with the price sticker still on the tank, and a thing somebody made
+out of a post tray and four elastic bands, which is on the evidence the only
+object in this building anyone has ever built for pleasure. Nobody has opened it
+since the coach got back.
+
+Nothing in it hurts anybody. What it does is make thirty-one adults react, which
+is the only ammunition this game has ever had. Hit a colleague and they stop dead,
+turn round, and say something; hit somebody on the pavement outside and you get
+the entire British response to being hit by a stranger, which is "Alright." It
+costs you a point of goodwill with that person, once, the first time — a second
+dart at Marjorie is the same joke and should not be a second grudge. Five
+different colleagues in one shift is an achievement that nobody escalates and
+everybody remembers.
+
+They are **drawn rather than fetched**, and for the same two reasons the cars
+are. Every pixel in `art/` is third-party, licence-checked by the sprite build,
+and the kit this game pins is mediaeval-through-Victorian: there is no blaster in
+it and there was never going to be one. And a twin-stick game aims through every
+angle rather than through the eight a sprite sheet would give it, so the art has
+to be something that can be turned. Each gun in `engine/guns.js` is a grid of
+characters and a palette to look them up in — the arrays are pictures, and moving
+the trigger is changing a `t` to an `o` — baked once at 1:1 into a small canvas
+and rotated about its grip after that. Past the vertical it mirrors rather than
+carrying on round, because a gun turned a hundred and seventy degrees is a gun
+lying on its back and that is not how anybody holds one.
+
+A dart goes over a desk, a worktop, a bin and a chair, and stops at a wall, a
+cabinet, a vending machine and a shut door. That is one rule and it is measured
+rather than listed: it is thrown at chest height, and the size a thing is drawn
+at is the only height this game has. Anything solid drawn taller than a desk is
+in the way and anything shorter is not. The test the walking uses was the wrong
+one to borrow — a foot box is stopped by every bin in the building, none of which
+is at chest height.
+
+### People bend in the middle now
+
+This is the part that is not about guns at all.
+
+A character in this game is a sprite sheet with four directions in it, and an aim
+is an angle — any angle. For as long as a person was one bitmap the only thing
+the game could do with the difference between the two was throw it away: you
+would back up a corridor firing at what you were backing away from, with your
+whole body turned round to face it, walking backwards at a full run. People do
+that exactly never.
+
+So a person is now drawn in two halves with a joint between them. The legs come
+from the direction they are **walking**; the chest, shoulders and head come from
+the direction they are **looking**; and whatever angle is left over between that
+direction and the real bearing — up to about a quarter of a radian of it — is
+taken up as a lean about the hip, with the shoulders shifting a pixel or two the
+way the lean is going, because a body twisting at the waist moves sideways as
+well as round. One extra blit, and the other three hundred and fifty-six degrees
+come back.
+
+The waist is at row 35 of a 56-row frame, and that is measured rather than
+eyeballed: the character kit ships the body in layers, and `parts-legs` starts on
+the row `parts-torso` stops. It is kept as a fraction of the frame, so a sheet
+from another project at another size bends in the right place too.
+
+Two things about the cut had to be got right and both were wrong first. The two
+halves **overlap by a row**, because two clips butted exactly against each other
+leave a seam the width of nothing at all, which on a screen scaled by
+`devicePixelRatio` is a bright line across somebody's hips on about half of all
+phones. And the torso is **clipped before it is rotated**, not after: a clip
+applied after turns with the body, and a tilted cut line takes a wedge out of one
+hip and leaves a gap at the other. Clipped first, the line across the body stays
+level and whatever rotates below it is simply hidden behind the legs, which is
+where it has gone.
+
+Nobody is obliged to use it. The twist is an optional argument to `Sprites.draw`
+and every call that does not pass one is the single blit it always was — so a
+colleague at a printer costs exactly what they cost last week. The ones who do
+use it are you, because you are aiming, and anybody who has just been hit by a
+foam dart and is turning round to find out who by. That is the same movement and
+the same three lines of code, which is why it lives in one place.
 
 ## Fourteen doors, and who is behind them
 
@@ -451,6 +550,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
 | `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
 | `engine/sky.js` | The clock past five, the light, the weather and the season. Everything that draws asks it what time it is; nothing that draws knows. |
+| `engine/guns.js` | The away-day box: three guns drawn from a grid of characters rather than fetched, what they do to the people they land on, and the twist that lets somebody walk one way and point another. |
 | `engine/title.js`, `css/title.css` | The title screen: the wallboard, the switchboard behind it, and the menu. |
 | `scripts/release.sh` | Checks the build and moves the version string. Run it before you ship. |
 | `editor.html`, `editor/` | A level editor. Not the game, and never published. |

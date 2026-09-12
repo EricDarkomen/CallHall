@@ -248,6 +248,9 @@
     </div>
 
     <div class="hud" id="hudBottom">
+      <!-- What is in your hand and what is left in it. Only while it is out —
+           see Guns.hud(). -->
+      <div id="gunHud" role="status" aria-live="off" hidden></div>
       <div id="prompt" role="status" aria-live="polite"></div>
       <nav id="keyhints" aria-label="Open a panel">
         <button data-panel="quests"><span class="kh-i" aria-hidden="true">🗂️</span>J · Jobs</button>
@@ -270,6 +273,14 @@
       <div id="throttleZone">
         <div class="stick" id="throttle"><div id="throttleKnob"></div></div>
         <div id="throttleHint" aria-hidden="true"><span>GO</span><span>BRAKE</span></div>
+      </div>
+      <!-- The aim stick: the other half of twin-stick, in the same corner and
+           on the same terms as the throttle. Only on screen while you are
+           carrying something to fire and are not behind a wheel, and listed
+           before the buttons for the same reason the throttle is. -->
+      <div id="aimZone">
+        <div class="stick" id="aim"><div id="aimKnob"></div></div>
+        <div id="aimHint" aria-hidden="true"><span>AIM · FIRE</span></div>
       </div>
       <div class="dpad">
         <button class="u" data-dir="up">▲</button><button class="l" data-dir="left">◀</button>
@@ -403,6 +414,7 @@
 <script src="engine/faces.js?v=705892d"></script>
 <script src="engine/cars.js?v=705892d"></script>
 <script src="engine/peds.js?v=705892d"></script>
+<script src="engine/guns.js?v=705892d"></script>
 <script src="engine/render.js?v=705892d"></script>
 <script src="engine/panels.js?v=705892d"></script>
 <script src="engine/menus.js?v=705892d"></script>

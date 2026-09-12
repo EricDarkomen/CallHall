@@ -50,6 +50,15 @@ const ITEMS = {
   lunch:    { n: 'An Actual Proper Lunch', e: '🍲', d: 'Hot. Eaten sitting down. Away from the desk. Legally yours. Ron was right.', v: 5, r: 'rare', use: 'properLunch' },
   survey:   { n: 'A Completed Survey', e: '📄', d: '“5. The lady on the phone actually listened.” They never know it was you.', v: 0, r: 'legendary', quest: true },
   cushion:  { n: 'The Good Cushion', e: '🛏️', d: 'Memory foam, contoured, bought by somebody with their own money for their own spine. The chair was never the point.', v: 12, r: 'legendary', slot: 'trinket', eff: { patience: 12, empathy: 2 } },
+  /* ---- the away-day box ----
+     Marketing's, from 2019, and the only three things in this building you can
+     point at anybody. They carry a `gun:` naming their entry in GUNS
+     (engine/guns.js), which is the whole of the binding between a thing in
+     your pocket and a thing in your hands — an item with a `gun:` is a gun,
+     and nothing anywhere has to keep a second list. */
+  blaster:  { n: 'Foam Dart Blaster', e: '🔫', d: 'From the 2019 away day, in the box, under the thing about values. Six darts. Four are the originals; two are from a different set and everybody can tell.', v: 0, r: 'rare', gun: 'dart' },
+  bandgun:  { n: 'Elastic Band Pistol', e: '📎', d: 'A post tray, four bands and a bulldog clip, made by somebody who is no longer with the company and left in the box like a message.', v: 0, r: 'rare', gun: 'band' },
+  squirter: { n: 'Water Pistol', e: '💦', d: 'Translucent pink, with a 2019 price sticker still on the tank. Fill it at the sink, not at the cooler. Terry has views.', v: 0, r: 'rare', gun: 'water' },
   /* Off the High Street, from the four units that now have floors. */
   stamps:   { n: 'A Book of Stamps', e: '\ud83d\udcee', d: 'Bought at a counter, in person, after twenty-two minutes, in a transaction that took ninety seconds. You will use two of them.', v: 4.4, r: 'common' },
   biscuits: { n: 'A Box of Biscuits (bought)', e: '🎁', d: 'The good ones. The foil ones. Bought with your own money for people who will never know it was you.', v: 4, r: 'rare' },
@@ -242,6 +251,8 @@ const ACHS = {
   a_darts:   { n: 'Nobody Left Before Five', e: '🕔', d: 'Be the first person out of that door in six years.' },
   a_synergy: { n: 'There Have Always Been Four', e: '🕴️', d: 'Find out what is actually behind the Synergy door.' },
   a_allthree:{ n: 'The Full Tour', e: '🗺️', d: 'Visit every room in the building, including the ones that are not on the plan.' },
+  a_awayday: { n: 'Team Building', e: '📦', d: 'Open what Marketing brought back from the 2019 away day and never opened again.' },
+  a_foamwar: { n: 'The Foam War', e: '🔫', d: 'Hit five different colleagues in one shift. Nobody escalates it. Everybody remembers it.' },
   a_pauline: { n: 'Pauline, 2008', e: '🍵', d: 'Get Dave to tell you why he is actually still here.' },
   a_greggs:  { n: 'The Best Thing About This Building', e: '🥐', d: 'Go to the Greggs. Everyone who works here knows.' },
   a_fourteenth: { n: 'The Fourteenth Mug', e: '🍵', d: 'Ask Marjorie about the one facing the wall.' },

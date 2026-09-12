@@ -211,6 +211,11 @@ const Levels = {
          loaded is the kind of state that only shows itself as the camera
          following something that is not there. */
       if (typeof Cars !== 'undefined') Cars.getOutQuietly();
+      /* And nothing is still in the air. A dart is a thing in a room, and the
+         room has just been swapped out from under it — kept, it would arrive
+         on the next level mid-flight, at the same pixel, having travelled
+         through a door it could not fit through. */
+      if (typeof Guns !== 'undefined') Guns.clear();
 
       /* Presence: who is standing on this level, which phones can be heard
          ringing, and a minimap that is of this map rather than the last one. */

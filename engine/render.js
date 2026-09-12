@@ -2160,7 +2160,12 @@ const R = {
 
          `face` on the chair object, 0 up / 1 left / 2 down / 3 right, and
          absent means 0, so nothing on the fourth floor moves a pixel. */
-      Sprites.draw(c, n.id, seat ? (seat.face ?? 0) : n.dir ?? 2, nf, at.x, at.y - nlift);
+      /* Somebody who has just been hit with a foam dart turns round to find
+         out who by — shoulders first, feet where they were, which is exactly
+         what a person does and exactly the twist the player is aiming with.
+         Nobody is drawn any differently until something happens to them. */
+      Sprites.draw(c, n.id, seat ? (seat.face ?? 0) : n.dir ?? 2, nf, at.x, at.y - nlift,
+        seat ? null : Guns.watchOf(n));
     } else this.emoji(n.face, at.x, at.y - bob, 29);
     /* NB: canvas font strings cannot contain CSS custom properties — an
        invalid string is ignored and the previous (emoji-sized) font sticks. */
@@ -2189,7 +2194,7 @@ const R = {
     if (Sprites.has(p.sprite)) {
       const f = p.walking ? Sprites.frame(p.sprite, this.animate, p.step)
         : this.animate ? Sprites.breath(p.sprite) : 0;
-      Sprites.draw(c, p.sprite, p.dir ?? 2, f, p.x, p.y);
+      Sprites.draw(c, p.sprite, p.dir ?? 2, f, p.x, p.y, Guns.watchOf(p));
     } else this.emoji('🧑', p.x, p.y, 28);
     /* No name over a stranger. That label is how you tell one of the twenty
        colleagues from another, and a street of floating names would say these
@@ -2980,13 +2985,32 @@ const R = {
             : P.moving ? Sprites.frame('player', this.animate, P.step, P.fast)
             : this.animate ? Sprites.breath('player') : 0;
           const plift = seat && this.animate ? Sprites.breathLift('player') : 0;
+          /* WHICH WAY THE TOP HALF IS POINTING. Aiming is the one thing in
+             this game where where you are going and where you are looking are
+             two different facts, so the draw is handed both: the legs take
+             P.dir as they always have, and the shoulders take the bearing of
+             the aim with the leftover angle as a lean. Nothing in your hands
+             and it is null, which is the single blit this has always been —
+             see Sprites.twisted(). */
+          const tw = seat ? null : Guns.pose();
+          /* Behind the body when it is pointing away from the camera and in
+             front of it otherwise, which is the whole of the depth sorting a
+             held object needs. */
+          const gun = !seat && Guns.armed;
+          if (gun && Guns.behind()) Guns.paint(c, at.x, at.y - plift, Guns.a);
           /* Same rule as the colleagues above: the chair points, not the
              sitter. Sit on the bench in Nailed It and you face the room. */
-          Sprites.draw(c, 'player', seat ? (seat.face ?? 0) : P.dir ?? 2, pf, at.x, at.y - plift);
+          Sprites.draw(c, 'player', seat ? (seat.face ?? 0) : P.dir ?? 2, pf, at.x, at.y - plift, tw);
+          if (gun && !Guns.behind()) Guns.paint(c, at.x, at.y - plift, Guns.a);
         } else this.emoji(P.face, at.x, at.y - bob, 30);
         c.restore();
       }
     });
+
+    /* Everything in the air, over the people it is going past and under the
+       light below, because a dart crossing an office at half past four is a
+       thing in that office and is lit by whatever that office is lit by. */
+    Guns.paintShots(c);
 
     /* THE LIGHT, over the top of everything the world is made of and under
        everything the game says about it. The order is the whole trick: the

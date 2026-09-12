@@ -25,6 +25,14 @@ const Game = {
        the camera is permanently one frame behind the thing it is following. */
     Cars.update(dt);
     Peds.update(dt);
+    /* After the walk and after the cars, because a shot is fired from wherever
+       the player ENDED UP this frame — including when "the player" is a car —
+       and lands on whoever has already finished moving. Before the camera, for
+       the same reason Cars is: what is on the screen this frame should be the
+       state this frame, not the state of the last one. */
+    readAim();
+    Guns.update(dt);
+    syncControls();
     Cut.tick(dt);
     /* The opening owns the camera while it is running — it is looking at the
        building rather than following somebody standing still in reception. */
