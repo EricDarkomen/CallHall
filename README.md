@@ -291,50 +291,88 @@ facing it.
 
 The blaster used to float in front of all this, in the middle of the chest,
 because it was drawn at one height for every direction and in nobody's hand at
-all. What fixed that was not a new pose but a measurement — see below.
+all. What fixed that was not a new pose — see below.
 
-### Holding it, and the swing sheet
+### What is holding it: the arm
 
-**Holding something is the ordinary frame.** The same drawing the game has always
-used, with the arms where the kit put them, and the thing you are holding in the
-hand it drew — down at the hip, pointed wherever you are pointing. The grip goes
-at that hand and the hand was measured, not guessed: the skin clustered per
-frame, and the cluster below the neck that is not the face is a hand. Two where
-the art shows two and the aim picks which; front on, a pistol held out to the
-right is in the right hand.
+**There is no pose in this kit where anybody is holding anything up.** That is
+worth stating plainly, because it was not obvious and it took a morning of
+fetching to establish. The character art is
+[LPC Revised](https://github.com/ElizaWy/LPC), pinned at one commit, and what
+that commit ships for a body is Idle, Walk, Run, Sitting, Jump, Climb and
+Emotes. The artist's own `Credits.txt` in that same commit lists a one-handed
+combat set — *Combat 1h (Idle, Slash, Halfslash, Backslash)* — and the files
+are not there, on that commit or on `main`. Her OpenGameArt pack of the same
+name ships the same six animations and no combat either. The universal LPC
+spritesheet generator does carry that combat set, on a different and larger
+body, offered as CC-BY-SA 3.0 or GPL 3.0 — a licence this project will not mix
+into OGA-BY art, for the reason set out in LICENSE part 2. So there was never
+going to be a shoot row to drop in.
 
-That is the second answer to this question and the first one was wrong, so it is
-worth writing down what it was. The frames with the elbows bent — the only poses
-in the kit with a fist punched out in front — are its RUN cycle, and a run frame
-is a stride. Measured, the head sits five pixels from the feet in the side rows,
-because the body is pitched forward over a leading leg. Freeze one for somebody
-standing still and their legs are not under them. Compose the top of it over a
-standing pair of legs and the hips have to disagree with either the head or the
-feet, because in the original drawing they disagree with both — which is exactly
-what it looked like: a torso standing next to its own legs. There is no
-arrangement of that frame that is a person standing up, and the way to find that
-out was to build all of them and put a line down the middle.
+Which left the thing standing to attention with a blaster beside it, and facing
+away, both hands at its sides and nothing on the screen holding anything.
 
-What the stride is right for is a stride. So the sheet that remains is four cells
-a direction — the two ends of a swing, and the same two mirrored so the next
-swing comes back the other way — baked once into a canvas laid out exactly like a
-row of the character sheet, and used for the quarter of a second in which
-somebody is actually lunging.
+**The answer is the arm the kit already drew, turned at the shoulder.** The arm
+is a rectangle — seven pixels by twelve — and the kit separates it from the ribs
+with a line of its own shading, so the cut follows a line an artist already
+drew. Take that rectangle out of the frame and blit it back rotated about the
+shoulder joint, and the person is holding something up.
 
-**There is no new art in it.** Every cell is a frame the kit already ships, and
-the only thing the sheet does that the kit does not is MIRROR — which is the
-whole reason to bake one rather than read the atlas directly. A left hook and a
-right hook are the same drawing seen from the other side, so the left-facing
-row's backhand is the right-facing row's forehand flipped about its own middle,
-and one table can say so. The two front-on rows need no mirrored cell at all: a
-front view flipped is still a front view, so they simply run their own pair the
-other way round.
+It is the player's OWN sleeve and the player's OWN fist, because it is their own
+frame: whatever shirt they picked in the creator, whatever skin, whatever hair.
+Nothing is recoloured and nothing is invented, and a shirt added to the wardrobe
+tomorrow gets an arm for free. That is paper-doll animation and it is as old as
+animation; what makes it affordable here is that it is two canvas operations —
+a clip with a hole in it, so the arm does not also hang where it used to, and
+the same blit again inside a rotation, clipped to itself. **No pixel is ever
+read back**, which matters because this game opens from `file://` and a canvas
+with a sprite on it cannot be read from there at all.
 
-Mirroring costs one thing and it has to be paid: an expression is a patch
-measured against a specific frame of a specific direction and drawn live over the
-top, so a flipped cell has to say which row its body actually came from and get
-its face flipped with it. Otherwise somebody's mouth ends up on the back of their
-ear.
+The table is in `Guns.ARM`, one entry per arm, and everything in it is measured
+off the composed frame:
+
+| | what it is |
+|---|---|
+| `rect` | the arm in the cell, inclusive |
+| `from` | the shoulder joint inside that rectangle — what it turns about |
+| `to` | where that joint goes |
+| `hand` | the middle of the fist, which is where the grip ends up |
+| `base` | where the arm points when the aim is straight along the row |
+
+Two arms on the front and back rows and the aim picks which; front on, a blaster
+held out to the right is in the right hand. One on the side rows, because there
+is only one arm to have — and on those rows `to` is not `from`, which is the
+only fiddly part of this. Side on, the only arm the kit leaves visible is the
+FAR one, swung out behind the back; rotate it where it stands and you get a hand
+stuck to somebody's chest. Carrying it across to the near shoulder on the way is
+the difference between that and an arm reaching forward.
+
+**The top half braces and the legs do the walking**, which is a decision about
+the rectangle and not about taste. The walk shifts the arm a pixel or two; the
+RUN cycle pitches the whole body forward over a leading leg and tucks both
+elbows in, moving it halfway across the cell. Cut the same rectangle out of a
+run frame and you take a piece of ribs and blit back a stub. So the torso holds
+the standing frame, the shins walk and run underneath it, and one pixel of
+breath on the building's own rhythm keeps it from reading as furniture — which
+is, as it happens, what a top half carrying something actually does.
+
+**A swing is the same arm**, turned further: the shoulder follows the sweep
+instead of the aim, so the arm goes round with the thing in it rather than
+holding still while a foam sword describes an arc on its own. Which arm it is
+still comes from the AIM, because a forehand that crosses the body is thrown by
+the shoulder it started on, and an arm that changed sides halfway through a
+swing would be a second person's.
+
+This replaced a baked pose sheet — four mirrored cells a direction, cut from the
+run cycle — and it is worth writing down why that went, because it was the
+second wrong answer to this question. A run frame is a stride. Measured, the
+head sits five pixels from the feet in the side rows, because the body is
+pitched forward over a leading leg. Freeze one for somebody standing still and
+their legs are not under them; compose the top of it over standing legs and the
+hips must disagree with either the head or the feet, because in the original
+they disagree with both. There is no arrangement of that drawing that is a
+person standing up, and the way to find that out was to build all of them and
+put a line down the middle. An arm that turns needs no stride and no mirror.
 
 **The recoil of a shot is in the gun**, not in the body: four pixels back down
 its own line and ten degrees of muzzle, both decaying over an eighth of a second
@@ -352,12 +390,17 @@ the way they are pointing — nothing is cut at all: one blit, one frame, and a
 lean at the waist over the top of it. Nothing in the figure can disagree with
 anything else in it.
 
-When they are genuinely different drawings — strafing, or backing away from what
-you are aiming at — the cut is eight rows lower, below every one of those hands
-and above every foot. The arms come whole from the half that is holding
+When they are genuinely different drawings — strafing, backing away from what
+you are aiming at, or simply holding something, because the top half has braced
+and the legs have not — the cut is eight rows lower, below every one of those
+hands and above every foot. The arms come whole from the half that is holding
 something and what swings underneath is shins. Cut at the waist there instead and
 the bottom half brings its own pair of hands along, which is one pair too many
 and impossible to un-see once seen.
+
+The arm that is holding something is cut out of that top half and put back
+turned, so there is still one hand at a hip and one on a grip, and never two of
+either.
 
 
 **Turning between the four** is the one place the four-direction art shows, and
@@ -692,7 +735,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
 | `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
 | `engine/sky.js` | The clock past five, the light, the weather and the season. Everything that draws asks it what time it is; nothing that draws knows. |
-| `engine/guns.js` | The away-day box: five things drawn from a grid of characters rather than fetched — three you fire and two you swing — what they do to the people they land on, the pose sheet the person holding them is drawn from, and the twist that lets somebody walk one way and point another. |
+| `engine/guns.js` | The away-day box: five things drawn from a grid of characters rather than fetched — three you fire and two you swing — what they do to the people they land on, the arm the person holding them raises to do it, and the twist that lets somebody walk one way and point another. |
 | `engine/title.js`, `css/title.css` | The title screen: the wallboard, the switchboard behind it, and the menu. |
 | `scripts/release.sh` | Checks the build and moves the version string. Run it before you ship. |
 | `editor.html`, `editor/` | A level editor. Not the game, and never published. |

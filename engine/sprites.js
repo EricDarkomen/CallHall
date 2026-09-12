@@ -398,11 +398,26 @@ const Sprites = {
         Math.round(b.x), Math.round(b.y), m.fw, m.fh);
     };
     /* A CELL FROM SOMEWHERE ELSE. The top half may come from a rectangle in
-       another image entirely — a pose sheet, baked from these same frames with
-       some of them mirrored: see Guns.sheet(). It is still a rectangle the
-       size of a frame, so it is still one blit; all this has to know is where
-       to read it from. */
+       another image entirely, as long as it is a rectangle the size of a
+       frame: then it is still one blit, and all this has to know is where to
+       read it from. Nothing in the game passes one today; the hook stays
+       because the alternative is a second copy of everything below it. */
     const cell = tw.cell;
+    /* ---- THE ARM THAT IS HOLDING SOMETHING ----
+       A rectangle of this same frame, turned about the shoulder. See
+       Guns.ARM, which is where it is measured and what it means: `rect` is
+       the arm in the cell, `from` is the joint inside it, `to` is where that
+       joint goes and `turn` is how far round.
+
+       It costs two things here. The arm is CUT OUT of the torso blit, so it
+       does not also hang where the kit drew it — that is one clip with a hole
+       in it, and the hole is in the same coordinates as the rectangle because
+       it is the same rectangle. And it is drawn again afterwards inside a
+       rotation, clipped to itself so the blit paints nothing else.
+
+       No pixel is read back and nothing is composited off-screen, which is
+       what lets this work from file:// — see compose(). */
+    const arm = tw.arm || null;
     /* One pixel of breath, when the caller asks for it. A braced top half that
        never moves at all is the thing that gives a sprite away as furniture,
        and this is the same pixel and the same rhythm every seated person in
@@ -433,7 +448,11 @@ const Sprites = {
        half that is holding something and what swings underneath is shins. Cut
        at the waist there instead and the bottom half brings its own pair of
        hands along, which is one pair too many. */
-    const line = tw.whole ? waist : hip;
+    /* Where the two halves meet. The low cut whenever an arm is in play,
+       whatever the halves are doing: the arm reaches to row 42 and the torso
+       blit is the one holding it, so the line has to be below it or the hole
+       cut for the arm is a hole in a blit that never covered it. */
+    const line = (tw.whole && !arm) ? waist : hip;
     c.save();
     c.beginPath(); c.rect(b.x - m.fw, b.y + line, m.fw * 3, m.fh);
     c.clip();
@@ -460,10 +479,38 @@ const Sprites = {
     c.translate(px, py);
     c.rotate(lean);
     c.translate(-px + Math.round(Math.sin(lean) * 3), -py);
-    top();
+    if (arm) {
+      /* The hole. Two rectangles and the even-odd rule: everything, minus the
+         arm. The blit underneath is unchanged — this simply refuses to let it
+         paint the six columns the arm used to hang in. */
+      c.save();
+      c.beginPath();
+      c.rect(b.x - m.fw, b.y - m.fh, m.fw * 3, m.fh * 3);
+      this.armRect(c, arm, b);
+      c.clip('evenodd');
+      top();
+      c.restore();
+    } else top();
     /* And the face, inside the same transform: an expression is part of the
        head and the head has just turned. */
     if (typeof Faces !== 'undefined') this.faceOn(c, id, b, m, cell, tdir, tframe, lift);
+    /* The arm goes on LAST and in front of everything, because it is the near
+       arm: it is the one the hand at the end of it is holding something with,
+       and a blaster behind a shoulder is a blaster nobody can see. */
+    if (arm) {
+      c.save();
+      c.translate(b.x + arm.to[0], b.y + arm.to[1]);
+      c.rotate(arm.turn);
+      c.translate(-(b.x + arm.from[0]), -(b.y + arm.from[1]));
+      /* The clip is declared BEFORE the blit and AFTER the transform, so it
+         travels with it: the rectangle is named in the cell's own coordinates
+         and lands wherever the rotation puts it, which is the whole trick. */
+      c.beginPath();
+      this.armRect(c, arm, b);
+      c.clip();
+      top();
+      c.restore();
+    }
     c.restore();
   },
 
@@ -473,6 +520,14 @@ const Sprites = {
      frame of a specific direction, and drawing a left-facing mouth over a
      right-facing head that has been flipped into place puts somebody's
      expression on the back of their ear. */
+  /* One arm's rectangle, in the cell, as a path — rounded the same way the
+     blit it is cutting is rounded, or the hole is half a pixel off the thing
+     it is supposed to be hiding. */
+  armRect(c, arm, b) {
+    const [x0, y0, x1, y1] = arm.rect;
+    c.rect(Math.round(b.x) + x0, Math.round(b.y) + y0, x1 - x0 + 1, y1 - y0 + 1);
+  },
+
   faceOn(c, id, b, m, cell, tdir, tframe, lift) {
     if (cell && cell.flip) {
       c.save();
