@@ -118,6 +118,16 @@ const Sfx = {
   reload() { this.tone(170, 0.05, 'square', 0.12); this.tone(140, 0.06, 'square', 0.1, 0.14); this.noise(0.06, 0.06, 0.28); },
   /* Taking it out of a drawer it should not be in. */
   draw() { this.tone(300, 0.05, 'triangle', 0.14); this.tone(460, 0.06, 'triangle', 0.12, 0.05); },
+  /* A swing is air and nothing else — foam through an office, or five hundred
+     and one pages of policy through the same air, which is heavier and slower
+     and should sound like it. */
+  swing(id) {
+    if (id === 'pack') { this.noise(0.22, 0.1); this.tone(120, 0.16, 'sine', 0.07, 0, -40); return; }
+    this.noise(0.14, 0.06); this.tone(260, 0.1, 'sine', 0.05, 0, -90);
+  },
+  /* And a swing that finds somebody. Soft, because everything in that box is
+     soft, and low enough to be felt rather than heard. */
+  bonk() { this.tone(150, 0.09, 'sine', 0.2); this.noise(0.07, 0.09); },
   horn() { this.tone(392, 0.3, 'sawtooth', 0.16); this.tone(330, 0.3, 'sawtooth', 0.14, 0.01); },
   thud(force) {
     const v = clamp(force || 0.5, 0.1, 1);

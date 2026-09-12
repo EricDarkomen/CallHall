@@ -239,16 +239,26 @@ const Sprites = {
     return r ? r.sheet.sit : 0;
   },
   /* Frame 0 stands, 1..sit-1 is the walk, sit is seated. `phase` is free
-     running, so callers keep no frame timer. */
-  frame(id, walking, phase, fast) {
+     running, so callers keep no frame timer.
+
+     `back` plays the same cycle the other way round, and it is the whole of
+     walking backwards. There is no reverse walk in the kit and there does not
+     need to be one: a walk cycle run in reverse is what backing up looks like,
+     and backing up is what somebody does when their feet want to go one way
+     and the thing they are pointing at is behind them — see Guns.legs(). */
+  frame(id, walking, phase, fast, back) {
     if (!walking) return 0;
     /* Derived as the frames between standing and sitting, so a pose appended
        past `sit` (breath, run) is never walked into by accident. */
     const r = this.rows.get(id);
     const run = fast && r && r.sheet.run;
-    if (run && run.length) return run[Math.floor(phase) % run.length];
+    if (run && run.length) {
+      const i = Math.floor(phase) % run.length;
+      return run[back ? run.length - 1 - i : i];
+    }
     const cycle = Math.max(1, (r ? r.sheet.sit : 1) - 1);
-    return 1 + (Math.floor(phase) % cycle);
+    const i = Math.floor(phase) % cycle;
+    return 1 + (back ? cycle - 1 - i : i);
   },
   /* Seconds per breath step, and the tuning knob. The kit's idle runs at
      animation speed, which on a body doing nothing reads as panting. The phase
