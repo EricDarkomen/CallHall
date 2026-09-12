@@ -221,48 +221,43 @@ const Guns = {
      than it sounds, and past about a third of a radian a person stops reading
      as twisting and starts reading as falling over. */
   TWIST: 0.30,
-  /* ---- THE POSE SHEET ----
-     Six poses, four directions, baked once into a canvas laid out exactly
-     like a row of the character sheet: cell (pose, direction). Everything
-     that follows — holding, firing, and both halves of a swing — is a column
+  /* ---- THE SWING SHEET ----
+     Four cells a direction, baked once into a canvas laid out exactly like a
+     row of the character sheet: the two ends of a swing, and the same two
+     mirrored so the next swing comes back the other way. A swing is a column
      number, and the renderer blits a rectangle out of it exactly as it blits
      one out of the atlas.
 
+     A SWING IS THE ONLY THING IN HERE, and it is worth saying why, because
+     there used to be a braced hold pose as well and it was wrong. The frames
+     with the elbows bent are the kit's RUN cycle, and a run frame is a stride:
+     measured, the head sits five pixels from the feet in the side rows,
+     because the body is pitched forward over a leading leg. Freeze one for
+     somebody standing still and their legs are not under them; compose it over
+     standing legs and the hips must disagree with either the head or the feet,
+     because in the original they disagree with both. There is no arrangement
+     of that drawing that is a person standing up.
+
+     So holding something is the ordinary frame — see column() — and the stride
+     comes out for the quarter of a second in which somebody is actually
+     lunging, which is what a stride is for.
+
      THERE IS NO NEW ART IN IT. Every cell is a frame the kit already ships,
-     and the only thing this sheet does that the kit does not is MIRROR. That
-     is the point of baking it rather than reading the atlas directly: a left
-     hook and a right hook are the same drawing seen from the other side, so
-     the left-facing row's backhand is the right-facing row's forehand flipped
-     about its own middle, and one table can say so. Six columns out of a kit
-     with two usable arm positions a side.
+     and the only thing this sheet does that the kit does not is MIRROR, which
+     is the whole reason to bake one rather than read the atlas directly. A
+     left hook and a right hook are the same drawing seen from the other side,
+     so the left-facing row's backhand is the right-facing row's forehand
+     flipped about its own middle, and one table can say so. The two front-on
+     rows need no mirrored cell at all — a front view flipped is still a front
+     view — so they simply run their own pair the other way round.
 
-     What a column is:
-
-       hold     braced, weapon up. The run frames are the only ones in the kit
-                with the elbows bent and, side on, a fist punched out in front,
-                and this is the fullest of them. Held still rather than played:
-                the legs walk and the top half does not, which is what carrying
-                something looks like.
-       fire     the same arm two pixels further back. That is the recoil — the
-                kit drew it for a running stride and it reads as a gun going
-                off, because the hand moves the way a hand moves when one does.
-       wind     the arm drawn back across the body: the start of a swing.
-       strike   the arm extended: the end of one.
-       windB    the same two mirrored, so the NEXT swing comes back the other
-       strikeB  way. A fight is a forehand and then a backhand, and until there
-                was a mirrored column every swing was the same swing.
-
-     Each entry is [frame, mirrored]. Mirrored means "take the row that faces
-     the other way and flip it": left borrows right, right borrows left, and
-     the two front-on rows borrow themselves, because a front view flipped is
-     still a front view — which is also why those two need no mirrored cell at
-     all and simply run their own pair the other way round. */
-  POSES: ['hold', 'fire', 'wind', 'strike', 'windB', 'strikeB'],
+     Each entry is [frame, mirrored]. */
+  POSES: ['wind', 'strike', 'windB', 'strikeB'],
   POSE: [
-    /* up    */ [[11, 0], [9, 0], [8, 0], [10, 0], [8, 1], [10, 1]],
-    /* left  */ [[10, 0], [8, 0], [8, 0], [10, 0], [8, 1], [10, 1]],
-    /* down  */ [[11, 0], [9, 0], [8, 0], [10, 0], [10, 0], [8, 0]],
-    /* right */ [[10, 0], [8, 0], [8, 0], [10, 0], [8, 1], [10, 1]]
+    /* up    */ [[8, 0], [10, 0], [8, 1], [10, 1]],
+    /* left  */ [[8, 0], [10, 0], [8, 1], [10, 1]],
+    /* down  */ [[8, 0], [10, 0], [10, 0], [8, 0]],
+    /* right */ [[8, 0], [10, 0], [8, 1], [10, 1]]
   ],
   /* WHERE THE HAND IS IN EACH OF THOSE CELLS, in cell pixels, measured off the
      art rather than guessed: the skin was clustered per frame and the cluster
@@ -275,53 +270,22 @@ const Guns = {
      The back row shows neither, because you are looking at somebody's back, so
      it gets the middle of the chest and the lift below. */
   HANDS: [
-    /* up    */ [[19, 30], [19, 30], [19, 30], [19, 30], [19, 30], [19, 30]],
-    /* left  */ [[7, 30], [9, 30], [9, 30], [7, 30], [9, 30], [7, 30]],
-    /* down  */ [[[13, 35], [26, 35]], [[11, 35], [24, 35]], [11, 32], [26, 32], [26, 32], [11, 32]],
-    /* right */ [[30, 30], [28, 30], [28, 30], [30, 30], [28, 30], [30, 30]]
+    /* up    */ [[19, 30], [19, 30], [19, 30], [19, 30]],
+    /* left  */ [[9, 30], [7, 30], [9, 30], [7, 30]],
+    /* down  */ [[11, 32], [26, 32], [26, 32], [11, 32]],
+    /* right */ [[28, 30], [30, 30], [28, 30], [30, 30]]
   ],
-  /* ---- WHAT THE BOTTOM HALF OF A POSE IS ----
-     Every cell of the sheet is composed of TWO frames, and this is the second
-     one: from row 38 down, every pose gets the legs of frame 11.
-
-     It is there for two reasons, and the first is hands. Every standing and
-     walking frame in this kit draws them hanging at the hips, rows 36 to 42,
-     and the pose frames draw a second pair up at the chest — so a person
-     holding a blaster in two braced hands had two more dangling at their
-     sides. Composing at 38 takes the stance's legs and leaves its hands
-     behind, which is the only pair that goes.
-
-     The second is that the pose frames are RUNNING. Frames 8 and 10 are the
-     middle of a stride: one foot off the floor, the body pitched forward, and
-     frozen for an idle they read as somebody paused mid-run rather than
-     somebody standing holding something. Frame 11 is the passing frame — feet
-     nearly together, both of them down — and it is what a person stands like.
-
-     And the two halves are ALIGNED, because a runner's hips are not where a
-     standing person's are: measured at the trouser midline just under the
-     join, frames 8 and 10 sit five pixels forward of frame 11 in the side
-     rows. Composed without that correction the top half overhangs the legs by
-     five pixels, which is a wedge of thigh sticking out behind somebody like a
-     tail. Shifted, the join is invisible. */
-  STANCE: 11, JOIN: 38 / 56,
-  /* The trouser midline at rows 38-41, per direction, per frame. Measured off
-     the art. Only the four run frames are here because they are the only ones
-     the sheet is composed from. */
-  HIPMID: {
-    8: [18, 23.5, 17.5, 13.5],
-    9: [18.5, 17.5, 17.5, 19.5],
-    10: [19, 23, 19.5, 14],
-    11: [18.5, 18, 19.5, 19]
-  },
-  /* How far to shove a pose sideways so its hips land on the stance's. A
-     mirrored cell is measured mirrored: its midline is the frame width less
-     the source's. */
-  hipShift(dir, spec, fw) {
-    const src = spec[1] ? (dir === 1 ? 3 : dir === 3 ? 1 : dir) : dir;
-    const mid = this.HIPMID[spec[0]] ? this.HIPMID[spec[0]][src] : this.HIPMID[11][src];
-    const mine = spec[1] ? (fw - 1) - mid : mid;
-    return Math.round(this.HIPMID[this.STANCE][dir] - mine);
-  },
+  /* WHERE THE HANDS ARE WHEN THE ARMS ARE DOWN, which is most of the time:
+     the ordinary standing and walking frames hang them at the hips, rows 36 to
+     42, and that is where the grip goes. Two where the art shows two and the
+     aim picks which; for the side rows the forward hand, which is the one a
+     gun would be in and which the body half hides anyway. */
+  HANDS_PLAIN: [
+    /* up    */ [[8, 39], [29, 39]],
+    /* left  */ [11, 38],
+    /* down  */ [[8, 38], [29, 38]],
+    /* right */ [26, 38]
+  ],
 
   /* The back row again: this lifts what is in that invisible hand over the
      shoulder, where you can see what you are holding. Without it, aimed at the
@@ -568,32 +532,15 @@ const Guns = {
     cv.width = m.fw * n; cv.height = m.fh * 4;
     const g = cv.getContext('2d');
     g.imageSmoothingEnabled = false;
-    const join = Math.round(m.fh * this.JOIN);
-    this._shift = [];
     for (let d = 0; d < 4; d++) {
-      this._shift[d] = [];
       for (let i = 0; i < n; i++) {
         const spec = this.POSE[d][i];
         /* Whose row a mirrored cell comes from: the one facing the other way
            for the two side rows, and its own for the two front-on ones. */
         const src = spec[1] ? (d === 1 ? 3 : d === 3 ? 1 : d) : d;
-        const sh = this.hipShift(d, spec, m.fw);
-        this._shift[d][i] = sh;
-
-        /* THE LEGS FIRST, from row 38 down: this direction's own passing
-           frame, square on, carrying no hands. */
         g.save();
-        g.beginPath(); g.rect(i * m.fw, d * m.fh + join, m.fw, m.fh - join); g.clip();
-        g.drawImage(m.img, (d * m.frames + this.STANCE) * m.fw, r.row * m.fh, m.fw, m.fh,
-          i * m.fw, d * m.fh, m.fw, m.fh);
-        g.restore();
-
-        /* THEN THE POSE OVER THE TOP of it, above the join, mirrored if the
-           table says so and shoved sideways so its hips land on the legs'. */
-        g.save();
-        g.beginPath(); g.rect(i * m.fw, d * m.fh, m.fw, join); g.clip();
-        if (spec[1]) { g.translate((i + 1) * m.fw + sh, 0); g.scale(-1, 1); }
-        else g.translate(i * m.fw + sh, 0);
+        if (spec[1]) { g.translate((i + 1) * m.fw, 0); g.scale(-1, 1); }
+        else g.translate(i * m.fw, 0);
         g.drawImage(m.img, (src * m.frames + spec[0]) * m.fw, r.row * m.fh, m.fw, m.fh,
           0, d * m.fh, m.fw, m.fh);
         g.restore();
@@ -611,10 +558,15 @@ const Guns = {
     const d = this.def();
     if (d && d.melee && this.swingT > 0) {
       const t = 1 - this.swingT / (this.swingFor || 1);
-      const b = this.swingDir < 0 ? 2 : 0;
-      return (t < 0.35 ? 2 : 3) + b;
+      return (t < 0.35 ? 0 : 1) + (this.swingDir < 0 ? 2 : 0);
     }
-    return this.kickT > 0 ? 1 : 0;
+    /* MINUS ONE MEANS NO CELL: the ordinary frame, the one the game has always
+       drawn, with the arms where the kit put them and the thing you are
+       holding in the hand it drew. The recoil of a shot is in the GUN — four
+       pixels back down its own line and ten degrees of muzzle — and not in the
+       body, because a body that lunges for an eighth of a second three times a
+       second is a body having a fit. */
+    return -1;
   },
 
   /* The player's own pose: which row the shoulders are, which cell of the
@@ -630,17 +582,9 @@ const Guns = {
   pose() {
     if (!this.armed) return null;
     const t = this.twist(this.a, true);
-    /* THE LEAN IS EASED, the row is not. A row can only change in one step —
-       there are four of them and no drawing in between — but the lean can, and
-       it is the lean that carries most of the jump: crossing a boundary flips
-       it from one extreme to the other, thirty-odd degrees in a single frame,
-       on top of the art changing underneath. Easing it turns that into
-       something that reads as somebody turning round rather than as a glitch.
-       The eased value is kept here rather than recomputed, because what is
-       being smoothed is the thing that was drawn last frame. */
     t.lean = this.smooth = this.smooth + (t.lean - this.smooth) * this.EASE;
-    const sh = this.sheet('player');
     t.col = this.column();
+    const sh = t.col >= 0 ? this.sheet('player') : null;
     if (sh) {
       const spec = this.POSE[t.dir][t.col];
       t.cell = {
@@ -654,27 +598,24 @@ const Guns = {
         faceFrame: spec[0], flip: !!spec[1]
       };
     } else {
-      /* No sheet — a page opened without art/ — and the old two-frame pick is
-         still exactly right, because there is nothing to draw either way. */
-      t.frame = 0;
+      /* The ordinary frame, in the direction the SHOULDERS are facing — which
+         is the whole of the twist when there is no pose involved: the same
+         drawing as the legs, from a different row. */
+      t.frame = P.moving ? Sprites.frame('player', R.animate, P.step, P.fast, this.back)
+        : (R.animate ? Sprites.breath('player') : 0);
     }
-    /* A BRACED TOP HALF IS NOT A FROZEN ONE. The pose is held rather than
-       played, which is right, and for the first few builds meant the shoulders
-       did not move at all while you stood there — the one thing that gives a
-       sprite away as furniture. This is the same one pixel, on the same
-       rhythm, that every seated person in the building breathes on. Not while
-       swinging or recoiling: those are already moving. */
+    /* A BRACED TOP HALF IS NOT A FROZEN ONE. One pixel, on the rhythm every
+       seated person in the building breathes on, and only while nothing else
+       is moving it. */
     t.lift = (this.swingT > 0 || this.kickT > 0 || !(typeof R !== 'undefined' && R.animate))
       ? 0 : Sprites.breathLift('player');
     const l = this.legs(t.dir);
     P.dir = l.dir; this.back = l.back;
-    /* WHEN BOTH HALVES WANT THE SAME THING they are one frame and not two:
-       standing still, or walking the way you are pointing. Nothing is cut,
-       nothing can disagree, and the stance is whatever that frame's stance is.
-       It is only when the feet and the shoulders genuinely differ — strafing,
-       or backing away from what you are aiming at — that the body is cut in
-       half, and then the legs take one of the two passing frames. */
-    t.whole = !P.moving && l.dir === t.dir;
+    /* WHEN BOTH HALVES WANT THE SAME THING they are one drawing and not two.
+       Standing still, or walking the way you are pointing, there is nothing to
+       cut: the same frame, the same hips, the same legs, and a lean at the
+       waist over the top of it. */
+    t.whole = l.dir === t.dir;
     this._pose = t;
     return t;
   },
@@ -695,13 +636,9 @@ const Guns = {
     const r = Sprites.at('player');
     if (!t || !r) return { x: x + Math.cos(ang) * 10, y: y - 15 };
     const m = r.sheet, b = Sprites.box('player', x, y);
-    let h = this.HANDS[t.dir][t.col];
+    let h = t.col >= 0 ? this.HANDS[t.dir][t.col] : this.HANDS_PLAIN[t.dir];
     /* Two hands: the one on the side the aim is leaning. */
     if (Array.isArray(h[0])) h = h[Math.cos(ang) < 0 ? 0 : 1];
-    /* Measured on the frame, drawn on the cell, and the cell shoved sideways
-       to put its hips over its legs — so the hand went with it. */
-    const shift = (this._shift && this._shift[t.dir]) ? (this._shift[t.dir][t.col] || 0) : 0;
-    h = [h[0] + shift, h[1]];
     const waist = Sprites.waistOf(m);
     const px = b.x + m.fw / 2, py = b.y + waist;
     const sh = Math.round(Math.sin(t.lean) * 3);

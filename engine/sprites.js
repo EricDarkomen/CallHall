@@ -422,14 +422,18 @@ const Sprites = {
        lean is a bend at the waist, and applied to the whole figure it is a
        bowling pin going over, feet and all. The feet stay where they were put.
 
-       `whole` says they come out of the SAME CELL as the top half — both
-       halves wanting the same direction — and then the cut is the waist and
-       the legs are that frame's own legs, which is as consistent as a person
-       can be. Otherwise the cut is the low one and what comes from the walk is
-       shins only: a run frame has a foot off the floor and the thigh it
-       belongs to lives above the waist, so cutting there between two different
-       frames leaves a boot lying on the carpet with no leg attached to it. */
-    const line = (tw.whole && cell) ? waist : hip;
+       `whole` is both halves out of the SAME drawing, which is what wanting
+       the same direction means — standing still, or walking the way you are
+       pointing. Then the cut is the waist, the legs are that drawing's own
+       legs, and nothing in the figure can disagree with anything else in it.
+
+       Otherwise — strafing, or backing away from what you are aiming at — the
+       two halves are genuinely different drawings and the cut is the low one,
+       below every hand this kit hangs at a hip. The arms come whole from the
+       half that is holding something and what swings underneath is shins. Cut
+       at the waist there instead and the bottom half brings its own pair of
+       hands along, which is one pair too many. */
+    const line = tw.whole ? waist : hip;
     c.save();
     c.beginPath(); c.rect(b.x - m.fw, b.y + line, m.fw * 3, m.fh);
     c.clip();
