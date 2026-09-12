@@ -311,13 +311,48 @@ out of it exactly as it blits one out of the atlas.
 | `windB` · `strikeB` | the same two mirrored, so the next swing comes back the other way. |
 
 **There is no new art in it.** Every cell is a frame the kit already ships, and
-the only thing the sheet does that the kit does not is MIRROR — which is the
-whole reason to bake one rather than read the atlas directly. A left hook and a
-right hook are the same drawing seen from the other side, so the left-facing
-row's backhand is the right-facing row's forehand flipped about its own middle,
-and one table can say so. Six columns out of a kit with two usable arm positions
-a side. The two front-on rows need no mirrored cell at all: a front view flipped
-is still a front view, so they simply run their own pair the other way round.
+what the sheet does that the kit does not is MIRROR and COMPOSE — which is the
+whole reason to bake one rather than read the atlas directly.
+
+Mirroring first: a left hook and a right hook are the same drawing seen from the
+other side, so the left-facing row's backhand is the right-facing row's forehand
+flipped about its own middle, and one table can say so. Six columns out of a kit
+with two usable arm positions a side. The two front-on rows need no mirrored cell
+at all: a front view flipped is still a front view, so they simply run their own
+pair the other way round.
+
+**And every cell is two frames, joined at row 38** — the pose on top, and frame
+11's legs underneath. Both halves of that are load-bearing.
+
+The first is hands. Every standing and walking frame in this kit draws them
+hanging at the hips, rows 36 to 42, and a pose frame draws a second pair up at
+the chest — so a person holding a blaster in two braced hands had two more
+dangling at their sides, which is one pair too many and impossible to un-see.
+Joining at 38 takes the legs and leaves those hands behind. It is the only pair
+that goes.
+
+The second is that the pose frames are RUNNING. Frames 8 and 10 are the middle of
+a stride: one foot off the floor, the body pitched forward. Frozen for somebody
+standing in an office holding a foam dart blaster they read as a man paused
+mid-sprint. Frame 11 is the passing frame — feet nearly together, both of them
+down — and it is what a person stands like.
+
+The join is ALIGNED, because a runner's hips are not where a standing person's
+are. Measured at the trouser midline just under the join, frames 8 and 10 sit
+five pixels forward of frame 11 in the side rows; composed without the
+correction, the top half overhangs its own legs by five pixels and there is a
+wedge of thigh sticking out behind somebody like a tail. Shifted by the measured
+difference, the join is invisible — and the hand table is shifted with it, or the
+gun stays where the hand used to be.
+
+What is left is one rule for the bottom half. **Both halves out of one cell when
+they agree** — standing still, or walking the way you are pointing — so nothing
+is cut and nothing can disagree. Cut only when the feet and the shoulders
+genuinely differ, strafing or backing away, and then the cut is the low one and
+what comes from the walk is shins. Cutting at the waist between two different
+frames was the other way to get this wrong: a run frame has a foot off the floor
+and the thigh it belongs to lives above the waist, so the foot ends up a boot
+lying on the carpet with no leg attached to it.
 
 Mirroring costs one thing and it has to be paid: an expression is a patch
 measured against a specific frame of a specific direction and drawn live over the
