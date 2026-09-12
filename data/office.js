@@ -111,6 +111,18 @@ const CHAT_SCRIPT = [
   { t: 578, c: '#wins', who: 'Dave', f: '🧔', m: 'Got in.' },
   { t: 580, c: '#wins', who: 'Sarah', f: '👩', m: 'dave that is not a win' },
   { t: 582, c: '#wins', who: 'Dave', f: '🧔', m: 'It was today.' },
+  /* ---- the away-day box ----
+     The only thing in the game that tells you it exists. It is a box in the
+     archive among nine identical boxes, and a box among boxes is not findable
+     by walking past it: this is how you find out, and Acts.archiveDoor pins it
+     once you are in the room. */
+  { t: 574, c: '#general', who: 'Gary', f: '🧑‍🦱', m: 'is the away day box still in the archive' },
+  { t: 576, c: '#general', who: 'Marjorie', f: '👩‍🦰', m: 'Why.' },
+  { t: 578, c: '#general', who: 'Gary', f: '🧑‍🦱', m: 'no reason' },
+  { t: 580, c: '#general', who: 'Marjorie', f: '👩‍🦰', m: 'It is where it has been since 2019, which is the archive, which is where it is staying.' },
+  { t: 584, c: '#general', who: 'Mo', f: '🧑‍🎓', m: 'whats in it' },
+  { t: 586, c: '#general', who: 'Gary', f: '🧑‍🦱', m: 'mo do not open the away day box' },
+  { t: 588, c: '#general', who: 'Dave', f: '🧔', m: 'Open the away day box.' },
   { t: 590, c: '#general', who: 'Alan', f: '🧓', m: 'Reminder: if a call is going badly you can transfer it to me. That is not failure. That is the system working. It is literally my job title.' },
   { t: 592, c: '#general', who: 'Gary', f: '🧑‍🦱', m: 'alan youve just made everyones day worse by being nice about it' },
   { t: 606, c: '#printer-watch', who: 'Priya', f: '👩‍💻', m: 'Starting a channel for this. ERROR 47 again. Day 14.' },

@@ -200,6 +200,14 @@ anyone has ever built for pleasure. Nobody has opened it since the coach got
 back. There is a fifth thing under the paper tray by the printer: a compliance
 pack, five hundred and one pages, which rolls up into a length of pipe.
 
+**How you find out it is there**, because a box in a room with nine identical
+boxes in it is not findable by walking past it: Gary asks about it in `#general`
+at 09:34, Marjorie tells him where it is and that it is staying there, and Dave
+says the quiet part. Walk into the archive after that and the compass points at
+the one with the writing on the side until you open it. Nothing else in the game
+is signposted this way and nothing else needed to be — everything else is
+furniture you can see.
+
 Nothing in any of it hurts anybody. What it does is make twenty adults turn
 round, which is the only ammunition this game has ever had. Hit a colleague and they stop dead,
 turn round, and say something; hit somebody on the pavement outside and you get
@@ -231,6 +239,13 @@ the sword arrives at the person on the left of the arc before the person on the
 right, it catches each of them once however long it dwells, and it will not
 reach round a corner — the same chest-height question a dart asks of the tile it
 is in, asked halfway along the reach.
+
+A dart leaves the barrel it is drawn coming out of, which takes two numbers and
+not one: how far in front is the muzzle's offset projected onto the aim, in the
+ground plane, and how high is whatever is left over, carried on the shot itself.
+Take the drawn height at face value instead and a dart fired dead level starts
+eight pixels north of the person firing it, which is most of the margin the hit
+test has.
 
 A dart goes over a desk, a worktop, a bin and a chair, and stops at a wall, a
 cabinet, a vending machine and a shut door. That is one rule and it is measured
@@ -321,6 +336,27 @@ the shoulder to be seen at all. The hand is then put through the same rotation
 the torso is, so the grip stays in the fist at full lean instead of drifting a
 couple of pixels out of it, which is exactly the amount that reads as a gun
 somebody is not quite holding.
+
+**Turning between the four** is the one place the four-direction art shows, and
+two things soften it. The row is STICKY: it only gives up the one it is on once
+the aim is eight degrees past halfway, because an aim sitting exactly on a
+diagonal is where a thumb naturally rests and a person who cannot decide which
+way they are facing is worse than one facing slightly the wrong way. And the
+lean is EASED while the row is not — a row can only change in one step, there
+being four of them and no drawing in between, but the lean is what carries most
+of the jump, flipping from one extreme to the other in a single frame on top of
+the art changing underneath. Smoothing it turns that into something that reads
+as somebody turning round.
+
+It is worth saying what cannot be done here, because the obvious idea does not
+work: eight facings. Squashing a cardinal frame horizontally to fake a
+three-quarter view — the standard trick — makes this character look thin rather
+than turned, at every squash from 0.88 down to 0.68, on both the front row and
+the side row. It was tried and photographed and thrown away. Eight directions
+would mean eight directions of art, which for a pinned third-party kit that
+ships four is a different job entirely. What there is instead is a body that
+snaps four ways as late as it can, a waist that covers the difference, and a
+weapon that points at the true angle regardless.
 
 The rest of the motion is two numbers and an arc. Firing takes the `fire` column
 for an eighth of a second and pushes the gun four pixels back down its own line
