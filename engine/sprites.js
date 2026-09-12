@@ -376,6 +376,16 @@ const Sprites = {
       c.drawImage(m.img, (dir * m.frames + frame) * m.fw, r.row * m.fh, m.fw, m.fh,
         Math.round(b.x), Math.round(b.y), m.fw, m.fh);
     };
+    /* A CELL FROM SOMEWHERE ELSE. The top half may come from a rectangle in
+       another image entirely — a pose sheet, baked from these same frames with
+       some of them mirrored: see Guns.sheet(). It is still a rectangle the
+       size of a frame, so it is still one blit; all this has to know is where
+       to read it from. */
+    const cell = tw.cell;
+    const top = cell
+      ? () => c.drawImage(cell.img, cell.sx, cell.sy, m.fw, m.fh,
+          Math.round(b.x), Math.round(b.y), m.fw, m.fh)
+      : () => cut(tw.dir, tw.frame === undefined ? legFrame : tw.frame);
     const tdir = tw.dir, tframe = tw.frame === undefined ? legFrame : tw.frame;
     const lean = tw.lean || 0;
 
@@ -403,11 +413,25 @@ const Sprites = {
     c.translate(px, py);
     c.rotate(lean);
     c.translate(-px + Math.round(Math.sin(lean) * 3), -py);
-    cut(tdir, tframe);
+    top();
     /* The face belongs to the half the face is on, and it is drawn inside the
        same transform — an expression is part of the head and the head has just
-       turned. */
-    if (typeof Faces !== 'undefined') Faces.paint(c, id, tdir, tframe, b.x, b.y);
+       turned.
+
+       A mirrored cell needs it mirrored too, and needs to be told which row
+       the body underneath actually came from: the patch is measured against a
+       specific frame of a specific direction, and drawing a left-facing mouth
+       over a right-facing head that has been flipped into place puts somebody's
+       expression on the back of their ear. */
+    if (typeof Faces !== 'undefined') {
+      if (cell && cell.flip) {
+        c.save();
+        c.translate(2 * (b.x + m.fw / 2), 0); c.scale(-1, 1);
+        Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y);
+        c.restore();
+      } else if (cell) Faces.paint(c, id, cell.faceDir, cell.faceFrame, b.x, b.y);
+      else Faces.paint(c, id, tdir, tframe, b.x, b.y);
+    }
     c.restore();
   },
 

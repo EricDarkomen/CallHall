@@ -198,6 +198,15 @@ const Guns = {
      bearing it started from, and who it has already caught. A swing hits
      each person once however long the arc dwells on them. */
   swingT: 0, swingFor: 0.3, swingA: 0, swingHit: null,
+  /* Which way round the next swing goes. Flipped by every swing, so holding
+     the trigger is a forehand, then a backhand, then a forehand — which is
+     what the mirrored columns of the pose sheet are for. */
+  swingDir: 1,
+  /* How long after a shot the arm is still coming back.
+     an eighth of a second: long enough to see at sixty frames and short enough
+     that the third dart of a magazine is not fired out of a pose left over
+     from the first. */
+  KICK_S: 0.13, kickT: 0,
 
   /* How far the shoulders may turn past the direction the sprite is drawn
      facing before the sprite gives up and faces the other way. Four rows of
@@ -208,38 +217,76 @@ const Guns = {
      than it sounds, and past about a third of a radian a person stops reading
      as twisting and starts reading as falling over. */
   TWIST: 0.30,
-  /* ---- the hold pose ----
-     WHICH FRAME THE TOP HALF IS, per direction, while something is in your
-     hands. Not the walk frame, which is what it used to be and which is why
-     the blaster floated in front of somebody strolling along with their arms
-     swinging by their sides. These are the kit's run frames — the only poses
-     in it with the elbows bent and, side on, a fist punched out in front —
-     held STILL rather than played: the legs walk, the top half is braced, and
-     braced is what carrying something looks like.
+  /* ---- THE POSE SHEET ----
+     Six poses, four directions, baked once into a canvas laid out exactly
+     like a row of the character sheet: cell (pose, direction). Everything
+     that follows — holding, firing, and both halves of a swing — is a column
+     number, and the renderer blits a rectangle out of it exactly as it blits
+     one out of the atlas.
 
-     Read off the sheet rather than chosen by eye: in the side rows the skin
-     of the leading hand reaches thirteen pixels forward of centre in frame 10
-     and nowhere near that in any other, and 11 is the fullest two-handed
-     front-on pose. Up, left, down, right. */
-  HOLD: [11, 10, 11, 10],
-  /* The two ends of a swing, same rows: 8 has the arm drawn back across the
-     body and 10 has it extended. A punch, in two frames, which is all a
-     swing needs. See melee below. */
-  SWING: [8, 10],
+     THERE IS NO NEW ART IN IT. Every cell is a frame the kit already ships,
+     and the only thing this sheet does that the kit does not is MIRROR. That
+     is the point of baking it rather than reading the atlas directly: a left
+     hook and a right hook are the same drawing seen from the other side, so
+     the left-facing row's backhand is the right-facing row's forehand flipped
+     about its own middle, and one table can say so. Six columns out of a kit
+     with two usable arm positions a side.
 
-  /* Where the hands are, relative to the point the sprite stands on, in the
-     pose above: fifteen up is the fist in the side rows and ten out is where
-     that fist is, so the grip of the thing is IN the hand rather than in
-     front of the chest.
+     What a column is:
 
-     The rise is split because this is a three-quarter view and up and down are
-     not the same question. Pointing away from the camera is pointing up the
-     screen, and a gun held at a flat chest height while aiming that way
-     disappears behind its owner — aimed at the far wall the blaster was simply
-     not on screen — so it lifts over the shoulder. Pointing at the camera only
-     has to clear the hands, so it barely drops at all: the old symmetric
-     number put it down at the knees. */
-  HAND_Y: -15, HAND_OUT: 10, RISE_UP: 12, RISE_DOWN: 4,
+       hold     braced, weapon up. The run frames are the only ones in the kit
+                with the elbows bent and, side on, a fist punched out in front,
+                and this is the fullest of them. Held still rather than played:
+                the legs walk and the top half does not, which is what carrying
+                something looks like.
+       fire     the same arm two pixels further back. That is the recoil — the
+                kit drew it for a running stride and it reads as a gun going
+                off, because the hand moves the way a hand moves when one does.
+       wind     the arm drawn back across the body: the start of a swing.
+       strike   the arm extended: the end of one.
+       windB    the same two mirrored, so the NEXT swing comes back the other
+       strikeB  way. A fight is a forehand and then a backhand, and until there
+                was a mirrored column every swing was the same swing.
+
+     Each entry is [frame, mirrored]. Mirrored means "take the row that faces
+     the other way and flip it": left borrows right, right borrows left, and
+     the two front-on rows borrow themselves, because a front view flipped is
+     still a front view — which is also why those two need no mirrored cell at
+     all and simply run their own pair the other way round. */
+  POSES: ['hold', 'fire', 'wind', 'strike', 'windB', 'strikeB'],
+  POSE: [
+    /* up    */ [[11, 0], [9, 0], [8, 0], [10, 0], [8, 1], [10, 1]],
+    /* left  */ [[10, 0], [8, 0], [8, 0], [10, 0], [8, 1], [10, 1]],
+    /* down  */ [[11, 0], [9, 0], [8, 0], [10, 0], [10, 0], [8, 0]],
+    /* right */ [[10, 0], [8, 0], [8, 0], [10, 0], [8, 1], [10, 1]]
+  ],
+  /* WHERE THE HAND IS IN EACH OF THOSE CELLS, in cell pixels, measured off the
+     art rather than guessed: the skin was clustered per frame and the cluster
+     below the neck that is not the face is the hand. The grip of whatever you
+     are holding goes there, so the thing is IN the hand in every pose rather
+     than floating at one average height for all of them.
+
+     Two hands where the art shows two and the aim picks which — front on, a
+     pistol held out to the right is in the right hand. One where it shows one.
+     The back row shows neither, because you are looking at somebody's back, so
+     it gets the middle of the chest and the lift below. */
+  HANDS: [
+    /* up    */ [[19, 30], [19, 30], [19, 30], [19, 30], [19, 30], [19, 30]],
+    /* left  */ [[7, 30], [9, 30], [9, 30], [7, 30], [9, 30], [7, 30]],
+    /* down  */ [[[13, 35], [26, 35]], [[11, 35], [24, 35]], [11, 32], [26, 32], [26, 32], [11, 32]],
+    /* right */ [[30, 30], [28, 30], [28, 30], [30, 30], [28, 30], [30, 30]]
+  ],
+  /* The back row again: this lifts what is in that invisible hand over the
+     shoulder, where you can see what you are holding. Without it, aimed at the
+     far wall, the blaster was simply not on the screen. */
+  RISE_UP: 13,
+  /* A couple of pixels of reach along the aim, on top of the hand. The hand
+     does not move within a direction — a wrist turns, a shoulder does not —
+     but a muzzle that never moves at all between aiming up-right and
+     down-right reads as painted on. Two, and not more: every pixel of this is
+     a pixel of daylight between a grip and the fist holding it. */
+  REACH: 2,
+
   /* Where a shot is born and how high it is drawn. It travels on the GROUND
      plane like everything else in this game — that is what lets it be tested
      against people and walls with the same arithmetic everything else uses —
@@ -374,7 +421,7 @@ const Guns = {
   },
   at(wx, wy) {
     if (!this.armed) return;
-    this.a = Math.atan2(wy - (P.y + this.HAND_Y), wx - P.x);
+    this.a = Math.atan2(wy - (P.y + this.SHOT_Z), wx - P.x);
     this.holster = this.HOLSTER;
   },
   trigger(on) {
@@ -432,10 +479,62 @@ const Guns = {
     if ((mv + 2) % 4 === tdir) return { dir: tdir, back: true };
     return { dir: mv, back: false };
   },
-  /* The player's own: which row the shoulders are, which frame they hold,
-     how far the lean goes — and, as a side effect, where the feet end up.
-     Null when there is nothing in your hands, which is the single blit
-     everybody has always been.
+  /* ---- baking the sheet ----
+     Once per character, into a canvas laid out as one cell per pose across
+     and one row per direction down — the same shape as a row of the atlas, so
+     everything downstream blits a rectangle out of an image and never learns
+     that some of those rectangles were flipped on the way in.
+
+     Rebuilt when the character changes, which is what the two identity checks
+     are for: the player is COMPOSED out of the creator's layers, so their
+     sheet object is replaced wholesale when they are made or handed back, and
+     a pose sheet baked from the old one would be somebody else's shoulders. */
+  sheet(id) {
+    const r = Sprites.at(id);
+    if (!r) return null;
+    const m = r.sheet;
+    if (this._sheet && this._sheetFor === m && this._sheetRow === r.row) return this._sheet;
+    const n = this.POSES.length;
+    const cv = document.createElement('canvas');
+    cv.width = m.fw * n; cv.height = m.fh * 4;
+    const g = cv.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    for (let d = 0; d < 4; d++) {
+      for (let i = 0; i < n; i++) {
+        const spec = this.POSE[d][i];
+        /* Whose row a mirrored cell comes from: the one facing the other way
+           for the two side rows, and its own for the two front-on ones. */
+        const src = spec[1] ? (d === 1 ? 3 : d === 3 ? 1 : d) : d;
+        g.save();
+        if (spec[1]) { g.translate((i + 1) * m.fw, 0); g.scale(-1, 1); }
+        else g.translate(i * m.fw, 0);
+        g.drawImage(m.img, (src * m.frames + spec[0]) * m.fw, r.row * m.fh, m.fw, m.fh,
+          0, d * m.fh, m.fw, m.fh);
+        g.restore();
+      }
+    }
+    this._sheetFor = m; this._sheetRow = r.row;
+    this._sheet = { img: cv, fw: m.fw, fh: m.fh, cols: n };
+    return this._sheet;
+  },
+  /* Which column, this instant. A swing owns it while one is running —
+     wind for the first third, strike for the rest, and the B pair when the
+     swing is coming back the other way — then the kick owns it for a tenth of
+     a second after a shot, and otherwise it is the braced hold. */
+  column() {
+    const d = this.def();
+    if (d && d.melee && this.swingT > 0) {
+      const t = 1 - this.swingT / (this.swingFor || 1);
+      const b = this.swingDir < 0 ? 2 : 0;
+      return (t < 0.35 ? 2 : 3) + b;
+    }
+    return this.kickT > 0 ? 1 : 0;
+  },
+
+  /* The player's own pose: which row the shoulders are, which cell of the
+     sheet they hold, how far the lean goes — and, as a side effect, where the
+     feet end up. Null when there is nothing in your hands, which is the single
+     blit everybody has always been.
 
      P.dir is WRITTEN here rather than returned, so that everything downstream
      that has ever asked which way the player is facing — the renderer, and
@@ -445,14 +544,61 @@ const Guns = {
   pose() {
     if (!this.armed) return null;
     const t = this.twist(this.a);
-    t.frame = this.swingT > 0 ? this.SWING[this.swingT > this.swingFor * .55 ? 0 : 1] : this.HOLD[t.dir];
+    const sh = this.sheet('player');
+    t.col = this.column();
+    if (sh) {
+      const spec = this.POSE[t.dir][t.col];
+      t.cell = {
+        img: sh.img, sx: t.col * sh.fw, sy: t.dir * sh.fh,
+        /* Which row the FACE has to come from, and whether it goes on
+           mirrored. The body in a flipped cell was baked from the other side's
+           row; an expression is drawn live over the top of it and has to be
+           told the same thing, or somebody's mouth is on the back of their
+           head. */
+        faceDir: spec[1] ? (t.dir === 1 ? 3 : t.dir === 3 ? 1 : t.dir) : t.dir,
+        faceFrame: spec[0], flip: !!spec[1]
+      };
+    } else {
+      /* No sheet — a page opened without art/ — and the old two-frame pick is
+         still exactly right, because there is nothing to draw either way. */
+      t.frame = 0;
+    }
     const l = this.legs(t.dir);
     P.dir = l.dir; this.back = l.back;
+    this._pose = t;
     return t;
   },
   /* Whether the walk is playing backwards this frame. Set by pose(), read by
      the renderer one line later. */
   back: false,
+
+  /* ---- where the hand is, in the world ----
+     The cell says where the hand is in the art; this says where that pixel has
+     ended up on the screen, which is not the same question once the torso has
+     been turned about the hip. It applies the SAME transform Sprites.twisted()
+     applies to the pixels — rotate about the waist, then the shoulder shift —
+     so the grip stays in the hand at every lean instead of drifting out of it
+     by a couple of pixels at the extremes, which is exactly the amount that
+     reads as a gun somebody is not quite holding. */
+  hand(x, y, ang) {
+    const t = this._pose;
+    const r = Sprites.at('player');
+    if (!t || !r) return { x: x + Math.cos(ang) * 10, y: y - 15 };
+    const m = r.sheet, b = Sprites.box('player', x, y);
+    let h = this.HANDS[t.dir][t.col];
+    /* Two hands: the one on the side the aim is leaning. */
+    if (Array.isArray(h[0])) h = h[Math.cos(ang) < 0 ? 0 : 1];
+    const waist = Sprites.waistOf(m);
+    const px = b.x + m.fw / 2, py = b.y + waist;
+    const sh = Math.round(Math.sin(t.lean) * 3);
+    const dx = (b.x + h[0]) - px + sh, dy = (b.y + h[1]) - py;
+    const co = Math.cos(t.lean), si = Math.sin(t.lean);
+    return {
+      x: px + dx * co - dy * si + Math.cos(ang) * this.REACH,
+      y: py + dx * si + dy * co + Math.sin(ang) * this.REACH - (t.dir === 0 ? this.RISE_UP : 0)
+    };
+  },
+
   /* Somebody else's: they have `watch` set to a bearing and a moment to hold
      it for. Set by a dart landing on them. */
   watchOf(who) {
@@ -493,6 +639,7 @@ const Guns = {
     g.ammo[id] = Math.max(0, (g.ammo[id] || 0) - 1);
     this.cool = 1 / d.rate;
     this.flash = 0.06;
+    this.kickT = this.KICK_S;
     const a = this.a + rnd(-d.spread, d.spread);
     const sp = d.speed * TILE;
     this.shots.push({
@@ -521,6 +668,7 @@ const Guns = {
     const d = this.def(); if (!d || !d.melee) return;
     this.swingT = this.swingFor = d.swing;
     this.swingA = this.a;
+    this.swingDir = -this.swingDir;
     this.swingHit = new Set();
     this.cool = 1 / d.rate;
     if (d.kick) FX.shake(d.kick);
@@ -534,7 +682,7 @@ const Guns = {
     const d = this.def();
     if (!d || !d.melee || this.swingT <= 0) return this.a;
     const t = 1 - this.swingT / (this.swingFor || 1);
-    return this.swingA + (t - 0.5) * d.arc;
+    return this.swingA + (t - 0.5) * d.arc * this.swingDir;
   },
   /* Who the blade is on top of this frame. Reach is measured centre to centre
      and the blade is given a width of its own — a sweep that only caught what
@@ -588,6 +736,7 @@ const Guns = {
   update(dt) {
     if (!this.can() && this.armed) this.arm(false);
     if (this.flash > 0) this.flash -= dt;
+    if (this.kickT > 0) this.kickT = Math.max(0, this.kickT - dt);
     if (this.armed) {
       if (this.reloadT > 0 && (this.reloadT -= dt) <= 0) { this.reloadT = 0; this.fill(); }
       if (this.cool > 0) this.cool -= dt;
@@ -753,21 +902,35 @@ const Guns = {
     const art = this.art(id || this.id());
     if (!art) return;
     const flip = Math.abs(ang) > Math.PI / 2;
-    const ax = x + Math.cos(ang) * (out === undefined ? this.HAND_OUT : out);
-    /* Asymmetric on purpose — see RISE_UP and RISE_DOWN. */
-    const s = Math.sin(ang);
-    const ay = y + this.HAND_Y + s * (s < 0 ? this.RISE_UP : this.RISE_DOWN);
+    /* The grip goes in the hand — see hand() — and `out` is the extra reach a
+       swing puts on top of it, because an arm straightens through one. */
+    const h = this.hand(x, y, ang);
+    const ax = h.x + (out || 0) * Math.cos(ang);
+    const ay = h.y + (out || 0) * Math.sin(ang);
+    /* ---- the kick ----
+       Four pixels back down its own line and ten degrees of muzzle, decaying
+       over an eighth of a second. It is small on purpose: the arm is already
+       doing the visible half of this in the sheet's `fire` column, and a gun
+       that jumps further than the hand holding it reads as a gun coming loose.
+       The rise flips with the mirror, because up the screen is a different
+       sign once the whole thing has been turned over. */
+    const d = GUNS[id || this.id()] || {};
+    const k = this.kickT > 0 ? this.kickT / this.KICK_S : 0;
+    /* `kick` is already the number that says how hard this one goes off — it
+       is what shakes the screen — so it is what moves the gun as well, rather
+       than a second number saying the same thing in other units. */
+    const back = k * (d.kick || 1) * 2.2;
+    ang += (flip ? 1 : -1) * k * 0.09 * (d.kick || 1);
     const sm = c.imageSmoothingEnabled;
     c.imageSmoothingEnabled = false;
     c.save();
-    c.translate(Math.round(ax), Math.round(ay));
+    c.translate(Math.round(ax - Math.cos(ang) * back), Math.round(ay - Math.sin(ang) * back));
     c.rotate(ang);
     if (flip) c.scale(1, -1);
     c.drawImage(art.cv, -art.pivot[0], -art.pivot[1]);
     /* The flash, at the muzzle, in the muzzle's own frame — which is why it is
        inside the transform rather than worked out in world coordinates. */
     if (this.flash > 0 && this.armed) {
-      const d = GUNS[id || this.id()];
       c.globalAlpha = clamp(this.flash / 0.06, 0, 1);
       c.fillStyle = d && d.shot ? d.shot.tip : '#ffe27a';
       c.fillRect(art.muzzle[0], art.muzzle[1] - 1, 4, 3);
@@ -790,7 +953,12 @@ const Guns = {
     const d = this.def();
     if (d && d.melee && this.swingT > 0) {
       const t = 1 - this.swingT / (this.swingFor || 1);
-      this.paint(c, x, y, this.sweep(), null, this.HAND_OUT + Math.sin(t * Math.PI) * 7);
+      /* A LITTLE further out at the middle of the arc, and only a little. The
+         first version pushed it nine pixels and the sword left the hand
+         entirely — the arm in the art does not straighten, so nothing the
+         weapon does can pretend it has. The swing is in the ARC; this is the
+         two pixels of follow-through on top of it. */
+      this.paint(c, x, y, this.sweep(), null, Math.sin(t * Math.PI) * 2);
       return;
     }
     this.paint(c, x, y, this.a);
@@ -867,6 +1035,6 @@ const Guns = {
   clear() {
     this.shots.length = 0;
     this.armed = false; this.want = false; this.reloadT = 0; this.cool = 0;
-    this.swingT = 0; this.swingHit = null;
+    this.swingT = 0; this.swingHit = null; this.kickT = 0;
   }
 };

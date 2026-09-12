@@ -279,13 +279,58 @@ frame, which is why the blaster floated in front of somebody strolling along wit
 their arms swinging by their sides. The kit's run frames are the only ones in it
 with the elbows bent and, side on, a fist punched out in front — so those are the
 frames, held still rather than played: the legs walk and the shoulders are
-braced, which is what carrying something looks like. Which frame, again, was read
-off the sheet rather than picked by eye — in the side rows the skin of the
-leading hand reaches thirteen pixels forward of centre in frame 10 and nowhere
-near that in any other, so frame 10 is the one, and the grip of whatever you are
-holding is put at that hand. A swing borrows the two ends of the same set: 8 has
-the arm drawn back across the body, 10 has it extended, and a punch in two frames
-is all a swing needs.
+braced, which is what carrying something looks like.
+
+### The pose sheet
+
+Six poses, four directions, baked once into a canvas laid out exactly like a row
+of the character sheet. Everything the top half does — holding, firing, and both
+halves of a swing — is a column number in it, and the renderer blits a rectangle
+out of it exactly as it blits one out of the atlas.
+
+| | |
+| --- | --- |
+| `hold` | braced, weapon up. |
+| `fire` | the same arm two pixels further back. That is the recoil: the kit drew it for a running stride and it reads as a gun going off, because the hand moves the way a hand moves when one does. |
+| `wind` · `strike` | the arm drawn back across the body, and the arm extended. The two ends of a swing. |
+| `windB` · `strikeB` | the same two mirrored, so the next swing comes back the other way. |
+
+**There is no new art in it.** Every cell is a frame the kit already ships, and
+the only thing the sheet does that the kit does not is MIRROR — which is the
+whole reason to bake one rather than read the atlas directly. A left hook and a
+right hook are the same drawing seen from the other side, so the left-facing
+row's backhand is the right-facing row's forehand flipped about its own middle,
+and one table can say so. Six columns out of a kit with two usable arm positions
+a side. The two front-on rows need no mirrored cell at all: a front view flipped
+is still a front view, so they simply run their own pair the other way round.
+
+Mirroring costs one thing and it has to be paid: an expression is a patch
+measured against a specific frame of a specific direction and drawn live over the
+top, so a flipped cell has to say which row its body actually came from and get
+its face flipped with it. Otherwise somebody's mouth ends up on the back of their
+ear.
+
+**Which pixel is the hand** was measured rather than guessed: the skin was
+clustered per frame, and the cluster below the neck that is not the face is the
+hand. The grip of whatever you are holding goes exactly there, so it is IN the
+hand in every pose rather than floating at one average height for all of them —
+two hands where the art shows two and the aim picks which, because front on a
+pistol held out to the right is in the right hand, and none at all in the back
+row, where you are looking at somebody's back and the thing has to be lifted over
+the shoulder to be seen at all. The hand is then put through the same rotation
+the torso is, so the grip stays in the fist at full lean instead of drifting a
+couple of pixels out of it, which is exactly the amount that reads as a gun
+somebody is not quite holding.
+
+The rest of the motion is two numbers and an arc. Firing takes the `fire` column
+for an eighth of a second and pushes the gun four pixels back down its own line
+with ten degrees of muzzle, both decaying — the same `kick` number that shakes the
+screen, rather than a second number saying the same thing in other units. A swing
+sweeps its arc, alternates direction every time, and pushes the weapon two pixels
+further out at the middle of it. Two, and not nine: the first version pushed it
+nine and the sword left the hand entirely, because the arm in the art does not
+straighten and nothing the weapon does can pretend it has. The swing is in the
+arc; the rest is follow-through.
 
 The waist is at row 35 of a 56-row frame, and that is measured rather than
 eyeballed: the character kit ships the body in layers, and `parts-legs` starts on
@@ -592,7 +637,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
 | `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
 | `engine/sky.js` | The clock past five, the light, the weather and the season. Everything that draws asks it what time it is; nothing that draws knows. |
-| `engine/guns.js` | The away-day box: five things drawn from a grid of characters rather than fetched — three you fire and two you swing — what they do to the people they land on, and the twist that lets somebody walk one way and point another. |
+| `engine/guns.js` | The away-day box: five things drawn from a grid of characters rather than fetched — three you fire and two you swing — what they do to the people they land on, the pose sheet the person holding them is drawn from, and the twist that lets somebody walk one way and point another. |
 | `engine/title.js`, `css/title.css` | The title screen: the wallboard, the switchboard behind it, and the menu. |
 | `scripts/release.sh` | Checks the build and moves the version string. Run it before you ship. |
 | `editor.html`, `editor/` | A level editor. Not the game, and never published. |
