@@ -2992,24 +2992,23 @@ const R = {
              are easing along on the stick — P.fast is set by movePlayer from
              the size of the movement vector, so the animation and the pace
              can never disagree. */
-          /* WHICH FRAME THE LEGS ARE. With something in your hands they come
-             out of the run cycle — the only frames in the kit with no hands at
-             the hips, and so the only ones that leave you with one pair — held
-             at the stance frame while you are standing and played through
-             while you are not. See Guns.STANCE. */
+          /* WHICH FRAME THE LEGS ARE: the ordinary walk, or the ordinary
+             stand. Holding something changes the ARM and nothing else — see
+             Guns.ARM — so the legs are the legs they have always been. */
           const pf = seat ? Sprites.sit('player')
             : P.moving ? Sprites.frame('player', this.animate, P.step, P.fast, tw && Guns.back)
             : this.animate ? Sprites.breath('player') : 0;
           const plift = seat && this.animate ? Sprites.breathLift('player') : 0;
-          /* Behind the body when it is pointing away from the camera and in
-             front of it otherwise, which is the whole of the depth sorting a
-             held object needs. */
-          const gun = !seat && Guns.armed;
-          if (gun && Guns.behind()) Guns.held(c, at.x, at.y - plift);
           /* Same rule as the colleagues above: the chair points, not the
              sitter. Sit on the bench in Nailed It and you face the room. */
           Sprites.draw(c, 'player', seat ? (seat.face ?? 0) : P.dir ?? 2, pf, at.x, at.y - plift, tw);
-          if (gun && !Guns.behind()) Guns.held(c, at.x, at.y - plift);
+          /* And what is in the hand, over the top, always. There used to be a
+             depth test here — behind the body when you were pointing away from
+             the camera — and it was answering a question that no longer comes
+             up: the hand is on the end of an arm that is held out away from
+             the ribs in every direction, including away from the camera, so
+             there is nothing left for the body to be in front of. */
+          if (!seat && Guns.armed) Guns.held(c, at.x, at.y - plift);
         } else this.emoji(P.face, at.x, at.y - bob, 30);
         c.restore();
       }

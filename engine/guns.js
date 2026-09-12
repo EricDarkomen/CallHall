@@ -221,82 +221,86 @@ const Guns = {
      than it sounds, and past about a third of a radian a person stops reading
      as twisting and starts reading as falling over. */
   TWIST: 0.30,
-  /* ---- THE SWING SHEET ----
-     Four cells a direction, baked once into a canvas laid out exactly like a
-     row of the character sheet: the two ends of a swing, and the same two
-     mirrored so the next swing comes back the other way. A swing is a column
-     number, and the renderer blits a rectangle out of it exactly as it blits
-     one out of the atlas.
+  /* ---- THE ARM ----
 
-     A SWING IS THE ONLY THING IN HERE, and it is worth saying why, because
-     there used to be a braced hold pose as well and it was wrong. The frames
-     with the elbows bent are the kit's RUN cycle, and a run frame is a stride:
-     measured, the head sits five pixels from the feet in the side rows,
-     because the body is pitched forward over a leading leg. Freeze one for
-     somebody standing still and their legs are not under them; compose it over
-     standing legs and the hips must disagree with either the head or the feet,
-     because in the original they disagree with both. There is no arrangement
-     of that drawing that is a person standing up.
+     THE PROBLEM. Four rows of art, and in every frame of every one of them
+     both arms hang at the sides. There is no pose in this kit where anybody
+     is holding anything up: the LPC Revised character ships Idle, Walk, Run,
+     Sitting, Jump, Climb and Emotes and not one frame of Combat — the artist's
+     own credits list a one-handed combat set, but it is not in the pinned
+     commit, and the universal spritesheet that does carry one carries it on a
+     different body under a ShareAlike licence this project will not mix into
+     OGA-BY art (see LICENSE part 2). So a blaster drawn at the end of the arm
+     the kit gives you is a blaster floating beside a man standing to
+     attention, and facing away it is a blaster nothing on the screen is
+     holding.
 
-     So holding something is the ordinary frame — see column() — and the stride
-     comes out for the quarter of a second in which somebody is actually
-     lunging, which is what a stride is for.
+     THE ANSWER IS THE ARM THE KIT ALREADY DREW, TURNED AT THE SHOULDER. Cut
+     the arm out of the frame — it is a rectangle, seven pixels by twelve, and
+     the kit separates it from the torso with a line of its own shading — and
+     blit that same rectangle back rotated about the shoulder joint. It is the
+     player's OWN sleeve and the player's OWN hand, because it is their own
+     frame: whatever shirt they chose, whatever skin they chose, at whatever
+     moment of the walk cycle they are on. Nothing is recoloured, nothing is
+     invented, and a shirt added to the creator tomorrow gets an arm for free.
 
-     THERE IS NO NEW ART IN IT. Every cell is a frame the kit already ships,
-     and the only thing this sheet does that the kit does not is MIRROR, which
-     is the whole reason to bake one rather than read the atlas directly. A
-     left hook and a right hook are the same drawing seen from the other side,
-     so the left-facing row's backhand is the right-facing row's forehand
-     flipped about its own middle, and one table can say so. The two front-on
-     rows need no mirrored cell at all — a front view flipped is still a front
-     view — so they simply run their own pair the other way round.
+     That is paper-doll animation and it is as old as animation. What makes it
+     affordable here is that it is two canvas operations: a clip with a hole in
+     it so the arm does not also hang where it used to, and the same blit again
+     inside a rotation. No pixel is ever read back, which matters because this
+     game opens from file:// and a canvas that has had a sprite drawn on it
+     cannot be read from there at all.
 
-     Each entry is [frame, mirrored]. */
-  POSES: ['wind', 'strike', 'windB', 'strikeB'],
-  POSE: [
-    /* up    */ [[8, 0], [10, 0], [8, 1], [10, 1]],
-    /* left  */ [[8, 0], [10, 0], [8, 1], [10, 1]],
-    /* down  */ [[8, 0], [10, 0], [10, 0], [8, 0]],
-    /* right */ [[8, 0], [10, 0], [8, 1], [10, 1]]
+     EACH ENTRY IS ONE ARM:
+
+       rect    the arm in the cell, [x0, y0, x1, y1] inclusive. Measured off
+               the composed frame: the kit shades a seam between the sleeve
+               and the ribs, so the cut follows a line that is already drawn.
+       from    the shoulder joint inside that rectangle — what it turns about.
+       to      where that joint goes. The same point for the front and back
+               rows, where the arm is already on the shoulder it belongs to.
+               NOT the same for the side rows, where the only arm the kit
+               leaves visible is the FAR one, swung out behind the back: it is
+               carried across to the near shoulder on the way, which is the
+               difference between an arm reaching forward and a hand stuck to
+               somebody's chest.
+       hand    the middle of the fist in that rectangle. Where the grip goes,
+               once the rotation has taken it wherever it takes it.
+       base    where the arm points, on the screen, when the aim is straight
+               along the row. Down and out on the front row, up and out on the
+               back one, forward on the two side rows.
+
+     Two arms on the front and back rows and the aim picks which — front on, a
+     blaster held out to the right is in the right hand. One on the side rows,
+     because there is only one arm to have. */
+  ARM: [
+    /* up    */ [
+      { rect: [5, 31, 11, 42], from: [8, 32], to: [8, 32], hand: [8, 39], base: -Math.PI + 0.55 },
+      { rect: [26, 31, 32, 42], from: [29, 32], to: [29, 32], hand: [29, 39], base: -0.55 }],
+    /* left  */ [
+      { rect: [23, 31, 30, 42], from: [26, 32], to: [15, 33], hand: [26, 39], base: Math.PI - 0.15 }],
+    /* down  */ [
+      { rect: [5, 31, 11, 42], from: [8, 32], to: [8, 32], hand: [8, 39], base: Math.PI - 0.62 },
+      { rect: [26, 31, 32, 42], from: [29, 32], to: [29, 32], hand: [29, 39], base: 0.62 }],
+    /* right */ [
+      { rect: [7, 31, 14, 42], from: [11, 32], to: [22, 33], hand: [11, 39], base: 0.15 }],
   ],
-  /* WHERE THE HAND IS IN EACH OF THOSE CELLS, in cell pixels, measured off the
-     art rather than guessed: the skin was clustered per frame and the cluster
-     below the neck that is not the face is the hand. The grip of whatever you
-     are holding goes there, so the thing is IN the hand in every pose rather
-     than floating at one average height for all of them.
+  /* Where the arm points when it is hanging: down the screen. Everything in
+     ARM is a rotation away from this. */
+  ARM_REST: Math.PI / 2,
+  /* HOW MUCH OF THE LEFTOVER ANGLE THE ARM TAKES. The row is chosen first and
+     takes the cardinal; the lean takes a third of a radian of what is left;
+     this takes half of it again, and the rest is simply the difference between
+     a shoulder and a wrist. A whole shoulder is more than one: swing the arm
+     through the full residual and aiming at the near corner of the room folds
+     it across the chest. */
+  ARM_K: 0.5,
 
-     Two hands where the art shows two and the aim picks which — front on, a
-     pistol held out to the right is in the right hand. One where it shows one.
-     The back row shows neither, because you are looking at somebody's back, so
-     it gets the middle of the chest and the lift below. */
-  HANDS: [
-    /* up    */ [[19, 30], [19, 30], [19, 30], [19, 30]],
-    /* left  */ [[9, 30], [7, 30], [9, 30], [7, 30]],
-    /* down  */ [[11, 32], [26, 32], [26, 32], [11, 32]],
-    /* right */ [[28, 30], [30, 30], [28, 30], [30, 30]]
-  ],
-  /* WHERE THE HANDS ARE WHEN THE ARMS ARE DOWN, which is most of the time:
-     the ordinary standing and walking frames hang them at the hips, rows 36 to
-     42, and that is where the grip goes. Two where the art shows two and the
-     aim picks which; for the side rows the forward hand, which is the one a
-     gun would be in and which the body half hides anyway. */
-  HANDS_PLAIN: [
-    /* up    */ [[8, 39], [29, 39]],
-    /* left  */ [11, 38],
-    /* down  */ [[8, 38], [29, 38]],
-    /* right */ [26, 38]
-  ],
-
-  /* The back row again: this lifts what is in that invisible hand over the
-     shoulder, where you can see what you are holding. Without it, aimed at the
-     far wall, the blaster was simply not on the screen. */
-  RISE_UP: 13,
-  /* A couple of pixels of reach along the aim, on top of the hand. The hand
-     does not move within a direction — a wrist turns, a shoulder does not —
-     but a muzzle that never moves at all between aiming up-right and
-     down-right reads as painted on. Two, and not more: every pixel of this is
-     a pixel of daylight between a grip and the fist holding it. */
-  REACH: 2,
+  /* A couple of pixels of reach along the aim, on top of the hand: a wrist,
+     on the end of the arm the shoulder has just moved. Two, and not more —
+     every pixel of this is a pixel of daylight between a grip and the fist
+     holding it. */
+  REACH: 1,
 
   /* How high a shot is drawn. It travels on the GROUND plane like everything
      else in this game — that is what lets it be tested against people and
@@ -512,66 +516,45 @@ const Guns = {
     if ((mv + 2) % 4 === tdir) return { dir: tdir, back: true };
     return { dir: mv, back: false };
   },
-  /* ---- baking the sheet ----
-     Once per character, into a canvas laid out as one cell per pose across
-     and one row per direction down — the same shape as a row of the atlas, so
-     everything downstream blits a rectangle out of an image and never learns
-     that some of those rectangles were flipped on the way in.
+  /* ---- which arm is holding it, and how far round ----
+     The row has already been chosen and the lean already taken off; this is
+     the last of the angle, and it goes into the shoulder.
 
-     Rebuilt when the character changes, which is what the two identity checks
-     are for: the player is COMPOSED out of the creator's layers, so their
-     sheet object is replaced wholesale when they are made or handed back, and
-     a pose sheet baked from the old one would be somebody else's shoulders. */
-  sheet(id) {
-    const r = Sprites.at(id);
-    if (!r) return null;
-    const m = r.sheet;
-    if (this._sheet && this._sheetFor === m && this._sheetRow === r.row) return this._sheet;
-    const n = this.POSES.length;
-    const cv = document.createElement('canvas');
-    cv.width = m.fw * n; cv.height = m.fh * 4;
-    const g = cv.getContext('2d');
-    g.imageSmoothingEnabled = false;
-    for (let d = 0; d < 4; d++) {
-      for (let i = 0; i < n; i++) {
-        const spec = this.POSE[d][i];
-        /* Whose row a mirrored cell comes from: the one facing the other way
-           for the two side rows, and its own for the two front-on ones. */
-        const src = spec[1] ? (d === 1 ? 3 : d === 3 ? 1 : d) : d;
-        g.save();
-        if (spec[1]) { g.translate((i + 1) * m.fw, 0); g.scale(-1, 1); }
-        else g.translate(i * m.fw, 0);
-        g.drawImage(m.img, (src * m.frames + spec[0]) * m.fw, r.row * m.fh, m.fw, m.fh,
-          0, d * m.fh, m.fw, m.fh);
-        g.restore();
-      }
-    }
-    this._sheetFor = m; this._sheetRow = r.row;
-    this._sheet = { img: cv, fw: m.fw, fh: m.fh, cols: n };
-    return this._sheet;
-  },
-  /* Which column, this instant. A swing owns it while one is running —
-     wind for the first third, strike for the rest, and the B pair when the
-     swing is coming back the other way — then the kick owns it for a tenth of
-     a second after a shot, and otherwise it is the braced hold. */
-  column() {
+     `armAim` is the AIM most of the time and the SWEEP while a swing is
+     running, so the arm goes round with the thing in it instead of holding
+     still while a sword describes an arc on its own. Which arm it is comes
+     from the aim either way: a forehand that crosses the body is still thrown
+     by the shoulder it started on, and an arm that changed sides halfway
+     through a swing would be a second person's.
+
+     `turn` is what Sprites.twisted() rotates the cut rectangle by, and it has
+     the lean SUBTRACTED out of it, because that blit happens inside the twist:
+     the torso has already turned by that much and the arm went with it. */
+  armAim() {
     const d = this.def();
-    if (d && d.melee && this.swingT > 0) {
-      const t = 1 - this.swingT / (this.swingFor || 1);
-      return (t < 0.35 ? 0 : 1) + (this.swingDir < 0 ? 2 : 0);
-    }
-    /* MINUS ONE MEANS NO CELL: the ordinary frame, the one the game has always
-       drawn, with the arms where the kit put them and the thing you are
-       holding in the hand it drew. The recoil of a shot is in the GUN — four
-       pixels back down its own line and ten degrees of muzzle — and not in the
-       body, because a body that lunges for an eighth of a second three times a
-       second is a body having a fit. */
-    return -1;
+    return (d && d.melee && this.swingT > 0) ? this.sweep() : this.a;
+  },
+  armFor(dir, lean) {
+    const row = this.ARM[dir];
+    if (!row) return null;
+    const s = row.length > 1 ? row[Math.cos(this.a) < 0 ? 0 : 1] : row[0];
+    const turn = s.base + this.off(this.armAim(), dir) * this.ARM_K
+      - this.ARM_REST - lean;
+    const co = Math.cos(turn), si = Math.sin(turn);
+    const hx = s.hand[0] - s.from[0], hy = s.hand[1] - s.from[1];
+    return {
+      rect: s.rect, from: s.from, to: s.to, turn,
+      /* Where the fist ended up, in the cell, once its own rectangle has been
+         turned about the shoulder and carried to wherever `to` puts it. The
+         grip goes here — see hand(), which takes it the rest of the way out
+         of the cell and onto the screen. */
+      hand: [s.to[0] + hx * co - hy * si, s.to[1] + hx * si + hy * co]
+    };
   },
 
-  /* The player's own pose: which row the shoulders are, which cell of the
-     sheet they hold, how far the lean goes — and, as a side effect, where the
-     feet end up. Null when there is nothing in your hands, which is the single
+  /* The player's own pose: which row the shoulders are, how far the lean
+     goes, where the arm has got to — and, as a side effect, where the feet
+     end up. Null when there is nothing in your hands, which is the single
      blit everybody has always been.
 
      P.dir is WRITTEN here rather than returned, so that everything downstream
@@ -583,27 +566,22 @@ const Guns = {
     if (!this.armed) return null;
     const t = this.twist(this.a, true);
     t.lean = this.smooth = this.smooth + (t.lean - this.smooth) * this.EASE;
-    t.col = this.column();
-    const sh = t.col >= 0 ? this.sheet('player') : null;
-    if (sh) {
-      const spec = this.POSE[t.dir][t.col];
-      t.cell = {
-        img: sh.img, sx: t.col * sh.fw, sy: t.dir * sh.fh,
-        /* Which row the FACE has to come from, and whether it goes on
-           mirrored. The body in a flipped cell was baked from the other side's
-           row; an expression is drawn live over the top of it and has to be
-           told the same thing, or somebody's mouth is on the back of their
-           head. */
-        faceDir: spec[1] ? (t.dir === 1 ? 3 : t.dir === 3 ? 1 : t.dir) : t.dir,
-        faceFrame: spec[0], flip: !!spec[1]
-      };
-    } else {
-      /* The ordinary frame, in the direction the SHOULDERS are facing — which
-         is the whole of the twist when there is no pose involved: the same
-         drawing as the legs, from a different row. */
-      t.frame = P.moving ? Sprites.frame('player', R.animate, P.step, P.fast, this.back)
-        : (R.animate ? Sprites.breath('player') : 0);
-    }
+    /* THE STANDING FRAME, in the direction the SHOULDERS are facing, whatever
+       the feet are doing. There is no second drawing of this person anywhere
+       and there does not need to be one: the pose is this frame with one arm
+       turned at the shoulder.
+
+       It is FROZEN on the stand while the legs walk and run underneath, for a
+       reason that is about the arm and not about taste. The rectangle the arm
+       is cut from is measured on this frame; the kit's own walk shifts it a
+       pixel or two and its RUN — which pitches the whole body forward over a
+       leading leg and tucks both elbows in — moves it halfway across the cell.
+       Cut that rectangle out of a run frame and you take a piece of ribs and
+       blit back a stub. So the top half braces, which is what a top half
+       carrying something does, and the shins do the walking. The breath below
+       keeps it from reading as furniture. */
+    t.frame = 0;
+    t.arm = this.armFor(t.dir, t.lean);
     /* A BRACED TOP HALF IS NOT A FROZEN ONE. One pixel, on the rhythm every
        seated person in the building breathes on, and only while nothing else
        is moving it. */
@@ -624,21 +602,19 @@ const Guns = {
   back: false,
 
   /* ---- where the hand is, in the world ----
-     The cell says where the hand is in the art; this says where that pixel has
-     ended up on the screen, which is not the same question once the torso has
-     been turned about the hip. It applies the SAME transform Sprites.twisted()
-     applies to the pixels — rotate about the waist, then the shoulder shift —
-     so the grip stays in the hand at every lean instead of drifting out of it
-     by a couple of pixels at the extremes, which is exactly the amount that
-     reads as a gun somebody is not quite holding. */
+     The arm says where the fist has got to in the cell; this says where that
+     pixel has ended up on the screen, which is not the same question once the
+     torso has been turned about the hip. It applies the SAME transform
+     Sprites.twisted() applies to the pixels — rotate about the waist, then the
+     shoulder shift — so the grip stays in the hand at every lean instead of
+     drifting out of it by a couple of pixels at the extremes, which is exactly
+     the amount that reads as a gun somebody is not quite holding. */
   hand(x, y, ang) {
     const t = this._pose;
     const r = Sprites.at('player');
-    if (!t || !r) return { x: x + Math.cos(ang) * 10, y: y - 15 };
+    if (!t || !t.arm || !r) return { x: x + Math.cos(ang) * 10, y: y - 15 };
     const m = r.sheet, b = Sprites.box('player', x, y);
-    let h = t.col >= 0 ? this.HANDS[t.dir][t.col] : this.HANDS_PLAIN[t.dir];
-    /* Two hands: the one on the side the aim is leaning. */
-    if (Array.isArray(h[0])) h = h[Math.cos(ang) < 0 ? 0 : 1];
+    const h = t.arm.hand;
     const waist = Sprites.waistOf(m);
     const px = b.x + m.fw / 2, py = b.y + waist;
     const sh = Math.round(Math.sin(t.lean) * 3);
@@ -646,7 +622,7 @@ const Guns = {
     const co = Math.cos(t.lean), si = Math.sin(t.lean);
     return {
       x: px + dx * co - dy * si + Math.cos(ang) * this.REACH,
-      y: py + dx * si + dy * co + Math.sin(ang) * this.REACH - (t.dir === 0 ? this.RISE_UP : 0)
+      y: py + dx * si + dy * co + Math.sin(ang) * this.REACH
     };
   },
 
@@ -1046,18 +1022,6 @@ const Guns = {
     }
     this.paint(c, x, y, this.a);
   },
-  /* In front of somebody or behind them, which is the whole of the depth
-     sorting a held object needs: aiming away from the camera puts it on the
-     far side of the body, and it is drawn first. The SWEEP decides it during
-     a swing, not the aim — a sword swung across the top of the arc passes
-     behind the head and comes back in front of the chest, and following it is
-     free. */
-  behind() {
-    if (!this.armed) return false;
-    const a = (this.def() && this.def().melee && this.swingT > 0) ? this.sweep() : this.a;
-    return Math.sin(a) < -0.34;
-  },
-
   /* Everything in the air. Drawn as pixels rather than as sprites — a dart is
      seven pixels by three and a rectangle at an angle is exactly that. */
   paintShots(c) {
