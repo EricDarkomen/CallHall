@@ -169,10 +169,11 @@ const Shop = {
     const it = ITEMS[k];
     if (P.money < it.v) { Sfx.deny(); UI.toast('💷', 'Not enough. Work a shift like everyone else.'); return; }
     Player.mod({ money: -it.v }); Item.give(k); Sfx.cash(); Panels.render();
-    /* Buying the biscuits with your own money is the whole of the accord. */
+    /* Buying the biscuits with your own money is the whole of the accord.
+       Q.step says what is left to do — the step's own words — so there is no
+       second objective line here saying it differently. */
     if (k === 'biscuits' && Q.active('q_biscuit')) {
       Q.step('q_biscuit');
-      UI.objective('Put the biscuits in the tin. Tell nobody.');
       UI.toast('🍪', 'A box of the good ones. Four pounds of your own money. Nobody asked you to and nobody will know.', 'gold');
     }
   }

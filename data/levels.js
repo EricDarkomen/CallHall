@@ -409,6 +409,17 @@ const LEVELS = {
       /* The board nobody reads, because everybody already knows. */
       A({ x: 6, y: 2, e: '\ud83d\udccb', name: 'The menu board', kind: 'board', solid: true, use: 'greggsBoard' });
       A({ x: 9, y: 2, e: '\ud83d\udcc4', name: 'The allergen folder', kind: 'poster', solid: true, use: 'greggsAllergens' });
+      /* BEHIND THE COUNTER, and the reason it is furnished at all: the strip
+         between the counter and the back wall was floor, and it was floor with
+         the counter across one side of it and the board and the folder sealing
+         the other two — two tiles of room that nothing could ever stand on,
+         which is the fault the level check calls an error and the one that
+         parks a colleague for ever if anything ever nudges one in there.
+         It is the counter's own handler, because that is what it is: you are
+         served at a counter and the ovens behind it are part of the counter,
+         exactly as the door on the parade and the sign over it are one shop. */
+      A({ x: 7, y: 2, e: '\ud83d\udd25', name: 'The ovens', kind: 'micro', solid: true, use: 'greggsCounter' });
+      A({ x: 8, y: 2, e: '\ud83e\uddfa', name: 'The racks of trays', kind: 'book', solid: true, use: 'greggsCounter' });
       /* Two tables by the window, which is one more than anybody uses. */
       A({ x: 4, y: 6, e: '\ud83e\ude91', name: 'The table by the window', kind: 'table', solid: true, use: 'greggsTable' });
       A({ x: 4, y: 7, e: '\ud83e\ude91', name: 'The chair nobody has moved', kind: 'chair', solid: true, use: 'greggsTable' });
@@ -449,6 +460,15 @@ const LEVELS = {
       A({ x: 10, y: 3, e: '🥃', name: 'The optics', kind: 'book', solid: true, use: 'pubOptics' });
       A({ x: 4, y: 2, e: '📝', name: 'The chalkboard', kind: 'board', solid: true, use: 'pubBoard' });
       A({ x: 9, y: 2, e: '📺', name: 'The telly', kind: 'tv', solid: true, use: 'pubTelly' });
+      /* THE BACK BAR, for the Greggs' reason: the strip between the bar and
+         the wall was four tiles of floor with the bar along one side and the
+         chalkboard and the telly sealing the ends, so nobody could ever stand
+         on any of it. It is the bar's own handler — the shelf behind a bar is
+         the bar, and there are six colleagues in here at ten past five. */
+      A({ x: 5, y: 2, e: '🧼', name: 'The glass washer', kind: 'micro', solid: true, use: 'pubBar' });
+      A({ x: 6, y: 2, e: '🍾', name: 'The shelf of bottles', kind: 'book', solid: true, use: 'pubBar' });
+      A({ x: 7, y: 2, e: '💳', name: 'The till', kind: 'oldpc', solid: true, use: 'pubBar' });
+      A({ x: 8, y: 2, e: '🥔', name: 'The crisps on the card', kind: 'heap', solid: true, use: 'pubBar' });
       /* The quiz corner, which is where the quiz is on a Tuesday and where
          nothing at all happens for the other six days. */
       A({ x: 4, y: 6, e: '🪑', name: 'A table', kind: 'table', solid: true, use: 'pubTable' });
@@ -553,10 +573,19 @@ const LEVELS = {
       A({ x: 8, y: 3, e: '⚖️', name: 'The scales', kind: 'pc', solid: true, use: 'postScales' });
       A({ x: 5, y: 2, e: '🕐', name: 'The notice about 1 till 2', kind: 'poster', solid: true, use: 'postNotice' });
       /* THE QUEUE. Four of them, always. */
-      A({ x: 7, y: 5, e: '🧍', name: 'First in the queue', kind: 'view', solid: true, use: 'postQueue1' });
-      A({ x: 7, y: 6, e: '🧍', name: 'Second in the queue', kind: 'view', solid: true, use: 'postQueue2' });
-      A({ x: 7, y: 7, e: '🧍', name: 'Third in the queue', kind: 'view', solid: true, use: 'postQueue3' });
-      A({ x: 7, y: 8, e: '🧍', name: 'Fourth in the queue', kind: 'view', solid: true, use: 'postQueue4' });
+      /* FOUR PEOPLE, AND `mount: null` ON ALL FOUR. The kind is borrowed for
+         its size — there is no FURN entry for a person, because a person is
+         normally an NPC and these four are scenery with an act each — and
+         every kind at that size hangs on a wall. A wall-mounted thing with no
+         wall behind it is dropped to the floor, silently, which is the right
+         picture arrived at by accident: it draws as somebody standing in a
+         queue either way, and now it SAYS so. Same override, same reason, as
+         the fire extinguisher propping the fire door. */
+      const Q4 = { mount: null };
+      A({ x: 7, y: 5, e: '🧍', name: 'First in the queue', kind: 'view', solid: true, use: 'postQueue1', furn: Q4 });
+      A({ x: 7, y: 6, e: '🧍', name: 'Second in the queue', kind: 'view', solid: true, use: 'postQueue2', furn: Q4 });
+      A({ x: 7, y: 7, e: '🧍', name: 'Third in the queue', kind: 'view', solid: true, use: 'postQueue3', furn: Q4 });
+      A({ x: 7, y: 8, e: '🧍', name: 'Fourth in the queue', kind: 'view', solid: true, use: 'postQueue4', furn: Q4 });
       /* Everything you did not come in for. */
       A({ x: 3, y: 5, e: '💌', name: 'The card carousel', kind: 'book', solid: true, use: 'postCards' });
       A({ x: 3, y: 7, e: '📎', name: 'The stationery', kind: 'box', solid: true, use: 'postStationery' });
@@ -593,7 +622,9 @@ const LEVELS = {
       A({ x: 3, y: 5, e: '👔', name: 'The rail of work shirts', kind: 'cupboard', solid: true, use: 'charityShirts' });
       A({ x: 3, y: 7, e: '📚', name: 'The book table', kind: 'table', solid: true, use: 'charityBooks' });
       A({ x: 10, y: 6, e: '🧩', name: 'The jigsaw', kind: 'box', solid: true, use: 'charityJigsaw' });
-      A({ x: 10, y: 8, e: '📺', name: 'The electricals corner', kind: 'tv', solid: true, use: 'charityElectrical' });
+      /* A heap of tellies in the middle of the shop rather than one on a
+         bracket, so it does not want the wall its kind normally wants. */
+      A({ x: 10, y: 8, e: '📺', name: 'The electricals corner', kind: 'tv', solid: true, use: 'charityElectrical', furn: { mount: null } });
       A({ x: 5, y: 6, e: '🕯️', name: 'The bric-a-brac', kind: 'misc', solid: true, use: 'charityBricabrac' });
     }
   },
@@ -653,7 +684,9 @@ const LEVELS = {
       A({ x: 10, y: 4, e: '💅', name: 'The nail bar basin', kind: 'sink', solid: true, use: 'vapourBasin' });
       A({ x: 3, y: 6, e: '🍞', name: 'The bakery tiling', kind: 'misc', solid: false, use: 'vapourTiles' });
       A({ x: 9, y: 6, e: '🪑', name: 'The chair from the nail bar', kind: 'chair', solid: true, use: 'vapourChair' });
-      A({ x: 6, y: 6, e: '💨', name: 'The smell', kind: 'view', solid: false, use: 'vapourSmell' });
+      /* The one thing in this game that is not anywhere: it is the middle of
+         the room, so it hangs on nothing on purpose. */
+      A({ x: 6, y: 6, e: '💨', name: 'The smell', kind: 'view', solid: false, use: 'vapourSmell', furn: { mount: null } });
     }
   },
 
@@ -948,7 +981,9 @@ const LEVELS = {
       A({ x: 12, y: 5, e: '\ud83d\udcec', name: 'The post on the windowsill', kind: 'paper', solid: true, use: 'flatsPost' });
       A({ x: 4, y: 5, e: '\ud83d\udeb2', name: 'The bike', kind: 'bike', solid: true, use: 'flatsBike' });
       A({ x: 3, y: 7, e: '\u26a1', name: 'The meters', kind: 'server', solid: true, use: 'flatsMeters' });
-      A({ x: 6, y: 7, e: '\ud83d\udd58', name: 'The light on the timer', kind: 'therm', solid: true, use: 'flatsTimer' });
+      /* The switch is on the wall; the LIGHT is the bulb on the landing, out
+         in the middle of it, which is why this one hangs on nothing. */
+      A({ x: 6, y: 7, e: '\ud83d\udd58', name: 'The light on the timer', kind: 'therm', solid: true, use: 'flatsTimer', furn: { mount: null } });
       A({ x: 11, y: 7, e: '\u2668\ufe0f', name: 'The radiator', kind: 'cooler', solid: true, use: 'flatsRad' });
       A({ x: 13, y: 8, e: '\ud83d\uddd1\ufe0f', name: 'The bin bags by the stairs', kind: 'bin', solid: true, use: 'flatsBags' });
     }
@@ -1456,7 +1491,13 @@ const LEVELS = {
          block, so a mounted sprite here would silently fall back to the emoji
          anyway. Kit art is not automatically an upgrade; there is still no
          wall on this side of the road that it would work on. */
-      A({ x: 31, y: 23, e: '🥐', name: 'Greggs', kind: 'shop', solid: true, use: 'greggs' });
+      /* `via` with no door object under it: this is the one frontage on the
+         map that is a shop and not a doorway — it is across the road, not in
+         the parade's wall — so the sign IS the way in, and it says which link
+         it is exactly as the fourteen doors do. Nothing turns it into a
+         doorway (that is `kind`, and this is a `shop`); what reads it is the
+         tracker, pinning the way to a job two levels away. */
+      A({ x: 31, y: 23, e: '🥐', name: 'Greggs', kind: 'shop', solid: true, use: 'greggs', via: 'greggsDoor' });
       A({ x: 22, y: 23, e: '🏧', name: 'The cashpoint', kind: 'screen', solid: true, use: 'cashpoint' });
       A({ x: 40, y: 23, e: '🖍️', name: 'The hoarding', kind: 'poster', solid: true, use: 'hoarding' });
 

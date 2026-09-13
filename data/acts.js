@@ -318,6 +318,14 @@ const Acts = {
          G.minutes += 6; Player.mod({ patience: -4 }); P.stats.knowledge += .5;
          UI.toast('📜', 'Six minutes and eleven pages. Page eleven defines “colleague”. You put it back.');
        } },
+       /* The tray itself, which is where the OTHER half of the joke has been
+          sitting unreachable: the pack is five hundred and one pages and a
+          ream is five hundred sheets, and neither line lands unless you can
+          hold both of them. */
+       { t: 'Take a ream out of the tray.', to: null, if: () => !Item.has('paper'), do() {
+         Item.give('paper');
+         UI.toast('📄', 'Five hundred sheets. One short, which you are not going to think about again until the next time you are standing here.');
+       } },
        { t: 'Leave them. They are for a session that has been moved twice.', to: null }]);
   },
   oldPrinter() { insp('🖨️', 'Printer (deceased)', 'Archive', ['An older printer, in the archive, facing the wall.', 'A note on it in Terry’s handwriting: “DO NOT REVIVE”.']); },
@@ -2670,6 +2678,13 @@ const Acts = {
       [{ t: 'Sit in it while he is at lunch.', to: null, do() {
           G.minutes += 4; Player.mod({ patience: 10 }); Rel.add('gary', -1); P.stats.chaos += 1;
           UI.toast('💺', 'Four minutes of genuine lumbar support. You will think about this on your deathbed.');
+        } },
+       /* The other way of wanting it, and the one the achievement over the
+          honest route is named after. It is a worse thing to do than sitting
+          in it and it costs more, which is the whole of the difference. */
+       { t: 'Take one of the castors.', to: null, if: () => !Item.has('castor'), do() {
+          G.minutes += 3; Item.give('castor'); Rel.add('gary', -2); P.stats.chaos += 2;
+          UI.toast('⚙️', 'It comes off in your hand more easily than it should. The chair lists to port for the rest of the week and Gary never works out why, and you do, and you say nothing.');
         } },
        { t: 'Ask Gary about the chair.', to: null, if: () => !Q.active('q_chair') && !Q.complete2('q_chair'), do() { Q.start('q_chair'); UI.objective('Ask Gary about The Good Chair.'); } },
        { t: 'Look at it and want.', to: null }]);

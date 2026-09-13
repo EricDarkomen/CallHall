@@ -16,7 +16,6 @@ const ArtUI = {
   zoom: 2,
   sel: null,          /* the rectangle being dragged out, in sheet pixels */
   drag: null,
-  hoverRow: -1,
   t: 0,
 
   refresh() {

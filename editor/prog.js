@@ -227,15 +227,6 @@ const ProgCheck = {
     return this;
   },
 
-  /* Every skill id in the tree, whichever branch it is in. */
-  skillIds() {
-    const out = [];
-    Object.keys(SKILLS).forEach(b => {
-      const list = (b === Prog.id && Prog.kind === 'skill') ? Prog.skills() : (SKILLS[b].list || {});
-      Object.keys(list).forEach(id => out.push(id));
-    });
-    return out;
-  },
   /* The FOUR ways an item can reach the player. Two of them cannot be read out
      of the writing at all, because both hand the item over by VARIABLE — a
      quest reward is `Item.give(q.rw.item)` and an arcade cabinet is
@@ -349,9 +340,10 @@ const ProgCheck = {
         if (typeof Writing !== 'undefined') {
           const reads = Writing.index().filter(x => x.src.indexOf("'" + sid + "'") >= 0
             || x.src.indexOf('"' + sid + '"') >= 0);
-          if (!reads.length && !this.engineReads(sid)) {
+          if (!reads.length && !this.engineReads(sid) && !this.gatesAMove(sid)) {
             fault('warn', '“' + sid + '” is never read — no Sk.rank(' + Emit.str(sid) + ') anywhere '
-              + 'in the writing or the engine. Buying it does nothing at all.', { skill: sid });
+              + 'in the writing or the engine, and no move is gated on it. Buying it does nothing '
+              + 'at all.', { skill: sid });
           }
         }
       });
@@ -414,6 +406,12 @@ const ProgCheck = {
       typeof Mail !== 'undefined' && Mail,
       typeof Nigel !== 'undefined' && Nigel,
       typeof Arcade !== 'undefined' && Arcade,
+      /* The street, which hands out five of these on its own: four for driving
+         and one for hitting five colleagues with something out of the box.
+         Missing here, all five read as unearnable — the same blind spot MOVES
+         and the minigames were, one file further out. */
+      typeof Cars !== 'undefined' && Cars,
+      typeof Guns !== 'undefined' && Guns,
     ].filter(Boolean).concat(
       /* The minigames themselves. Each names its achievement literally inside
          its own reward(), so this is the only list that has to know they exist
@@ -422,13 +420,14 @@ const ProgCheck = {
     );
   },
   /* Top-level FUNCTIONS, which no amount of enumerating object methods will
-     ever reach: `a_allthree` is granted inside movePlayer(), and until this
+     ever reach: `a_allthree` is granted inside zoneCheck(), and until this
      list existed the reward editor called it unearnable. Declared, like every
      other root here, because the global lexical scope a classic script writes
      into cannot be enumerated at all. */
   engineFns() {
     return [
       typeof movePlayer !== 'undefined' && movePlayer,
+      typeof zoneCheck !== 'undefined' && zoneCheck,
       typeof resetRun !== 'undefined' && resetRun,
       typeof count !== 'undefined' && count,
       typeof surveyReady !== 'undefined' && surveyReady,
@@ -444,6 +443,17 @@ const ProgCheck = {
       this._eng = parts.join('\n');
     }
     return this._eng.indexOf("'" + id + "'") >= 0 || this._eng.indexOf('"' + id + '"') >= 0;
+  },
+
+  /* The OTHER way a skill is read, and the one a regular expression over
+     source can never see: a move carries `need: 'blame'`, which is a STRING on
+     a table rather than a call in a function, and Writing's index only holds
+     functions. So the table is asked directly — the same rule, and the same
+     reason, as the quest and cabinet tables in reachable() above. Without it
+     two skills that unlock two moves read as dead. */
+  gatesAMove(id) {
+    return typeof MOVES !== 'undefined' && Array.isArray(MOVES)
+      && MOVES.some(m => m && m.need === id);
   },
 
   /* The other direction: the writing naming something that is not in a table.

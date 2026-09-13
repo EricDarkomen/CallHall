@@ -631,6 +631,14 @@ const NPCS = [
   lines: ["I’m off in a couple of months anyway.", "This place, honestly.", "I’ve got an interview lined up.", "I’ve had it up to here."],
   entry() {
     if (World.level === 'nails') return G.flags.sawGary ? 'nails2' : 'nails';
+    /* THE FRIDGE JOB'S THIRD CLUE, asked before the chair and only while it is
+       outstanding. It has to be here rather than as a choice further down: the
+       four lines under this one hand Gary's entry to the chair for as long as
+       that job is open, and a player doing both jobs at once would never be
+       offered the wrap at all. One visit, then `clueGary` and the chair has
+       him back. Behind `metGary`, so his own introduction still happens first:
+       a stranger going straight to a denial is a scene with no first act. */
+    if (G.flags.metGary && Q.active('q_fridge') && !G.flags.clueGary) return 'wrap';
     if (G.flags.gotGoodChair) return 'chairdone';
     if (Q.active('q_chair') && G.flags.garyChairTerms) return 'chairdeal';
     if (Q.active('q_chair')) return 'chair';
@@ -657,6 +665,24 @@ const NPCS = [
       do() { Rel.add('gary', 3); } },
     nails2: { text: ["“You want to get it done,” says Gary. “Honestly. You’d be surprised.”",
         "He is not leaving in a couple of months. He has not been leaving in a couple of months since 2022. But he is, six weeks at a time, doing exactly one thing for himself, and that is one more than anybody else on that floor manages."] },
+    /* THE THIRD CLUE. Sarah's brief is "check the fridge, check the bins, and
+       talk to people... especially Gary", and the fridge and the bin were the
+       only two ever written — so `fridgeClues` stopped at two, her `solve` node
+       is gated on three, and a four-step job with three endings and an
+       achievement on the end of it could not be finished by anybody. This is
+       the third. He does not confess. He does not have to. */
+    wrap: { text: ["Wrap? What wrap.", "No. Nothing to do with me.",
+      "...",
+      "It wasn’t even that nice, was it. Chicken and stuffing. Bit dry.",
+      "...",
+      "That’s what I’ve heard. From people. Who’ve had one."],
+      do() {
+        if (G.flags.clueGary) return;
+        G.flags.clueGary = true;
+        G.flags.fridgeClues = (G.flags.fridgeClues || 0) + 1;
+        Q.step('q_fridge'); Player.xp(20);
+        UI.toast('🔍', 'Clue: nobody told Gary what was in it.');
+      }, to: null },
     chair: { text: ["The chair.", "Everyone asks about the chair eventually. You’ve lasted longer than most, I’ll give you that."],
       choices: [
         { t: "Where did it come from?", to: 'chairfrom' },
@@ -664,7 +690,15 @@ const NPCS = [
     chairfrom: { text: ["2019 refresh. They ordered forty of the cheap ones and one of the good ones, by mistake, and it came on the same pallet.",
       "I was the only one in that Monday. Everyone else was on the training day. I have never been so glad to have missed a training day in my life.",
       "I’ve had it five years. It’s the only thing in this building that’s mine."], to: 'chairterms' },
-    chairterms: { text: ["What would it take?", "...",
+    /* Step one of the job is asking him about it and this is where he answers,
+       so this is where it advances. Flagged rather than left to Q.step's clamp
+       because there are two ways into this node — straight off `chair` and via
+       `chairfrom` — and a job that advances twice for one conversation reads
+       as a step you were never asked to do. */
+    chairterms: { do() {
+        if (!G.flags.garyChairAsked) { G.flags.garyChairAsked = true; Q.step('q_chair'); }
+      },
+      text: ["What would it take?", "...",
       "Honestly? Nothing. There’s no price. I’m not being awkward, there just isn’t one.",
       "But — and I’m going to be straight with you because you’ve been alright with me — the chair’s not the thing, is it.",
       "The chair is the thing I’ve got instead of leaving. Five years of ‘two months’ and the only evidence I was ever here is a chair with my name on it in marker.",

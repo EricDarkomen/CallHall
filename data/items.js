@@ -170,11 +170,16 @@ const QUESTS = {
       'Tell Karen what to do about the 08:00.'],
     track: [{ npc: 'steve' }, { npc: 'bev' }, { obj: 'meetingTable' }, { npc: 'tomasz' }, { npc: 'karen' }],
     rw: { xp: 220, money: 0, item: 'invite' } },
+  /* TWO STEPS, and it used to be three. The first was "put your name on the
+     biscuit rota", which is the only thing that starts this job — so it was
+     already done the moment the job existed and the tracker spent the whole of
+     the rest of it one step behind itself. Its pin was wrong as well: `rota`
+     is the SHIFT rota, on a board in the training room, and the biscuit rota
+     is a bit of paper taped inside the lid of the tin. */
   q_biscuit: { n: 'The Biscuit Tin Accord', giver: 'the tin', steps: [
-      'Put your name on the biscuit rota.',
       'Actually buy the biscuits. With your own money. Like a functioning adult.',
-      'Tell nobody you did it.'],
-    track: [{ obj: 'rota' }, null, { obj: 'biscuitTin' }],
+      'Put the biscuits in the tin. Tell nobody.'],
+    track: [{ obj: 'greggsCounter' }, { obj: 'biscuitTin' }],
     rw: { xp: 120, money: 0, item: 'goodbiscuit' } }
 };
 
