@@ -363,5 +363,201 @@ export default {
         rect: [256, 110, 32, 26],
       },
     },
+    /* ---- THE OLD TOWN, THE RAILWAY AND THE WATER ----
+       Everything below arrived with the half of the map south of the line. The
+       rule at the top of this file still holds and was applied to every one of
+       them: nothing that covers more than one square went in without being
+       tiled three by three and looked at. Three of these are ground, and all
+       three were. */
+    {
+      /* THE WATER, and it is one cell off the same four-season terrain sheet
+         the verge and the tree come from — [384,512] is the plain-fill middle
+         of the deep-water block, no edge piece and no ripple mark in it, which
+         is what a surface covering the bottom of the map has to be. The ripple
+         cells beside it repeat as a landmark every metre of a river that runs
+         the width of the town, which is the fault the streets sheet's own note
+         is about.
+
+         One season, not four, and that is a decision rather than an oversight:
+         upstream's winter water is ICE, and the thing at the bottom of this
+         town is a tidal river with a working quay on it. It does not freeze,
+         it has never frozen, and a January that turned it white would be the
+         one lie on a map that otherwise knows exactly what month it is.
+
+         SURFACES.water is what makes it water rather than a blue floor: it
+         carries `open`, which is the flag that tells the renderer this is
+         ground you can see and cannot stand on — see World.open(). */
+      name: 'terrain.water',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Terrain/terrain_summer.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Terrain (all seasons)',
+        rect: [384, 512, 32, 32],
+      },
+    },
+    {
+      /* THREE STEPS TO THE TILE. Upstream ships this as a band of treads on a
+         transparent cell — one, two and three risers, seven colours — and the
+         three-riser cell is 24 pixels tall rather than 32, which is why the
+         rect is 24 and not a whole square: a surface tile is drawn stretched to
+         fill its tile, so a 24-pixel band of three treads becomes a 32-pixel
+         band of three treads and the next one down starts exactly where this
+         one stopped. Crop the whole cell instead and every tile of the flight
+         carries eight pixels of nothing, which on a stepped lane reads as a
+         missing step every third one.
+
+         Laid down the lane between the old town and the water, which is the one
+         place on this map where the ground is not flat and the only reason a
+         set of steps exists in a game with no height in it: what the steps
+         tell you is that the town is UP and the river is DOWN, and they tell
+         you that without the camera having to move an inch. */
+      name: 'terrain.steps',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Structure/Stairs/Short Steps A.png',
+        creditsPath: 'Structure/Stairs/Credits.txt',
+        assetName: 'Short Steps A',
+        rect: [96, 64, 32, 24],
+      },
+    },
+    {
+      /* THE WALL THE TOWN IS INSIDE. Random-coursed rubble in the red of the
+         stone this part of the country is actually built out of — six colour
+         blocks on the sheet and this is the warm one, picked over the grey and
+         the cream because a city wall that reads as granite reads as a castle
+         in a different county.
+
+         [128,128] is the middle cell of that block, clear of the coping course
+         along its top and bottom edge, tiled three by three and checked. It is
+         a `wtile` rather than a `tile` — see the old town's zones in
+         data/world.js — so what it covers is the mass between the streets, and
+         the whole of what makes the lanes in there read as lanes cut through
+         something old rather than as gaps between office blocks. */
+      name: 'wall.stone',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Structure/Walls/Jagged Stone Walls.png',
+        creditsPath: 'Structure/Walls/Credits.txt',
+        assetName: 'Jagged Stone Walls',
+        rect: [128, 128, 32, 32],
+      },
+    },
+    {
+      /* The pale one off the same sheet, and it has one job: the minster. A
+         cathedral is not built out of the same stone as the wall round the town
+         — it is built out of the stone somebody paid to bring in — and the one
+         building on this map that everybody in it can see from anywhere gets to
+         say so. Same block position, three blocks along. */
+      name: 'wall.stone.pale',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Structure/Walls/Jagged Stone Walls.png',
+        creditsPath: 'Structure/Walls/Credits.txt',
+        assetName: 'Jagged Stone Walls',
+        rect: [32, 32, 32, 32],
+      },
+    },
+    {
+      /* A drinking fountain on a market square, which is what this becomes the
+         moment it is standing on paving with a bench beside it: the ornate
+         basin a corporation put up for somebody in 1887 and nobody has turned
+         the water on in since. Two tiles across and three tall, cropped to its
+         own alpha — the 14 rows below it on the sheet are empty. */
+      name: 'obj.fountain',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Structure/Misc/Fountain A.png',
+        creditsPath: 'Structure/Misc/Credits.txt',
+        assetName: 'Fountain A',
+        rect: [0, 0, 64, 82],
+      },
+    },
+    {
+      /* Three barrels, stacked, for the quay. Upstream ships four single
+         barrels and this one group; the group is the one that reads at a
+         glance as goods waiting to go somewhere rather than as a prop. */
+      name: 'obj.barrels',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Objects/Furniture/Barrel.png',
+        creditsPath: 'Objects/Furniture/Credits.txt',
+        assetName: 'Barrel',
+        rect: [96, 2, 48, 61],
+      },
+    },
+    {
+      /* A crate, and not the world atlas's `obj.boxes` — that is the stack of
+         cardboard in the archive, and cardboard on a wharf in the rain is a
+         thing that would not be there in the morning. This is the timber one,
+         seen from the corner. */
+      name: 'obj.crate',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Objects/Furniture/Crate.png',
+        creditsPath: 'Objects/Furniture/Credits.txt',
+        assetName: 'Crate',
+        rect: [0, 32, 32, 32],
+      },
+    },
+    {
+      /* The municipal trough: a timber planter with something green in it,
+         which is what a town centre puts down the middle of a street the day it
+         stops letting cars up it. Column 0 of the sheet — the other four are a
+         tree in an urn and a tree in a trough, both of which are trees, and
+         this game already has a tree that knows what month it is. */
+      name: 'obj.trough',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Objects/Furniture/Planter.png',
+        creditsPath: 'Objects/Furniture/Credits.txt',
+        assetName: 'Planter',
+        rect: [0, 32, 32, 52],
+      },
+    },
+    {
+      /* Post and rail, one bay of it between two posts, for the riverside and
+         the top of the steps. A tile wide on purpose: a fence is a thing you
+         put a run of, and a run of this is a run of fence. */
+      name: 'obj.fence',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Structure/Fences/Plain Fence A.png',
+        creditsPath: 'Structure/Fences/Credits.txt',
+        assetName: 'Plain Fence A',
+        rect: [32, 64, 32, 32],
+      },
+    },
+    {
+      /* THE BALLAST. The plain-fill middle of the stone block on the same
+         terrain sheet the grass comes off — a bed of small round stones with
+         no pattern in it, tiled three by three and checked. It is brown on the
+         sheet and grey on the map, because SURFACES.rail multiplies it through
+         a tint the way every other surface in this game is: granite chippings
+         and a hundred years of brake dust.
+
+         It is `open`, like the water, and for the same reason — a railway is
+         ground you can stand and look at and cannot walk on. The two running
+         lines are painted over the top of it by R.roadPaint(); see the `rails`
+         entry in its vocabulary. */
+      name: 'terrain.ballast',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Terrain/terrain_summer.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Terrain (all seasons)',
+        rect: [128, 128, 32, 32],
+      },
+    },
   ],
 };

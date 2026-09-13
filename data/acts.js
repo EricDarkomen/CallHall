@@ -2374,15 +2374,22 @@ const Acts = {
           UI.toast('☕', 'You drive on. You do have a coffee machine. That is not the same thing and you know it is not the same thing.');
         } }]);
   },
+  /* This act said the platform was still there under the brambles for a year
+     before there was a platform to be under them. There is one now, four rows
+     down and thirty tiles east, and the only change here is the last line:
+     you can go and look. */
   railway() {
     insp('🚃', 'The railway', 'Behind the fence', [
       'Palisade fencing, a bank of buddleia, and two tracks. Every eleven minutes something goes through at a speed that suggests it has considered Bellhaven and decided against.',
-      'The last train that stopped here stopped in 1967. The platform is still there under the brambles and the sign is still on it, and everybody in this town can tell you that and nobody can tell you why they know it.']);
+      'The last train that stopped here stopped in 1967. The platform is still there under the brambles and the sign is still on it, and everybody in this town can tell you that and nobody can tell you why they know it.',
+      'The fence has no gate in it. The way down is the subway, forty yards along the verge, and out the other side.']);
   },
   subway() {
     insp('🕳️', 'The subway', 'Pedestrian underpass', [
       'A tiled underpass beneath the railway, lit, dry, and swept — which is not what anybody expects and is why everybody mentions it.',
-      'There is a mural in there of the town as it was, painted by a school in 1998. Two of the children in the mural work in your building.']);
+      'There is a mural in there of the town as it was, painted by a school in 1998. Two of the children in the mural work in your building.',
+      'Four minutes gets you under the line, past both platforms of a station that shut in 1967, and out on Station Road with the whole of the old town in front of you. It is a right of way and it is open. You just walk down it.',
+      'Nobody in your building has ever done it on a lunch hour.']);
   },
   corvenWall() {
     insp('🖍️', 'The wall on Corven Way', 'Retaining', [
@@ -2952,5 +2959,1027 @@ const Acts = {
     'Forty-one of them. Janet prints one for everybody who completes the induction. Nobody has ever taken theirs.',
     'She keeps printing them. She will keep printing them.'],
     [{ t: 'Find yours and take it.', to: null, if: () => G.flags.trained, do() { Item.give('cert'); Rel.add('janet', 3); Player.xp(30); Ach.get('a_cert'); UI.toast('🎓', 'You take yours. Janet, two rooms away, does not see. But the stack is one shorter, and she counts them, and on Friday she will notice, and she will have a very good day.', 'gold'); } },
-     { t: 'Leave them.', to: null }]); }
+     { t: 'Leave them.', to: null }]); },
+
+  /* ======================= SOUTH OF THE LINE =======================
+     One entry per `use:` on the half of the map below the railway, in the order
+     you meet them walking south: the subway, the platforms, Station Road, the
+     gate, Priorygate, the Shambles, the lanes, the minster, the Close, the
+     gardens, the steps, the two roads round the wall, and the quay.
+
+     The rule the rest of this file is written to holds down here as well and
+     matters more: nothing is a joke about a town, everything is a fact about
+     one. Every single thing below is a thing that is actually there, in an
+     English town of forty thousand people, this afternoon. */
+
+  /* --- THE SUBWAY AND THE OLD STATION --- */
+  subwaySouth() {
+    insp('🕳️', 'The subway, south end', 'Right of way', [
+      'The other mouth of it, coming out on Station Road under the embankment, with a green sign on a post that says PUBLIC FOOTPATH and a smaller one under it that says NO CYCLING and is ignored by everybody including the people who put it up.',
+      'Four minutes from the verge on Corven Way to this pavement. The alternative is the bridge on Cargate Lane, which is eleven minutes, and the walk to the bridge on Marlow Street, which is twenty.']);
+  },
+  subwayMural() {
+    insp('🖍️', 'The mural in the subway', 'Painted 1998', [
+      'The town as it was, forty feet of it, painted by a school in 1998 in the flat colours a school has: the minster, the quay with a boat at it, the market, and a train at the platform with people getting off it.',
+      'The train is the only thing in the painting that was already untrue when it was painted. Nobody has ever mentioned it.',
+      pick(['Two of the children in it work in your building.',
+        'Somebody has written their name in the sky above the minster, in biro, very small, and then apologised underneath it in the same biro.',
+        'It has been touched up twice. You can see where, because the second lot could not match the first lot’s green.'])]);
+  },
+  subwayLight() {
+    insp('💡', 'The light in the subway', 'On, always', [
+      'A bulkhead light in a steel cage, on at two in the afternoon because the tunnel is a tunnel.',
+      'The council adopted this subway as a right of way in 1971 and has lit it, swept it and repainted it every year since, through four reorganisations and two changes of name. It is the single most competently maintained object in this game.']);
+  },
+  nameBoard() {
+    insp('🪧', 'The name board', 'BELLHAVEN', 'BELLHAVEN'.length ? [
+      'The running-in board, still bolted to its posts at the platform end: BELLHAVEN, in white on a background that was maroon and is now the colour of a plant pot.',
+      'Under it, screwed on later and in a different typeface, a smaller board: ALIGHT HERE FOR THE MINSTER AND THE QUAY.',
+      'The last train that stopped for anybody to alight from did so on the fourth of January 1967. Somebody has kept the boards on. Nobody has ever been able to find out who.'] : []);
+  },
+  platformBench() {
+    insp('🪑', 'The platform bench', 'Cast iron', [
+      'Cast iron ends with the company’s initials in the casting, and slats that have been replaced twice in wood that does not match either time.',
+      pick(['Somebody sits on it. You have seen somebody sitting on it. There is no reason to sit on it and somebody always is.',
+        'It is dry. The canopy over it is the only piece of roof on this platform that is still doing its job.',
+        'Two crisp packets underneath it, both of a design discontinued some years ago, which on this platform proves nothing at all.'])]);
+  },
+  platformClock() {
+    insp('🕰️', 'The platform clock', 'Stopped', [
+      'A double-sided clock on a bracket, the sort that hangs over a platform so it can be read from both ends of it.',
+      'It says eleven minutes past four. It has said eleven minutes past four since some point in the nineteen-eighties.',
+      'Twice a day it is right, which on this platform is a better service than anything else here manages.']);
+  },
+  platformLamp() {
+    insp('💡', 'A platform lamp', 'Not connected', [
+      'A swan-neck lamp standard with a concrete base and no bulb in it. The cable was cut at the base and capped, neatly, by somebody who expected to come back.']);
+  },
+  stationPigeons() {
+    insp('🐦', 'Pigeons under the canopy', 'Residents', [
+      pick(['Nine of them along the canopy ironwork, all facing the same way, all facing the direction the trains come from.',
+        'They go up in one sheet when a train goes through and are back on the ironwork before it has cleared the bridge.',
+        'One of them is on the running-in board. It has been on the running-in board every time you have looked.'])]);
+  },
+  theLine() {
+    insp('🚃', 'The line', 'Two tracks', [
+      'Two running lines, a six-foot between them, and a white line on the platform edge that has been repainted since the station shut, which is either health and safety or somebody’s habit.',
+      'Something goes through about every eleven minutes at a speed that suggests it has considered Bellhaven and decided against.',
+      'You can stand here and watch the whole of a train pass in four seconds. It is the fastest thing anywhere in this town and it is not stopping.']);
+  },
+  stationPosters() {
+    insp('🪧', 'The poster cases', 'Behind glass', [
+      'Three aluminium poster cases screwed to the platform wall, all locked, all still glazed, all empty except the middle one.',
+      'The middle one holds a timetable for the winter service, 1966. The paper has gone the colour of weak tea and the ink has gone brown, and every train on it left at a time you could still turn up for.']);
+  },
+  bookingHall() {
+    insp('🚪', 'The booking hall', 'Boarded', [
+      'Ticket window, waiting room and a door onto Station Road, all of it behind eleven-millimetre ply screwed to the frames from the outside.',
+      'The ply has been up long enough that somebody has painted it, which is the point at which a boarded building stops being temporary.',
+      'It was a carpet showroom for two years in the nineties and a place that sold hot tubs for eight months after that. It has been nothing at all for longer than it was ever a station.']);
+  },
+  buddleia() {
+    insp('🌿', 'The buddleia', 'Volunteer', [
+      'Growing out of the platform face, out of a joint in the brickwork, at the height of somebody’s chest, and doing extremely well.',
+      'Buddleia came into this country as a garden shrub and got out along the railway, which is why every disused platform in England has one and every one of them is the same plant doing the same thing.',
+      Sky.season() === 'summer' ? 'It is in flower, and there are eleven butterflies on it, and nobody is here to see them.' : 'It is not in flower. It will be.']);
+  },
+
+  parapet(o) {
+    insp('🧱', o.name, 'Over the line', [
+      'Blue engineering brick with a rounded coping, at exactly the height a parapet is at everywhere in this country, which is the height of somebody’s forearms.',
+      pick(['You can see the whole of the station from here: two platforms, a name board, a clock that says eleven minutes past four, and nothing at all on either line.',
+        'Something goes through underneath. The noise arrives before it does and leaves after it, and the whole parapet does it with you.',
+        'The coping is worn smooth in a strip about two feet long. That is where everybody stands. You are standing there.']),
+      'There is no reason to stop on a bridge. Everybody stops on a bridge.']);
+  },
+
+  /* --- STATION ROAD --- */
+  stationSign() {
+    insp('🪧', 'BELLHAVEN STATION', 'The sign on the road', [
+      'The road sign, at the kerb, in the council’s current typeface, replaced within the last five years: STATION ROAD.',
+      'And bolted above it, in the old enamel, kept because taking it down would have cost money: BELLHAVEN STATION →, with an arrow pointing at a sheet of painted plywood.',
+      'The road is still called Station Road. It will be called Station Road in a hundred years. That is what roads do and it is the most reliable form of local history there is.']);
+  },
+  stationStop() {
+    insp('🚏', 'The stop for the 12', 'Every 20 minutes', [
+      'A pole, a flag, a timetable in a frame, and a shelter with two of its three panels still in it.',
+      'The 12 stops here. It is the red one. It goes over the bridge on Cargate Lane, round the new town, and back over Marlow Street, which is a twenty-two minute round trip to cross a railway you can walk under in four.',
+      'Six people are waiting. Every one of them knows about the subway. Every one of them is waiting for the bus.'],
+      [{ t: 'Wait for it. (Up to 6 min.)', to: null, do() {
+          const wait = 2 + (G.minutes % 5);
+          G.minutes += wait; Player.mod({ patience: -2, energy: 1 });
+          UI.toast('🚏', wait + ' minutes. It came. You did not get on it, because you are not going anywhere. You just wanted to see whether it would.');
+        } },
+       { t: 'Walk. It is four minutes.', to: null }]);
+  },
+  fingerpost() {
+    insp('🪧', 'The fingerpost', 'Cast iron, four arms', [
+      'Four arms on a cast post, painted and repainted until the letters stand a quarter of an inch proud of the wood: MINSTER ¼ · THE QUAY ½ · MARKET ¼ · STATION.',
+      'Three of the four are still true.']);
+  },
+  roadworks() {
+    insp('🚧', 'The cones on Station Road', 'Since March', [
+      'Eleven cones, four lengths of barrier and a hole. No van, no men, no plant, no material, and no sign saying whose work it is or when it might be anybody’s.',
+      'The lane has been shut since March. Nothing has come the other way since March. Nobody has complained about it in four months, which is the most unsettling part.']);
+  },
+  tempLights() {
+    insp('🚦', 'The temporary lights', 'Red', [
+      'A set of temporary three-way signals on a trailer with a battery box and a solar panel, standing at the end of a coned-off lane with nothing in it.',
+      'They are on red. They have been on red at this end since March. Nothing has ever come the other way, so nobody has ever had to find out whether the other end is on red as well.',
+      pick(['A car pulls up, waits eleven seconds, reads the situation, and goes round.',
+        'Somebody has put a traffic cone on top of the trailer, which is the local equivalent of a note.',
+        'The solar panel is spotless. Something out there is still working perfectly.'])]);
+  },
+  theHole() {
+    insp('🕳️', 'The hole', 'Excavation', [
+      'About four feet by two, with a plate over half of it and a drop of maybe eighteen inches to a pipe, a joint, and some water.',
+      'It is a clean hole. It was dug by somebody who knew what they were doing, and then they went to something more urgent, and the more urgent thing has lasted four months.']);
+  },
+  embankmentWall() {
+    insp('🖍️', 'The wall under the embankment', 'Blue engineering brick', [
+      'The retaining wall of the railway, blue engineering brick, twenty feet of it, and it will outlast everything on the other side of this road.',
+      pick(['Somebody has done a piece across four courses that is genuinely good and genuinely illegible.',
+        'Three tags, all of them over each other, none of them recent.',
+        'A very old white painted line at knee height, dead level, running the whole length of it. Nobody knows what it was for. Everybody has a theory.'])]);
+  },
+
+  /* --- THE GATE AND PRIORYGATE --- */
+  northGate() {
+    insp('🏛️', 'The North Gate', 'Scheduled monument', [
+      'Two drum towers and an arch you could get a cart through and cannot get a Transit through, which is the whole planning history of this town in one sentence.',
+      'The gate is thirteenth century. The arch was widened in 1794, the top was rebuilt in 1846, and the whole thing was underpinned in 1971 when the road outside was made a road.',
+      'There is a room over the arch. It has been a lock-up, a museum, a scout hut and a store for the museum it used to be. It is locked.']);
+  },
+  gatePlaque() {
+    insp('🪧', 'The plaque on the gate', 'Cast bronze', [
+      'THE NORTH GATE. ERECTED c.1270. RESTORED 1846 BY PUBLIC SUBSCRIPTION. RESTORED AGAIN 1971 BY THE BOROUGH.',
+      'Underneath, a much newer strip in a different metal: AND 2009.',
+      'Nobody has added one since, and something has certainly been done since, which means somewhere in this town is a man who is still annoyed about it.']);
+  },
+  noEntry() {
+    insp('⛔', 'NO ENTRY — pedestrian zone', 'Mon–Sat 10am–4pm', [
+      'The red disc with the white bar, on a post, with a plate under it: PEDESTRIAN ZONE · NO MOTOR VEHICLES · MON–SAT 10AM–4PM · EXCEPT LOADING.',
+      'The exception is the whole sign. Everybody loading is loading. Everybody is loading all day.',
+      'Priorygate was pedestrianised in 1988 after nineteen years of argument. It is now the thing every single person in this town is proudest of and the thing they were angriest about, usually the same person.']);
+  },
+  eastGate() {
+    insp('🏛️', 'The East Gate', 'Demolished 1784', [
+      'There is no gate. There is a gap in the wall one cart wide, two stubs of rubble either side of it dressed with ashlar that does not match, and a plaque.',
+      'The East Gate was pulled down in 1784 because it was in the way. This is the most honest thing any generation of this town has ever done and the whole of the rest of it has been apologising ever since.']);
+  },
+  oldBakery() {
+    insp('🥖', 'The bakery on Priorygate', 'Since 1911', [
+      'Four generations, a window full of things at eye height, and the smell out of the extractor at half past five in the morning that half of this town has woken up to all its life.',
+      'It is not the cheapest bread in Bellhaven. It is not even the second cheapest. There is a queue out of the door at ten past twelve every single day.']);
+  },
+  giftShop() {
+    insp('🕯️', 'The gift shop', 'Cards · candles · gifts', [
+      'Candles, cards, small wooden things with words on them, and a scent coming out of the door that you can stand in from four feet away.',
+      'It has been four businesses in nine years, all of them this business, all of them run by somebody lovely, and all of them gone by the second winter.']);
+  },
+  theMitre(o) {
+    insp('🍺', 'The Mitre', 'Open 11 till 11', [
+      'Low door, three steps down, a beam across the bar you can only stand under if you are under five foot ten, and a floor that is not level in any direction.',
+      'There has been a pub on this plot since something in the fourteenth century and this one has had eleven names. It has been the Mitre for the last sixty of them, which makes it the newest name in the list and the one everybody would fight you about.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('mitreDoor'); } },
+       { t: 'Walk on.', to: null }]);
+  },
+  bookshop() {
+    insp('📚', 'The second-hand bookshop', 'Open most days', [
+      'Two rooms, a staircase that is a fire risk, and a cat. The window is the sort of window you stop at without deciding to.',
+      'It is the only shop on Priorygate with its lights on at half past four in January, and that one fact does more for this street than every piece of public realm improvement the council has ever spent money on.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('bookDoor'); } },
+       { t: 'Not today. There is never time.', to: null }]);
+  },
+  coffeePlace() {
+    insp('☕', 'The coffee place on Priorygate', 'Open 8 till 4', [
+      'A board outside with the day written on it in four colours, two tables on the pavement that are legally a pavement licence and practically a decision, and somebody’s dog tied to the leg of one of them.',
+      'It has been a building society, a phone shop, a charity shop and this. This is the first one anybody has been sorry to walk past when it is shut.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('caffDoor'); } },
+       { t: 'You have a machine at work.', to: null, do() {
+          UI.toast('☕', 'You do have a machine at work. You have thought this before, outside this window, and you will think it again.');
+        } }]);
+  },
+  deli() {
+    insp('🧀', 'The delicatessen', 'Cheese · charcuterie · oil', [
+      'A counter, a slicer, eleven cheeses and a man who will cut you a piece of any of them to try and will then tell you which one he would have.',
+      'Everybody in this town says it is dear. Everybody in this town goes in at Christmas. Both of these are true and neither is a complaint.']);
+  },
+  shoeShop() {
+    insp('👞', 'The shoe shop', 'Fitting service', [
+      'School shoes, a measuring slide on the floor, and a chair at child height with a mirror at child height in front of it.',
+      'Everybody who grew up here was measured on that slide. It is the same slide. It is the same chair. The mirror has been replaced once and somebody noticed.']);
+  },
+  barber() {
+    insp('💈', 'The barber on Priorygate', 'No appointments', [
+      'Pole outside, three chairs, and a system of who is next that is held entirely in the heads of the people sitting down and has never once gone wrong.',
+      pick(['Four men waiting, none of them talking, all of them perfectly content.',
+        'Through the window: a boy of about six, having his first proper one, being extremely brave.',
+        'The radio is on, loud, and it is a station that plays things from before any of them were born.'])]);
+  },
+  oldBank() {
+    insp('🏦', 'The old bank', 'Now a restaurant', [
+      'Portland stone, four columns, a doorway you could get a horse through, and a brass plate by the door that has had its lettering polished flat.',
+      'It was the town’s bank from 1898 to 2016 and it has been a restaurant since 2018. The vault is a wine store and the counter is a bar and everybody says it has been done beautifully, and it has, and everybody under sixty means it.']);
+  },
+  tackleShop() {
+    insp('🎣', 'The tackle shop', 'Bait · tickets · advice', [
+      'A window of floats, a board of day tickets for four different stretches of water, and a printed notice about levels on the river that is updated by hand in pencil.',
+      'The pencil note today says: UP AND COLOURED. NOT WORTH IT.',
+      'The shop is open anyway, because somebody will come in, because somebody always comes in, and they will be told it is not worth it, and they will go anyway.']);
+  },
+  trough() {
+    insp('🪴', 'A council trough', 'Bellhaven in Bloom', [
+      pick(['Bedding, watered, dead-headed, and genuinely good. Somebody does this at seven in the morning and nobody has ever seen them.',
+        'One of the four has something in it that is not a plant and has been in it for some days.',
+        'The label from the garden centre is still pushed into the corner of it, face down, which is how you can tell it was done in a hurry and by a volunteer.']),
+      'There are eleven of these down Priorygate. They are not here to be looked at. They are here so that a vehicle cannot get up the middle of the street, and everybody knows that, and everybody still waters them.']);
+  },
+  prioryBench() {
+    insp('🪑', 'A bench on Priorygate', 'In memory of', [
+      'Timber slats, cast ends, and a small brass plate: IN MEMORY OF — and a name, and two dates, and WHO LOVED THIS STREET.',
+      pick(['Three people on it, none of whom know each other, all of whom have left exactly the right amount of space.',
+        'Nobody on it. It is ten past two and everybody is at work.',
+        'One man, asleep, upright, with a carrier bag between his feet, entirely undisturbed.'])]);
+  },
+  prioryBin() {
+    insp('🗑️', 'Bin, Priorygate', 'Please do not overfill', [
+      pick(['Full, with a coffee cup balanced on the top of it that is going to go over.',
+        'Emptied within the hour. The old town’s bins get done twice a day and the parade’s get done twice a week, and there has been a letter about it in the paper every spring for eleven years.',
+        'A seagull is on it. It has no business being this far from the water and it knows it.'])]);
+  },
+  busker() {
+    const set = pick([
+      ['Guitar, small amp, and a set list gaffer-taped to the amp that he does not look at.',
+       'He is genuinely good. He is doing a song that was old when this street was pedestrianised and he is doing it straight, with no apology in it at all.'],
+      ['Guitar, no amp, and a case with about four pounds in it, most of it silver.',
+       'Three people have gone past without hearing him. One woman two shops down has stopped, and is not pretending to look in a window, and is just listening, and he has noticed, and he has started playing better.'],
+      ['He is packing up. Four o’clock. The pitch is his until four and somebody else’s after four and this has never once been written down.',
+       'The changeover takes ninety seconds and involves a nod.']]);
+    insp('🎸', 'The busker', 'Pitch, Priorygate', set,
+      [{ t: 'Put something in.', to: null, do() {
+          if (P.money < 1) { Sfx.deny(); return UI.toast('🎸', 'You have nothing on you. He nods at you anyway, mid-line, which is worse.'); }
+          Player.mod({ money: -1, patience: 5 }); Player.xp(15);
+          UI.toast('🎸', 'A pound. He does the nod without stopping playing, which is a skill, and is the entire transaction, and is worth a pound.', 'gold');
+        } },
+       { t: 'Listen to the end of it.', to: null, do() {
+          G.minutes += 3; Player.mod({ patience: 6, energy: 2 });
+          UI.toast('🎸', 'Three minutes. You stood in the middle of a street in the middle of a working day and listened to a whole song. Nobody will ever know.');
+        } },
+       { t: 'Walk on.', to: null }]);
+  },
+  clipboard() {
+    insp('📋', 'Somebody with a clipboard', 'Tabard, lanyard, hope', [
+      'Tabard, lanyard, clipboard, and the walk — the diagonal drift that starts eight feet away and is designed to arrive at your shoulder rather than in front of you.',
+      pick(['“Have you got two minutes?” You have got two minutes. You are going to say you have not got two minutes.',
+        '“Do you live locally?” This is the opening question and it is the opening question because there is no way to answer it that closes the conversation.',
+        'He is being ignored by everybody, cheerfully, and is still going, which is a form of courage.'])],
+      [{ t: 'Give them two minutes.', to: null, do() {
+          G.minutes += 4; Player.mod({ patience: -3 }); Player.xp(25); Ach.get('a_clipboard');
+          insp('📋', 'Somebody with a clipboard', 'Four minutes later', [
+            'It is not a charity and it is not a survey. It is the Friends of the Minster, and they want eleven pounds a year, and the leaflet has a photograph of the roof on it.',
+            'He knows an enormous amount about the roof. He is not reciting it. He is telling you about it, the way you would tell somebody about a thing you had seen.',
+            'You do not sign up. He says “no, of course, no bother at all” and means it, and you walk away feeling worse than if he had pushed.']);
+        } },
+       { t: '“Sorry — really late.”', to: null, do() {
+          UI.toast('📋', '“No bother!” he says, brightly, to your back. You are not late.');
+        } }]);
+  },
+
+  /* --- THE SHAMBLES --- */
+  theFountain() {
+    insp('⛲', 'The fountain', 'Erected 1887', [
+      'Ornate cast basin on a stone plinth, four lion’s heads, and a bronze cup on a chain that has not been on the chain since the nineteen-fifties.',
+      'ERECTED BY PUBLIC SUBSCRIPTION IN COMMEMORATION OF THE JUBILEE OF HER MAJESTY. And under that, much smaller, the name of the man who actually paid for most of it.',
+      pick(['The water is on. It has been on since April and it goes off in October and the man who does it is the man who does the troughs.',
+        'The water is off. There is a note in the basin from the council explaining why, and it has gone to pulp.',
+        'Two children are putting their hands in it. A third is being told not to.'])]);
+  },
+  marketHall() {
+    insp('🏛️', 'The Market Hall', 'Tues · Thurs · Sat', [
+      'Iron columns, a glazed roof, sixteen pitches and a smell of cardboard and cheese that has not changed in anybody’s lifetime.',
+      'It is the only building in this town that has done one job continuously since it was built, which was 1872, and it is doing it right now.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('marketDoor'); } },
+       { t: 'Another time.', to: null }]);
+  },
+  greengrocer() {
+    insp('🥬', 'The greengrocer’s', 'Outside the hall', [
+      'Boxes on a slope under an awning, prices on card in marker pen, and everything turned so the good side is up, which is not a lie, it is a display.',
+      'He will tell you what is good this week and he will tell you what is not, including things he is selling, which is why everybody buys the things he says are good.']);
+  },
+  fishStall() {
+    insp('🐟', 'The fish stall', 'Tues & Sat', [
+      'Ice, a slab, a man in a blue-and-white apron and a van behind him with the shutters up.',
+      'The fish comes up from the coast twice a week. It is the last remaining commercial connection between this town and the water at the bottom of it, and it arrives by road.']);
+  },
+  marketRules() {
+    insp('🪧', 'The market rules', 'Bye-laws', [
+      'A board of bye-laws in a typeface from about 1960, listing what may not be done in the market place. It includes touting, and the driving of cattle, and the crying of goods before eight in the morning.',
+      'None of it has been repealed. One clause is enforced, and it is the one about pitches being taken up by nine, and it is enforced by the traders on each other.']);
+  },
+  marketCrates() {
+    insp('📦', 'Crates, behind the stalls', 'Empties', [
+      'Stacked, nested, sorted by whose they are, and going back on the van at four.',
+      'The stack is a wall of empty crate and it is the only thing standing between the market and the wind that comes up Cooper’s Lane, which is why it is stacked where it is stacked and why it goes there every single week.']);
+  },
+  marketPigeons() {
+    insp('🐦', 'The Shambles pigeons', 'Present', [
+      pick(['Forty of them, in the square, all of them doing the walk.',
+        'They know the market days. There is no argument about this in the town and there is no evidence for it either.',
+        'One is on the fountain. One is on the lion’s head on the fountain. That one is the best-placed pigeon in Bellhaven and it knows.'])]);
+  },
+
+  /* --- THE LANES --- */
+  lanesWall() {
+    insp('🖍️', 'The wall in Cooper’s Lane', 'Rubble, rendered, repainted', [
+      pick(['A piece that has been here long enough to be on the front of a leaflet about the town, which happened last year, which has ruined it for everybody who liked it.',
+        'Somebody has painted over somebody. The over-painting is worse. It is always worse.',
+        'At the bottom, six inches up, in tiny neat capitals: “COOPERS LANE IS THE BEST LANE”. Nobody has ever touched it.'])]);
+  },
+  laneBins() {
+    insp('🗑️', 'The bins in Cooper’s Lane', 'Trade waste', [
+      'Nine of them in a row with nine different companies’ locks, and a tenth that belongs to nobody and is used by everybody.',
+      'Every business on Priorygate has its back door on one of these lanes and every one of them puts its bins out here, which is why the lanes exist and why a pedestrianised high street works at all.']);
+  },
+  bikeRacks() {
+    insp('🚲', 'The bike racks', 'Sheffield stands', [
+      'Six stands, eleven bikes, and one frame with no wheels that has been locked to the end one for at least two years.',
+      'The council put these in when the street was pedestrianised and they have been full every working day since, which makes them the most successful thing in that entire scheme and the only part of it nobody has ever mentioned.']);
+  },
+  fireMark() {
+    insp('🪧', 'The fire mark', 'Cast lead, c.1780', [
+      'A small lead plaque high on the wall: a sun in relief, and a number under it.',
+      'Before there was a fire brigade there were insurance companies with fire brigades, and this told theirs that this building had paid. Whether the other lot would have gone past it is a thing this town has argued about for two hundred years on no evidence whatsoever.']);
+  },
+  laneCat() {
+    insp('🐈', 'The cat in Pinfold Lane', 'Has a home', [
+      pick(['On the wall, in the one patch of sun the lane gets, at the one hour the lane gets it.',
+        'It comes over. It headbutts your shin. It leaves. That was the entire interaction and it was on its terms.',
+        'It looks at you for a long moment and then continues looking past you at something behind you, and you will now spend the rest of the afternoon slightly on edge.']),
+      'It belongs to the deli. It has a collar with a tag on it that says, in full: “I AM NOT LOST.”']);
+  },
+
+  /* --- THE MINSTER --- */
+  minster(o) {
+    insp('⛪', 'Bellhaven Minster', 'Open daily · free', [
+      'It is the biggest thing in this town by a factor nobody has ever bothered to work out, it is made of a stone that had to be brought here, and it has been there so long that nobody who lives here looks at it.',
+      'You can see the top of it from the fourth floor. You have seen it from the fourth floor four hundred times. You could not have told anybody what shape it is.',
+      'The south door is open. It says OPEN on a chalkboard, and under that, FREE, and under that, YES REALLY.'],
+      [{ t: 'Go in.', to: null, do() { Levels.take('minsterDoor'); } },
+       { t: 'Not dressed for it.', to: null, do() {
+          UI.toast('⛪', 'You are dressed for a call centre. Nobody in there has ever once cared and you will think about that on the way back up the hill.');
+        } }]);
+  },
+  minsterGlass() {
+    insp('🪟', 'The minster windows', 'Fourteenth century, mostly', [
+      'Three lights and tracery, and from outside it is all lead and grime and you cannot see a thing.',
+      'A window like this is the wrong way round from out here and always has been. It is for the people inside. It has been for the people inside for six hundred years and nobody has ever thought that was a design fault.']);
+  },
+  minsterNotices() {
+    insp('🪧', 'The notice board at the minster', 'Glazed, lockable', [
+      'Service times, the roof appeal, a concert by a choir from somewhere else, a lost cat, and a photocopied sheet about a flower rota with four names on it and two crossings-out.',
+      'The roof appeal poster has a thermometer on it. The thermometer is at about four fifths. It has been at about four fifths for as long as you have been walking past it, and the total at the top has been changed twice, upwards.']);
+  },
+  greenBench() {
+    insp('🪑', 'A bench on the green', 'Facing the minster', [
+      'It faces the building, which is what every bench on this green does, and it is the one thing on the whole green that anybody argues about — there is a faction who think at least one of them should face the other way and look at the trees.',
+      pick(['Somebody is on it with a sandwich and a paperback and has the correct amount of afternoon.',
+        'Empty, and wet, and the wet is only on one end of it.',
+        'Two people, a long way apart, both eating, both determinedly looking at the building.'])]);
+  },
+  churchyard() {
+    insp('🪦', 'The churchyard', 'Closed for burials 1859', [
+      'Fifty-odd stones, most of them illegible, a dozen of them laid flat into the path at some point when somebody decided that was tidier.',
+      'Closed for burials in 1859 by order, when the town got too big for it. Everybody buried here lived in a Bellhaven that had one road out of it.',
+      pick(['A blackbird is going at the turf under the yew as if it is owed something.',
+        'Somebody has put flowers on one. They are fresh. Nobody who is in this churchyard has been known to a living person for a hundred and fifty years.',
+        'The grass has been cut round the stones by hand, which takes about nine times as long as not doing that.'])]);
+  },
+  warMemorial() {
+    insp('🪧', 'The war memorial', 'Names', [
+      'A cross on a plinth, and four faces of names, and the second face has more names on it than the other three together.',
+      'Nineteen of the surnames on it are still in the phone book for this town. Four of them work in your building.',
+      Sky.season() === 'autumn' ? 'There are wreaths on it. There have been wreaths on it since the Sunday.' : 'There is one wreath on it, from the Sunday, gone the colour of a hedge.']);
+  },
+  greenTree() {
+    insp('🌳', 'The trees on Minster Green', 'Limes', [
+      'Limes, planted in a line, pollarded every few years by somebody with a cherry picker and an opinion.',
+      Sky.season() === 'summer' ? 'The whole green is under them and the whole green is about four degrees cooler than Priorygate, which everybody feels and nobody has ever said out loud.'
+        : Sky.season() === 'autumn' ? 'They are dropping, and the sweeping is a losing proposition, and the man doing it knows and is doing it anyway.'
+        : 'Bare, and you can see the whole west front through them, which is the one time of year you can, and it is the reason people who know the town come down here in February.']);
+  },
+
+  /* --- THE CLOSE --- */
+  deanery() {
+    insp('🚪', 'The door in the Close', 'Private', [
+      'A door in a wall with nothing on it but a bell-pull and a very small brass plate that has been polished until you cannot read it.',
+      'Behind it is a garden that four people have seen and everybody in this town can describe.']);
+  },
+  closeNotices() {
+    insp('🪧', 'The notices in the Close', 'Private property', [
+      'PRIVATE. NO THROUGH ACCESS. NO BALL GAMES. NO CYCLING. RESIDENTS’ PARKING ONLY, PERMIT HOLDERS.',
+      'It is a public right of way and has been since before any of those words were spelled that way, and everybody walks through it, and nobody has ever been stopped.']);
+  },
+  waterGate() {
+    insp('🏛️', 'The Water Gate', 'The way down', [
+      'The smallest of the three gates: one arch, no towers, and a groove in the stone at ankle height on both sides worn by six hundred years of barrels going down to the water and nothing at all coming back up.',
+      'This is the gate the town was actually built for. The other two are for people.']);
+  },
+
+  /* --- CASTLE GARDENS --- */
+  castleGate() {
+    insp('🏰', 'The castle gate', 'There is no castle', [
+      'A gatehouse. Two storeys of it, complete, roofed, in good order, and with absolutely nothing whatsoever behind it.',
+      'The castle came down in the sixteen-forties and the stone went into half the buildings on Priorygate. The gatehouse survived because somebody was using it as a barn.',
+      'It is still called the castle gate. There has been no castle for longer than there was one.']);
+  },
+  bandstand() {
+    insp('🎪', 'The bandstand', 'Restored 2014', [
+      'Cast iron, eight columns, a lead roof and a rail with the borough’s arms in the panels. Restored in 2014 with lottery money after thirty years of being a place to shelter from rain.',
+      pick(['Nothing on today. There is a laminated sheet of the summer programme cable-tied to a column and it is out of date.',
+        'A brass band on the third Sunday of the month, June to August. Sixty people sit out on the grass. Nobody under thirty has ever gone and everybody under thirty means to.',
+        'Two teenagers are in it, out of the wind, being quietly and completely happy, which is what it was built for and not what it was built for.'])]);
+  },
+  gardenTree() {
+    insp('🌳', 'The trees in the gardens', 'Planted 1904', [
+      'Big ones. A cedar, two beeches and something nobody can name, all of them planted when this was laid out and all of them now considerably more impressive than anything that was built here.']);
+  },
+  gardenBench() {
+    insp('🪑', 'A bench in the gardens', 'Dedicated', [
+      'Another plate, another name, another two dates. There are nineteen benches in these gardens and seventeen of them have a plate.',
+      'The other two are the oldest ones. Nobody knows who they were for either.']);
+  },
+  bedding() {
+    insp('🌸', 'The bedding', 'Bellhaven in Bloom', [
+      Sky.season() === 'winter' ? 'Wallflowers and bulbs, in the ground since October, doing nothing visible and doing exactly what they are supposed to be doing.'
+        : Sky.season() === 'spring' ? 'Tulips, in a block, all the same colour, all exactly the same height, which is a thing only a parks department can achieve and is genuinely magnificent.'
+        : Sky.season() === 'summer' ? 'Bedding out, in the borough’s colours, in a pattern, with the year picked out in something silver. This town does this every year and has done it every year through everything.'
+        : 'Being lifted. Two men and a wheelbarrow and the whole thing gone by Thursday, to be somewhere else entirely by the weekend.']);
+  },
+  gardensSign() {
+    insp('🪧', 'The gardens sign', 'Open dawn till dusk', [
+      'CASTLE GARDENS. OPEN DAWN TO DUSK. NO CYCLING. NO BARBECUES. DOGS ON LEADS.',
+      'And the opening hours, which are given as a table of times by month, which somebody worked out once and which has been correct ever since.']);
+  },
+
+  /* --- FISHERS STEPS --- */
+  stepsSign() {
+    insp('🪧', 'The sign at the top of the steps', 'Unsuitable for wheelchairs', [
+      'FISHERS STEPS. THE QUAY. And under it a newer plate: UNSUITABLE FOR WHEELCHAIRS AND PUSHCHAIRS. ALTERNATIVE ROUTE VIA QUAY ROAD.',
+      'The alternative route is nine hundred yards and the steps are ninety. This has been in front of the council four times.']);
+  },
+  stepsRail() {
+    insp('🧱', 'The handrail', 'Added 1978', [
+      'A galvanised rail on the open side, put in in 1978, painted twice since, and worn bright along the whole of its length at exactly the height of a hand.',
+      'That worn strip is the only evidence in this entire town of how many people have gone down these steps, and it is better evidence than anything in the museum.']);
+  },
+
+  /* --- QUAY ROAD AND WEIRBANK ROAD --- */
+  quayRoadWall() {
+    insp('🖍️', 'The wall on Quay Road', 'Retaining', [
+      'The wall holding the town up, seen from the road at the bottom of it. Twenty feet of coursed rubble with a batter on it and weep holes every few yards, and it is doing a great deal of work.',
+      pick(['A tag halfway up that somebody has got to from somewhere, and there is nowhere to have got to it from.',
+        'BELLHAVEN, in three-foot letters, level and correctly spelled, and it has been there since before anybody currently in the town hall started.',
+        'Ferns in the weep holes, all the way along, at exactly the same height.'])]);
+  },
+  weirbankWall() {
+    insp('🖍️', 'The wall on Weirbank Road', 'The back of the Close', [
+      pick(['Three tags, none of them over each other, which is a form of manners.',
+        'A piece done in one colour with a roller, which is the sort of thing done by somebody who has thought about the wall as a wall.',
+        'Somebody has written a phone number and, underneath it, in a different hand, “this is the chippy”.'])]);
+  },
+  parkAndRide() {
+    insp('🪧', 'The park and ride sign', 'Follow the buses', [
+      'A brown sign with a bus on it: PARK & RIDE 2 MILES. It points east along Weirbank Road and out of town.',
+      'It opened in 2011 and it works, and it is the reason the old town can be pedestrianised at all, and it has been the subject of a letter in the paper every fortnight since.']);
+  },
+  rampSign() {
+    insp('🪧', 'The sign at the top of the ramp', 'The Quay', [
+      'THE QUAY. PAY & DISPLAY. 3.5T LIMIT. And a hatched arrow down.',
+      'The ramp is one in seven and it is cobbled at the bottom and everybody who has ever driven down it has done so at about four miles an hour with the window open.']);
+  },
+
+  /* --- THE QUAY --- */
+  chandlery() {
+    insp('⚓', 'The chandlery', 'Open weekends', [
+      'Rope, shackles, antifoul, and a window of things that are obviously for boats and are not obviously for anything.',
+      'There are eleven boats on this water and none of them goes anywhere. The chandlery has been open every weekend for forty years on the strength of them and on the strength of everybody else who comes in for a bit of rope.']);
+  },
+  ferryman() {
+    insp('🍺', 'The Ferryman', 'Open six till close', [
+      'Whitewashed, low, one bar, and a row of six wooden seats on the quay outside that face the water and are full from about four o’clock on any evening the rain holds off.',
+      'It is named for a ferry that stopped running in 1934. There is a photograph of the last ferryman behind the bar and everybody in there can tell you his name.']);
+  },
+  antiques() {
+    insp('🏺', 'The antiques warehouse', 'Open when the man is in', [
+      'Three floors of a Victorian bonded warehouse containing, on any given day, about nine hundred objects and one man.',
+      'It is open when the man is in. There is no way of telling from outside whether the man is in. The town has adapted to this by simply trying the door on the way past, for thirty years.']);
+  },
+  kiosk() {
+    insp('🍦', 'The kiosk on the quay', 'Open in July', [
+      'A hatch, an awning, a chest freezer, and a board with nine things on it and a picture of each.',
+      Sky.season() === 'summer' ? 'It is open. There are four people at it. Three of them are having a 99 and the fourth is having a conversation about the weather that has now lasted longer than the queue.'
+        : 'It is shut. The shutter is down and the board is turned to the wall and it will be like that until it is warm enough for it not to be, which is a date nobody sets and everybody agrees on.']);
+  },
+  boatHire() {
+    insp('🚣', 'The boat hire', 'By the hour', [
+      'Eight rowing boats on a rack, four in the water, a hut with a window, and a laminated price list showing an hourly rate and a deposit.',
+      'It runs from Easter to September, has been run by the same family since 1958, and is the only business on this quay that has ever made money out of the water itself.']);
+  },
+  quayBarrels() {
+    insp('🛢️', 'The barrels on the quay', 'Not going anywhere', [
+      'Oak, banded, three of them, standing where something has always stood, outside a warehouse that has not warehoused anything since 1962.',
+      pick(['They belong to the pub, and they are empties, and they go back on Tuesday.',
+        'They belong to nobody, and they have been photographed eleven thousand times, and they are in the background of about a third of the wedding photographs taken in this town.',
+        'One of them has a plant in it. One of them has rain in it. One of them is full and nobody has ever asked of what.'])]);
+  },
+  quayCrate() {
+    insp('📦', 'A crate on the quay', 'Timber', [
+      'A proper timber crate with rope handles and a stencilled mark on the side that has been painted over and is still perfectly legible in the right light.',
+      'Nothing here is waiting for a ship. Everything here looks like it is waiting for a ship, which is the whole of what a preserved quay is for and is not a criticism.']);
+  },
+  quayRail() {
+    insp('🧱', 'The rail along the quay', 'In four bays', [
+      'Four bays of it, and then a gap where the steps go down to the water, and then four more.',
+      'There has been a rail along this edge since 1971 and there was nothing at all before that, and the drop is eleven feet at low water onto stone. The town managed for six hundred years and then put a rail up, and both of those facts are true and neither is the interesting one.']);
+  },
+  mooring() {
+    insp('⚓', 'The mooring rings', 'Cast iron, set in stone', [
+      'Rings the size of a dinner plate, set into the quay stone with lead, spaced the length of a barge apart the whole way along.',
+      'Most of them are unused. Two of them have a boat on them. All of them still turn, because a thing made out of that much iron and set in that much lead does not stop working, it just stops being needed.']);
+  },
+  theBoat() {
+    insp('🛥️', 'The boat that has not moved', 'On a mooring', [
+      'Wooden, about twenty-six feet, blue, with a cover over the cockpit that is green in the folds.',
+      'It has been on that mooring for as long as anybody will admit to remembering. It floats. Somebody pumps it. Nobody has ever seen anybody pump it.']);
+  },
+  swans() {
+    insp('🦢', 'The swans', 'Two, and a grudge', [
+      pick(['Two of them, upstream of the slipway, ignoring everything.',
+        'Two adults and four this year’s, in a line, in order, which is not something they have been taught.',
+        'One of them comes over. It comes over quickly. You have made a series of small decisions that have led you here.']),
+      'Everybody in this town has a story about these swans and every one of those stories is about being chased.']);
+  },
+  slipway() {
+    insp('🕳️', 'The slipway', 'Steps to the water', [
+      'Stone steps going down into the water with a groove worn down the middle of each one and weed from about the fourth step down.',
+      'The bottom six are always wet and always green and there is no rail, and everybody in this town was told about these steps by somebody when they were about six.']);
+  },
+  quayBench() {
+    insp('🪑', 'The bench on the quay', 'Facing the water', [
+      'Facing the water, unlike every bench on Minster Green, which is the whole argument.',
+      pick(['A man with a flask. Not fishing. Just a flask.',
+        'Two people, eating chips out of the paper, not talking, entirely at ease.',
+        'Empty. It is the best seat in Bellhaven and it is empty, because it is a Tuesday and it is twenty past two.'])]);
+  },
+  payAndDisplay() {
+    insp('🪧', 'The pay and display', 'Tariff', [
+      'Up to 1 hour £1.40. Up to 2 hours £2.60. Up to 4 hours £4.20. All day £6.00. Blue badge holders free. Coins and card. The card reader has a note on it.',
+      'The note says: CARD READER WORKING. Somebody put that there because everybody assumed it was not.']);
+  },
+  theBasin() {
+    insp('🪧', 'The basin', 'Interpretation board', [
+      'A board with a drawing of the basin as it was in 1880: nine vessels, a crane, a bonded warehouse, and about two hundred people.',
+      'The photograph next to it is of the same view now. It is a car park, a pub, eleven boats that do not go anywhere, and you.',
+      'The board does not editorialise. It is a much better board for not editorialising.']);
+  },
+  theRiver() {
+    insp('🌊', 'The river', 'Tidal to the weir', [
+      'Brown, wide, moving faster than it looks, and going somewhere.',
+      'It is tidal up to the weir and fresh above it. It is the reason there is a town here at all — every single thing on the hill behind you exists because this was the furthest up a boat could get — and it is now the one part of Bellhaven nobody has found a use for.',
+      pick(['A cormorant goes under and does not come up anywhere you can see.',
+        'The tide is out. There is more mud than water and the mud has a smell that people who grew up here find reassuring.',
+        'Up and coloured, the way the board in the tackle shop said. Not worth it.'])]);
+  },
+
+  /* --- TRAFFIC AND PEOPLE, SOUTH --- */
+  theTwelve() {
+    insp('🚌', 'The 12', 'Crosses the line', [
+      'The red one. It is the only bus that goes over the railway, which it does twice a lap, on two different bridges, taking twenty-two minutes to get from one side of a line you can walk under in four.',
+      'Everybody knows this. The 12 is full.']);
+  },
+  chandlerVan() {
+    insp('🚐', 'The chandler’s van', 'Weekends only', [
+      'A brown van with a rope-and-shackle logo that was hand-painted and is very good, backed up to the chandlery’s door with the back open and nobody in sight.',
+      'It is here on a weekday, which means something has come in, which means the man is in, which means the antiques warehouse might also be open, which is how information travels on this quay.']);
+  },
+  yellowsVan() {
+    insp('🚐', 'A van on the yellows, hazards going', 'Loading', [
+      'On the double yellows outside the North Gate, hazards going, nobody in it, back doors open, and a cage trolley half out of it.',
+      'Priorygate is a pedestrian zone except for loading, and this is loading, and it will be loading for another fifty minutes.',
+      'Every person who drives down Station Road between eight and ten in the morning has an opinion about this van, and every one of them has parked in exactly the same place at least once.']);
+  },
+  pedBus(ped) {
+    insp('🚌', ped.name, 'Off the 12', [
+      'Coming away from the stop at the speed of somebody who has just been on a bus for twenty minutes and would now like to walk.',
+      pick(['They look up at the boarded booking hall as they pass it. Everybody does. Nobody has ever done anything about it.',
+        '“Was the subway shut?” they ask, hopefully, to nobody in particular, meaning: tell me I was right to take the bus.',
+        'They are at the crossing before you have finished looking at them, which is the correct speed to be on Station Road.'])]);
+  },
+  pedCarrier(ped) {
+    insp('🛍️', ped.name, 'Weirbank Road', [
+      'Two carrier bags, one in each hand, both of them the thin sort that has already gone through at one corner.',
+      pick(['They are going up. The steps are ahead of them. They know the steps are ahead of them. They have made a decision about the steps.',
+        '“Bit of a walk,” they say, without stopping, which is a complete conversation in this town.',
+        'They stop, set both bags down on the pavement, shake out both hands, pick both bags up, and carry on. The whole thing takes four seconds.'])]);
+  },
+  pedPriory(ped) {
+    insp('🚶', ped.name, 'Priorygate', [
+      pick(['Two people walking at the speed of a street with no cars on it, which is about two thirds of the speed anybody walks on Bellhaven Road.',
+        'They have stopped at the bookshop window and are both reading the same spine.',
+        'They are having the conversation you have on a pedestrianised street, which is one where neither of you is watching for anything.']),
+      'Nobody hurries down here. It is four hundred yards long and it takes people eleven minutes and that is what it was for.']);
+  },
+  pedLate(ped) {
+    insp('🏃', ped.name, 'Late', [
+      'Going up the middle of Priorygate at a pace that is not quite a run because running would be an admission.',
+      pick(['They go round the trough without breaking stride. They have gone round that trough before.',
+        'Lanyard out, still on, from a building somewhere behind them. You know exactly how they feel and you know exactly how it will go.',
+        'They check a phone, do not break stride, and put it away. Whatever it said has not helped.'])]);
+  },
+  pedGreen(ped) {
+    insp('🥪', ped.name, 'Minster Green, one o’clock', [
+      'Sitting out on the grass with a sandwich and a lanyard turned round so the card is against their chest, which is the universal sign of somebody who is on their lunch and does not want to be.',
+      pick(['They have got thirty-five minutes and they are going to use all of them.',
+        'They are looking at the west front. You have never once seen anybody actually looking at the west front.',
+        'There are nine people on this green and every one of them is from a different building and every one of them has done this deliberately.'])]);
+  },
+  pedQuay(ped) {
+    insp('🌊', ped.name, 'Looking at the water', [
+      'Standing at the rail, doing nothing, at twenty past two on a working day.',
+      pick(['They have been there since you came down the steps. They will be there when you go back up them.',
+        '“There’s a seal comes up sometimes,” they say. There is not a seal. Everybody says there is a seal.',
+        'They nod at you the way people nod at each other when they are both somewhere they have no particular reason to be.'])]);
+  },
+  pedSubway(ped) {
+    insp('🕳️', ped.name, 'Through the subway', [
+      'Going through it at a pace that says they do this twice a day and have done for years.',
+      pick(['They do not look at the mural. You would not look at the mural.',
+        'Their footsteps come back off the tiles about a second and a half after they have gone past, which is the whole reason children love this tunnel.',
+        '“All right,” they say, not as a question, which down here is what you say.'])]);
+  },
+
+  /* ======================= THE OLD TOWN'S INTERIORS ======================= */
+  /* --- the bookshop --- */
+  booksOut() { Levels.take('booksOut'); },
+  shelfLocal() {
+    insp('📚', 'Local history', 'Two shelves and a box', [
+      'Everything ever printed about this town, which is more than you would think: eleven parish histories, four guides, a book about the minster roof, two about the railway, and a self-published one about the quay that is the best of them.',
+      'The man behind the counter has read all of them. He will tell you which is wrong about the gate. He is right.'],
+      [{ t: 'Buy the one about the quay. (£8)', to: null, do() {
+          if (P.money < 8) { Sfx.deny(); return UI.toast('📚', 'Eight pounds and you have not got eight pounds, which is a sentence about this job rather than about the book.'); }
+          Player.mod({ money: -8, patience: 4 }); P.stats.knowledge += 1; Player.xp(35); Ach.get('a_localhistory');
+          UI.toast('📚', 'Eight pounds. He wraps it in paper, which nobody asked him to do and which he has done for every book he has ever sold.', 'gold');
+        } },
+       { t: 'Just look.', to: null }]);
+  },
+  shelfRail() {
+    insp('📚', 'Railways', 'One bay, floor to ceiling', [
+      'More shelf than local history, which in a town with a closed station is exactly the correct allocation of space and would be defended vigorously by four separate people.',
+      'Somewhere in there is the only published photograph of the up platform with people on it.']);
+  },
+  shelfSea() {
+    insp('📚', 'Maritime', 'Half a bay', [
+      'Knots, tides, coastal pilots for a coast eleven miles away, and four copies of the same book about a voyage that started at the bottom of this hill.']);
+  },
+  shelfRest() {
+    insp('📚', 'Everything else', 'Alphabetical, mostly', [
+      'Fiction, alphabetical by author, and it genuinely is, which in a shop this size is an enormous quantity of somebody’s life.',
+      'Except for the last three feet, which is where things go when they come in faster than they can be sorted, and which has been the last three feet for eleven years.']);
+  },
+  shelfPaper() {
+    insp('📚', 'The paperbacks', 'Three for £5', [
+      'The wall of them, spines out, sun-faded in a band at exactly the height the window lights.',
+      'Everybody comes in for one thing and leaves with three of these.']);
+  },
+  shelfBack() {
+    insp('📚', 'The ones behind the counter', 'Ask', [
+      'Six shelves you cannot reach without him getting up, which is the point: these are the ones with the prices in pencil that have three figures in them.',
+      'He will get up. He will get up for anybody and hand you the thing and let you hold it, which is not how anybody else sells anything.']);
+  },
+  booksCounter() {
+    insp('🗂️', 'The counter', 'Cash preferred', [
+      'A till that is a drawer, a pad of receipts, a pot of pencils, a roll of brown paper on a spindle, and a card reader that has been put where it can be reached and not where it can be seen.',
+      'Behind it: him, a stool, a mug, and a book face-down that he was reading and will go back to.']);
+  },
+  booksTable() {
+    insp('📖', 'The table of things nobody has bought', 'Reduced', [
+      'A trestle by the door with a card on it saying HALF MARKED PRICE, and about forty books on it that have been on it long enough to have a personality as a group.',
+      pick(['Four identical copies of a biography of somebody nobody under fifty could name.',
+        'A book of photographs of this county in the nineteen-seventies, which is the only thing on this table anybody ever picks up.',
+        'An enormous atlas, open, at a page showing a country that has not existed since 1991.'])]);
+  },
+  shopCat() {
+    insp('🐈', 'The shop cat', 'Non-negotiable', [
+      pick(['Asleep in the window on a pile of the ones that were meant to go on the table.',
+        'On the counter, directly on top of whatever he was about to write in.',
+        'Following you at a distance of about four feet, stopping when you stop, which is either affection or supervision.']),
+      'There is a hand-lettered card on the door about the cat. It says: PLEASE DO NOT LET HIM OUT. HE WILL ASK.']);
+  },
+  booksWindow() {
+    insp('🪟', 'The window from inside', 'Priorygate', [
+      'From in here the street is quieter than it has any right to be, and everybody on it is going past at the pedestrianised speed, and you can watch all of them without any of them seeing you.',
+      'This is the best window in Bellhaven and the man behind the counter has had it for thirty-one years.']);
+  },
+  booksUpstairs() {
+    insp('🪜', 'The stairs to the room upstairs', 'Mind your head', [
+      'Steep, narrow, turning, with a rope instead of a banister and a printed sign on the newel that says MIND YOUR HEAD (WE MEAN IT).',
+      'Upstairs is poetry, plays, art and a chair. Nobody has ever bought anything from upstairs and it has never once been suggested that upstairs should be anything else.']);
+  },
+
+  /* --- the coffee place --- */
+  caffOut() { Levels.take('caffOut'); },
+  caffMachine() {
+    insp('☕', 'The machine', 'Two group', [
+      'A two-group machine, polished, with a knock box beside it and a tamp on a mat, and somebody using all of it without looking at any of it.',
+      'It cost more than a car. Everybody who has ever worked here has said so, to a customer, at least once.']);
+  },
+  caffCabinet() {
+    insp('🧁', 'The cabinet', 'Made here', [
+      pick(['Four things left at half past two, which is the correct number of things to have left at half past two.',
+        'A tray of something that has gone in the last hour, and the gap where it was, and a card still standing up in the gap.',
+        'The brownies. There is a reason people come here and it is not the coffee and everybody is too polite to say so to the person with the machine.'])]);
+  },
+  caffBoard() {
+    insp('📝', 'The board', 'Today', [
+      'Written out every morning in four colours by somebody with genuinely lovely handwriting.',
+      pick(['The soup is leek and potato. The soup is leek and potato about forty per cent of the time and nobody has ever objected.',
+        'Someone has drawn a small extremely good cat in the corner.',
+        'Today’s quote at the bottom is one everybody has seen before, and it still works, which is annoying.'])]);
+  },
+  caffCounter() {
+    insp('🧾', 'The counter', 'Order here', [
+      'A card reader, a tip jar with a joke on it, a stack of loyalty cards, and a jar of dog biscuits which is the single most commercially effective object in this building.'],
+      [{ t: 'Get a coffee. (£3.20)', to: null, do() {
+          if (P.money < 3.20) { Sfx.deny(); return UI.toast('☕', 'Three twenty. You have not got three twenty. You leave, and it is fine, and you mind.'); }
+          G.minutes += 7; Player.mod({ money: -3.20, energy: 12, patience: 8 });
+          count('coffee'); Ach.get('a_prioryCoffee');
+          UI.toast('☕', 'Seven minutes and three pounds twenty. It is better than the drive-thru, which is better than the fourth floor, which is a hierarchy you now carry around with you.', 'gold');
+        } },
+       { t: 'Just looking.', to: null }]);
+  },
+  caffTable() {
+    insp('🪑', 'A table', 'Two covers', [
+      pick(['Somebody with a laptop who has been here since eleven and has bought one thing.',
+        'Two people who have finished and are not leaving, which is what these tables are for.',
+        'Empty, wiped, with the chairs pushed in square, which means it has just been done.'])]);
+  },
+  caffWindowTable() {
+    insp('🪟', 'The table by the window', 'Taken', [
+      'The good one. Two seats, the whole of Priorygate through the glass, and the radiator under it.',
+      'It is taken. It is always taken. There is a system of who gets it and the system is that somebody is already in it.']);
+  },
+  caffWobble() {
+    insp('🪑', 'The wobbly table', 'The one nobody chooses', [
+      'It wobbles. There is a folded beermat under the near leg that does not fix it because the fault is in the floor, and the floor is four hundred years old.',
+      'Everybody sits here eventually. Everybody folds the beermat again. Nobody has ever mentioned it to the staff.']);
+  },
+  caffWindow() {
+    insp('🪟', 'The window from inside', 'Steamed', [
+      'Steamed at the bottom eight inches, which is what tells everybody on the street that it is warm in here.',
+      'Somebody small has drawn on it, and it has been wiped, and you can still see it, and it will come back every cold day until the glass is replaced.']);
+  },
+  caffLoo() {
+    insp('🚽', 'The toilet', 'Customers only', [
+      'One, up two steps, with a door that needs a shoulder, and a shelf of things that are all a bit nicer than they need to be.',
+      'The sign says CUSTOMERS ONLY. Nobody in the history of this business has ever been asked.']);
+  },
+  caffPlant() {
+    insp('🌱', 'The plant', 'Doing well', [
+      'A monstera the size of an armchair in the corner by the window, propped with a cane, and about a foot taller than it was in the spring.',
+      'It came from somebody’s flat when they moved away. It is the only thing in here older than the business.']);
+  },
+
+  /* --- The Mitre --- */
+  mitreOut() { Levels.take('mitreOut'); },
+  mitreBar() {
+    insp('🍺', 'The bar', 'Four hand pumps', [
+      'Four pumps, three of them on, and clips for two more that are turned round. A row of glasses on a shelf above, upside down, none of them matching.',
+      'The beam over the bar is at five foot ten and has a strip of foam gaffer-taped to it and the tape is the fourth layer of tape.'],
+      [{ t: 'Have one. (£4.60)', to: null, do() {
+          if (!Sky.working()) {
+            if (P.money < 4.60) { Sfx.deny(); return UI.toast('🍺', 'Four sixty. Not today.'); }
+            G.minutes += 25; Player.mod({ money: -4.60, patience: 14, energy: -4 });
+            Ach.get('a_mitre');
+            return UI.toast('🍺', 'Twenty-five minutes in a room with a floor that is not level. You have not looked at your phone once, which has not happened this month.', 'gold');
+          }
+          Sfx.deny();
+          UI.toast('🍺', 'It is a working day and you are wearing a lanyard, and the man behind the bar has seen four hundred lanyards do exactly this and has never once said anything.');
+        } },
+       { t: 'Not on a working day.', to: null }]);
+  },
+  mitreLandlords() {
+    insp('📜', 'The list of landlords', 'Since 1641', [
+      'A painted board, thirty-odd names, first one 1641, last one added in a different hand about eight years ago.',
+      'Four of the surnames repeat. One of them repeats five times across two hundred years and then stops, and the stop is a whole novel nobody is ever going to write.']);
+  },
+  mitreTrophies() {
+    insp('🏆', 'The shelf of trophies', 'Darts, skittles, quiz', [
+      'Fourteen trophies, none of them recent, all of them polished. Skittles league, darts league, and a quiz shield with the names of teams engraved round the base until there was no more base.',
+      'The quiz is still going. The shield is full. Nobody has bought a new one because the new one would not have the old names on it.']);
+  },
+  mitreFire() {
+    insp('🪵', 'The fireplace', 'Lit October to March', [
+      Sky.season() === 'winter' || Sky.season() === 'autumn'
+        ? 'Lit. Actually lit, with actual wood, and there is a basket of it and a man whose job at half past four is to do this.'
+        : 'Not lit. There is a jug of something dried in the grate and a fire iron leaning where it has leaned since March.',
+      'The lintel is a single piece of oak and there is a burn mark in the middle of it that predates every single person who has ever complained about the price of a pint in here.']);
+  },
+  mitreCorner() {
+    insp('🪑', 'The table in the corner', 'Spoken for', [
+      'Settle on two sides, a stool on the third, and a table with a surface like the top of a fence post.',
+      'It is spoken for between about five and seven by four men who have sat there for long enough that the pub has quietly stopped putting anybody else in it.']);
+  },
+  mitreLong() {
+    insp('🪑', 'The long table', 'Twelve, at a push', [
+      'One board, four trestle legs, twelve chairs that are eleven different chairs, and a scattering of beermats that will be a construction project by nine o’clock.',
+      'This is where the quiz sits, where the skittles team sits, and where somebody’s wake was in March, all of which are the same fourteen people.']);
+  },
+  mitreTable() {
+    insp('🪑', 'A table', 'Two or three', [
+      pick(['Two people, a pint and a half, and a conversation that has been going since before you came in.',
+        'A dog under it, asleep, taking up substantially more room than the two people at it.',
+        'Empty, with a glass on it, and a beermat on top of the glass, which means somebody is outside and is coming back.'])]);
+  },
+  mitreDarts() {
+    insp('🎯', 'The dartboard', 'Wednesdays', [
+      'Board, oche taped on the floor, a lamp over it with a shade that has been mended, and a chalk scoreboard with the last game still on it from Wednesday.',
+      'The wall round the board is not plaster. It has not been plaster since about 1975.']);
+  },
+  mitreMachine() {
+    insp('🎰', 'The machine', 'In the corner', [
+      'It is in the corner by the gents where the machine in every pub in this country is, making the noise, being ignored by everybody, and paying the rent.']);
+  },
+  mitreGents() {
+    insp('🚽', 'The gents', 'Down the passage', [
+      'Down a passage, round a corner, down two steps, through a door, with a ceiling that requires a decision from anybody over six foot.',
+      'There is a framed thing on the wall in there that is worth going in to read even if you do not need to, and everybody who has ever been told that has gone and read it.']);
+  },
+  mitreYard() {
+    insp('🚪', 'The door to the yard', 'Smoking area', [
+      'Out into a walled yard with four barrels for tables, a heater that works, and a view of the back of the minster that is the best view of the minster in this town.',
+      'Nobody plans to go out there. Everybody who goes out there stays out there.']);
+  },
+
+  /* --- the market hall --- */
+  marketOut() { Levels.take('marketOut'); },
+  stallCheese() {
+    insp('🧀', 'The cheese stall', 'Pitch 4', [
+      'Eleven cheeses on a marble slab, wire cutter, greaseproof, and a woman who will give you a piece of any of them on the end of a knife.',
+      'Four of the eleven are made within twenty miles. She will tell you which four and she will tell you which of the four is best this month and she will be right.']);
+  },
+  stallButcher() {
+    insp('🥩', 'The butcher', 'Pitch 1 and 2', [
+      'Two pitches because he needs two, a window of trays, a block behind him that is worn into a dish, and a queue of five people who all know each other.',
+      'There has not been a butcher on the Shambles outside since 1974. There has been one in here the whole time, thirty feet away, which is why nobody noticed.']);
+  },
+  stallBread() {
+    insp('🍞', 'The bread stall', 'Wednesday and Saturday', [
+      'Baked six miles away and here by seven. By half eleven there are four loaves left and by noon there are none and the man reads the paper for two hours and then packs up.',
+      'He could bring more. He has been asked. He brings the same number every week because that is the number he can do properly.']);
+  },
+  stallWool() {
+    insp('🧶', 'The wool stall', 'Pitch 9', [
+      'Wool, needles, patterns, buttons in a drawer unit, and two chairs beside the pitch that are not for the trader.',
+      'Those two chairs are the reason four people leave the house on a Thursday and the town would be measurably worse without them.']);
+  },
+  stallMender() {
+    insp('🔧', 'The stall that mends things', 'Pitch 11', [
+      'Watches, clocks, zips, shoes, spectacles, lamps and anything with a plug. A man with a loupe on his forehead and a drawer unit of about eleven thousand parts.',
+      'He will look at a thing, tell you what is wrong with it, tell you it is not worth mending, and then mend it for four pounds.']);
+  },
+  stallHaber() {
+    insp('🪡', 'The haberdashery', 'Pitch 6', [
+      'Thread on a rack in spectrum order, which is the most beautiful object in this building and nobody ever says so.',
+      'Bias binding, elastic by the metre, hooks, eyes, and a card of things nobody can name that somebody comes in for about once a fortnight.']);
+  },
+  stallRecords() {
+    insp('💿', 'The record stall', 'Pitch 7', [
+      'Four crates, alphabetical, priced in pencil on the sleeve, and a man who will not tell you what is good because he thinks that is your job.',
+      'There is a shoebox under the table that is not for browsing and everybody who comes here regularly knows to ask about the shoebox.']);
+  },
+  stallCaff() {
+    insp('☕', 'The market caff', 'Pitch 8 · Tea 90p', [
+      'Six stools at a horseshoe counter, a tea urn, a griddle, and a menu on a board that has had four prices changed and forty not.',
+      'Tea is ninety pence. A bacon roll is three pounds. There has never been a queue and there has never been an empty stool.'],
+      [{ t: 'Have a tea. (90p)', to: null, do() {
+          if (P.money < 0.9) { Sfx.deny(); return UI.toast('☕', 'Ninety pence. You do not have ninety pence. There is nothing to say about this.'); }
+          G.minutes += 9; Player.mod({ money: -0.9, energy: 7, patience: 7 });
+          count('tea'); Ach.get('a_marketTea');
+          UI.toast('☕', 'Ninety pence, in a proper cup, sitting on a stool in a market. Nine minutes. It is the best value of anything anywhere in this game.', 'gold');
+        } },
+       { t: 'Not now.', to: null }]);
+  },
+  stallButtons() {
+    insp('🧵', 'The stall with the buttons', 'Pitch 12', [
+      'Trays of them, sorted by colour and then by size, and a set of tweezers on a string for going through the trays.',
+      'Everybody who has ever come in here for one button has left forty minutes later with four and no clear account of the intervening time.']);
+  },
+  stallEmpty() {
+    insp('📦', 'The empty pitch', 'Pitch 14 · to let', [
+      'Boards, a number painted on the floor, and a card from the market office with a phone number and a weekly rate that is genuinely reasonable.',
+      'It has been empty since the spring. Everybody who trades in here has a theory about what should go in it and no two of the theories agree.']);
+  },
+  marketTables() {
+    insp('🪑', 'The tables in the middle', 'For the caff', [
+      'Four of them under the glazed roof, where the light comes down, and they are always the warmest and always the loudest part of this building.',
+      'At eleven they are old men. At half twelve they are people from offices. At two they are old men again.']);
+  },
+  marketCharter() {
+    insp('📜', 'The market charter', 'Framed, 1253', [
+      'A photographic copy of a charter, framed, with a typed translation beside it, granting the right to hold a market on a Tuesday and a fair for three days at Michaelmas.',
+      'The market is still held. The fair stopped in 1911. The right to hold it has never been surrendered and every so often somebody in this town remembers that and gets extremely excited.']);
+  },
+  marketClock() {
+    insp('🕰️', 'The market clock', 'Right', [
+      'Over the door, wound by hand on a Monday by whoever is in first, and it keeps very good time indeed.',
+      'It is the only clock in this game that is telling the truth.']);
+  },
+  marketBins() {
+    insp('🗑️', 'The bins at the back', 'Trade waste', [
+      'Cardboard flattened and baled, which is done properly here because sixteen traders have to share one yard and it only works if everybody does it properly.',
+      'They do. It works. It has worked since 1872.']);
+  },
+
+  /* --- the minster --- */
+  minsterOut() { Levels.take('minsterOut'); },
+  minsterAltar() {
+    insp('✝️', 'The east end', 'Quire and sanctuary', [
+      'Steps, a rail, a table with a cloth on it in the colour of the season, and above it a window a hundred feet away that is the whole reason the building is this shape.',
+      'You are not going up there. Nobody has stopped you and nobody would. You are not going up there.']);
+  },
+  minsterEastWindow() {
+    insp('🪟', 'The east window', 'Mostly fourteenth century', [
+      'Glass, a great deal of it, in nine lights, and you are looking at it from ninety feet away with the whole length of the building between you and it.',
+      Sky.dark() ? 'It is dark outside and the window is flat and grey and dead, which is the other thing glass does and which nobody photographs.'
+        : 'The sun is on it. There are eleven colours on the stone floor and four of them are moving.']);
+  },
+  minsterChairs() {
+    insp('🪑', 'The chairs', 'Since 2003', [
+      'Beech, stackable, with a shelf under the seat for a book, arranged in two blocks with an aisle between them.',
+      'They replaced the pews in 2003. There is a letter about it in the parish magazine every spring. Two of the people who write those letters were in favour at the time.']);
+  },
+  minsterOrgan() {
+    insp('🎹', 'The organ', 'Rebuilt 1963', [
+      'Case, pipes, and a console tucked in behind a screen where the organist can see a mirror and nothing else.',
+      pick(['Somebody is practising. It is not a tune. It is four bars, over and over, and then the same four bars slightly differently, and it is one of the best things you have ever accidentally walked into.',
+        'Silent, with the lid down and a duster folded on top of it.',
+        'A single note, held, for a very long time, by somebody testing something, and the whole building is doing it with them.'])]);
+  },
+  minsterCandles() {
+    insp('🕯️', 'The candle stand', 'Suggested 50p', [
+      'A tray of sand, a box of tapers, a slot, and a card: A CANDLE MAY BE LIT FOR ANY REASON AT ALL.',
+      pick(['Nineteen of them going. It is a Tuesday afternoon.',
+        'Three going, and one that has just gone out, and somebody still standing in front of it.',
+        'Full. Completely full. Something has happened in this town this week.'])],
+      [{ t: 'Light one. (50p)', to: null, do() {
+          if (P.money < 0.5) { Sfx.deny(); return UI.toast('🕯️', 'You have not got fifty pence. The card says any reason at all and says nothing about the fifty pence, and you put a taper in anyway, and nobody sees, and you feel every possible way about it at once.'); }
+          Player.mod({ money: -0.5, patience: 10 }); Player.xp(30); Ach.get('a_candle');
+          UI.toast('🕯️', 'Fifty pence. You did not decide who it was for until you had lit it.', 'gold');
+        } },
+       { t: 'Not today.', to: null }]);
+  },
+  minsterTombs() {
+    insp('🪦', 'The tombs along the aisle', 'Effigies', [
+      'Four of them along the north aisle, on chests, with their feet on dogs and their hands together and their noses gone.',
+      'One of them has a small brass plate from 1911 apologising for a restoration.',
+      'Everybody who has ever been brought in here as a child has been shown the dogs.']);
+  },
+  minsterClock() {
+    insp('🕰️', 'The astronomical clock', 'c.1484', [
+      'A dial with the earth in the middle, the sun on an arm, the moon on a ball that turns to show its phase, and a fleur-de-lis pointing at the hour on a twenty-four hour ring.',
+      'It is wrong about the middle of the universe and it has been keeping time for five hundred and forty years, and nobody has ever felt those two facts were in tension.',
+      'There is a hole cut in the door underneath it for the cat that kept the mice off the rope. There is no cat. The hole is still there and it is on the guidebook cover.']);
+  },
+  minsterRoll() {
+    insp('📜', 'The roll of incumbents', 'From 1194', [
+      'A painted board, two columns, about a hundred names, starting in 1194 and coming down to a name at the bottom in a hand that is still fresh.',
+      'There is one gap, eleven years long, in the sixteen-forties, and the board does not explain it, and the guidebook does, in one sentence, at the back.']);
+  },
+  minsterShop() {
+    insp('📚', 'The bookstall', 'By the door', [
+      'Guidebooks, postcards, pencils, a jigsaw of the west front, and a cash tin with an honesty slot.',
+      'The guidebook is four pounds, is genuinely well written, and was written by somebody who is dead and is thanked at the front of it by somebody else who is also dead.']);
+  },
+  minsterUrn() {
+    insp('☕', 'The urn and the biscuits', 'Help yourself', [
+      'A tea urn, a stack of cups, a tin of biscuits and a jar with some coins in it, on a table at the back, unattended, in a building that is open to anybody.',
+      'It is unattended every single day and it has never once been a problem, and there is not a single institution in this town that could get away with it and this one does.'],
+      [{ t: 'Have a cup.', to: null, do() {
+          G.minutes += 6; Player.mod({ money: -0.5, energy: 6, patience: 9 });
+          count('tea'); Ach.get('a_minsterTea');
+          UI.toast('☕', 'Six minutes, fifty pence in the jar, and a custard cream, sitting at the back of a cathedral. Nobody spoke to you. Somebody nodded.', 'gold');
+        } },
+       { t: 'Leave it.', to: null }]);
+  },
+  minsterRoofFund() {
+    insp('💷', 'The box for the roof', 'Every penny', [
+      'A wooden box with a slot and a brass plate and a laminated sheet beside it with a photograph of the actual problem, which is a valley gutter, and a number, which is very large.',
+      'The thermometer outside is at about four fifths. It has been at about four fifths for years. That is not because it has stalled; it is because they keep putting the target up as they find more of it.']);
+  },
+  minsterFont() {
+    insp('💧', 'The font', 'Norman', [
+      'A tub of stone on four squat columns, older than everything around it by a hundred and fifty years, with a lid on a counterweight and a step worn in front of it.',
+      'It was in a garden in the eighteen-nineties. Somebody found it and brought it back. Nobody has ever established whose garden.']);
+  },
 };

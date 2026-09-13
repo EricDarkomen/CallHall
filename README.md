@@ -73,7 +73,8 @@ the right instructions.
 
 Press `E` on the way out and you are in the car park, and Bellhaven is a town.
 
-Six streets on a grid: Bellhaven Road along the front of the building, becoming
+The half of it you come out into was built between about 1968 and 1994, and it is
+six streets on a grid: Bellhaven Road along the front of the building, becoming
 the High Street once it reaches the shops; Fenn Street through the middle;
 Corven Way along the bottom by the railway; and Aldergate Rise, Cargate Lane and
 Marlow Street crossing all three. Nine junctions, four blocks of buildings, the
@@ -137,6 +138,9 @@ There is a drive-thru on Corven Way. It will not serve you on foot.
 
 Five achievements are out there. One of them is parking straight.
 
+And then there is a railway along the bottom of it, and the other half of the
+town is on the far side.
+
 The roads are the kit's — the tarmac, the paving, the drains and the awnings are
 all Liberated Pixel Cup art, fetched and licence-checked by the sprite build like
 everything else. The cars are not, and could not be: the set this game pins is
@@ -186,6 +190,92 @@ still drawn live is the four things that actually move: the wheels, because the
 front pair steer; the lights, because they come on; the indicators, because they
 blink; and whoever is in it. The layered car costs less per frame than the flat
 one did.
+
+## Across the line
+
+Corven Way ends at a palisade fence, a bank of buddleia and two running lines.
+Forty yards along the verge there is a subway: tiled, lit, dry and swept, which
+is not what anybody expects and is why everybody mentions it. Four minutes under
+there and you come out on Station Road with a city wall in front of you.
+
+**The town doubled.** It is a hundred and fourteen tiles across and a hundred and
+twenty down now, and the seam is the railway at row 60. Nothing above that line
+moved to do it: the office's front doors are still at `[20,2]` and the Greggs is
+still at `[31,23]`. The town grew off the bottom of itself, the way one does.
+
+What is down there is the town that was here first. It is inside a wall, it has no
+cars in it, its main street was pedestrianised in 1988, and it falls away
+westward down eight courses of steps to a river with a quay on it that stopped
+working in 1962. Everything is red rubble stone instead of brick, nothing is
+square to anything else, and the one building made of a different stone is the one
+somebody paid for.
+
+Priorygate runs the width of it with ten frontages on it and five that open — a
+second-hand bookshop with a cat in it, a coffee place, and The Mitre, which has
+been a pub since something in the fourteenth century and has had eleven names.
+Off it: the Shambles with a market hall, a fountain and a fish stall; three lanes
+where all the bins go; Minster Green with the cathedral standing in the middle of
+it as seventeen tiles of solid nothing; the Close; and the castle gardens, which
+have a gatehouse, a bandstand and no castle. Round the outside, Quay Road and
+Weirbank Road, and at the bottom the quay itself: warehouses, barrels, mooring
+rings, a boat that has not moved, and twelve pay-and-display bays you can drive
+the pool car down a one-in-seven ramp to get to.
+
+**Three things join the two halves,** and between them they are the whole shape of
+this map: two road bridges over the railway — Cargate Lane and Marlow Street — and
+the subway under it. Four more circuits of traffic run down there, two of them
+crossing the line twice a lap on different bridges, and a fifth bus, the 12,
+which is red so you can tell it from the two green ones and which takes
+twenty-two minutes to get you across a railway you can walk under in four.
+Everybody knows this. The 12 is full.
+
+**The old station.** The act on the railway has said since long before there was
+anything to say it about that the last train stopped here in 1967 and the platform
+is still there under the brambles. There are two platforms now and you can stand
+on them: a running-in board, a bench, a clock that says eleven minutes past four
+and has said so since the eighties, three empty poster cases and one with a
+winter timetable in it from 1966. The booking hall on the road side has been
+boarded so long that somebody has painted the ply. The only way in is the subway,
+which is a public right of way and is the reason it is lit.
+
+**Three things the engine had to learn,** and all three are small:
+
+*Ground you can see and cannot stand on.* Everything solid in this game is a wall
+or a building: the renderer gives it a face where a floor can see it and a roof
+where none can. A river with slates on it is what that produces. So a surface may
+now say `open` — still solid, collision untouched, but drawn as what it is made of
+and skipped by the wall pass. The water and the ballast are the two.
+
+*Taking a surface off again.* `{ s: null, r: [...] }` says this ground is made of
+whatever its room says it is made of, which is the state 8,043 tiles of that level
+were already in and which there was no way back to until one surface covered nine
+rows of the whole map with four things standing on top of it. Nothing in the
+engine needed telling; every reader already treated a null surface as "ask the
+zone". It is the difference between a platform and the ballast beside it.
+
+*A sixth word of road paint.* `rails` draws two rails and the sleepers under them
+from a to b. It belongs in that list for the reason the centre lines do: a marking
+is linework laid on the ground at a position, and a track that came in 32-pixel
+pieces would put a sleeper joint every metre. It stops at the two bridges, because
+a bridge deck is on top of a railway; it runs straight over the subway, because
+that goes under, and the pale strip of tunnel showing between the rails is the only
+thing on the whole embankment that says so.
+
+Eleven new sprites came with it, all through the same fetch-crop-licence-check-pack
+pipeline as the rest: the water and the ballast off the four-season terrain sheet,
+red rubble and pale ashlar off the castle walls, a drinking fountain, barrels, a
+crate, a council trough, a bay of post-and-rail fence, a NO ENTRY sign and a set
+of temporary traffic lights. The lights are fixed on red, and that is honesty
+rather than laziness: nothing in this game phases a signal and nothing in
+`engine/cars.js` knows what one is, so they are the thing they actually are
+everywhere in England — temporary three-way lights round a hole with nobody
+working in it, stuck on red since March, with the lane behind them coned off and
+no route in the level going down it.
+
+Seven more achievements are down there. Not one of them is an achievement in the
+ordinary sense: every single one is somebody spending four minutes and about a
+pound on the wrong side of a railway line in the middle of a working day. That is
+the whole of what the old town is for.
 
 ## The away-day box
 
@@ -452,13 +542,15 @@ use it are you, because you are aiming, and anybody who has just been hit by a
 foam dart and is turning round to find out who by. That is the same movement and
 the same three lines of code, which is why it lives in one place.
 
-## Fourteen doors, and who is behind them
+## Nineteen doors, and who is behind them
 
-Fourteen of those frontages open. A Greggs, a pub, a bookmaker's, a launderette,
+Fourteen frontages open on the four parades north of the railway, and five more
+on Priorygate. A Greggs, a pub, a bookmaker's, a launderette,
 a post office, a charity shop, a kebab shop, a vape shop, a nail bar, a tyre
 place, an empty unit, a working men's club, a tanning salon — and a door between
 the launderette and the post office with six bells and no sign, which is the
-stairs up to the flats above the parade.
+stairs up to the flats above the parade. And in the old town: The Mitre, the
+second-hand bookshop, the coffee place, the Market Hall and the minster.
 
 **And you can see them now.** For a long time every frontage out here was a brick
 wall with a sign hanging on it: the glass was there, the awnings were there, the
@@ -809,8 +901,8 @@ it always was.
 
 | | |
 | --- | --- |
-| `surfaces:` | Rectangles of `SURFACES` (data/world.js) painted over the rooms. What a tile is MADE of, where that differs from what its room is made of: a street is one zone with one name and a carriageway down the middle. `R.kerbs()` derives the kerb from wherever two of them meet. |
-| `paint:` | The markings. `dash`, `line`, `yellow`, `zebra`, `bays`, `text`, all in tiles, all drawn by `R.roadPaint()` rather than cropped — a marking is position-dependent and a tile is not. |
+| `surfaces:` | Rectangles of `SURFACES` (data/world.js) painted over the rooms. What a tile is MADE of, where that differs from what its room is made of: a street is one zone with one name and a carriageway down the middle. `R.kerbs()` derives the kerb from wherever two of them meet. A surface that says `open` is ground you can see and cannot stand on — the river, the ballast — still solid, still uncollidable, and drawn as itself rather than as the roof the wall pass gives every other piece of wall mass. `{ s: null, r: [...] }` takes a surface back off again, which is how a platform is a platform and the ballast beside it is not. |
+| `paint:` | The markings. `dash`, `line`, `yellow`, `zebra`, `bays`, `text`, `rails`, all in tiles, all drawn by `R.roadPaint()` rather than cropped — a marking is position-dependent and a tile is not, and a running line least of all. |
 | `cars:` | What is parked, and what is driving. A car is not furniture: it is at a pixel, at an angle, at a speed, so it lives here and in `engine/cars.js` rather than in `furnish()`. `model:` names an entry in `CARS`; `body:`/`roof:` repaint that model for one car; `drive: true` lets you in; `route:` makes it traffic. |
 | `peds:` | Who is walking about. Same shape as a traffic car and for the same reason — a pixel, a route, a speed — and deliberately not the machinery in `engine/npc.js`, which is twenty colleagues with schedules and a grudge about a doorway. A route is `[x, y]` waypoints in tiles, with an optional third number to stand there for that many seconds. See `engine/peds.js`. |
 
