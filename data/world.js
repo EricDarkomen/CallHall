@@ -584,7 +584,7 @@ const FURN = {
      to come on with at dusk. The parade still comes on: it is the light out of
      the open doorways now, which is warmer, is in the right place, and is
      drawn by R.thresholds() over the floor it already borrows. */
-  shopwin: { mount: 'wall', size: 20, sprite: 'wall.mirror', high: 0.82 },
+  shopwin: { mount: 'wall', size: 20, sprite: 'shop.window', lit: 'shop.window.lit', high: 1.5 },
   /* Redeclared from the wall-mounted block at the top of this table, and only
      to add a footprint: a sign with a wall behind it hangs on the wall, and a
      sign with nothing behind it — a bus stop, a car park sign — stands on a

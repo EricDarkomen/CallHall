@@ -344,6 +344,41 @@ street, and a public clock on Priorygate that everybody arranges to meet at and
 nobody can date. The benches split with the town — painted iron north of the
 railway, the wooden settle south of it.
 
+**Three roads that used to stop.** Bellhaven Road ran x 2..111 and Fenn Street
+and Corven Way ran x 8..107: six lanes of carriageway that came to an end two
+tiles short of the map border and butted into the side of a building, with no
+junction, no turning head and no reason. They run to the edge now, both ends,
+the way Station Road and Weirbank Road always have — the view stops, the town
+does not.
+
+Those two DO stop at their western ends, and they are right to: the river is
+there. What was missing was anything saying so. There is a stone parapet across
+each of them now, and a sign on it that says ROAD ENDS and, underneath in a
+different decade, RIVER BELLHAVEN — DEEP WATER. Two hundred years ago this was a
+ford and the road went straight on into it. The road still goes straight on.
+
+**The doors.** Every door in this game — office, flat, shop, cathedral — was the
+same leaf standing ajar at forty-five degrees, hinged out onto whatever was in
+front of it. Indoors that is right and it is what the kit drew it for. On a
+parade of twenty shopfronts it was twenty copies of one sticker lying across
+the pavement.
+
+The kit had the answer and nothing had asked for it: `15 Panel Door A` is a
+fourteen-frame swing in eight wood tones, and the frames nobody was using are
+the ones where the leaf is square to the wall. An **exit** — a way out of a
+building — is now drawn as a door IN a wall, in four tones picked off the tile;
+a **door** — inside one — keeps the swing. And the two frames say something:
+**ajar means you can go in, shut means you cannot.** Seventeen of the town's
+frontages have no interior behind them and every one of them was wearing the
+same wide-open door as the five that do.
+
+**The windows.** `shopwin` was the office's `wall.mirror` — thirty-two by
+twenty-three of landscape glass with a diagonal across it, chosen because the
+sash window in the atlas "read as a terraced house". At a fifth of the wall it
+was on, it read as a mirror. It is `shop.window` now, which is what it was
+always for: tall, in a frame, filling the frontage — and it has a **lit**
+variant, so the parade comes on at dusk with the rest of the town.
+
 **Three things join the two halves,** and between them they are the whole shape of
 this map: two road bridges over the railway — Cargate Lane and Marlow Street — and
 the subway under it. Four more circuits of traffic run down there, two of them

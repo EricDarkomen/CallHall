@@ -82,6 +82,14 @@ or by the Liberated Pixel Cup.
 
 ## Assets used
 
+### `12-Panel Door, 15-Panel Door`
+
+- **Used for:** door.front.pine, door.front.oak, door.front.walnut, door.front.olive, door.front.ajar.pine, door.front.ajar.oak, door.front.ajar.walnut, door.front.ajar.olive
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original design and animation by Lanea Zimmerman. Converted to 15 panel door by Eliza Wyatt. Recolors by Eliza Wyatt.
+
 ### `Adult Head - Elderly`
 
 - **Used for:** facial expressions

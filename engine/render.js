@@ -1416,8 +1416,29 @@ const R = {
      Nothing for an opening in a vertical wall: the kit draws a door face-on,
      which is what you see of a wall running left to right, and turning one on
      its side reads as decking. Those keep the drawn doorway below. */
+  /* A SHOPFRONT WEARS A DIFFERENT DOOR, and the four of them are the whole
+     point. The three above are one leaf at three angles — a door swung towards
+     you, which is what a corridor door looks like from inside a building and is
+     right in every room of this office. Out on the street it was twenty shops
+     each with the same pine door standing open at forty-five degrees, hinged
+     out across the pavement, in a row. `door.front.*` is the same kit's leaf at
+     the frame it is SHUT and flat in its own opening, in four wood tones, which
+     is what a parade actually looks like from the other side of the road.
+
+     Seeded off the tile rather than shuffled, so a door does not change colour
+     when the camera moves, and mixed with the door's own row so two shops side
+     by side do not draw the same tone. */
+  SHOP_TONES: ['pine', 'oak', 'walnut', 'olive'],
   kitDoor(d) {
     if (!Tiles.ready || d.axis !== 'h') return null;
+    /* An EXIT is a way out of a building and is drawn as a door in a wall. A
+       DOOR is a door inside one and keeps the swing, which is what the kit drew
+       it for and what a corridor wants. */
+    if (d.kind === 'exit') {
+      const tone = this.SHOP_TONES[((d.x * 2654435761 ^ d.y * 40503) >>> 13) & 3];
+      const n = 'door.front.' + (d.shop ? 'ajar.' : '') + tone;
+      if (Tiles.has(n)) return n;
+    }
     const n = d.locked ? 'door.shut.locked' : d.solid ? 'door.shut' : 'door.open';
     return Tiles.has(n) ? n : null;
   },
@@ -1439,8 +1460,26 @@ const R = {
     for (const d of list) {
       if (d.x < x0 - 1 || d.x > x1 + 1 || d.y < y0 - 1 || d.y > y1 + 1) continue;
       const n = this.kitDoor(d); if (!n) continue;
-      /* Hung in the wall band, standing on the threshold. */
-      Tiles.draw(c, n, (d.x + .5) * TILE, (d.y + .5) * TILE - TILE * .18, this.doorFlip(d, list));
+      /* Hung in the wall band, standing on the threshold — and a shut leaf sits
+         HIGHER than an open one, because a door swung towards you is drawn
+         standing on the floor in front of the opening and a door shut in a wall
+         is drawn in the wall. Not flipped either: a mirrored hinge is a
+         variation on a leaf you can see the hinge side of, and on a flat one it
+         is the same twenty-six pixels reversed. */
+      if (n.startsWith('door.front')) {
+        /* Stood on the shop's threshold rather than centred on anything: the
+           two leaves are different heights (a shut one is twenty-six pixels of
+           door seen flat, an ajar one thirty-four), and hanging both from the
+           same centre would put their FEET at two different places on the same
+           parade. What has to line up is the bottom edge, which is the step,
+           and that sits where the shop window's does — see `shopwin` in
+           data/world.js and the `high` it is hung at. */
+        const r = Tiles.rects && Tiles.rects[n];
+        const lift = (r ? r[3] : 26) / 2 - 11;
+        Tiles.draw(c, n, (d.x + .5) * TILE, (d.y + .5) * TILE - lift);
+      } else {
+        Tiles.draw(c, n, (d.x + .5) * TILE, (d.y + .5) * TILE - TILE * .18, this.doorFlip(d, list));
+      }
     }
   },
   /* Strip lighting: the only thing breaking up an acre of identical carpet.

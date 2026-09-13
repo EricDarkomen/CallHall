@@ -223,8 +223,14 @@ const World = {
         if (axis === 'h') face = !at(o.x, o.y + 1) ? 1 : -1;
         else face = !at(o.x + 1, o.y) ? 1 : -1;
       }
+      /* `shop` is the one thing a frontage door has that an internal one does
+         not: a `via`, naming the link it takes you out through. Every shop,
+         pub, flat and cathedral entrance on the street has one; the way OUT of
+         those, on the inside, does not. It is carried here so R.kitDoor() can
+         hang a different leaf on the two — see the note there about twenty
+         copies of one sticker lying across a pavement. */
       this.doorways.push({ x: o.x, y: o.y, axis, face, into: this.behind(o),
-        locked: !!o.locked, solid: !!o.solid, kind: o.kind });
+        locked: !!o.locked, solid: !!o.solid, kind: o.kind, shop: !!o.via });
       /* The drawn doorway replaces the emoji; two doors on one tile is worse
          than none. The object itself stays exactly as it was, so interaction,
          the minimap and every Act are untouched. */
