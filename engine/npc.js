@@ -2577,7 +2577,14 @@ const Guide = {
     if (!levelId || levelId === Levels.current) return false;
     const link = Levels.route(levelId);
     if (!link) return false;
-    const door = World.objects.find(x => x.use === link.via);
+    /* `via || use`, which is World.behind()'s rule and has to be this one's
+       too. A way out names its link one of two ways: the hatch and the front
+       doors ARE the link and say so with their handler, and every shopfront on
+       the parade keeps the shop's own handler — one shop, one act, whether you
+       press E on the door or on the sign over it — and names the link with
+       `via`. Asking for `use` alone found none of the fourteen, so a job
+       pointing into any shop on that street pinned nothing at all. */
+    const door = World.objects.find(x => (x.via || x.use) === link.via);
     if (!door) return false;
     this.set(door.x, door.y, what ? what + ' — this way' : door.name, null);
     this.sticky = true;

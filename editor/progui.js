@@ -260,33 +260,20 @@ const ProgUI = {
   },
 
   exportPane() {
-    const p = $('#paneExport');
     const d = Prog.def();
-    p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + '<option value="one">This one → data/items.js</option>'
-      + '<option value="all">The whole ' + esc(d.label) + ' table</option>'
-      + '<option value="changes">Change list</option>'
-      + '</select></span></label>'
-      + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="16" spellcheck="false" readonly wrap="off"></textarea>'
-      + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button></div>';
-    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
-    const render = () => {
-      if (sel.value === 'one') {
-        out.value = Emit.progEntry(Prog.kind, Prog.id, Prog.it);
-        note.textContent = 'One entry, ready to paste over the old one.';
-      } else if (sel.value === 'all') {
-        out.value = Emit.progTable(Prog.kind);
-        note.textContent = 'The whole table with this one as you have it. data/items.js lines its '
-          + 'columns up by hand; this does not.';
-      } else {
-        out.value = Emit.progChanges();
-        note.textContent = 'What you changed, so you can edit the entry rather than replace it.';
-      }
-    };
-    sel.onchange = render;
-    render();
-    Side.wireExport(p, out, () => Prog.kind + '-' + Prog.id + '.txt');
+    Side.exportChoices({
+      name: () => Prog.kind + '-' + Prog.id + '.txt',
+      choices: [
+        { v: 'one', label: 'This one &rarr; data/items.js',
+          src: () => Emit.progEntry(Prog.kind, Prog.id, Prog.it),
+          note: 'One entry, ready to paste over the old one.' },
+        { v: 'all', label: 'The whole ' + esc(d.label) + ' table',
+          src: () => Emit.progTable(Prog.kind),
+          note: 'The whole table with this one as you have it. data/items.js lines its '
+            + 'columns up by hand; this does not.' },
+        { v: 'changes', label: 'Change list',
+          src: () => Emit.progChanges(),
+          note: 'What you changed, so you can edit the entry rather than replace it.' }]
+    });
   }
 };

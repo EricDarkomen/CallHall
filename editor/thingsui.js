@@ -206,36 +206,22 @@ const ThingsUI = {
 
   /* ---- export ---- */
   exportPane() {
-    const p = $('#paneExport');
-    p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + '<option value="one">This kind → data/world.js</option>'
-      + '<option value="all">The whole FURN table</option>'
-      + '<option value="changes">Change list</option>'
-      + '</select></span></label>'
-      + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="16" spellcheck="false" readonly wrap="off"></textarea>'
-      + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button></div>';
-    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
-    const render = () => {
-      if (sel.value === 'one') {
-        out.value = Emit.furnEntry(Things.id, Things.furn);
-        note.textContent = 'One line of FURN. The table is keyed by `kind`, and the entries at '
-          + 'the end of it win the merge — which is how the sprites are added to kinds that '
-          + 'already had a size.';
-      } else if (sel.value === 'all') {
-        out.value = Emit.furnTable();
-        note.textContent = 'The whole table, with this kind as you have it. data/world.js writes '
-          + 'it with comments explaining each group; this does not, so paste a line rather than '
-          + 'the block unless you mean it.';
-      } else {
-        out.value = Emit.furnChanges();
-        note.textContent = 'What you changed, so you can edit the line rather than replace the '
-          + 'table.';
-      }
-    };
-    sel.onchange = render;
-    render();
-    Side.wireExport(p, out, () => Things.id + '.furn.txt');
+    Side.exportChoices({
+      name: () => Things.id + '.furn.txt',
+      choices: [
+        { v: 'one', label: 'This kind &rarr; data/world.js',
+          src: () => Emit.furnEntry(Things.id, Things.furn),
+          note: 'One line of FURN. The table is keyed by `kind`, and the entries at '
+            + 'the end of it win the merge — which is how the sprites are added to kinds that '
+            + 'already had a size.' },
+        { v: 'all', label: 'The whole FURN table',
+          src: () => Emit.furnTable(),
+          note: 'The whole table, with this kind as you have it. data/world.js writes '
+            + 'it with comments explaining each group; this does not, so paste a line rather than '
+            + 'the block unless you mean it.' },
+        { v: 'changes', label: 'Change list',
+          src: () => Emit.furnChanges(),
+          note: 'What you changed, so you can edit the line rather than replace the table.' }]
+    });
   }
 };

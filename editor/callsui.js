@@ -272,36 +272,23 @@ const CallsUI = {
 
   /* ---- export ---- */
   exportPane() {
-    const p = $('#paneExport');
     const d = Calls.def();
-    p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + '<option value="one">This one → data/callers.js</option>'
-      + '<option value="all">The whole ' + esc(d.label.toUpperCase()) + ' table</option>'
-      + '<option value="changes">Change list</option>'
-      + '</select></span></label>'
-      + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="16" spellcheck="false" readonly wrap="off"></textarea>'
-      + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button></div>';
-    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
-    const render = () => {
-      if (sel.value === 'one') {
-        out.value = Emit.callEntry(Calls.kind, Calls.id, Calls.it, Calls.code);
-        note.textContent = Calls.kind === 'move'
-          ? 'One entry. run() and show: are the source they came in as — this tool did not write '
-            + 'them and has not rewritten them.'
-          : 'One entry, ready to paste over the old one.';
-      } else if (sel.value === 'all') {
-        out.value = Emit.callTable(Calls.kind);
-        note.textContent = 'The whole table with this one as you have it. data/callers.js carries '
-          + 'comments this does not, so paste an entry rather than the block unless you mean it.';
-      } else {
-        out.value = Emit.callChanges();
-        note.textContent = 'What you changed, so you can edit the entry rather than replace it.';
-      }
-    };
-    sel.onchange = render;
-    render();
-    Side.wireExport(p, out, () => Calls.kind + '-' + Calls.id + '.txt');
+    Side.exportChoices({
+      name: () => Calls.kind + '-' + Calls.id + '.txt',
+      choices: [
+        { v: 'one', label: 'This one &rarr; data/callers.js',
+          src: () => Emit.callEntry(Calls.kind, Calls.id, Calls.it, Calls.code),
+          note: () => Calls.kind === 'move'
+            ? 'One entry. run() and show: are the source they came in as — this tool did not write '
+              + 'them and has not rewritten them.'
+            : 'One entry, ready to paste over the old one.' },
+        { v: 'all', label: 'The whole ' + esc(d.label.toUpperCase()) + ' table',
+          src: () => Emit.callTable(Calls.kind),
+          note: 'The whole table with this one as you have it. data/callers.js carries '
+            + 'comments this does not, so paste an entry rather than the block unless you mean it.' },
+        { v: 'changes', label: 'Change list',
+          src: () => Emit.callChanges(),
+          note: 'What you changed, so you can edit the entry rather than replace it.' }]
+    });
   }
 };

@@ -866,9 +866,6 @@ const Cars = {
     for (const p of Peds.list()) if (Math.hypot(p.x - px, p.y - py) < TILE * 1.15) return 'person';
     return null;
   },
-  /* Kept as the question everybody outside this file asks, and the one the
-     give-way lines in data/levels.js point at. */
-  aheadBlocked(car) { return !!this.blocker(car); },
 
   /* ---- getting in and out ---- */
 

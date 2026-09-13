@@ -168,18 +168,26 @@ const Check = {
      to it" and "there is floor next to it that you can reach" are different
      questions and only the second one matters. */
   reach() {
-    const bad = [];
-    Doc.objects.forEach((o, i) => {
-      if (!o.use) return;
+    const standable = o => {
       const sides = [[o.x, o.y - 1], [o.x, o.y + 1], [o.x - 1, o.y], [o.x + 1, o.y]];
       /* You can stand on a non-solid object's own tile, so it counts too. */
       if (!o.solid) sides.push([o.x, o.y]);
-      if (sides.some(([x, y]) => this.walkableAndReached(x, y))) return;
-      bad.push({ i: i, o: o });
+      return sides.some(([x, y]) => this.walkableAndReached(x, y));
+    };
+    /* Every `use` somebody can actually get to. TWO objects may be one thing:
+       the parade's doors sit IN the wall with the shop's sign on the tile
+       below, both carrying the same `use`, because pressing E on the door and
+       pressing E on the sign over it are the same act. Asking each object on
+       its own called sixteen shipped shopfronts unreachable — the act is read
+       every time. What matters is whether the HANDLER can be reached. */
+    const reachable = new Set();
+    Doc.objects.forEach(o => { if (o.use && standable(o)) reachable.add(o.use); });
+    Doc.objects.forEach((o, i) => {
+      if (!o.use || reachable.has(o.use)) return;
+      this.fault('error',
+        '“' + (o.name || o.kind) + '” cannot be reached — no tile beside it that anyone can stand on.',
+        [[o.x, o.y]], { obj: i });
     });
-    bad.forEach(b => this.fault('error',
-      '“' + (b.o.name || b.o.kind) + '” cannot be reached — no tile beside it that anyone can stand on.',
-      [[b.o.x, b.o.y]], { obj: b.i }));
   },
 
   /* ---- things on walls ----
@@ -244,10 +252,18 @@ const Check = {
         this.fault('error', 'Link “' + l.via + '” arrives at “' + l.entry
           + '”, which ' + l.to + ' does not declare.', []);
       }
-      if (!Doc.objects.some(o => o.use === l.via)) {
-        this.fault('warn', 'Link “' + l.via + '” has no object on this level with that `use`, '
-          + 'so there is no way to take it.', []);
-      }
+      /* THREE ways a link gets taken, and only the first is an object whose
+         handler IS the link. A door on the parade declares which link it is
+         with `via:` and keeps the shop's own handler, so one shop that moves
+         moves in one place; and a frontage with no door object at all — the
+         Greggs across the road — calls Levels.take() from inside its act.
+         Asking only the first called fourteen shipped doors unusable. */
+      if (Doc.objects.some(o => o.use === l.via || o.via === l.via)) return;
+      if (typeof Writing !== 'undefined'
+        && Writing.calls('Levels', 'take').some(c => c.id === l.via)) return;
+      this.fault('warn', 'Link “' + l.via + '” has no object on this level with that `use` or '
+        + '`via`, and nothing in the writing calls Levels.take(' + Emit.str(l.via) + '), '
+        + 'so there is no way to take it.', []);
     });
     /* There is deliberately no check the other way round — "this looks like a
        way out and has no link". The lift is exactly that and it is the joke:

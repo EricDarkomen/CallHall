@@ -537,35 +537,22 @@ const TalkUI = {
 
   /* ---- export ---- */
   exportPane() {
-    const p = $('#paneExport');
-    p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + '<option value="nodes">The nodes → data/npcs.js</option>'
-      + '<option value="person">The whole person</option>'
-      + '<option value="changes">Change list</option>'
-      + '</select></span></label>'
-      + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="18" spellcheck="false" readonly wrap="off"></textarea>'
-      + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button></div>';
-
-    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
-    const render = () => {
-      if (sel.value === 'nodes') {
-        out.value = Emit.talkNodes();
-        note.textContent = 'The nodes block, to paste over the old one. Every do(), if: and '
-          + 'code-written text comes back out exactly as it went in — this tool does not write '
-          + 'that code and will not pretend to.';
-      } else if (sel.value === 'person') {
-        out.value = Emit.talkPerson();
-        note.textContent = 'The whole entry for data/npcs.js. The desk, colour and schedule come '
-          + 'through as they were — they belong to the floor plan, not to this tab.';
-      } else {
-        out.value = Emit.talkChanges();
-        note.textContent = 'What you changed, node by node.';
-      }
-    };
-    sel.onchange = render;
-    render();
-    Side.wireExport(p, out, () => Talk.id + '.' + sel.value + '.txt');
+    Side.exportChoices({
+      rows: 18,
+      name: v => Talk.id + '.' + v + '.txt',
+      choices: [
+        { v: 'nodes', label: 'The nodes &rarr; data/npcs.js',
+          src: () => Emit.talkNodes(),
+          note: 'The nodes block, to paste over the old one. Every do(), if: and '
+            + 'code-written text comes back out exactly as it went in — this tool does not write '
+            + 'that code and will not pretend to.' },
+        { v: 'person', label: 'The whole person',
+          src: () => Emit.talkPerson(),
+          note: 'The whole entry for data/npcs.js. The desk, colour and schedule come '
+            + 'through as they were — they belong to the floor plan, not to this tab.' },
+        { v: 'changes', label: 'Change list',
+          src: () => Emit.talkChanges(),
+          note: 'What you changed, node by node.' }]
+    });
   }
 };

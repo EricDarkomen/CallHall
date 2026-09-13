@@ -185,10 +185,6 @@ const Arcade = {
     return this.wiring().filter(c => c.use === use && this.has(c.game)
       && (!c.need || G.flags[c.need]));
   },
-  /* And the other way: everywhere one game is installed, gates ignored —
-     this is the question "is this game reachable at all", which is about the
-     table rather than about the shift. */
-  installed(game) { return this.wiring().filter(c => c.game === game); },
   cabinet(game, use) {
     return this.wiring().filter(c => c.game === game && (use === undefined || c.use === use))[0] || null;
   },
