@@ -264,32 +264,19 @@ const ZonesUI = {
   },
 
   exportPane() {
-    const p = $('#paneExport');
-    p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + '<option value="one">This room type → data/world.js</option>'
-      + '<option value="all">The whole ZONES table</option>'
-      + '<option value="changes">Change list</option>'
-      + '</select></span></label>'
-      + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="16" spellcheck="false" readonly wrap="off"></textarea>'
-      + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button></div>';
-    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
-    const render = () => {
-      if (sel.value === 'one') {
-        out.value = Emit.zoneEntry(Zones.id, Zones.z);
-        note.textContent = 'One line of ZONES, ready to paste over the old one.';
-      } else if (sel.value === 'all') {
-        out.value = Emit.zoneTable();
-        note.textContent = 'The whole table with this one as you have it. data/world.js lines its '
-          + 'columns up by hand and carries a comment about the outdoor zones; this does not.';
-      } else {
-        out.value = Emit.zoneChanges();
-        note.textContent = 'What you changed, so you can edit the line rather than replace the table.';
-      }
-    };
-    sel.onchange = render;
-    render();
-    Side.wireExport(p, out, () => Zones.id + '.zone.txt');
+    Side.exportChoices({
+      name: () => Zones.id + '.zone.txt',
+      choices: [
+        { v: 'one', label: 'This room type &rarr; data/world.js',
+          src: () => Emit.zoneEntry(Zones.id, Zones.z),
+          note: 'One line of ZONES, ready to paste over the old one.' },
+        { v: 'all', label: 'The whole ZONES table',
+          src: () => Emit.zoneTable(),
+          note: 'The whole table with this one as you have it. data/world.js lines its '
+            + 'columns up by hand and carries a comment about the outdoor zones; this does not.' },
+        { v: 'changes', label: 'Change list',
+          src: () => Emit.zoneChanges(),
+          note: 'What you changed, so you can edit the line rather than replace the table.' }]
+    });
   }
 };

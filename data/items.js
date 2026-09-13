@@ -324,8 +324,8 @@ const ACHS = {
    It is a TABLE rather than four hand-written dialogue choices because that is
    the only form the editor can add to, edit and take away from — a minigame
    bound to an object in code is one the tool can describe and never change.
-   Acts._cab() turns these into the replies, so the PROSE stays in data/acts.js
-   where the writing lives and only the wiring is data.
+   cab() at the top of data/acts.js turns these into the replies, so the PROSE
+   stays there with the rest of the writing and only the wiring is data.
 
    Every one of those six joins fails silently and each fails differently: a
    `use` nothing handles is a reply that never appears, a `skill` that is not

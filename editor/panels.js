@@ -862,71 +862,96 @@ const Side = {
 
   /* ---- export ---- */
   exportPane() {
-    const p = $('#paneExport');
     const shared = Emit.usesSharedDefs();
     const flat = Emit.flatIsSafe();
     /* The whole entry is only honest where a flat furnish() is faithful and the
        floor plan is the level's own — which is exactly the case for a level
        invented here, and for the flat ones that already exist. */
     const whole = flat && !shared;
+    Side.exportChoices({
+      rows: 18,
+      name: v => Doc.id + '.' + v + '.txt',
+      /* Four of the six are conditional, which is what a filtered list of
+         choices is for: an option that cannot say anything true about this
+         level is not offered rather than offered and hedged. */
+      choices: [
+        whole && { v: 'entry', label: 'Whole entry &rarr; data/levels.js',
+          src: () => Emit.levelEntry(),
+          note: 'The complete catalogue entry — drop it into `const LEVELS = { … }` '
+            + 'in data/levels.js. A level created here exists in this tab and nowhere else until '
+            + 'you do.' },
+        { v: 'geometry', label: 'Geometry &rarr; data/levels.js',
+          src: () => Emit.geometry(),
+          note: 'The data half of this level’s entry. Literal in the file and '
+            + 'literal here, so it pastes straight over the old block.'
+            + (shared ? ' The floor plan itself is a reference to data/world.js — export that separately.' : '') },
+        shared && { v: 'plan', label: 'Floor plan &rarr; data/world.js',
+          src: () => Emit.roomDefs() + '\n' + Emit.doorDefs(),
+          note: 'ROOM_DEFS and DOOR_DEFS, for data/world.js. This level names them '
+            + 'rather than carrying its own copy.' },
+        Object.keys(Doc.waypoints).length && { v: 'wp', label: 'Waypoints &rarr; data/world.js',
+          src: () => Emit.waypointDefs(),
+          note: 'The WP table, for data/world.js. The NPC schedules in data/npcs.js '
+            + 'name these by key, so moving one is safe and renaming one is not.' },
+        { v: 'furnish', label: 'Whole furnish() &rarr; data/levels.js',
+          src: () => Emit.furnish(),
+          note: flat
+            ? 'A whole furnish(). This level’s furniture is a flat list already, so this is a '
+              + 'faithful replacement.'
+            : '⚠ This level builds its furniture with loops and explains itself in comments. '
+              + 'Pasting this would replace all of that with one line per object. Use the change '
+              + 'list instead unless you mean it.' },
+        { v: 'changes', label: 'Change list',
+          src: () => Emit.changeText(),
+          note: 'What you changed, so you can edit the source rather than regenerate it.' }
+      ].filter(Boolean)
+    });
+  },
+
+  /* Copy and Download, under every export pane. Copy is the affordance that
+     matters — it works everywhere — and Download is the one thing that differs
+     by where this page is being served from. */
+  /* THE EXPORT PANE, which is the same pane nine times.
+     Every document ends at the same place — a `what` select, a note under it,
+     a read-only textarea and Copy/Download — and the only thing that differs
+     between them is WHICH sources the select is choosing between. That was
+     nine copies of the same markup and the same render/onchange wiring, which
+     is nine places for the textarea to grow a row or the buttons to change
+     and eight of them to be missed.
+
+     A document now declares its choices and nothing else:
+
+       choices  [{ v, label, src(), note }]  — `label` is HTML, so a caller
+                that interpolates anything escapes it, exactly as before
+       name     (value) => the download's filename
+       rows     the textarea's height, where 16 is not what it wanted
+       buttons  extra buttons inside the row, wired by the caller afterwards
+       after    anything below the buttons
+
+     Returns the pane, so a caller with an extra button has something to hang
+     it on. */
+  exportChoices(opts) {
+    const p = $('#paneExport');
+    const choices = opts.choices;
     p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + (whole ? '<option value="entry">Whole entry → data/levels.js</option>' : '')
-      + '<option value="geometry">Geometry → data/levels.js</option>'
-      + (shared ? '<option value="plan">Floor plan → data/world.js</option>' : '')
-      + (Object.keys(Doc.waypoints).length ? '<option value="wp">Waypoints → data/world.js</option>' : '')
-      + '<option value="furnish">Whole furnish() → data/levels.js</option>'
-      + '<option value="changes">Change list</option>'
+      + choices.map(c => '<option value="' + c.v + '">' + c.label + '</option>').join('')
       + '</select></span></label>'
       + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="18" spellcheck="false" readonly wrap="off"></textarea>'
+      + '<textarea id="edOut2" class="code" rows="' + (opts.rows || 16) + '" spellcheck="false" readonly wrap="off"></textarea>'
       + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button></div>';
-
-    const sel = $('#edWhat');
-    const out = $('#edOut2');
-    const note = $('#edWhatNote');
+      + '<button data-a="dl">Download</button>' + (opts.buttons || '') + '</div>'
+      + (opts.after || '');
+    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
     const render = () => {
-      const what = sel.value;
-      if (what === 'entry') {
-        out.value = Emit.levelEntry();
-        note.textContent = 'The complete catalogue entry — drop it into `const LEVELS = { … }` '
-          + 'in data/levels.js. A level created here exists in this tab and nowhere else until '
-          + 'you do.';
-      } else if (what === 'geometry') {
-        out.value = Emit.geometry();
-        note.textContent = 'The data half of this level’s entry. Literal in the file and '
-          + 'literal here, so it pastes straight over the old block.'
-          + (shared ? ' The floor plan itself is a reference to data/world.js — export that separately.' : '');
-      } else if (what === 'plan') {
-        out.value = Emit.roomDefs() + '\n' + Emit.doorDefs();
-        note.textContent = 'ROOM_DEFS and DOOR_DEFS, for data/world.js. This level names them '
-          + 'rather than carrying its own copy.';
-      } else if (what === 'wp') {
-        out.value = Emit.waypointDefs();
-        note.textContent = 'The WP table, for data/world.js. The NPC schedules in data/npcs.js '
-          + 'name these by key, so moving one is safe and renaming one is not.';
-      } else if (what === 'furnish') {
-        out.value = Emit.furnish();
-        note.textContent = flat
-          ? 'A whole furnish(). This level’s furniture is a flat list already, so this is a '
-            + 'faithful replacement.'
-          : '⚠ This level builds its furniture with loops and explains itself in comments. '
-            + 'Pasting this would replace all of that with one line per object. Use the change '
-            + 'list instead unless you mean it.';
-      } else {
-        out.value = Emit.changeText();
-        note.textContent = 'What you changed, so you can edit the source rather than regenerate it.';
-      }
+      const c = choices.filter(x => x.v === sel.value)[0] || choices[0];
+      out.value = c.src();
+      note.textContent = typeof c.note === 'function' ? c.note() : c.note;
     };
     sel.onchange = render;
     render();
-
-    this.wireExport(p, out, () => Doc.id + '.' + sel.value + '.txt');
+    this.wireExport(p, out, () => opts.name(sel.value));
+    return p;
   },
-
-  /* Copy and Download, for all three export panes. Copy is the affordance that
-     matters — it works everywhere — and Download is the one thing that differs
-     by where this page is being served from. */
   wireExport(p, out, name) {
     p.querySelector('[data-a="copy"]').onclick = () => {
       out.select();

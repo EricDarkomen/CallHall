@@ -316,42 +316,29 @@ const GamesUI = {
      hooks verbatim — and, separately, the two lines in engine/arcade.js and
      index.html without which the file is never loaded and never registered. */
   exportPane() {
-    const p = $('#paneExport');
-    p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + '<option value="file">This game → minigames/' + esc(Games.id || 'x') + '.js</option>'
-      + '<option value="cabs">Where they are played → data/items.js</option>'
-      + '<option value="wire">Wiring it up → arcade.js, index.html, acts.js</option>'
-      + '<option value="changes">Change list</option>'
-      + '</select></span></label>'
-      + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="18" spellcheck="false" readonly wrap="off"></textarea>'
-      + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button></div>';
-    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
-    const render = () => {
-      if (sel.value === 'file') {
-        out.value = Emit.gameFile();
-        note.textContent = 'The whole file. Everything you edited here is rewritten; every '
-          + 'hook is the source exactly as it was captured, because this tool cannot write '
-          + 'that half and must not pretend to.';
-      } else if (sel.value === 'cabs') {
-        out.value = Emit.cabinetTable();
-        note.textContent = 'The whole CABINETS table, with every game as you have it here — '
-          + 'the ones on the bench included. It is one table and the rows for a game are not '
-          + 'next to each other in it, so this replaces the block rather than adding a line.';
-      } else if (sel.value === 'wire') {
-        out.value = Emit.gameWiring();
-        note.textContent = 'A file in minigames/ that nothing loads and nothing names is a '
-          + 'game that does not exist. Three places: the script tag, the catalogue, and the '
-          + 'act that opens it.';
-      } else {
-        out.value = Emit.gameChanges();
-        note.textContent = 'What you changed, so you can edit the declaration rather than '
-          + 'replace the file.';
-      }
-    };
-    sel.onchange = render;
-    render();
-    Side.wireExport(p, out, () => (Games.id || 'game') + '.js');
+    Side.exportChoices({
+      rows: 18,
+      name: () => (Games.id || 'game') + '.js',
+      choices: [
+        { v: 'file', label: 'This game &rarr; minigames/' + esc(Games.id || 'x') + '.js',
+          src: () => Emit.gameFile(),
+          note: 'The whole file. Everything you edited here is rewritten; every '
+            + 'hook is the source exactly as it was captured, because this tool cannot write '
+            + 'that half and must not pretend to.' },
+        { v: 'cabs', label: 'Where they are played &rarr; data/items.js',
+          src: () => Emit.cabinetTable(),
+          note: 'The whole CABINETS table, with every game as you have it here — '
+            + 'the ones on the bench included. It is one table and the rows for a game are not '
+            + 'next to each other in it, so this replaces the block rather than adding a line.' },
+        { v: 'wire', label: 'Wiring it up &rarr; arcade.js, index.html, acts.js',
+          src: () => Emit.gameWiring(),
+          note: 'A file in minigames/ that nothing loads and nothing names is a '
+            + 'game that does not exist. Three places: the script tag, the catalogue, and the '
+            + 'act that opens it.' },
+        { v: 'changes', label: 'Change list',
+          src: () => Emit.gameChanges(),
+          note: 'What you changed, so you can edit the declaration rather than '
+            + 'replace the file.' }]
+    });
   }
 };

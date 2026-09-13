@@ -250,29 +250,17 @@ const OfficeUI = {
   },
 
   exportPane() {
-    const p = $('#paneExport');
-    p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + '<option value="one">This one → data/office.js</option>'
-      + '<option value="all">The whole table it is in</option>'
-      + '</select></span></label>'
-      + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="16" spellcheck="false" readonly wrap="off"></textarea>'
-      + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button></div>';
-    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
-    const render = () => {
-      if (sel.value === 'one') {
-        out.value = Emit.officeEntry(Office.kind, Office.id, Office.it, Office.code);
-        note.textContent = Office.kind === 'event'
-          ? 'go() is the source it came in as — this tool did not write it and has not rewritten it.'
-          : 'One entry, ready to paste over the old one.';
-      } else {
-        out.value = Emit.officeTable(Office.kind);
-        note.textContent = 'The whole table with this one as you have it.';
-      }
-    };
-    sel.onchange = render;
-    render();
-    Side.wireExport(p, out, () => Office.kind + '-' + String(Office.id).replace(/[^\w-]/g, '') + '.txt');
+    Side.exportChoices({
+      name: () => Office.kind + '-' + String(Office.id).replace(/[^\w-]/g, '') + '.txt',
+      choices: [
+        { v: 'one', label: 'This one &rarr; data/office.js',
+          src: () => Emit.officeEntry(Office.kind, Office.id, Office.it, Office.code),
+          note: () => Office.kind === 'event'
+            ? 'go() is the source it came in as — this tool did not write it and has not rewritten it.'
+            : 'One entry, ready to paste over the old one.' },
+        { v: 'all', label: 'The whole table it is in',
+          src: () => Emit.officeTable(Office.kind),
+          note: 'The whole table with this one as you have it.' }]
+    });
   }
 };

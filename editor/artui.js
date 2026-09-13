@@ -433,44 +433,35 @@ const ArtUI = {
     const p = $('#paneExport');
     const s = Art.sheet();
     if (!s) { p.innerHTML = '<p class="empty">Nothing imported yet.</p>'; return; }
-    p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + '<option value="sheet">The manifest entry</option>'
-      + '<option value="credits">The credit, for art/CREDITS.md</option>'
-      + '<option value="licence">The line for LICENSE part 2</option>'
-      + '</select></span></label>'
-      + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="14" spellcheck="false" readonly wrap="off"></textarea>'
-      + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button>'
-      + '<button data-a="png" class="primary">Download the PNG</button></div>'
-      + (ArtCheck.usable() ? '' : '<div class="note bad">This sheet cannot be shipped as it '
+    Side.exportChoices({
+      rows: 14,
+      name: v => s.id + '.' + v + '.txt',
+      /* The one document with a third button, because the PNG is half of what
+         this tab produces and a manifest entry without it is a list of rects
+         describing nothing. */
+      buttons: '<button data-a="png" class="primary">Download the PNG</button>',
+      after: (ArtCheck.usable() ? '' : '<div class="note bad">This sheet cannot be shipped as it '
         + 'stands — see the Check tab. The export is here so you can see what it would say.</div>')
-      + '<div class="note">art/sprites/manifest.js is <b>build output</b>: '
-      + '<code>tools/build-sprites.mjs</code> writes it, and the rects and the pixels are only '
-      + 'ever correct together — which is why each sheet carries a hash of its own bytes. Pasting '
-      + 'this in works until the next build erases it, so a sheet that is staying belongs in that '
-      + 'script’s own inputs. Put the PNG at <code>' + esc(Art.path(s)) + '</code>.</div>';
-
-    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
-    const render = () => {
-      if (sel.value === 'sheet') {
-        out.value = Emit.artSheet(s);
-        note.textContent = 'One entry for SPRITE_ATLAS.sheets. `src` is the path the PNG has to '
-          + 'end up at, not the data: URI it is being previewed from — and there is no `v`, '
-          + 'because that hash is of the file’s bytes and there is no file yet.';
-      } else if (sel.value === 'credits') {
-        out.value = Emit.artCredit(s);
-        note.textContent = 'OGA-BY requires the attribution and the licence text to travel with '
-          + 'the art, which is why both are in LICENSE part 2.';
-      } else {
-        out.value = Emit.artLicence(s);
-        note.textContent = 'LICENSE part 1 is defined as everything except the files part 2 '
-          + 'lists, so that list is the authority and has to stay accurate.';
-      }
-    };
-    sel.onchange = render;
-    render();
-    Side.wireExport(p, out, () => s.id + '.' + sel.value + '.txt');
+        + '<div class="note">art/sprites/manifest.js is <b>build output</b>: '
+        + '<code>tools/build-sprites.mjs</code> writes it, and the rects and the pixels are only '
+        + 'ever correct together — which is why each sheet carries a hash of its own bytes. Pasting '
+        + 'this in works until the next build erases it, so a sheet that is staying belongs in that '
+        + 'script’s own inputs. Put the PNG at <code>' + esc(Art.path(s)) + '</code>.</div>',
+      choices: [
+        { v: 'sheet', label: 'The manifest entry',
+          src: () => Emit.artSheet(s),
+          note: 'One entry for SPRITE_ATLAS.sheets. `src` is the path the PNG has to '
+            + 'end up at, not the data: URI it is being previewed from — and there is no `v`, '
+            + 'because that hash is of the file’s bytes and there is no file yet.' },
+        { v: 'credits', label: 'The credit, for art/CREDITS.md',
+          src: () => Emit.artCredit(s),
+          note: 'OGA-BY requires the attribution and the licence text to travel with '
+            + 'the art, which is why both are in LICENSE part 2.' },
+        { v: 'licence', label: 'The line for LICENSE part 2',
+          src: () => Emit.artLicence(s),
+          note: 'LICENSE part 1 is defined as everything except the files part 2 '
+            + 'lists, so that list is the authority and has to stay accurate.' }]
+    });
     p.querySelector('[data-a="png"]').onclick = () => this.savePng(s);
   },
   /* The pixels back out as a file. The data: URI is base64 already, so this is

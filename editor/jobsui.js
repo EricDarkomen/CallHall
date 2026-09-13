@@ -218,34 +218,21 @@ const JobsUI = {
 
   /* ---- export ---- */
   exportPane() {
-    const p = $('#paneExport');
-    p.innerHTML = '<label class="frow"><span>what</span><span><select id="edWhat">'
-      + '<option value="one">This job → data/items.js</option>'
-      + '<option value="all">The whole QUESTS table</option>'
-      + '<option value="changes">Change list</option>'
-      + '</select></span></label>'
-      + '<div class="note" id="edWhatNote"></div>'
-      + '<textarea id="edOut2" class="code" rows="18" spellcheck="false" readonly wrap="off"></textarea>'
-      + '<div class="btns"><button data-a="copy">Copy</button>'
-      + '<button data-a="dl">Download</button></div>';
-
-    const sel = $('#edWhat'), out = $('#edOut2'), note = $('#edWhatNote');
-    const render = () => {
-      if (sel.value === 'one') {
-        out.value = Emit.questEntry(Jobs.id, Jobs.def());
-        note.textContent = 'One entry, indented to sit inside `const QUESTS = { … }`. A job is '
-          + 'pure data, so this round-trips exactly — there is no procedural half to lose.';
-      } else if (sel.value === 'all') {
-        out.value = Emit.questTable();
-        note.textContent = 'The whole table, with this job as you have it and every other one as '
-          + 'the file already has it.';
-      } else {
-        out.value = Emit.jobChanges();
-        note.textContent = 'What you changed, if you would rather edit the entry than replace it.';
-      }
-    };
-    sel.onchange = render;
-    render();
-    Side.wireExport(p, out, () => Jobs.id + '.' + sel.value + '.txt');
+    Side.exportChoices({
+      rows: 18,
+      name: v => Jobs.id + '.' + v + '.txt',
+      choices: [
+        { v: 'one', label: 'This job &rarr; data/items.js',
+          src: () => Emit.questEntry(Jobs.id, Jobs.def()),
+          note: 'One entry, indented to sit inside `const QUESTS = { … }`. A job is '
+            + 'pure data, so this round-trips exactly — there is no procedural half to lose.' },
+        { v: 'all', label: 'The whole QUESTS table',
+          src: () => Emit.questTable(),
+          note: 'The whole table, with this job as you have it and every other one as '
+            + 'the file already has it.' },
+        { v: 'changes', label: 'Change list',
+          src: () => Emit.jobChanges(),
+          note: 'What you changed, if you would rather edit the entry than replace it.' }]
+    });
   }
 };
