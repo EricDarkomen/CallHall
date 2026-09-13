@@ -357,27 +357,46 @@ each of them now, and a sign on it that says ROAD ENDS and, underneath in a
 different decade, RIVER BELLHAVEN — DEEP WATER. Two hundred years ago this was a
 ford and the road went straight on into it. The road still goes straight on.
 
-**The doors.** Every door in this game — office, flat, shop, cathedral — was the
-same leaf standing ajar at forty-five degrees, hinged out onto whatever was in
-front of it. Indoors that is right and it is what the kit drew it for. On a
-parade of twenty shopfronts it was twenty copies of one sticker lying across
-the pavement.
+**The doors open.** `15 Panel Door A` is not a door, it is a fourteen-frame
+SWING in eight wood tones — and every door in this game used to be frame eleven
+of it, standing at forty-five degrees, for ever. A door caught mid-open and
+left there, twenty times along one parade.
 
-The kit had the answer and nothing had asked for it: `15 Panel Door A` is a
-fourteen-frame swing in eight wood tones, and the frames nobody was using are
-the ones where the leaf is square to the wall. An **exit** — a way out of a
-building — is now drawn as a door IN a wall, in four tones picked off the tile;
-a **door** — inside one — keeps the swing. And the two frames say something:
-**ajar means you can go in, shut means you cannot.** Seventeen of the town's
-frontages have no interior behind them and every one of them was wearing the
-same wide-open door as the five that do.
+Four frames of it are cropped per tone now, from shut and flat in its own
+opening round to wide, and `R.swingDoors()` runs them: a shop door opens when
+you walk within a tile and a half of it and closes a little slower behind you,
+at a fixed rate so it takes the same third of a second whatever the frame rate
+is doing. Only for a unit with something behind it — **seventeen of the town's
+frontages have no interior**, and the cash and carry does not open for anybody.
 
-**The windows.** `shopwin` was the office's `wall.mirror` — thirty-two by
-twenty-three of landscape glass with a diagonal across it, chosen because the
-sash window in the atlas "read as a terraced house". At a fifth of the wall it
-was on, it read as a mirror. It is `shop.window` now, which is what it was
-always for: tall, in a frame, filling the frontage — and it has a **lit**
-variant, so the parade comes on at dusk with the rest of the town.
+The frames are padded into one box to make that work. Upstream's get narrower
+and taller as the door turns away from you, and they are drawn hinged on the
+left; blit them centred, the way everything else is, and the door does not
+swing, it shrinks into its own middle and grows out of the floor.
+
+**The windows are shopfronts.** `shopwin` has been wrong twice: first the
+office's `wall.mirror`, which on a two-tile wall read as exactly what it was,
+then a tall sash off a castle-window sheet, which filled the wall and read as
+the front of a terraced house — because a sash IS the front of a terraced
+house. Neither kit had a shopfront in it. One does now
+(`tools/sheets/frontage.mjs`): two tiles across, mullioned, on a stall riser,
+with a painted timber frame and a lintel, in **four colourways picked off the
+tile** so no two units in a row wear the same paint.
+
+**And the light is drawn, not swapped.** The parade used to come on at dusk by
+exchanging every window for a second copy of itself with yellow behind the
+panes: one hard-coded brightness, no falloff, and a sheet carrying two of every
+window so that one of them could be on. `R.lamps()` draws it now, as what a lit
+window actually is — a warm room seen through glass, brightest at the middle of
+the pane — which works on any window in any colourway, and let three of the
+four arrive for free. The same tile hash decides whose lights are on, so a
+parade at eight o'clock is twenty units lit and ten dark.
+
+The doorways do the other half. How much light comes out of one is a function
+of how far its door is open: a shut shop with its lights on leaks a line round
+the leaf, and the same shop with the door swinging back **throws a wedge of its
+own inside across the pavement** — a slot-shaped light, because a doorway is a
+slot. Walking up a parade at night is worth doing now.
 
 **Three things join the two halves,** and between them they are the whole shape of
 this map: two road bridges over the railway — Cargate Lane and Marlow Street — and

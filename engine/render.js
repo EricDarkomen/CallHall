@@ -149,8 +149,14 @@ const R = {
      floorTile() asks of SURFACES.grass, asked of FURN.tree, and asked in one
      place so the next seasonal object is a table entry rather than a branch
      in the draw. */
-  spriteOf(f) {
+  spriteOf(f, o) {
     if (!f) return undefined;
+    /* A ROW OF SHOPS IS NOT ONE SHOP DRAWN ELEVEN TIMES. `tones` is a list of
+       colourways of the same object and the tile picks between them — the same
+       hash the doors use, so a unit's glass and its door were painted by the
+       same person in the same decade. Seeded off the tile rather than shuffled,
+       so nothing changes colour when the camera moves. */
+    if (f.tones && o) return f.tones[this.toneOf(o.x, o.y) % f.tones.length];
     /* Lit from inside, once the streetlights are on. The same idea as the
        seasonal swap below and a different axis of it: a shop is not a
        different shop after dark, it is the same shop with the lights on. Only
@@ -1429,18 +1435,55 @@ const R = {
      when the camera moves, and mixed with the door's own row so two shops side
      by side do not draw the same tone. */
   SHOP_TONES: ['pine', 'oak', 'walnut', 'olive'],
+  /* WHICH PAINT THIS UNIT WAS DONE IN. Off the tile, so it is the same every
+     frame and no two doors in a row match, and the same hash the windows use so
+     a shop's door and its glass are not decided by two different coin flips. */
+  toneOf(x, y) { return ((x * 2654435761 ^ y * 40503) >>> 13) & 3; },
   kitDoor(d) {
     if (!Tiles.ready || d.axis !== 'h') return null;
     /* An EXIT is a way out of a building and is drawn as a door in a wall. A
-       DOOR is a door inside one and keeps the swing, which is what the kit drew
-       it for and what a corridor wants. */
+       DOOR is a door inside one and keeps the swing the kit drew it for, which
+       is what a corridor wants and what R.doorways() has always given it. */
     if (d.kind === 'exit') {
-      const tone = this.SHOP_TONES[((d.x * 2654435761 ^ d.y * 40503) >>> 13) & 3];
-      const n = 'door.front.' + (d.shop ? 'ajar.' : '') + tone;
+      const tone = this.SHOP_TONES[this.toneOf(d.x, d.y)];
+      /* Four frames, and `a` is how far through them this door is: 0 shut,
+         1 wide. Rounded rather than lerped, because pixel art does not
+         interpolate and four frames is enough swing to read as one. */
+      const f = Math.min(3, Math.round((d.a || 0) * 3));
+      const n = 'door.shop.' + tone + '.' + f;
       if (Tiles.has(n)) return n;
     }
     const n = d.locked ? 'door.shut.locked' : d.solid ? 'door.shut' : 'door.open';
     return Tiles.has(n) ? n : null;
+  },
+  /* HOW OPEN EVERY DOOR IS, advanced once a frame before anything draws one.
+
+     A door opens because somebody is walking up to it, which is the only reason
+     a door in a shop front ever opens. `want` is 1 within a tile and a half of
+     the threshold and 0 beyond two — a band rather than a line, so standing on
+     the edge of it does not make the door flap — and only for a unit with
+     something behind it. The cash and carry does not open for anybody.
+
+     Eased at a fixed rate rather than lerped by a fraction, so a door takes the
+     same third of a second to open whatever the frame rate is doing, and shuts
+     a little slower than it opens because that is what a closer does. */
+  swingDoors(dt) {
+    const list = World.doorways; if (!list) return;
+    const px = P ? P.x / TILE : -99, py = P ? P.y / TILE : -99;
+    for (const d of list) {
+      if (d.kind !== 'exit') continue;
+      const open = d.shop && d.into && ZONES[d.into];
+      let want = 0;
+      if (open) {
+        const dx = px - (d.x + .5), dy = py - (d.y + .5);
+        const r = Math.hypot(dx, dy);
+        want = r < 1.5 ? 1 : r < 2.2 ? (2.2 - r) / .7 : 0;
+      }
+      const a = d.a || 0;
+      const rate = want > a ? 3.4 : 2.1;
+      const step = rate * Math.min(dt || .016, .05);
+      d.a = want > a ? Math.min(want, a + step) : Math.max(want, a - step);
+    }
   },
   /* WHICH JAMB IT IS HUNG ON. The far half of a two-tile opening is the other
      leaf of a pair, so it is hinged on the other side and mirrored — that one
@@ -1466,7 +1509,7 @@ const R = {
          is drawn in the wall. Not flipped either: a mirrored hinge is a
          variation on a leaf you can see the hinge side of, and on a flat one it
          is the same twenty-six pixels reversed. */
-      if (n.startsWith('door.front')) {
+      if (n.startsWith('door.shop')) {
         /* Stood on the shop's threshold rather than centred on anything: the
            two leaves are different heights (a shut one is twenty-six pixels of
            door seen flat, an ajar one thirty-four), and hanging both from the
@@ -1474,8 +1517,11 @@ const R = {
            parade. What has to line up is the bottom edge, which is the step,
            and that sits where the shop window's does — see `shopwin` in
            data/world.js and the `high` it is hung at. */
+        /* One box for all four frames now, so one lift for all four: the box
+           is bottom-aligned on the threshold, which is where the leaf's foot
+           is in every frame of the swing. */
         const r = Tiles.rects && Tiles.rects[n];
-        const lift = (r ? r[3] : 26) / 2 - 11;
+        const lift = (r ? r[3] : 42) / 2 - 19;
         Tiles.draw(c, n, (d.x + .5) * TILE, (d.y + .5) * TILE - lift);
       } else {
         Tiles.draw(c, n, (d.x + .5) * TILE, (d.y + .5) * TILE - TILE * .18, this.doorFlip(d, list));
@@ -1740,13 +1786,85 @@ const R = {
       if (!d.into || !ZONES[d.into]) continue;
       if (d.x < x0 - 2 || d.x > x1 + 2 || d.y < y0 - 2 || d.y > y1 + 2) continue;
       const op = this.doorOpening(d, doors); if (!op) continue;
+      /* THE LIGHT IN THE OPENING, and how much of it there is depends on how
+         far the door is open. A shut shop with its lights on leaks a line of
+         light round the leaf and nothing else; the same shop with the door
+         swinging back throws the whole of its inside out at you. `a` is the
+         swing, set by R.swingDoors() before anything drew today's frame. */
+      const a = d.a || 0;
+      const lit = .18 + a * .82;
       const warm = c.createLinearGradient(0, op.py, 0, op.py + TILE);
       warm.addColorStop(0, 'rgba(255,206,140,0)');
-      warm.addColorStop(.4, 'rgba(255,206,140,.22)');
-      warm.addColorStop(1, 'rgba(255,220,164,.62)');
+      warm.addColorStop(.4, 'rgba(255,206,140,' + (.22 * lit).toFixed(3) + ')');
+      warm.addColorStop(1, 'rgba(255,220,164,' + (.62 * lit).toFixed(3) + ')');
       c.globalAlpha = night;
       c.fillStyle = warm;
       c.fillRect(op.x, op.y, op.w, op.h);
+      /* AND THE SPILL, which is the half nobody had. Light does not stop at a
+         threshold: an open door lays a patch of its own inside out across the
+         pavement in front of it, and that patch is the thing you see from down
+         the street long before you can see the shop. Drawn as a wedge widening
+         away from the opening rather than as a circle — a doorway is a slot and
+         a slot throws a slot-shaped light — and only when the door is actually
+         open, which is what makes walking up to a shop at night worth doing. */
+      if (a > .02) {
+        const cx = op.x + op.w / 2, ty = op.py + TILE;
+        const reach = TILE * (0.5 + a * 1.45);
+        const half = op.w / 2;
+        const spill = c.createLinearGradient(0, ty, 0, ty + reach);
+        spill.addColorStop(0, 'rgba(255,214,150,' + (.30 * a).toFixed(3) + ')');
+        spill.addColorStop(.45, 'rgba(255,214,150,' + (.12 * a).toFixed(3) + ')');
+        spill.addColorStop(1, 'rgba(255,214,150,0)');
+        c.globalAlpha = night;
+        c.fillStyle = spill;
+        c.beginPath();
+        c.moveTo(cx - half, ty);
+        c.lineTo(cx + half, ty);
+        c.lineTo(cx + half + reach * .36, ty + reach);
+        c.lineTo(cx - half - reach * .36, ty + reach);
+        c.closePath(); c.fill();
+      }
+    }
+    /* THE GLASS, lit from inside, and this is drawn rather than swapped for.
+       The parade used to come on at dusk by exchanging every window sprite for
+       a second copy of itself with yellow paint behind the panes, which meant
+       one hard-coded brightness, no falloff, and a sheet carrying two of every
+       window so that one of them could be on. What a lit shop window actually
+       is, is the room behind it seen through glass: warm, brightest at the
+       middle of the pane, and dimmer at the frame where the reveal is. That is
+       a gradient, it costs nothing, and it works on any window sprite in any
+       colourway — including the three this town has changed its glass for.
+
+       Not every unit: the same tile hash that picks a shop's paint decides
+       whether its lights are on, so a parade at eight o'clock is most of it
+       lit and two of them dark, which is what a parade at eight o'clock is. */
+    for (const o of (World.objects || [])) {
+      if (o.kind !== 'shopwin') continue;
+      if (o.x < x0 - 2 || o.x > x1 + 2 || o.y < y0 - 2 || o.y > y1 + 2) continue;
+      if ((this.toneOf(o.x * 3, o.y * 7) & 3) === 1) continue;      /* this one is shut */
+      /* North walls only, for the reason the object pass gives: the kit draws a
+         wall item face-on and north is the only side this projection shows you
+         the face of. Anywhere else the window is already falling back to an
+         emoji and there is no glass to light. */
+      if (o.mount !== 'wall' || o.wallSide !== 'n') continue;
+      const f = o.fdef || FURN[o.kind] || {};
+      const n = this.spriteOf(f, o), r = n && Tiles.rects && Tiles.rects[n];
+      if (!r) continue;
+      /* Where the sprite lands — the same sum the object pass does, so the
+         light is in the glass and not beside it. */
+      const cx = (o.x + .5) * TILE;
+      const cy = (o.y + .5) * TILE - TILE * (typeof f.high === 'number' ? f.high : 1.45);
+      const w = r[2] * .78, h = r[3] * .62;
+      const g = c.createRadialGradient(cx, cy, 1, cx, cy, Math.max(w, h) / 2);
+      g.addColorStop(0, 'rgba(255,216,152,.60)');
+      g.addColorStop(.7, 'rgba(255,206,140,.30)');
+      g.addColorStop(1, 'rgba(255,200,132,0)');
+      c.globalAlpha = night;
+      c.save();
+      c.translate(cx, cy); c.scale(1, h / Math.max(w, h));
+      c.fillStyle = g;
+      c.beginPath(); c.arc(0, 0, Math.max(w, h) / 2, 0, 6.3); c.fill();
+      c.restore();
     }
     c.globalAlpha = 1;
 
@@ -2691,6 +2809,11 @@ const R = {
        every frame index derived from it, and a NaN frame index draws nothing
        and throws nothing. Tests calling R.draw() by hand must pass a dt. */
     const c = this.ctx; this.t += dt || 0; this.lastDt = dt || 0;
+    /* Before anything draws a door. Two passes read how open one is — the leaf
+       itself and the light coming out of it — and they must not each work it
+       out, or the light will be a frame ahead of the door on the frame the
+       player steps over the threshold. */
+    this.swingDoors(dt || 0);
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     c.clearRect(0, 0, Cam.w, Cam.h);
     const sx = FX.shakeAmt ? rnd(-FX.shakeAmt, FX.shakeAmt) : 0;
@@ -2995,7 +3118,7 @@ const R = {
            of it — whether it hangs, whether it draws its own shadow, where its
            middle is, and what to draw — and a tree must not be able to answer
            in two different seasons within one frame. */
-        const fsprite = this.spriteOf(f);
+        const fsprite = this.spriteOf(f, o);
         const size = o.kind === 'chair' ? (Sprites.ready ? 22 : 16) : (f.size ?? 20);
         let ex = d.wx, ey = d.wy, onFloor = true;
         if (o.mount === 'wall') {

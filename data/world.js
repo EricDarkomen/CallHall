@@ -566,25 +566,30 @@ const FURN = {
      doors and the `high` test in R's object pass. Before those, the whole
      frontage was this emoji and it could hang wherever it liked. */
   shop: { mount: 'wall', size: 27, high: 1.78 },
-  /* THE GLASS, and it is the office's MIRROR. Which sounds like a joke and is
-     not: the kit's `wall.mirror` is a dark frame round a pale pane with a
-     diagonal reflection across it, landscape rather than portrait, and that is
-     a shop window. What was here before was `shop.window`, which is a sash — a
-     tall thing in a white frame with glazing bars, and it read as the front of
-     a terraced house every time. A parade at street level is plate glass.
-     Nothing about the sheets changed to do this: the mirror was already packed
-     in world.png and already licensed, and this names it.
-     Not the shop — the shop is the sign over the door, and a pane of glass does
-     not tell you whether you are outside a launderette or a bookmaker's. This
-     is the frontage either side of it. Scenery, so it never blocks the
-     pavement, and hung a little lower than picture height so the glass and the
-     door read as one shopfront rather than as two unrelated things.
-     The sash is not gone from the game — `shop.window` and its lit and dark
-     variants are still in the atlas, and the lit one is what the parade used
-     to come on with at dusk. The parade still comes on: it is the light out of
-     the open doorways now, which is warmer, is in the right place, and is
-     drawn by R.thresholds() over the floor it already borrows. */
-  shopwin: { mount: 'wall', size: 20, sprite: 'shop.window', lit: 'shop.window.lit', high: 1.5 },
+  /* THE GLASS, and it is a shopfront at last — see tools/sheets/frontage.mjs.
+
+     This has been wrong twice. It was the office's `wall.mirror`, thirty-two by
+     twenty-three of landscape pane with a diagonal across it, which on a
+     two-tile wall read as exactly what it was. Then it was `shop.window`, a
+     tall sash off a castle-window sheet, which filled the wall and read as the
+     front of a terraced house — because a sash is the front of a terraced
+     house. Neither kit had a shopfront in it.
+
+     One does now: two tiles across, mullioned, on a stall riser, with a painted
+     timber frame and a lintel, in four colourways picked off the tile. `tones`
+     rather than `sprite` is what does the picking — see R.spriteOf() — and it
+     is the same hash the doors use, so a unit's glass and its door were painted
+     by the same person in the same decade.
+
+     No `lit` any more, and that is the other half of it. The parade used to
+     come on at dusk by swapping every window for a second copy of itself with
+     yellow behind the panes: one brightness, no falloff, and a sheet carrying
+     two of everything so one of them could be on. It is drawn now, in
+     R.lamps(), as what a lit window actually is — a warm room seen through
+     glass, brightest at the middle of the pane. Which works on any window in
+     any colourway, and let three of the four arrive for free. */
+  shopwin: { mount: 'wall', size: 20, high: 1.5,
+    tones: ['shop.win.maroon', 'shop.win.cream', 'shop.win.gold', 'shop.win.slate'] },
   /* Redeclared from the wall-mounted block at the top of this table, and only
      to add a footprint: a sign with a wall behind it hangs on the wall, and a
      sign with nothing behind it — a bus stop, a car park sign — stands on a
