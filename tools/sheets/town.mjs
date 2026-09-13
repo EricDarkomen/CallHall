@@ -718,5 +718,125 @@ export default {
         rect: [64, 37, 31, 27],
       },
     },
+    /* FOUR SHOP DOORS, SHUT, FACE ON.
+
+       Every door in this game — office, flat, shop, cathedral — has been the
+       same leaf standing ajar at forty-five degrees, hinged out onto whatever
+       is in front of it. Indoors that is right and it is what the kit is drawn
+       for: a corridor door you are about to walk through, swung towards you.
+       On a parade of twenty shopfronts it is twenty copies of one sticker, each
+       one lying across the pavement, and it is the single most obviously wrong
+       thing on the street.
+
+       The kit has the answer and nothing had asked it for. `15 Panel Door A` is
+       a fourteen-frame SWING, from edge-on to shut, in eight wood tones down
+       the sheet — and frame seven of it is the leaf FULLY SHUT and flat in its
+       own opening, thirty-two across and twenty-six tall because that is how
+       much of a door you see when it is in a wall rather than swung out of one.
+       Which is exactly what a shut shop looks like from the other side of the
+       road.
+
+       Four tones rather than one, out of rows 0, 2, 4 and 10, because a parade
+       where every door is the same orange pine is the sticker problem again in
+       a different colour. R.kitDoor() picks between them off the tile, so a
+       door does not change colour when the camera moves. */
+    {
+      name: 'door.front.pine',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        rect: [224, 38, 32, 26],
+      },
+    },
+    {
+      name: 'door.front.oak',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        rect: [224, 166, 32, 26],
+      },
+    },
+    {
+      name: 'door.front.walnut',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        rect: [224, 294, 32, 26],
+      },
+    },
+    {
+      name: 'door.front.olive',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        rect: [224, 678, 32, 26],
+      },
+    },
+    /* AND THE SAME FOUR, AJAR. Frame five of the same swing rather than frame
+       seven: open by about a hand's width, still square to the wall, nothing
+       lying across the pavement.
+
+       This is the difference between a shop you can walk into and one you can
+       only read the window of, and the street needed it. Seventeen of the
+       frontages out there have no interior behind them — the superstore, the
+       bakery, the chandlery, the old bank — and every one of them was wearing
+       the same wide-open door as the five that do, which is a door promising
+       something that is not there. Ajar means go in. Shut means look. */
+    {
+      name: 'door.front.ajar.pine',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        rect: [160, 30, 28, 34],
+      },
+    },
+    {
+      name: 'door.front.ajar.oak',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        rect: [160, 158, 28, 34],
+      },
+    },
+    {
+      name: 'door.front.ajar.walnut',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        rect: [160, 286, 28, 34],
+      },
+    },
+    {
+      name: 'door.front.ajar.olive',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        rect: [160, 670, 28, 34],
+      },
+    },
   ],
 };

@@ -1542,8 +1542,16 @@ const LEVELS = {
       /* Bellhaven Road, and then the same road under a different name once it
          reaches the shops, because that is what happens to roads. Pavement,
          carriageway and pavement, all of it one zone. */
-      { z: 'street', r: [2, 14, 41, 23] },
-      { z: 'high', r: [42, 14, 111, 23] },
+      /* OUT TO THE EDGE OF THE MAP, both ends, and that is the whole of the
+         fix for a road that used to stop. Bellhaven Road ran x 2..111 and Fenn
+         and Corven ran x 8..107: six lanes of carriageway that came to an end
+         two tiles short of the border and butted into the side of a building,
+         with no junction, no turning head and no reason. Station Road and
+         Weirbank Road have run off the east edge since they were drawn, and
+         that is what a road at the edge of a map should do — the view stops,
+         the town does not. These three now do the same. */
+      { z: 'street', r: [0, 14, 41, 23] },
+      { z: 'high', r: [42, 14, 113, 23] },
       /* The three north–south streets, each in two pieces: the stretch between
          Bellhaven and Fenn, and the stretch between Fenn and Corven. Two rects
          rather than one because the retail park's wall runs across between
@@ -1557,8 +1565,8 @@ const LEVELS = {
       /* The two long ones. Listed after the north–south streets so they lose
          the junctions to them — every crossing belongs to the street it is
          named after on the sign, and the sign is on the corner. */
-      { z: 'fenn', r: [6, 32, 109, 41] },
-      { z: 'corven', r: [6, 50, 109, 59] },
+      { z: 'fenn', r: [0, 32, 113, 41] },
+      { z: 'corven', r: [0, 50, 113, 59] },
       /* And the car park, with its one gap, exactly as the forecourt has. */
       { z: 'retail', r: [18, 43, 55, 48] },
       { z: 'retail', r: [34, 42, 37, 42] },
@@ -1698,7 +1706,7 @@ const LEVELS = {
          kerb is dropped for it. Draw the pavement through here instead and
          the game paints a six-inch kerb across the road you drive out of. */
       { s: 'tarmac', r: [34, 13, 37, 15] },
-      { s: 'tarmac', r: [2, 16, 111, 21] },
+      { s: 'tarmac', r: [0, 16, 113, 21] },
       /* Each north–south carriageway in ONE rectangle running the whole height
          of the map, straight through every pavement band it crosses. Stop one
          at a junction and the game lays a kerb across the road, for the same
@@ -1706,8 +1714,8 @@ const LEVELS = {
       { s: 'tarmac', r: [8, 22, 13, 57] },
       { s: 'tarmac', r: [60, 22, 65, 57] },
       { s: 'tarmac', r: [102, 22, 107, 57] },
-      { s: 'tarmac', r: [8, 34, 107, 39] },
-      { s: 'tarmac', r: [8, 52, 107, 57] },
+      { s: 'tarmac', r: [0, 34, 113, 39] },
+      { s: 'tarmac', r: [0, 52, 113, 57] },
       /* The retail park and the way into it. */
       { s: 'tarmac', r: [34, 42, 37, 42] },
       { s: 'tarmac', r: [18, 43, 55, 48] },
@@ -1741,7 +1749,7 @@ const LEVELS = {
          across the exit everybody drives out of. */
       { s: 'grass', r: [2, 14, 33, 14] },
       { s: 'grass', r: [38, 14, 41, 14] },
-      { s: 'grass', r: [6, 59, 109, 59] },
+      { s: 'grass', r: [0, 59, 113, 59] },
 
       /* ================= SOUTH OF THE LINE =================
          THE RAILWAY. Nine rows of ballast the width of the map, and it is a
@@ -1841,17 +1849,21 @@ const LEVELS = {
          painted through a zebra or across a side road is the one marking error
          you can see from a moving car. Six-tile carriageways throughout, so
          each of these is three tiles in from either kerb. */
-      { p: 'dash', a: [2, 19], b: [8, 19] },
+      { p: 'dash', a: [0, 19], b: [8, 19] },
       { p: 'dash', a: [14, 19], b: [30, 19] },
       { p: 'dash', a: [34, 19], b: [60, 19] },
       { p: 'dash', a: [66, 19], b: [102, 19] },
-      { p: 'dash', a: [108, 19], b: [112, 19] },
+      { p: 'dash', a: [108, 19], b: [114, 19] },
+      { p: 'dash', a: [0, 37], b: [8, 37] },
       { p: 'dash', a: [14, 37], b: [44, 37] },
       { p: 'dash', a: [48, 37], b: [60, 37] },
       { p: 'dash', a: [66, 37], b: [102, 37] },
+      { p: 'dash', a: [108, 37], b: [114, 37] },
+      { p: 'dash', a: [0, 55], b: [8, 55] },
       { p: 'dash', a: [14, 55], b: [60, 55] },
       { p: 'dash', a: [66, 55], b: [76, 55] },
       { p: 'dash', a: [80, 55], b: [102, 55] },
+      { p: 'dash', a: [108, 55], b: [114, 55] },
       { p: 'dash', a: [11, 24], b: [11, 32] },
       { p: 'dash', a: [11, 42], b: [11, 50] },
       { p: 'dash', a: [63, 24], b: [63, 32] },
@@ -2024,6 +2036,8 @@ const LEVELS = {
       { p: 'kerbside', r: [52, 21, 59, 21], side: 's' },
       { p: 'kerbside', r: [66, 21, 78, 21], side: 's' },
       { p: 'kerbside', r: [84, 21, 96, 21], side: 's' },
+      { p: 'kerbside', r: [0, 16, 1, 16], side: 'n' },
+      { p: 'kerbside', r: [108, 21, 113, 21], side: 's' },
       /* Fenn Street, north kerb */
       { p: 'kerbside', r: [14, 34, 26, 34], side: 'n' },
       { p: 'kerbside', r: [32, 34, 37, 34], side: 'n' },
@@ -2036,6 +2050,10 @@ const LEVELS = {
       { p: 'kerbside', r: [48, 39, 59, 39], side: 's' },
       { p: 'kerbside', r: [66, 39, 78, 39], side: 's' },
       { p: 'kerbside', r: [84, 39, 96, 39], side: 's' },
+      { p: 'kerbside', r: [0, 34, 6, 34], side: 'n' },
+      { p: 'kerbside', r: [108, 34, 113, 34], side: 'n' },
+      { p: 'kerbside', r: [0, 39, 6, 39], side: 's' },
+      { p: 'kerbside', r: [108, 39, 113, 39], side: 's' },
       /* Corven Way, north kerb */
       { p: 'kerbside', r: [14, 52, 26, 52], side: 'n' },
       { p: 'kerbside', r: [32, 52, 44, 52], side: 'n' },
@@ -2048,6 +2066,10 @@ const LEVELS = {
       { p: 'kerbside', r: [50, 57, 59, 57], side: 's' },
       { p: 'kerbside', r: [66, 57, 75, 57], side: 's' },
       { p: 'kerbside', r: [80, 57, 92, 57], side: 's' },
+      { p: 'kerbside', r: [0, 52, 6, 52], side: 'n' },
+      { p: 'kerbside', r: [108, 52, 113, 52], side: 'n' },
+      { p: 'kerbside', r: [0, 57, 6, 57], side: 's' },
+      { p: 'kerbside', r: [108, 57, 113, 57], side: 's' },
       /* Station Road, north kerb */
       { p: 'kerbside', r: [24, 71, 36, 71], side: 'n' },
       { p: 'kerbside', r: [50, 71, 59, 71], side: 'n' },
@@ -3009,6 +3031,23 @@ const LEVELS = {
          behind it, which is the only wall Station Road has and is where a town
          map goes. */
       A({ x: 32, y: 69, e: '🪧', name: 'The town map', kind: 'poster', solid: true, use: 'townMap' });
+
+      /* ---------- THE TWO ENDS THAT ARE NOT ROADS TO NOWHERE ----------
+         Station Road and Weirbank Road stop at x=9 at their western ends and
+         they are RIGHT to: the river is there. What was missing was anything
+         saying so. Six tiles of carriageway ran up to the bank and ended, with
+         nothing between the nearside lane and forty feet of water — no
+         parapet, no barrier, no sign, just tarmac and then river.
+
+         There is a parapet now, on both, and a sign on each saying what is
+         behind it. Which is also the reason those two roads do not run off the
+         edge of the map the way Bellhaven, Fenn and Corven now do: a road that
+         stops at a river has a reason, and a reason is all a dead end ever
+         needed. */
+      for (let ry = 71; ry <= 76; ry++) {
+        A({ x: 8, y: ry, e: '🧱', name: 'The parapet at the end of Station Road', kind: 'fence', solid: true, use: 'riverParapet' });
+      }
+      A({ x: 7, y: 74, e: '🪧', name: 'The sign at the parapet', kind: 'sign', solid: true, use: 'riverEnd' });
       A({ x: 56, y: 70, e: '🗑️', name: 'Bin, Station Road', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 44, y: 77, e: '🪑', name: 'The bench outside the gate', kind: 'bench', solid: true, use: 'gateBench' });
@@ -3314,6 +3353,13 @@ const LEVELS = {
          corner. */
       A({ x: 101, y: 96, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
       A({ x: 16, y: 96, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      /* And the same at the bottom of the town, where Weirbank Road runs out
+         of bank. Same parapet, same reason, and the sign on this one is the
+         older of the two by about a century. */
+      for (let ry = 98; ry <= 103; ry++) {
+        A({ x: 8, y: ry, e: '🧱', name: 'The parapet at the end of Weirbank Road', kind: 'fence', solid: true, use: 'riverParapet' });
+      }
+      A({ x: 7, y: 101, e: '🪧', name: 'The sign at the parapet', kind: 'sign', solid: true, use: 'riverEnd' });
       /* Beside the ramp, not down it. The ramp is the tarmac at x 40..43 and
          this stood in the middle of it, which is a bollard, not a sign. */
       A({ x: 39, y: 105, e: '🪧', name: 'The sign at the top of the ramp', kind: 'sign', solid: true, use: 'rampSign' });

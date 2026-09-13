@@ -1354,6 +1354,18 @@ const Acts = {
       'The plate says PRESENTED TO THE TOWN and then a name and then a date, and the name and the date are under four coats of the same green paint, which is how the town says thank you.',
       'It keeps time. Everybody in the old town arranges to meet at it and nobody has ever needed to say which clock.']);
   },
+  riverParapet() {
+    insp('🧱', 'The parapet', 'Between a road and a river', [
+      'Two courses of stone with a coping on top, running across the end of the road where the road runs out of ground.',
+      pick(['Somebody has left a half-drunk coffee on the coping. It is cold. It has been there since before you came out.',
+        'The coping is worn smooth in one place, which is where everybody leans.',
+        'There is a scrape along it at bumper height, the same colour as a car that is no longer anybody\u2019s problem.'])]);
+  },
+  riverEnd() {
+    insp('🪧', 'The sign at the parapet', 'ROAD ENDS', [
+      'ROAD ENDS. NO TURNING AREA. And underneath, in smaller letters and a different decade, RIVER BELLHAVEN \u2014 DEEP WATER.',
+      'Two hundred years ago this was a ford and the road went straight on into it. The road still goes straight on. The ford does not.']);
+  },
   lamppost() {
     insp('💡', 'Lamppost', 'Council-maintained', [
       'A council lamppost, one of a matching pair, both working — which the fourth floor’s own lighting has not managed in a decade of maintenance tickets.',
