@@ -75,6 +75,21 @@ export async function fetchPinnedFile(url, sha256) {
    Anything else arriving under ShareAlike gets the same treatment — its own
    sheet, its own entry, never mixed.
 
+   A part-4 sheet is the SAME ARGUMENT at a later version. CC-BY-SA 4.0 is not
+   3.0 and the two are not interchangeable in the direction that matters here:
+   4.0 permits relicensing an Adaptation under a later version of the same
+   licence, 3.0 does not, and the attribution and notice clauses are worded
+   differently enough that one section of LICENSE cannot honestly cover both.
+   So 4.0 art gets its own part and its own sheet, and the same rule applies
+   to it as to part 3: never mixed, with anything, including part-3 art.
+
+   Why 4.0 is accepted at all, given part 3 declines it where a submission
+   offers both: because some kits offer ONLY 4.0. Declining those would not be
+   caution, it would be refusing art on terms this project already accepts one
+   version of. What part 3 declines is the 4.0 OPTION on a work that also
+   offers 3.0, which is a different decision and is about not honouring two
+   versions where one will do.
+
    GPL 3.0 is deliberately NOT here, and its absence is not an oversight. Most
    ShareAlike LPC art is offered as CC-BY-SA 3.0 *or* GPL 3.0 at the licensee's
    option, and LICENSE part 3 already says which of the two this project takes
@@ -96,6 +111,7 @@ export async function fetchPinnedFile(url, sha256) {
 const LICENCES_BY_PART = {
   2: ['OGA-BY 3.0', 'CC0'],
   3: ['CC-BY-SA 3.0'],
+  4: ['CC-BY-SA 4.0'],
 };
 export const PARTS = Object.keys(LICENCES_BY_PART).map(Number);
 export function licencesFor(part) {

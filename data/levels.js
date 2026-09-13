@@ -1967,8 +1967,14 @@ const LEVELS = {
       /* No parking outside the old town's two gates, which is where the taxis
          wait and where the delivery vans for the whole of Priorygate stop,
          because there is nowhere else and there never has been. */
-      { p: 'yellow', a: [44, 77.2], b: [58, 77.2] },
-      { p: 'yellow', a: [94, 96.8], b: [110, 96.8] },
+      /* Double yellows go on the CARRIAGEWAY, hard against the kerb. These two
+         were at 77.2 and 96.8, which is on the wrong side of the kerb line in
+         both cases — two tenths of a tile up onto the footway, where no line is
+         ever painted and where the van below was parked on top of them. Station
+         Road's carriageway ends at y=77.0 and Weirbank's begins at y=98.0, so
+         they belong just inside those, not just outside. */
+      { p: 'yellow', a: [44, 76.8], b: [58, 76.8] },
+      { p: 'yellow', a: [94, 98.2], b: [110, 98.2] },
       /* Three crossings, and all three are where somebody actually crosses:
          outside the North Gate, outside the Water Gate, and outside the station
          that shut in 1967, which still has more people crossing to it than the
@@ -1983,7 +1989,85 @@ const LEVELS = {
       { p: 'bays', r: [57, 110, 78, 112], open: 'n' },
       { p: 'text', at: [42, 107.4], s: 'RAMP' },
       { p: 'text', at: [67.5, 109.9], s: 'PAY & DISPLAY' },
-      { p: 'text', at: [63, 67], s: 'SLOW', turn: 1 }
+      { p: 'text', at: [63, 67], s: 'SLOW', turn: 1 },
+
+      /* ---------- KERBSIDE PARKING ----------
+         Every carriageway on this map is six tiles across and every one of them
+         is driven on four. That was not a decision, it was an accident of
+         laying the town out as pavement-road-pavement and giving the road a
+         generous middle: the traffic circuits in `cars` below run at 17.5 and
+         20.5 on Bellhaven, 35.5 and 38.5 on Fenn, and so on down the map, which
+         leaves the tile against each kerb permanently, structurally empty. A
+         hundred and ten tiles of it, per side, per road. It read as a runway
+         with a dashed line down it, and the only thing to do on it was cross it.
+
+         So the outer tile on each side is parking, which is what a road that
+         wide has ALWAYS been — the six tiles were never six lanes, they were
+         two lanes and two rows of parked cars, and nobody had said so. Nothing
+         about the traffic changes: not one route moves, and no parked car is
+         within a tile of a lane a moving one uses.
+
+         Where the runs stop is where a real one stops. Junction mouths, both
+         sides of every zebra, the length of the double yellows on the north
+         side of the High Street, and seven tiles round each bus stop. See
+         tools' kerb pass in the commit that added these — every gap below was
+         computed off the surfaces, the zebras and the yellows rather than
+         eyeballed, and then broken further into stretches, because a kerb that
+         is parking for sixty tiles without a break is as unreal as one that is
+         empty for sixty. */
+      /* Bellhaven Road, north kerb */
+      { p: 'kerbside', r: [2, 16, 14, 16], side: 'n' },
+      /* Bellhaven Road, south kerb */
+      { p: 'kerbside', r: [2, 21, 7, 21], side: 's' },
+      { p: 'kerbside', r: [14, 21, 26, 21], side: 's' },
+      { p: 'kerbside', r: [34, 21, 46, 21], side: 's' },
+      { p: 'kerbside', r: [52, 21, 59, 21], side: 's' },
+      { p: 'kerbside', r: [66, 21, 78, 21], side: 's' },
+      { p: 'kerbside', r: [84, 21, 96, 21], side: 's' },
+      /* Fenn Street, north kerb */
+      { p: 'kerbside', r: [14, 34, 26, 34], side: 'n' },
+      { p: 'kerbside', r: [32, 34, 37, 34], side: 'n' },
+      { p: 'kerbside', r: [48, 34, 59, 34], side: 'n' },
+      { p: 'kerbside', r: [66, 34, 78, 34], side: 'n' },
+      { p: 'kerbside', r: [84, 34, 96, 34], side: 'n' },
+      /* Fenn Street, south kerb */
+      { p: 'kerbside', r: [14, 39, 26, 39], side: 's' },
+      { p: 'kerbside', r: [32, 39, 43, 39], side: 's' },
+      { p: 'kerbside', r: [48, 39, 59, 39], side: 's' },
+      { p: 'kerbside', r: [66, 39, 78, 39], side: 's' },
+      { p: 'kerbside', r: [84, 39, 96, 39], side: 's' },
+      /* Corven Way, north kerb */
+      { p: 'kerbside', r: [14, 52, 26, 52], side: 'n' },
+      { p: 'kerbside', r: [32, 52, 44, 52], side: 'n' },
+      { p: 'kerbside', r: [50, 52, 59, 52], side: 'n' },
+      { p: 'kerbside', r: [66, 52, 75, 52], side: 'n' },
+      { p: 'kerbside', r: [88, 52, 100, 52], side: 'n' },
+      /* Corven Way, south kerb */
+      { p: 'kerbside', r: [8, 57, 20, 57], side: 's' },
+      { p: 'kerbside', r: [26, 57, 38, 57], side: 's' },
+      { p: 'kerbside', r: [50, 57, 59, 57], side: 's' },
+      { p: 'kerbside', r: [66, 57, 75, 57], side: 's' },
+      { p: 'kerbside', r: [80, 57, 92, 57], side: 's' },
+      /* Station Road, north kerb */
+      { p: 'kerbside', r: [24, 71, 36, 71], side: 'n' },
+      { p: 'kerbside', r: [50, 71, 59, 71], side: 'n' },
+      { p: 'kerbside', r: [66, 71, 78, 71], side: 'n' },
+      { p: 'kerbside', r: [92, 71, 101, 71], side: 'n' },
+      /* Station Road, south kerb */
+      { p: 'kerbside', r: [16, 76, 28, 76], side: 's' },
+      { p: 'kerbside', r: [34, 76, 43, 76], side: 's' },
+      { p: 'kerbside', r: [68, 76, 80, 76], side: 's' },
+      { p: 'kerbside', r: [90, 76, 101, 76], side: 's' },
+      /* Weirbank Road, north kerb */
+      { p: 'kerbside', r: [16, 98, 28, 98], side: 'n' },
+      { p: 'kerbside', r: [40, 98, 52, 98], side: 'n' },
+      { p: 'kerbside', r: [58, 98, 70, 98], side: 'n' },
+      { p: 'kerbside', r: [76, 98, 88, 98], side: 'n' },
+      /* Weirbank Road, south kerb */
+      { p: 'kerbside', r: [16, 103, 28, 103], side: 's' },
+      { p: 'kerbside', r: [44, 103, 56, 103], side: 's' },
+      { p: 'kerbside', r: [62, 103, 74, 103], side: 's' },
+      { p: 'kerbside', r: [80, 103, 92, 103], side: 's' }
     ],
     doors: [],
     /* In the walkway between the two banks of bays, facing away from the
@@ -2178,8 +2262,43 @@ const LEVELS = {
          nobody in it, delivering to a street no vehicle is allowed up. It is
          there every morning and it is the reason the queue for the bridge is
          what it is. */
-      { x: 52, y: 77.6, face: 'e', model: 'van', body: '#d8d5cc', roof: '#c2bfb5',
+      { x: 52, y: 76.5, face: 'e', model: 'van', body: '#d8d5cc', roof: '#c2bfb5',
         name: 'A van on the yellows, hazards going', use: 'yellowsVan' },
+
+      /* ---------- THE CARS THAT ARE NOT GOING ANYWHERE ----------
+         Twenty-nine of them, one in every other stretch of kerbside paint above
+         and never two stretches running, because a kerb with a car in every bay
+         is a car park and a kerb with none is a road nobody lives on. They have
+         no `route`, so nothing in engine/cars.js ever looks at them twice; they
+         are scenery with a bonnet, and the act on them says as much. */
+      { x: 4, y: 16.5, face: 'e', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'parkedCar' },
+      { x: 13, y: 16.5, face: 'w', model: 'hatch', body: '#2d3f52', roof: '#233246', name: 'A blue hatchback', use: 'parkedCar' },
+      { x: 16, y: 21.5, face: 'e', model: 'hatch', body: '#6b3350', roof: '#552840', name: 'A plum hatchback', use: 'parkedCar' },
+      { x: 54, y: 21.5, face: 'e', model: 'estate', body: '#57624f', roof: '#434d3d', name: 'An olive estate', use: 'parkedCar' },
+      { x: 86, y: 21.5, face: 'e', model: 'small', name: 'A small blue car', use: 'parkedCar' },
+      { x: 95, y: 21.5, face: 'w', model: 'van', body: '#d8d5cc', roof: '#c2bfb5', name: 'A white van', use: 'parkedCar' },
+      { x: 34, y: 34.5, face: 'e', model: 'small', body: '#7d6a4f', roof: '#63543f', name: 'A beige runabout', use: 'parkedCar' },
+      { x: 68, y: 34.5, face: 'e', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'parkedCar' },
+      { x: 16, y: 39.5, face: 'e', model: 'hatch', body: '#6b3350', roof: '#552840', name: 'A plum hatchback', use: 'parkedCar' },
+      { x: 25, y: 39.5, face: 'w', model: 'saloon', body: '#3b3f48', roof: '#2e323a', name: 'A grey saloon', use: 'parkedCar' },
+      { x: 50, y: 39.5, face: 'e', model: 'estate', body: '#57624f', roof: '#434d3d', name: 'An olive estate', use: 'parkedCar' },
+      { x: 86, y: 39.5, face: 'e', model: 'small', name: 'A small blue car', use: 'parkedCar' },
+      { x: 34, y: 52.5, face: 'e', model: 'small', body: '#7d6a4f', roof: '#63543f', name: 'A beige runabout', use: 'parkedCar' },
+      { x: 43, y: 52.5, face: 'w', model: 'hatch', body: '#2f4a3a', roof: '#25392d', name: 'A green hatchback', use: 'parkedCar' },
+      { x: 68, y: 52.5, face: 'e', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'parkedCar' },
+      { x: 10, y: 57.5, face: 'e', model: 'hatch', body: '#6b3350', roof: '#552840', name: 'A plum hatchback', use: 'parkedCar' },
+      { x: 52, y: 57.5, face: 'e', model: 'estate', body: '#57624f', roof: '#434d3d', name: 'An olive estate', use: 'parkedCar' },
+      { x: 82, y: 57.5, face: 'e', model: 'small', name: 'A small blue car', use: 'parkedCar' },
+      { x: 52, y: 71.5, face: 'e', model: 'small', body: '#7d6a4f', roof: '#63543f', name: 'A beige runabout', use: 'parkedCar' },
+      { x: 94, y: 71.5, face: 'e', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'parkedCar' },
+      { x: 36, y: 76.5, face: 'e', model: 'hatch', body: '#6b3350', roof: '#552840', name: 'A plum hatchback', use: 'parkedCar' },
+      { x: 70, y: 76.5, face: 'e', model: 'estate', body: '#57624f', roof: '#434d3d', name: 'An olive estate', use: 'parkedCar' },
+      { x: 18, y: 98.5, face: 'e', model: 'small', name: 'A small blue car', use: 'parkedCar' },
+      { x: 27, y: 98.5, face: 'w', model: 'van', body: '#d8d5cc', roof: '#c2bfb5', name: 'A white van', use: 'parkedCar' },
+      { x: 60, y: 98.5, face: 'e', model: 'small', body: '#7d6a4f', roof: '#63543f', name: 'A beige runabout', use: 'parkedCar' },
+      { x: 46, y: 103.5, face: 'e', model: 'hatch', body: '#6b3350', roof: '#552840', name: 'A plum hatchback', use: 'parkedCar' },
+      { x: 55, y: 103.5, face: 'w', model: 'saloon', body: '#3b3f48', roof: '#2e323a', name: 'A grey saloon', use: 'parkedCar' },
+      { x: 82, y: 103.5, face: 'e', model: 'estate', body: '#57624f', roof: '#434d3d', name: 'An olive estate', use: 'parkedCar' },
 
       /* ---- TRAFFIC, SOUTH ----
          Four more circuits, and the two halves of the table they are written to
@@ -2238,6 +2357,19 @@ const LEVELS = {
        stop for anybody in front of them. That rule was in engine/cars.js before
        there was a single pedestrian to apply it to; this is what finally gives
        it somebody to stop for. */
+    /* ---- WHICH ROW THEY WALK ----
+       Two of these used to walk the kerb-side row of the pavement and now walk
+       the frontage-side row, one tile back: 22.6 became 23.4 on Bellhaven Road
+       and 40.6 became 41.4 on Fenn Street.
+
+       Because that is what the two rows ARE. A footway has a furniture strip at
+       the kerb — lamp columns, bins, trees, planters, the bench — and a clear
+       walking strip against the shops, and Station Road and Weirbank Road have
+       been built that way since they were drawn. Bellhaven and Fenn had it the
+       other way round, which is why their kerb rows were the empty ones: they
+       were empty because somebody was walking down them. Furnishing those rows
+       without moving these two would have been putting eleven lampposts in a
+       pedestrian's way and calling it a street. */
     peds: [
       /* Routes are rectangles: two runs along a pavement and two crossings of
          the road between them. Where there is a zebra the crossing is ON it —
@@ -2256,19 +2388,19 @@ const LEVELS = {
          along the south side, and over again at the far end. The one anybody
          watching the street for thirty seconds will see do a full circuit. */
       { name: 'Somebody with a Greggs bag', use: 'pedGreggs', sprite: 'bev', speed: 1.05, leg: 0, along: 6,
-        route: [[31.5, 14.6], [44, 14.6, 4], [58, 14.6], [58, 22.6], [44, 22.6], [31.5, 22.6, 3], [31.5, 14.6]] },
+        route: [[31.5, 14.6], [44, 14.6, 4], [58, 14.6], [58, 23.4], [44, 23.4], [31.5, 23.4, 3], [31.5, 14.6]] },
       /* East of Cargate, where there is no zebra, so he crosses straight over
          at each end — well clear of both junctions, which is the difference
          between jaywalking and walking into a car. */
       { name: 'A man on the phone', use: 'pedPhone', sprite: 'colin', speed: 1.25, leg: 3, along: 6,
-        route: [[68, 14.6], [80, 14.6], [92, 14.6, 5], [92, 22.6], [80, 22.6], [68, 22.6, 2]] },
+        route: [[68, 14.6], [80, 14.6], [92, 14.6, 5], [92, 23.4], [80, 23.4], [68, 23.4, 2]] },
       /* Outside the office, doing the thing everybody does outside an office. */
       { name: 'Two people not going back in yet', use: 'pedSmokers', sprite: 'gary', speed: 0.8, leg: 0, along: 2,
         route: [[24, 14.6, 9], [20, 14.6, 7], [16, 14.6, 5]] },
       /* Fenn Street, past the units and the car wash, over the zebra at the
          east end and straight across at the west. Stops short of Cargate. */
       { name: 'Somebody in a hi-vis', use: 'pedHiVis', sprite: 'tomasz', speed: 1.3, leg: 0, along: 14,
-        route: [[18, 33.4], [45.5, 33.4, 3], [45.5, 40.6], [18, 40.6, 2]] },
+        route: [[18, 33.4], [45.5, 33.4, 3], [45.5, 41.4], [18, 41.4, 2]] },
       /* Corven Way and the retail park, which is where the trolleys come from. */
       { name: 'Somebody pushing a trolley', use: 'pedTrolley', sprite: 'marjorie', speed: 0.85, leg: 0, along: 4,
         route: [[26, 51.4], [40, 51.4, 4], [56, 51.4], [56, 58.6], [40, 58.6], [26, 58.6, 3]] },
@@ -2279,7 +2411,7 @@ const LEVELS = {
       /* Aldergate Rise, where the overflow parks and walks round. Both sides
          of it, so the crossings are the two ends rather than the middle. */
       { name: 'Somebody walking in from Aldergate', use: 'pedCommuter', sprite: 'mo', speed: 1.35, leg: 0, along: 5,
-        route: [[6.6, 44], [6.6, 30], [6.6, 22.6], [14.6, 22.6], [14.6, 30], [14.6, 44, 3]] },
+        route: [[6.6, 44], [6.6, 30], [6.6, 23.4], [14.6, 23.4], [14.6, 30], [14.6, 44, 3]] },
       /* And one who is simply not moving very fast, outside the bookmakers. */
       { name: 'A man who has stopped', use: 'pedStopped', sprite: 'terry', speed: 0.7, leg: 0, along: 1,
         route: [[54, 14.6, 12], [50, 14.6, 8]] },
@@ -2393,10 +2525,24 @@ const LEVELS = {
       /* GIVE WAY, above the kerb at last. One at the top of each of the three
          north-south streets, on the left of the approach, where the painted
          line already is and where the traffic already yields. */
-      A({ x: 14, y: 21, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
-      A({ x: 66, y: 21, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
-      A({ x: 108, y: 21, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
-      A({ x: 24, y: 15, e: '🪑', name: 'The bench', kind: 'bench', solid: true, use: 'bench' });
+      /* THE GIVE-WAY SIGNS, on the pavement at the corner rather than in the
+         road. All three of these stood on row 21, which is the southern KERB
+         LANE of Bellhaven Road — a sign on a post, in the carriageway, a metre
+         out from the kerb, on the side of the road the traffic now parks
+         against. The line they belong to is painted across the mouth of the
+         side street at row 22 and has always been in the right place; the post
+         is now beside it, on the footway, where a post goes. */
+      A({ x: 14, y: 22, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      A({ x: 66, y: 22, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      A({ x: 108, y: 22, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      /* NORTH OF THE LINE THE BENCHES ARE PAINTED IRON. The wooden settle in
+         art/sprites/wood.png stays where it belongs — the churchyard, the
+         green, Priorygate, the quay — and everything on the modern side of the
+         railway gets the municipal red-and-green one instead. It is the same
+         object, the same act and the same tile; only the sprite is chosen by
+         which half of the town it is standing in. */
+      A({ x: 24, y: 15, e: '🪑', name: 'The bench', kind: 'bench', solid: true, use: 'bench',
+        furn: { sprite: 'obj.bench.iron' } });
       A({ x: 40, y: 15, e: '🗑️', name: 'The council bin', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 29, y: 14, e: '🐦', name: 'A pigeon, possibly the same one', kind: 'pigeon', solid: false, use: 'pigeon' });
@@ -2473,7 +2619,8 @@ const LEVELS = {
       A({ x: 76, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 62, y: 15, e: '🗑️', name: 'Bin, High Street', kind: 'bin', solid: false, use: 'highStreetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
-      A({ x: 70, y: 22, e: '🪑', name: 'Another bench', kind: 'bench', solid: true, use: 'bench2' });
+      A({ x: 70, y: 22, e: '🪑', name: 'Another bench', kind: 'bench', solid: true, use: 'bench2',
+        furn: { sprite: 'obj.bench.iron' } });
 
       /* ---- ALDERGATE RISE ----
          The west side of the block. Nothing has a front door on it, which is
@@ -2537,7 +2684,8 @@ const LEVELS = {
       A({ x: 100, y: 15, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 95, y: 15, e: '🗑️', name: 'Bin, High Street', kind: 'bin', solid: false, use: 'highStreetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
-      A({ x: 90, y: 22, e: '🪑', name: 'The third bench', kind: 'bench', solid: true, use: 'bench3' });
+      A({ x: 90, y: 22, e: '🪑', name: 'The third bench', kind: 'bench', solid: true, use: 'bench3',
+        furn: { sprite: 'obj.bench.iron' } });
       A({ x: 96, y: 16, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
 
       /* ---- FENN STREET, EAST OF CARGATE ----
@@ -2742,7 +2890,8 @@ const LEVELS = {
       /* THE PLATFORMS. The name board is the whole joke and it is worth having
          it be the first thing you meet coming up the steps. */
       A({ x: 76, y: 61, e: '🪧', name: 'The name board', kind: 'sign', solid: true, use: 'nameBoard' });
-      A({ x: 84, y: 61, e: '🪑', name: 'The platform bench', kind: 'bench', solid: true, use: 'platformBench' });
+      A({ x: 84, y: 61, e: '🪑', name: 'The platform bench', kind: 'bench', solid: true, use: 'platformBench',
+        furn: { sprite: 'obj.bench.iron' } });
       A({ x: 90, y: 61, e: '🕰️', name: 'The platform clock', kind: 'sign', solid: true, use: 'platformClock' });
       A({ x: 96, y: 62, e: '💡', name: 'A platform lamp', kind: 'lamp', solid: true, use: 'platformLamp' });
       A({ x: 82, y: 62, e: '🐦', name: 'Pigeons under the canopy', kind: 'pigeon', solid: false, use: 'stationPigeons' });
@@ -2783,7 +2932,10 @@ const LEVELS = {
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 104, y: 70, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
       A({ x: 34, y: 77, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
-      A({ x: 12, y: 69, e: '🌳', name: 'The tree at the end of Station Road', kind: 'tree', solid: true, use: 'streetTree' });
+      /* Five tiles east, onto the pavement. x=12 is the middle of Quay Road's
+         carriageway where it meets Station Road: this was a mature tree growing
+         out of the give-way line of a junction. */
+      A({ x: 17, y: 69, e: '🌳', name: 'The tree at the end of Station Road', kind: 'tree', solid: true, use: 'streetTree' });
       /* GIVE WAY at the two bridge mouths and the two junctions, on the left of
          each approach, exactly as the three upstairs are. */
       A({ x: 66, y: 70, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
@@ -2851,7 +3003,12 @@ const LEVELS = {
       /* Station Road's long middle, which was a hundred tiles of nothing
          between the North Gate and the bridge. */
       A({ x: 20, y: 70, e: '🚏', name: 'The stop outside the wall', kind: 'sign', solid: true, use: 'wallStop' });
-      A({ x: 32, y: 70, e: '🪧', name: 'The town map', kind: 'poster', solid: true, use: 'townMap' });
+      /* One row north, onto the embankment. A `poster` is a wall mount and
+         there was no wall on row 70 to mount it on — it was a laminated town
+         map hanging in mid-air on a footway. Row 69 has the railway embankment
+         behind it, which is the only wall Station Road has and is where a town
+         map goes. */
+      A({ x: 32, y: 69, e: '🪧', name: 'The town map', kind: 'poster', solid: true, use: 'townMap' });
       A({ x: 56, y: 70, e: '🗑️', name: 'Bin, Station Road', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
       A({ x: 44, y: 77, e: '🪑', name: 'The bench outside the gate', kind: 'bench', solid: true, use: 'gateBench' });
@@ -2859,14 +3016,22 @@ const LEVELS = {
       A({ x: 64, y: 77, e: '🌳', name: 'The trees on Station Road', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 36, y: 77, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
       A({ x: 26, y: 77, e: '🐦', name: 'The pigeons under the embankment', kind: 'pigeon', solid: false, use: 'pigeon' });
-      A({ x: 100, y: 77, e: '🖍️', name: 'The wall by the bridge', kind: 'graf', solid: true, use: 'embankmentWall',
+      /* Onto the embankment, which is the only wall down here there is anything
+         to paint. This tag was the one piece of graffiti on the map with no
+         wall on any of its four sides: `graf` is `paint: true`, so it is drawn
+         flat ON the tile rather than propped in front of it, and a flat tag on
+         a tile with nothing solid touching it is a tag lying face up on a
+         pavement. */
+      A({ x: 98, y: 69, e: '🖍️', name: 'The wall by the bridge', kind: 'graf', solid: true, use: 'embankmentWall',
         furn: { sprite: 'wall.graf.sport', paint: true } });
       /* And Weirbank Road, which was the same. */
       A({ x: 26, y: 97, e: '🌳', name: 'The trees on Weirbank Road', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 46, y: 97, e: '🌳', name: 'The trees on Weirbank Road', kind: 'tree', solid: true, use: 'streetTree' });
       A({ x: 74, y: 97, e: '🌳', name: 'The trees on Weirbank Road', kind: 'tree', solid: true, use: 'streetTree' });
-      A({ x: 34, y: 105, e: '🪑', name: 'The bench on Weirbank Road', kind: 'bench', solid: true, use: 'weirbankBench' });
-      A({ x: 82, y: 105, e: '🪑', name: 'The bench on Weirbank Road', kind: 'bench', solid: true, use: 'weirbankBench' });
+      A({ x: 34, y: 105, e: '🪑', name: 'The bench on Weirbank Road', kind: 'bench', solid: true, use: 'weirbankBench',
+        furn: { sprite: 'obj.bench.iron' } });
+      A({ x: 82, y: 105, e: '🪑', name: 'The bench on Weirbank Road', kind: 'bench', solid: true, use: 'weirbankBench',
+        furn: { sprite: 'obj.bench.iron' } });
       A({ x: 96, y: 105, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
       A({ x: 58, y: 97, e: '🐦', name: 'Gulls, Weirbank Road', kind: 'pigeon', solid: false, use: 'gulls' });
       A({ x: 68, y: 105, e: '🚧', name: 'The fence round the site', kind: 'barrier', solid: true, use: 'yardFence' });
@@ -2948,10 +3113,18 @@ const LEVELS = {
       A({ x: 72, y: 87, e: '🪑', name: 'A bench on Priorygate', kind: 'bench', solid: true, use: 'prioryBench' });
       A({ x: 40, y: 87, e: '🎸', name: 'The busker', kind: 'sign', solid: false, use: 'busker' });
       A({ x: 60, y: 87, e: '📋', name: 'Somebody with a clipboard', kind: 'sign', solid: false, use: 'clipboard' });
-      A({ x: 52, y: 87, e: '🗑️', name: 'Bin, Priorygate', kind: 'bin', solid: false, use: 'prioryBin',
-        furn: { sprite: 'obj.wheeliebin', size: 26 } });
-      A({ x: 78, y: 87, e: '🗑️', name: 'Bin, Priorygate', kind: 'bin', solid: false, use: 'prioryBin',
-        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      /* ---------- THE OLD TOWN'S OWN IRONWORK ----------
+         A pillar box, a fluted litter bin and a public clock, all off the
+         Victorian sheet, all standing on a street that has been furnished out
+         of the same catalogue as the retail park since it was drawn. The clock
+         is the thing everybody arranges to meet at and nobody can tell you what
+         it commemorates; there is a plate on it, and the plate has been painted
+         over four times. */
+      A({ x: 46, y: 84, e: '🕰️', name: 'The Priorygate clock', kind: 'streetclock', solid: true, use: 'prioryClock' });
+      A({ x: 30, y: 84, e: '📮', name: 'The pillar box', kind: 'postbox', solid: true, use: 'pillarBox' });
+      A({ x: 92, y: 84, e: '📮', name: 'The pillar box', kind: 'postbox', solid: true, use: 'pillarBox' });
+      A({ x: 52, y: 87, e: '🗑️', name: 'Bin, Priorygate', kind: 'ironbin', solid: false, use: 'prioryBin' });
+      A({ x: 78, y: 87, e: '🗑️', name: 'Bin, Priorygate', kind: 'ironbin', solid: false, use: 'prioryBin' });
       A({ x: 94, y: 87, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 38, y: 84, e: '🐦', name: 'The Priorygate pigeons', kind: 'pigeon', solid: false, use: 'pigeon' });
       /* THE EAST GATE, which is one tile wide, is the way out onto Marlow
@@ -2979,8 +3152,7 @@ const LEVELS = {
       A({ x: 29, y: 82, e: '📦', name: 'Crates, behind the stalls', kind: 'crate', solid: true, use: 'marketCrates' });
       A({ x: 45, y: 82, e: '📦', name: 'Crates, behind the stalls', kind: 'crate', solid: true, use: 'marketCrates' });
       A({ x: 42, y: 82, e: '🐦', name: 'The Shambles pigeons', kind: 'pigeon', solid: false, use: 'marketPigeons' });
-      A({ x: 38, y: 83, e: '🗑️', name: 'Bin, The Shambles', kind: 'bin', solid: false, use: 'prioryBin',
-        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 38, y: 83, e: '🗑️', name: 'Bin, The Shambles', kind: 'ironbin', solid: false, use: 'prioryBin' });
       A({ x: 46, y: 81, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
 
       /* ---- THE LANES ----
@@ -3136,9 +3308,15 @@ const LEVELS = {
       A({ x: 66, y: 97, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
       A({ x: 50, y: 105, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
       A({ x: 100, y: 97, e: '🪧', name: 'The park and ride sign', kind: 'sign', solid: true, use: 'parkAndRide' });
-      A({ x: 102, y: 96, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      /* Same again, at the foot of Marlow Street: x=102 is the first tile of
+         that street's carriageway, so this sign was standing in the mouth of
+         the junction it was warning about. One tile west puts it on the
+         corner. */
+      A({ x: 101, y: 96, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
       A({ x: 16, y: 96, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
-      A({ x: 41, y: 105, e: '🪧', name: 'The sign at the top of the ramp', kind: 'sign', solid: true, use: 'rampSign' });
+      /* Beside the ramp, not down it. The ramp is the tarmac at x 40..43 and
+         this stood in the middle of it, which is a bollard, not a sign. */
+      A({ x: 39, y: 105, e: '🪧', name: 'The sign at the top of the ramp', kind: 'sign', solid: true, use: 'rampSign' });
       A({ x: 94, y: 105, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'strayTrolley' });
       A({ x: 62, y: 105, e: '🖍️', name: 'The wall on Weirbank Road', kind: 'graf', solid: true, use: 'weirbankWall',
         furn: { sprite: 'wall.graf.nice', paint: true } });
@@ -3202,9 +3380,81 @@ const LEVELS = {
       A({ x: 98, y: 112, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 96, y: 110, e: '🪑', name: 'The bench on the quay', kind: 'bench', solid: true, use: 'quayBench' });
       A({ x: 80, y: 109, e: '🪧', name: 'The pay and display', kind: 'sign', solid: true, use: 'payAndDisplay' });
-      A({ x: 106, y: 111, e: '🌊', name: 'The river', kind: 'view', solid: true, use: 'theRiver' });
+      /* Standing on the quay rather than hung on it. A `view` is a wall mount by
+         default and there is no wall at the water's edge — the same note the
+         churchyard carries, for the same reason. */
+      A({ x: 106, y: 111, e: '🌊', name: 'The river', kind: 'view', solid: true, use: 'theRiver',
+        furn: { mount: null } });
       A({ x: 70, y: 109, e: '🗑️', name: 'Bin, the Quay', kind: 'bin', solid: false, use: 'streetBin',
         furn: { sprite: 'obj.wheeliebin', size: 26 } });
+
+      /* ---------- THE OTHER PAVEMENT ----------
+         Every road on this map is pavement, carriageway, pavement — and on four
+         of the five, ONE of those two pavements had everything on it and the
+         other had nothing at all. Fenn Street's southern footway ran a hundred
+         and four tiles with not one object on it; Station Road's had one;
+         Weirbank's had two. They were not quiet, they were unbuilt: a strip of
+         paving with a wall on one side and a kerb on the other and a hundred
+         metres of nothing in between.
+
+         So: lamp, tree, bin, planter, bench, roughly every nine tiles, which is
+         about the spacing a real one has and is close enough to regular that
+         the eye stops counting. Placed against the surfaces rather than by
+         hand — nothing here is on tarmac, in a junction mouth, or within a tile
+         of something that was already standing there.
+
+         The benches are the painted iron ones off the Victorian sheet rather
+         than the wooden settle the old town sits on. Two benches for two halves
+         of a town, and the line between them is the railway. */
+      /* Fenn Street, the side of it nothing has ever stood on. */
+      A({ x: 19, y: 40, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 28, y: 40, e: '🗑️', name: 'Bin, Fenn Street', kind: 'bin', solid: false, use: 'highStreetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 37, y: 40, e: '🌳', name: 'A street tree, Fenn Street', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 46, y: 40, e: '🪴', name: 'A planter, Fenn Street', kind: 'plant', solid: true, use: 'streetPlanter' });
+      A({ x: 55, y: 40, e: '🪑', name: 'A bench on Fenn Street', kind: 'bench', solid: true, use: 'streetBench',
+        furn: { sprite: 'obj.bench.iron' } });
+      A({ x: 66, y: 40, e: '🌳', name: 'A street tree, Fenn Street', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 73, y: 40, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 82, y: 40, e: '🗑️', name: 'Bin, Fenn Street', kind: 'bin', solid: false, use: 'highStreetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 91, y: 40, e: '🌳', name: 'A street tree, Fenn Street', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 100, y: 40, e: '🪴', name: 'A planter, Fenn Street', kind: 'plant', solid: true, use: 'streetPlanter' });
+
+      /* Bellhaven Road, the side of it nothing has ever stood on. */
+      A({ x: 3, y: 22, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 21, y: 22, e: '🌳', name: 'A street tree, Bellhaven Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 30, y: 22, e: '🗑️', name: 'Bin, Bellhaven Road', kind: 'bin', solid: false, use: 'highStreetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 39, y: 22, e: '🪑', name: 'A bench on Bellhaven Road', kind: 'bench', solid: true, use: 'streetBench',
+        furn: { sprite: 'obj.bench.iron' } });
+      A({ x: 48, y: 22, e: '🌳', name: 'A street tree, Bellhaven Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 57, y: 22, e: '🪴', name: 'A planter, Bellhaven Road', kind: 'plant', solid: true, use: 'streetPlanter' });
+      A({ x: 68, y: 22, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 75, y: 22, e: '🌳', name: 'A street tree, Bellhaven Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 84, y: 22, e: '🗑️', name: 'Bin, Bellhaven Road', kind: 'bin', solid: false, use: 'highStreetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 93, y: 22, e: '🪑', name: 'A bench on Bellhaven Road', kind: 'bench', solid: true, use: 'streetBench',
+        furn: { sprite: 'obj.bench.iron' } });
+      A({ x: 101, y: 22, e: '🌳', name: 'A street tree, Bellhaven Road', kind: 'tree', solid: true, use: 'streetTree' });
+
+      /* Corven Way's verge. Not its pavement: row 58 is the only footway on
+         that side and it is the one people walk down, so the trees and the
+         planters go on the grass behind it, which is what a verge is for. */
+      A({ x: 10, y: 59, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 19, y: 59, e: '🌳', name: 'A street tree, Corven Way', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 28, y: 59, e: '🗑️', name: 'Bin, Corven Way', kind: 'bin', solid: false, use: 'highStreetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 37, y: 59, e: '🪴', name: 'A planter, Corven Way', kind: 'plant', solid: true, use: 'streetPlanter' });
+      A({ x: 48, y: 59, e: '🌳', name: 'A street tree, Corven Way', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 55, y: 59, e: '🗑️', name: 'Bin, Corven Way', kind: 'bin', solid: false, use: 'highStreetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 66, y: 59, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 73, y: 59, e: '🌳', name: 'A street tree, Corven Way', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 82, y: 59, e: '🗑️', name: 'Bin, Corven Way', kind: 'bin', solid: false, use: 'highStreetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 91, y: 59, e: '🪴', name: 'A planter, Corven Way', kind: 'plant', solid: true, use: 'streetPlanter' });
+      A({ x: 97, y: 59, e: '🌳', name: 'A street tree, Corven Way', kind: 'tree', solid: true, use: 'streetTree' });
     }
   }
 };
