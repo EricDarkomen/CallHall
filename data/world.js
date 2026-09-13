@@ -35,6 +35,27 @@ const ZONES = {
      in it, a door to the stairs, a water cooler, and a noticeboard nobody
      reads. Same carpet as the corridor, because it is the same carpet. */
   landing:  { name: 'The Landing',      floor: '#2d333f', alt: '#282e39', wall: '#1a1f28', tint: '#8d9bb5', tile: 'floor.carpet.dim', wtile: 'wall.drywall' },
+  /* THE STAIRWELL, on every floor, and it is one zone rather than three because
+     it is one stairwell: you can tell which floor you are on by what is through
+     the door, and a stairwell that announced a different name on each landing
+     would be three stairwells. Bare block and concrete — the one finish in this
+     building nobody chose, because nobody was ever meant to see it. */
+  stairwell: { name: 'The Stairwell',   floor: '#33373c', alt: '#2f3338', wall: '#1c1f23', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block' },
+  /* The three rooms the ground floor is actually made of. It was one thirty by
+     sixteen hall with the furniture round the edges and a thirteen-tile square
+     of nothing in the middle of it, which is not a lobby, it is a car park with
+     a sofa in it. A lobby is a way in, a desk across the way in, and a lift
+     lobby behind the desk that you are not supposed to reach without passing
+     it. */
+  entrance: { name: 'Reception',        floor: '#333c4a', alt: '#2e3643', wall: '#1c2330', tint: '#4da3ff', surf: 'stone', tile: 'floor.diamond', wtile: 'wall.drywall' },
+  liftlob:  { name: 'The Lift Lobby',   floor: '#303a48', alt: '#2b3441', wall: '#1a212d', tint: '#4da3ff', surf: 'stone', tile: 'floor.diamond', wtile: 'wall.drywall' },
+  postrm:   { name: 'The Post Room',    floor: '#343a36', alt: '#2f3531', wall: '#1d2220', tint: '#5ad48a', surf: 'vinyl', tile: 'floor.sub', wtile: 'wall.drywall' },
+  /* And the two the fifth floor is made of. The Area Manager does not sit in
+     an open-plan office; that is the whole of what being the Area Manager is
+     for, and drawing him a desk in the middle of one was the same category
+     error as drawing his floor next to yours. */
+  corner:   { name: 'The Corner Office', floor: '#43292c', alt: '#3d2427', wall: '#281618', tint: '#ff5f56', tile: 'floor.herring', wtile: 'wall.drywall' },
+  board:    { name: 'The Boardroom',    floor: '#3a2c3e', alt: '#352738', wall: '#221926', tint: '#b48cff', tile: 'floor.carpet.vio', wtile: 'wall.drywall' },
   secret:   { name: '████████',         floor: '#1d2230', alt: '#191d29', wall: '#0d1017', tint: '#b48cff', surf: 'concrete', wsurf: 'block'  },
   /* Outdoors. Lighter than anything inside the building, because they are lit
      by the sky rather than by a strip light — see LEVELS.outside, which is the
@@ -270,12 +291,16 @@ const SURFACES = {
        what stops four hundred tiles of it reading as a car park. */
     floor: '#74787c', alt: '#6e7276', map: '#33302b', open: true
   },
-  /* And one that is neither: steps are ground you walk on, and they are here
-     rather than in a zone because the lane they are laid down runs through
-     three rooms and a gateway and has to look the same in all of them. Flat
-     tints, like the road: three treads to the tile is pattern enough without
-     every other tile of the flight being a different grey. */
-  steps: { tile: 'terrain.steps', floor: '#c2c8d0', alt: '#c2c8d0', map: '#6a717b' }
+  /* And two that are neither: steps are ground you walk on. Flat tints, like
+     the road — three or four treads to the tile is pattern enough without every
+     other tile of the flight being a different grey.
+
+     `steps` is the outdoor one and is what Fishers Steps is laid in. `stair` is
+     the indoor one: four concrete treads to the tile, tileable straight down a
+     column, and laid in the stairwell of every floor of this building so that a
+     flight reads as a flight instead of as one object standing on carpet. */
+  steps: { tile: 'terrain.steps', floor: '#c2c8d0', alt: '#c2c8d0', map: '#6a717b' },
+  stair: { tile: 'terrain.stair', floor: '#b8bec8', alt: '#b8bec8', map: '#50565f' }
 };
 
 /* THE BUILDING, VERTICALLY — what is behind the buttons in the lift car.
@@ -445,7 +470,26 @@ const FURN = {
      Both hang on nothing and stand on the floor: a lift is a hole in a wall but
      what is in your way is the doorway, which is most of a tile. */
   lift: { size: 34, art: 'lift', ground: [0.86, 0.34] },
-  stairs: { size: 30, art: 'stairs', ground: [0.8, 0.5] },
+  /* THE STAIRS, and they are kit art now rather than three rectangles and a
+     rail drawn in a canvas context. The search for stair art stopped the first
+     time at `Short Steps A`, which is the outdoor step Fishers Steps is laid
+     in; `Cement Stairs A` was in the same folder and is a concrete flight, four
+     treads to the tile, which is what the inside of an office stairwell is.
+     The flight underfoot is the same crop laid as a SURFACE — see
+     SURFACES.stair — so the object is the top of a real flight rather than a
+     picture of one standing on carpet. */
+  stairs: { size: 32, sprite: 'terrain.stair', ground: [0.86, 0.6] },
+  /* Nine steel pigeonholes on a wall. Both banks of these in the game were an
+     emoji: the post on the ground floor, and the six bells beside the door to
+     the flats over the parade. */
+  pigeonholes: { mount: 'wall', size: 26, sprite: 'wall.pigeonholes' },
+  /* The single pedestal desk somebody has because they are not on a bank of
+     them. There are two in this building and R.desks() draws neither: it draws
+     the thirty-two on the fourth floor, properly, and should go on doing it. */
+  deskbig: { size: 40, sprite: 'obj.desk.office', ground: [0.94, 0.62] },
+  /* A timber counter, for the two places in this game with one: the bar of The
+     Mitre and the pitches in the Market Hall. */
+  woodcounter: { size: 30, sprite: 'obj.counter.wood', ground: [0.94, 0.5] },
 
   /* Drawn as real furniture by the renderer, so the emoji would be a second
      table sitting on the first. A cubicle draws its own stall; the pan inside
@@ -690,13 +734,13 @@ const WP = {
   /* DOWNSTAIRS. Ron is on the door on the ground floor, which is a different
      level, so his waypoint says so. Behind the security counter rather than in
      it: a waypoint inside a counter is a waypoint nobody reaches. */
-  lobby: [16, 7, 'ground'], reception: [10, 7, 'ground'],
+  lobby: [15, 7, 'ground'], reception: [11, 7, 'ground'],
   corridor: [30, 12], lift: [22, 37],
   training: [7, 31], archive: [6, 8], serverRoom: [54, 31],
   /* UPSTAIRS. The Management Floor is the fifth floor and always was — it is
      on the directory in the lobby. Two people work up there and one comes down
      twice a day, and all three of them now do it in the lift. */
-  mgmt: [6, 5, 'five'], synergy: [24, 5, 'five'],
+  mgmt: [5, 5, 'five'], synergy: [24, 13, 'five'],
   water: [15, 33], stationery: [48, 15],
   /* added with the new rooms */
   meetRoom: [22, 5], meetHead: [24, 4], wellRoom: [36, 5], beanbag: [34, 4],

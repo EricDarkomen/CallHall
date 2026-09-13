@@ -1148,7 +1148,7 @@ const NPCS = [
      said since the day it was written. `level` is what tells NPCM which floor
      somebody is ON; `desk` is a square on that floor. He comes down for lunch
      like everybody else, in the lift, and you will see him waiting for it. */
-  level: 'five', desk: [24, 5], colour: '#b48cff',
+  level: 'five', desk: [24, 13], colour: '#b48cff',
   schedule: [[540,'synergy'],[720,'breakTable'],[760,'synergy']],
   lines: ["Synergy.", "We’re aligning.", "There are four of us. There have always been four of us.", "Circling."],
   entry() { return G.flags.metColin ? 'again' : 'first'; },
@@ -1185,7 +1185,7 @@ const NPCS = [
      He is the only person in this game who is not on the hub, and "nothing
      happens in this lobby I don't know about" is a considerably better line now
      that the lobby is somewhere you have to have come through. */
-  level: 'ground', desk: [16, 7], colour: '#ffb347',
+  level: 'ground', desk: [15, 7], colour: '#ffb347',
   schedule: [[540,'lobby'],[720,'lobby'],[780,'lobby']],
   lines: ["Morning.", "Lanyard.", "In or out, don’t hover.", "Nothing happens in this lobby I don’t know about."],
   entry() { return G.flags.metRon ? 'again' : 'first'; },
@@ -1218,7 +1218,7 @@ const NPCS = [
      on the fourth floor — the corridor, the break room, the printer — and all
      of it is now four floors of lift away, which is exactly the amount of
      warning the fourth floor has always wished it had. */
-  level: 'five', desk: [5, 4], colour: '#ff5f56',
+  level: 'five', desk: [5, 5], colour: '#ff5f56',
   /* Four o'clock, when the spit goes on, on one of the two stools nobody
      sits on in Bellhaven Kebab. There has been a photograph of Nigel in
      that doorway on the fourth floor since 2019 and nobody has ever

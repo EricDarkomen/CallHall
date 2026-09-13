@@ -4249,4 +4249,116 @@ const Acts = {
         'There is a dent in the side of it at about knee height and it is the only violent thing in this entire building.',
         'On top of it: a plant that is not real, and eleven years of the dust that settles on a plant that is not real.'])]);
   },
+
+  /* --- WHAT THE REBUILD OF THE GROUND AND FIFTH FLOORS BROUGHT WITH IT --- */
+  emptyChair() {
+    insp('💺', 'The chair nobody is in', 'Behind reception', [
+      'A typist chair behind the reception counter, at the height somebody set it to, turned away from the desk at the angle somebody leaves a chair at when they have got up to do something and are coming back.',
+      'Reception has been unstaffed since the restructure. The chair has been at that angle for two years.',
+      pick(['There is a cardigan over the back of it. There has always been a cardigan over the back of it.',
+        'One castor is not from this chair. You know exactly which one and you know exactly where it came from.',
+        'Ron does not sit in it. Ron has a stool. Ron considers the chair to be somebody else’s.'])]);
+  },
+  waitingChairs() {
+    insp('🪑', 'The chairs by the window', 'Four, bolted together', [
+      'Four moulded chairs on a common frame, bolted to each other so they cannot be rearranged and cannot be taken, which is a decision somebody made about people.',
+      pick(['A courier is on the end one with a device on his knee, waiting for somebody to come down. He has been there eleven minutes.',
+        'Nobody. There has not been a visitor in this building since a Tuesday in 2023.',
+        'Somebody has left a lanyard on the second one. It is not a CallHall lanyard.'])]);
+  },
+  hallPlanters() {
+    insp('🪴', 'The planters in the hall', 'Contract maintained', [
+      'A run of three timber planters down the middle of the hall with something glossy and architectural in them, on a contract, watered by a man who comes on a Thursday.',
+      'They are not here to be looked at. They are here so that you cannot walk straight at the desk, and everybody does exactly what they are shaped to make everybody do without once noticing they have been steered.']);
+  },
+  aBoard() {
+    insp('🪧', 'The A-board', 'In the middle of the floor', [
+      pick(['CAUTION — CLEANING IN PROGRESS. There is no cleaning in progress. It has been there since before you started.',
+        'A yellow wet-floor sign on a floor that is not wet, in a hall that is not being cleaned, at an angle that suggests it was last moved by somebody walking into it.',
+        'PLEASE REPORT TO RECEPTION. Reception is unstaffed. The sign points at the unstaffed reception.']),
+      'Every single person who works in this building walks round it twice a day and not one of them has ever moved it.']);
+  },
+  liftPhoto() {
+    insp('🖼️', 'The photograph in the lift lobby', 'Framed', [
+      'A large framed photograph of somewhere with mountains in it, in a corporate frame, hung at the height a contract hangs things.',
+      'It is not this town. It is not near this town. It was chosen from a catalogue by somebody who was choosing eleven of them for eleven buildings and it is in all eleven.']);
+  },
+  franking() {
+    insp('🖨️', 'The franking machine', 'Post room', [
+      'A franking machine on a bench with a set of scales beside it and a chart of postage rates that is two increases out of date.',
+      'It is the only machine in this building that has never once broken, never been escalated, and never been mentioned in a meeting. Nobody knows who maintains it. Somebody does.']);
+  },
+  floorFive() {
+    insp('🪧', 'FLOOR 5 · MANAGEMENT', 'Wayfinding', [
+      'The same sign as the one on the fourth floor, in the same typeface, saying the other thing.',
+      'It is screwed to the wall opposite the lift so that it is the first thing anybody arriving on this floor reads, which given that you need a keycard to arrive on this floor is a sign for an audience of four.']);
+  },
+  cornerWindow() {
+    insp('🪟', 'The window in the corner office', 'Two aspects', [
+      'A corner office has two windows at right angles to each other and that is the whole of what a corner office is: not the size, not the door, the two aspects.',
+      'One of them looks out over the car park and one of them looks out over the road, and between them you can see who has arrived and who is leaving without getting up.']);
+  },
+  boardScreen() {
+    insp('📺', 'The screen in the boardroom', 'HDMI · input 2', [
+      'A screen on a bracket with a cable coiled on the table under it and a laminated card explaining how to connect to it that is four sentences long and is wrong at sentence two.',
+      'The cable is an HDMI cable. It is the good one. The one in Meeting Room 2 on the fourth floor is the one somebody swapped it for.']);
+  },
+  boardWhiteboard() {
+    insp('📝', 'The whiteboard in the boardroom', 'Do not erase', [
+      pick(['A box with four words in it, three arrows, and DO NOT ERASE underlined twice in the corner. It is from a meeting in March.',
+        'Wiped clean, which is more unsettling than anything that could have been written on it.',
+        'A diagram of this business with your floor drawn as one box near the bottom and no names in it.']),
+      G.flags.knowTuesday
+        ? 'Bottom right, very small, in the handwriting you now recognise: a date, and the word MEETING.'
+        : 'Bottom right, very small, in handwriting somebody has not quite wiped off: something you cannot read from here.']);
+  },
+  northWalkTombs() {
+    insp('🪦', 'The tombs along the north walk', 'Outside the north door', [
+      'Chest tombs along the north side, where the sun does not get to, which is why they are the ones with moss on and the ones on the south side are not.',
+      'The north side of a churchyard was the cheap side for eight hundred years and everybody who could afford the south side took it, and that is the single most legible piece of social history in this entire town.']);
+  },
+  flatsBells() {
+    insp('📬', 'The bells, and the post', 'Six of them', [
+      'Six bell pushes in a brass plate and, under them, six steel pigeonholes with the doors hanging open on four.',
+      'Two of the bells have names on. Two have names that have been crossed out and written over. One has a strip of masking tape. One is blank and is the one that works.',
+      pick(['There is post in five of the six and three of the names on it are nobody’s.',
+        'A takeaway menu in every single one, including the one that is nobody’s.',
+        'Flat 6’s is full to the front, which means whoever is in Flat 6 has not been down in a while.'])]);
+  },
+  permitSign() {
+    insp('🪧', 'PERMIT HOLDERS ONLY', 'Aldergate Rise', [
+      'PERMIT HOLDERS ONLY MON–FRI 8AM–6PM, on a post, above eleven cars none of which is displaying a permit.',
+      'The permits were issued in 2016 and were valid for a year. Nobody has issued any since and nobody has taken the sign down, so the arrangement now is simply that everybody parks here.']);
+  },
+  loadingBay() {
+    insp('🪧', 'The loading bay sign', 'Cargate Lane', [
+      'DELIVERIES — RETAIL PARK. NO WAITING. VEHICLES LEFT HERE WILL BE REMOVED.',
+      'Everything that is in every shed on Corven Way came in through this lane on a pallet at six in the morning, and this is the only sign in Bellhaven that describes something that genuinely happens.']);
+  },
+  coachDrop() {
+    insp('🪧', 'The coach drop', 'Marlow Street', [
+      'COACH SET DOWN ONLY. 20 MINUTES. And a brown sign under it with a picture of the minster on it.',
+      'Four coaches a week in the summer and none at all between November and March. The people who get off them walk in through the East Gate, do the minster, do the market, and are gone by three.']);
+  },
+  wallStop() {
+    insp('🚏', 'The stop outside the wall', 'Station Road', [
+      'A pole, a flag and a timetable case with the glass gone out of it and the timetable behind perspex that has gone the colour of weak tea.',
+      'It is the stop for the North Gate and it is four hundred yards from the North Gate, which is how bus stops work everywhere.']);
+  },
+  townMap() {
+    insp('🪧', 'The town map', 'You are here', [
+      'A board with a plan of the old town on it under scratched perspex: the wall, the four gates, Priorygate, the Shambles, the minster and the quay, with a red dot and YOU ARE HERE.',
+      'The dot is in the right place. The map has north at the bottom, because it is drawn the way you are facing, which is correct and which about one person in nine finds unbearable.']);
+  },
+  gateBench() {
+    insp('🪑', 'The bench outside the gate', 'Facing the wall', [
+      'A bench on the pavement outside the North Gate, facing the gate, which means facing the thing worth looking at — and there is not a single other bench in this town that faces the right way.',
+      pick(['Two people eating chips out of the paper at half past one on a working day.',
+        'Nobody. It is raining.',
+        'Somebody asleep, upright, with a rucksack between their feet, entirely undisturbed.'])]);
+  },
+  weirbankBench() {
+    insp('🪑', 'The bench on Weirbank Road', 'Dedicated', [
+      'Another plate, another name, another two dates, and this one has the words WHO WALKED THIS WAY EVERY DAY on it, which is the best thing written on anything in Bellhaven.']);
+  },
 };
