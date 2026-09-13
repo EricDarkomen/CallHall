@@ -632,5 +632,91 @@ export default {
         rect: [30, 30, 37, 37],
       },
     },
+    {
+      /* WROUGHT-IRON RAILINGS, two tiles of them, with a timber top rail and a
+         post every tile. The thing that goes round a churchyard, a public
+         garden and the front of anything municipal in an English town — and
+         the town has had all three of those since the map was expanded, each
+         of them edged with a construction-site barrier emoji.
+
+         SIXTY-FOUR WIDE, not the sixty-seven the sheet draws. Upstream's panel
+         carries a post at BOTH ends so that one of them can stand alone; a run
+         of them laid end to end at that width doubles the post up every two
+         tiles, which is a thing nobody builds. Cut just short of the far post
+         instead and the next copy along supplies it — the run comes out with
+         one post per tile, evenly, however long it is, which is what railings
+         are. Laid out four across and looked at before this was written down. */
+      name: 'obj.railing',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Structure/Fences/Ornamental Fence B.png',
+        creditsPath: 'Structure/Fences/Credits.txt',
+        assetName: 'Ornamental Fence B',
+        rect: [14, 110, 64, 18],
+      },
+    },
+    {
+      /* A TALL ARCHED WINDOW IN A STONE SURROUND, nearly three tiles of it. For
+         the minster, which is a mediaeval building the game has been drawing
+         with the same rounded shop window as a bookmaker's on the High Street.
+
+         ASSEMBLED, because the kit ships it in pieces on purpose: one row of
+         arched heads, then three rows of mullioned shaft, so that a wall can be
+         given a window of whatever height it has room for. Taking the shaft
+         alone gives a square-headed manor-house window, which is a perfectly
+         good window and is not a church's. The head goes on the shaft here, in
+         the sheet, where it can be re-derived — the two are registered to each
+         other upstream and the mullion runs straight through the join.
+
+         The kit ships the glass in three: unlit, daylit and lit from within.
+         This is the daylit one, and it is the only one of the three that is not
+         a lie half the time — the town runs a clock and the minster is not on a
+         switch. Glass that reads as glass at every hour beats glass that is
+         right for two of them. */
+      name: 'wall.window.stone',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Windows/Stone Windows A.png',
+        creditsPath: 'Structure/Windows/Credits.txt',
+        assetName: 'Stone Windows A',
+        size: [32, 89],
+        layers: [
+          { rect: [32, 5, 32, 27], at: [0, 0] },
+          { rect: [32, 34, 32, 62], at: [0, 27] },
+        ],
+      },
+    },
+    {
+      /* FLOWERS. Two clumps out of a sheet of eleven colours in four sizes,
+         and the two are a deliberate pair rather than a shortage of taste: one
+         white, one red, planted alternately, is how a municipal bed is planted
+         and how it stops reading as a stamp.
+
+         The dense row rather than the sparse one — a single stem at this size
+         is three green pixels and a dot, which is a weed. These are the ones
+         with something in them to see from a tile away. */
+      name: 'obj.flowers.white',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Terrain/flowers.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Flowers',
+        rect: [0, 37, 31, 27],
+      },
+    },
+    {
+      name: 'obj.flowers.red',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Terrain/flowers.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Flowers',
+        rect: [64, 37, 31, 27],
+      },
+    },
   ],
 };

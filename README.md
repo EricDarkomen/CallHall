@@ -290,6 +290,26 @@ Weirbank Road, and at the bottom the quay itself: warehouses, barrels, mooring
 rings, a boat that has not moved, and twelve pay-and-display bays you can drive
 the pool car down a one-in-seven ramp to get to.
 
+**Fifteen benches, four windows and a clock.** The old town was drawn with a
+chair emoji anywhere somebody sits down, a shop window on the minster and a
+mantel clock in the market, because there was no kit with any of those in it.
+There is now. The benches on the green, on Priorygate, in the gardens, on the
+platform and along the quay are one bench, cut down from a piece of wooden
+furniture that was nearly three tiles long — see the note in
+`tools/sheets/wood.mjs` about where it is spliced and why that is allowed. The
+minster has four tall arched windows in stone, assembled in the sheet from the
+arched heads and mullioned shafts the kit ships separately so a wall can be
+given whatever height of window it has room for. The churchyard and the castle
+gardens have wrought-iron railings, cut to join to themselves every two tiles
+rather than doubling a post up at each end. And there are flower beds on the
+green and in the gardens, planted white and red alternately, which is what stops
+a border reading as a stamp.
+
+Two clocks did not get the new art and that is the point of the note beside
+each: the lobby's is described in its own act as a plain white battery clock
+bought in a multipack, and the minster's is an astronomical dial of 1484. Art
+that contradicts the writing is worse than no art.
+
 **Three things join the two halves,** and between them they are the whole shape of
 this map: two road bridges over the railway — Cargate Lane and Marlow Street — and
 the subway under it. Four more circuits of traffic run down there, two of them
@@ -934,6 +954,14 @@ this regenerates and would just overwrite. Picking the crop rect is still a
 human job: never take one off a contact sheet without tiling it a few times
 over to check for a seam.
 
+A sprite is usually one crop, and may instead be a STACK of them — `layers`,
+with a finished `size` and each layer saying where in it to sit. That is for
+kits that ship a thing in pieces on purpose: a road sign as a pole and a face,
+a cased clock as the case on one layer and the dial on another, a bench too
+long for its tile taken in two halves and joined. Doing it in the sheet keeps
+the assembly re-derivable, rather than performed once in an image editor and
+pasted in as pixels nobody can account for.
+
 A sprite names its source in one of two ways, and a sheet may not mix them,
 because a line in `CREDITS.md` names one source per sheet and has to stay true.
 
@@ -1126,19 +1154,24 @@ the awnings — are not ours. They are pixel art from the
 NonCommercial or NoDerivatives terms — the PNGs in `art/sprites/` are the clean
 copies to take if you want them.
 
-Every sheet listed above uses only assets offered under OGA-BY 3.0 or CC0,
+Most of the sheets above use only assets offered under OGA-BY 3.0 or CC0,
 deliberately: neither carries a ShareAlike term, so using them costs
 attribution and nothing else. `tools/build-sprites.mjs` re-checks that against
 upstream's own licence data on every build and refuses to produce a sheet if it
 stops being true.
 
-ShareAlike art is not banned outright — it is kept in a file of its own.
-`art/sprites/sanitary.png` has always been that: one CC-BY-SA 3.0 tileset, in a
-sheet nothing else is packed into, under its own terms in `LICENSE` part 3. A
-sheet may declare `part: 3` and take CC-BY-SA art on the same footing, and the
-build refuses to mix the two in one PNG — mixing would make the whole sheet an
+ShareAlike art is not banned outright — it is kept in files of its own, and
+there are two of them. `art/sprites/sanitary.png` has always been one: a
+CC-BY-SA 3.0 tileset, in a sheet nothing else is packed into, under its own
+terms in `LICENSE` part 3. `art/sprites/wood.png` is the other, and it is the
+first one the build tool makes rather than carries — it says `part: 3`, it
+holds two crops off one CC-BY-SA 3.0 submission, and `assertOnePart()` refuses
+to write it if anything else ever ends up in there. The build refuses to mix
+the two kinds in one PNG at all: mixing would make the whole sheet an
 Adaptation of a ShareAlike work and place a term on other artists' work that is
-not ours to place. See `LICENSE`, and the build section above.
+not ours to place. `CREDITS.md` marks a part-3 sheet in the list at the top of
+it, so the OGA-BY sentence underneath is not quietly covering something it does
+not cover. See `LICENSE`, and the build section above.
 
 A work of fiction; CALLHALL Services plc and everyone in it are invented.
 "Call of Duty" is a trade mark of Activision Publishing, Inc. — this is an

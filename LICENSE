@@ -9,10 +9,11 @@ thing.  Read the part that covers the file you are interested in.
      the Liberated Pixel Cup community, licensed OGA-BY 3.0 (some contributions
      CC0).  NOT covered by part 1 — see below.
 
-  3. The sanitary sheet, art/sprites/sanitary.png.  Third-party pixel art by
-     Matthew Nash, licensed CC-BY-SA 3.0.  ShareAlike, so it carries an
-     obligation parts 1 and 2 do not, and it is in a file of its own for
-     exactly that reason — see below.
+  3. The ShareAlike sheets, art/sprites/sanitary.png and art/sprites/wood.png.
+     Third-party pixel art by Matthew Nash and by bluecarrot16 and others,
+     licensed CC-BY-SA 3.0.  ShareAlike, so it carries an obligation parts 1
+     and 2 do not, and it is kept in files of its own for exactly that
+     reason — see below.
 
 The split is deliberate.  Part 1's NoDerivatives term is ours to place on our
 own work; it is not ours to place on somebody else's art, and doing so would
@@ -150,10 +151,10 @@ Liberated Pixel Cup endorses this game or is connected with it.
 
 
 ===============================================================================
-PART 3 — THE SANITARY SHEET
+PART 3 — THE SHAREALIKE SHEETS
 ===============================================================================
 
-One file, kept apart from Part 2 on purpose.
+Two files, kept apart from Part 2 and from each other on purpose.
 
 Which files this covers
 -----------------------
@@ -162,10 +163,21 @@ Which files this covers
     building's washrooms.  Two rectangles, cut from the Public Toilet Tileset
     and packed into a sheet of their own.
 
+  * art/sprites/wood.png — the bench the town sits on and the clock on the
+    wall.  Two rectangles, cut from the layered form of [LPC] Wooden Furniture
+    and packed into a sheet of their own.
+
+    Each sheet holds ONE work by ONE set of artists.  They are two files rather
+    than one for the same reason neither is packed into world.png: a sheet is
+    an Adaptation of everything in it, and two unrelated ShareAlike works
+    sharing a file would make each an Adaptation of the other's art with no
+    way to say afterwards which artist's term reached which pixel.
+
 Which files this does NOT cover
 -------------------------------
 
-  * art/sprites/world.png, art/sprites/revised.png and the parts-*.png sheets.
+  * art/sprites/world.png, art/sprites/revised.png, art/sprites/town.png,
+    art/sprites/streets.png, art/sprites/faces.png and the parts-*.png sheets.
     Those are Part 2 and contain none of this art.  The build refuses to mix
     them; see assertOnePart() in tools/build-sprites.mjs.
 
@@ -182,10 +194,14 @@ CC-BY-SA 3.0 (Creative Commons Attribution-ShareAlike 3.0 Unported).
 Section 4(a) permits the URI to stand in place of a copy of the licence text,
 which is why there is no local copy of it here as there is for OGA-BY 3.0.
 
-The tileset is offered under CC-BY-SA 3.0 or GPL 3.0, at the licensee's option.
-This project takes CC-BY-SA 3.0.  GPL 3.0 is the worse of the two here: its
+Both works are offered under CC-BY-SA 3.0 or GPL 3.0, at the licensee's option;
+[LPC] Wooden Furniture offers CC-BY-SA 4.0 as well.  This project takes
+CC-BY-SA 3.0 for both.  GPL 3.0 is the worse of the options here: its
 "preferred form for making modifications" would reach the build inputs, and
-tools/ is deliberately not published.
+tools/ is deliberately not published.  CC-BY-SA 4.0 is declined only because
+3.0 is the version this part already states and one version is simpler to
+honour than two; nothing is lost by it, as the 4.0 offer is an addition to the
+3.0 one rather than a replacement for it.
 
 Why this file is separate
 -------------------------
@@ -200,35 +216,69 @@ whole and unmodified alongside independent works, and CC-BY-SA 3.0 section 4(a)
 says a Collection need not be made subject to this licence.  That is the same
 argument Part 2 already makes, quoting the same clause, for the OGA-BY sheets.
 
-Had this art been packed into world.png, that sheet would have become an
-Adaptation of a ShareAlike work and every OGA-BY contribution in it would have
-been dragged into a licence its artists never chose.  Hence the separate file,
-and hence the build-time assertion that keeps it separate.
+Had this art been packed into world.png or town.png, that sheet would have
+become an Adaptation of a ShareAlike work and every OGA-BY contribution in it
+would have been dragged into a licence its artists never chose.  Hence the
+separate files, and hence the build-time assertion that keeps them separate.
 
 Attribution
 -----------
+
+art/sprites/sanitary.png
 
   Original author:  Matthew Nash
   Source:           https://opengameart.org/content/public-toilet-tileset
   Title:            Public Toilet Tileset
 
+art/sprites/wood.png
+
+  Original authors: bluecarrot16, Baŝto, Lanea Zimmerman (Sharm),
+                    William Thompson, Tuomo Untinen (Reemax),
+                    Janna/Lilius/Jannax
+  Source:           https://opengameart.org/content/lpc-wooden-furniture
+  Title:            [LPC] Wooden Furniture
+
 Changes were made
 -----------------
 
 Stated plainly, as section 4(c) requires: the original artwork has been
-modified.  Two rectangles — one wall tile and one toilet pan — were cut from
-the tileset and packed into a single indexed PNG.  No original sheet is
-reproduced here intact.
+modified.
+
+For sanitary.png: two rectangles — one wall tile and one toilet pan — were cut
+from the tileset and packed into a single indexed PNG.
+
+For wood.png: two pieces were cut from the dark-wood layer of the submission's
+layered form and packed into a single indexed PNG.  The bench was additionally
+SHORTENED — taken in two thirty-two pixel halves and joined, dropping the
+twenty-six unbroken pixels between them, so that it is two tiles long rather
+than nearly three.  The clock is the case from one layer with the dial from
+another stacked back onto it, which is how the submission ships it.
+
+No original sheet is reproduced here intact.
 
 Standing of this attribution
 ----------------------------
 
-Recorded honestly because it should be re-checkable.  The author and the
-licence above were reported by the project owner from the source page named
-above.  They could not be verified from inside the build environment, which
-cannot reach opengameart.org or web.archive.org; the PNG carries no tEXt chunk,
-and the name does not appear in the official Liberated Pixel Cup asset
-repository.  The same note is carried in art/CREDITS.md.
+Recorded honestly because it should be re-checkable, and the two files do not
+stand in quite the same place.
+
+For sanitary.png, the author and the licence were reported by the project owner
+from the source page named above.  They could not be verified from inside the
+build environment at the time, which could not reach opengameart.org or
+web.archive.org; the PNG carries no tEXt chunk, and the name does not appear in
+the official Liberated Pixel Cup asset repository.
+
+For wood.png, the authors and the licence were read off the source page and off
+the CREDITS-furniture.txt the submission ships beside the art, and they are
+written into tools/sheets/wood.mjs where they can be compared against that page
+by anyone who opens it.  What the build re-checks is not the page but the
+BYTES: the sheet pins the sha256 of the archive it was cut from and refuses to
+build if the download no longer matches, so a re-upload under different terms
+stops the build rather than passing through it.  That is a guarantee about the
+art not having changed, not about the page having been read correctly; the
+reading is still a human's, and if it is wrong it should be corrected.
+
+The same notes are carried in art/CREDITS.md.
 
 If this attribution is wrong, it should be corrected rather than removed: the
 art is licensed, and the obligation is to credit the right person.
@@ -236,8 +286,9 @@ art is licensed, and the obligation is to credit the right person.
 No endorsement
 --------------
 
-Attribution does not imply that Matthew Nash, OpenGameArt.org, or the Liberated
-Pixel Cup endorses this game or is connected with it.
+Attribution does not imply that Matthew Nash, bluecarrot16, any other artist
+named above, OpenGameArt.org, or the Liberated Pixel Cup endorses this game or
+is connected with it.
 
 
 ===============================================================================

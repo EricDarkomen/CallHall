@@ -3521,6 +3521,29 @@ const Acts = {
         : Sky.season() === 'summer' ? 'Bedding out, in the borough’s colours, in a pattern, with the year picked out in something silver. This town does this every year and has done it every year through everything.'
         : 'Being lifted. Two men and a wheelbarrow and the whole thing gone by Thursday, to be somewhere else entirely by the weekend.']);
   },
+  /* THE RAILINGS, twice. Two runs of the same ironwork a hundred and fifty
+     years apart in intention and identical in section, which is the sort of
+     thing this town does without noticing. */
+  churchRailings() {
+    insp('🚧', 'The churchyard railings', 'Wrought, then painted, repeatedly', [
+      'Iron railings on a low kerb, black, with a spike on every other bar and a scroll along the top rail.',
+      'They went for scrap in 1942 like everybody else’s and came back in 1967 as a copy, which is on a plaque on the gate pier and is the only part of the story anybody local disputes.',
+      'Somebody has locked a bicycle to them. There is a sign asking people not to lock bicycles to them.']);
+  },
+  gardenRailings() {
+    insp('🚧', 'The garden railings', 'Between the lawn and the backs', [
+      'The same railings as the churchyard, painted a different black, marking where the gardens stop and the service yards of Marlow Street begin.',
+      'The far side of them is bins, a fire door and a stack of pallets. The near side is a lawn that is cut in stripes. Nine inches of iron doing an enormous amount of work.']);
+  },
+  greenBedding() {
+    insp('🌸', 'The bedding on the green', 'Not the parks department’s', [
+      'Four beds on the green, planted by the Bellhaven in Bloom committee rather than by the council, which is a distinction the committee makes and the council does not.',
+      Sky.season() === 'winter' ? 'Cut back to the soil and mulched. A laminated card says what is under it and when it will be up.'
+        : Sky.season() === 'spring' ? 'Coming through in a wave, white one end and red the other, which was argued about at a meeting and minuted.'
+        : Sky.season() === 'summer' ? 'Out, and doing rather better than the borough’s own beds up in the gardens, which is the entire point and is never said aloud.'
+        : 'Gone over, and left gone over on purpose — the committee leaves the seed heads for the birds and has a leaflet about why.']);
+  },
+
   gardensSign() {
     insp('🪧', 'The gardens sign', 'Open dawn till dusk', [
       'CASTLE GARDENS. OPEN DAWN TO DUSK. NO CYCLING. NO BARBECUES. DOGS ON LEADS.',
@@ -3997,7 +4020,7 @@ const Acts = {
   },
   marketClock() {
     insp('🕰️', 'The market clock', 'Right', [
-      'Over the door, wound by hand on a Monday by whoever is in first, and it keeps very good time indeed.',
+      'High on the gable at the far end, over the pitches, wound by hand on a Monday by whoever is in first, and it keeps very good time indeed.',
       'It is the only clock in this game that is telling the truth.']);
   },
   marketBins() {

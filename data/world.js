@@ -422,7 +422,12 @@ const FURN = {
   screen: { mount: 'wall', size: 17, art: 'screen' },
   roll: { mount: 'wall', size: 16, art: 'roll' },
   sign: { mount: 'wall', size: 18, art: 'sign' },
-  clock: { mount: 'wall', size: 19 }, mirror: { mount: 'wall', size: 20 },
+  /* The clock is a cased wall clock now rather than a mantel-clock emoji, and
+     the hands on it do not move. See tools/sheets/wood.mjs: the game tells
+     the time in four other places and a clock on a wall is a thing in a
+     room. It is the one sprite in this file that is not part 2 — its own
+     sheet, its own licence, and nothing here has to know that. */
+  clock: { mount: 'wall', size: 19, sprite: 'wall.clock' }, mirror: { mount: 'wall', size: 20 },
   view: { mount: 'wall', size: 26 },
   dryer: { mount: 'wall', size: 17, art: 'dryer' }, fire: { mount: 'wall', size: 19 },
   graf: { mount: 'wall', size: 15 },
@@ -552,7 +557,8 @@ const FURN = {
      three cars parked in one. */
   /* A bench is longer than it is deep, and a barrier is a pole across a gap:
      both are things you get round the end of rather than square blocks. */
-  bench: { size: 30, ground: [0.86, 0.4] }, barrier: { size: 26, ground: [0.8, 0.34] },
+  bench: { size: 30, sprite: 'obj.bench', ground: [0.86, 0.4] },
+  barrier: { size: 26, ground: [0.8, 0.34] },
   puddle: { size: 22 },
   /* THE SIGN OVER THE DOOR, which is what a shop's emoji has always been and
      what `high` finally says out loud. It hangs on the fascia rather than at
@@ -669,6 +675,22 @@ const FURN = {
      because what is in your way is four pixels of galvanised tube. */
   noentry: { size: 24, sprite: 'sign.noentry', ground: [0.28] },
   signals: { size: 34, sprite: 'sign.signals', ground: [0.24] },
+  /* WROUGHT IRON, two tiles of it at a time. Same argument as the fence above
+     and then one further: railings go round things, so they are laid in runs
+     of two tiles and the sprite is cut to join to itself at that pitch — see
+     tools/sheets/town.mjs. The footprint is one tile's worth of nothing much,
+     because what is in your way is a row of bars. */
+  railing: { size: 30, sprite: 'obj.railing', ground: [0.96, 0.22] },
+  /* A minster window: two tiles tall, in stone, and pointed. Hung like every
+     other thing on a wall, which means the north face and nowhere else — the
+     renderer falls back to the emoji on the other three sides, and there is
+     nothing to fall back to here, so these go on north walls only. */
+  gothicwin: { mount: 'wall', size: 30, sprite: 'wall.window.stone', high: 1.9 },
+  /* A clump of bedding plants. White by default and red where a bed says so —
+     one colour laid the whole length of a border is a stamp, and two alternated
+     is a border. Nothing to walk into: a flower bed is ankle high and the
+     ground under it is the ground. */
+  flowers: { size: 26, sprite: 'obj.flowers.white' },
 };
 
 /* THE FOURTH FLOOR'S OWN ROOMS, and Management is not among them any more.
