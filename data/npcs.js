@@ -1143,7 +1143,12 @@ const NPCS = [
 {
   id: 'colin', name: 'Colin', face: '🧑‍💼', role: 'Synergy',
   /* No `home:`, and it is written rather than missed — see the note above. */
-  desk: [60, 6], colour: '#b48cff',
+  /* THE FIFTH FLOOR. Synergy has always been on the Management Floor and the
+     Management Floor is the fifth, which is what the directory in the lobby has
+     said since the day it was written. `level` is what tells NPCM which floor
+     somebody is ON; `desk` is a square on that floor. He comes down for lunch
+     like everybody else, in the lift, and you will see him waiting for it. */
+  level: 'five', desk: [24, 5], colour: '#b48cff',
   schedule: [[540,'synergy'],[720,'breakTable'],[760,'synergy']],
   lines: ["Synergy.", "We’re aligning.", "There are four of us. There have always been four of us.", "Circling."],
   entry() { return G.flags.metColin ? 'again' : 'first'; },
@@ -1173,10 +1178,14 @@ const NPCS = [
 {
   id: 'ron', name: 'Big Ron', face: '💂', role: 'Security · sees everything',
   /* No `home:`, and it is written rather than missed — see the note above. */
-  /* Behind the counter, not in front of it. The counter stops people now, and
-     it stopped Ron too — he spawned on the visitors' side and spent the
-     morning shouldering his own desk. */
-  desk: [30, 37], colour: '#ffb347',
+  /* THE GROUND FLOOR, which is where Ron has always been and is now where the
+     lobby is. Behind the counter, not in front of it: the counter stops people
+     and it stopped Ron too — he spawned on the visitors' side once and spent
+     the morning shouldering his own desk.
+     He is the only person in this game who is not on the hub, and "nothing
+     happens in this lobby I don't know about" is a considerably better line now
+     that the lobby is somewhere you have to have come through. */
+  level: 'ground', desk: [16, 7], colour: '#ffb347',
   schedule: [[540,'lobby'],[720,'lobby'],[780,'lobby']],
   lines: ["Morning.", "Lanyard.", "In or out, don’t hover.", "Nothing happens in this lobby I don’t know about."],
   entry() { return G.flags.metRon ? 'again' : 'first'; },
@@ -1205,7 +1214,11 @@ const NPCS = [
 {
   id: 'nigel', name: 'Nigel', face: '👔', role: 'Area Manager',
   home: { at: [30, 8], where: 'four sites and a car, and a stool in a kebab shop on the way to none of them' },
-  desk: [46, 3], colour: '#ff5f56',
+  /* Also the fifth, and he is the reason the keycard exists. Half his day is
+     on the fourth floor — the corridor, the break room, the printer — and all
+     of it is now four floors of lift away, which is exactly the amount of
+     warning the fourth floor has always wished it had. */
+  level: 'five', desk: [5, 4], colour: '#ff5f56',
   /* Four o'clock, when the spit goes on, on one of the two stools nobody
      sits on in Bellhaven Kebab. There has been a photograph of Nigel in
      that doorway on the fourth floor since 2019 and nobody has ever
@@ -2031,7 +2044,7 @@ const NPCS = [
         "“Whether they’re actually members.”",
         "Norman considers this for a genuinely long time, the way a man considers a question nobody has put to him in nineteen years.",
         "“If you’ll say a name to me in a doorway,” he says eventually, “you’re the sort that belongs in here. If you won’t, you’re not. That’s the check. That’s always been the check.”",
-        "It is, on reflection, a better door policy than the keycard on the fourth floor."],
+        "It is, on reflection, a better door policy than the keycard on the lift."],
       do() { G.flags.normanTold = true; Rel.add('norman', 4); Ach.get('a_thecheck'); } },
     terry: { text: ["“Terry signs everybody in,” says Norman, entirely unbothered.",
         "“Terry hasn’t been in since March.”",

@@ -11,7 +11,7 @@ const ITEMS = {
   goldset:  { n: 'The Golden Headset', e: '🏆', d: 'Awarded 2011 to “Kevin”. Nobody has claimed it since.', v: 250, r: 'legendary', slot: 'headset', eff: { patience: 20, empathy: 3 } },
   mug:      { n: 'Plain White Mug', e: '☕', d: 'Marjorie is aware of this mug at all times.', v: 2, r: 'common', slot: 'mug', eff: { energy: 5 } },
   terrymug: { n: "Terry’s Mug", e: '🍵', d: 'Brown. Cracked. Beloved. Absorbed by Marjorie in a dispute nobody remembers.', v: 0, r: 'rare', quest: true },
-  keycard:  { n: 'Management Keycard', e: '🪪', d: 'Opens the fourth-floor door. Photo is of a man who left in 2013.', v: 0, r: 'rare', quest: true },
+  keycard:  { n: 'Management Keycard', e: '🪪', d: 'Works the button for the fifth floor. Photo is of a man who left in 2013.', v: 0, r: 'rare', quest: true },
   coffee:   { n: 'Emergency Coffee', e: '☕', d: 'Not a drink. A decision.', v: 1.2, r: 'common', use: 'drinkCoffee' },
   double:   { n: 'Double Coffee', e: '☕', d: 'Two coffees in a trench coat.', v: 2.2, r: 'rare', use: 'drinkDouble' },
   biscuit:  { n: 'Communal Biscuit', e: '🍪', d: 'From the tin. The tin is a commons and the commons is a tragedy.', v: 0.3, r: 'common', use: 'eatSmall' },
@@ -307,6 +307,9 @@ const ACHS = {
   a_candle:  { n: 'Any Reason At All', e: '🕯️', d: 'Light a candle in the minster. You did not decide who it was for until you had lit it.' },
   a_minsterTea:{ n: 'Nobody Was Watching The Tin', e: '☕', d: 'Take a cup from the unattended urn at the back of the minster and put the money in.' },
   a_clipboard:{ n: 'Four Minutes About A Roof', e: '📋', d: 'Give the man with the clipboard on Priorygate his two minutes.' },
+  /* ---- the building, vertically ---- */
+  a_fifthcoffee:{ n: 'Beans', e: '☕', d: 'Drink a cup of the fifth floor’s coffee, standing up, facing the lift.' },
+  a_stairs:  { n: 'Ninety Seconds', e: '🪜', d: 'Walk the whole building, top to bottom, on the stairs. Once.' },
   /* ---- the arcade ----
      Handed out by minigames/*.js, which each name theirs literally so the
      reward editor's "can this be earned at all" check can see the call. */

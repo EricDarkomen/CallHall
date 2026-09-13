@@ -69,6 +69,75 @@ down.
 The game saves itself, and detects touch devices to show the right controls and
 the right instructions.
 
+## Three floors, and a lift that goes to them
+
+For a year this building was one plan. The lobby you walk in through, the floor
+you work on, and the Management Floor with a keycard on the door were all drawn
+on the same sixty-four by forty-four grid, seven tiles apart, and the first job
+the game ever gives you is **"Find the fourth floor"**. You could see it from
+where you were standing.
+
+The building's own directory, on the wall of that lobby, has said this the whole
+time:
+
+> **FLOOR 1–2:** A dental practice, a company called NORTHGATE (nobody has ever
+> seen anyone go in), and a Greggs.
+> **FLOOR 3–5:** CALLHALL SERVICES.
+> **FLOOR 6:** *(blank strip, adhesive residue in the shape of letters,
+> unreadable except the last one, which is a Y.)*
+
+So the map agrees with the directory now. **Ground** is the lobby — reception,
+security, the visitors' book, the awards cabinet, the bike nobody claims, and
+Ron, who is the only person in this game who does not work on the hub. **Four**
+is Operations: the sea of desks, and where the lobby used to be drawn is what is
+actually at the bottom of every floor of every office building in the country —
+a landing with a lift in it, a cooler, and a noticeboard nobody reads. **Five**
+is Management, which is a floor at last instead of a room with a sign on it.
+
+**The lift works.** It has four buttons because the directory lists four floors:
+5, 4, 3 and G. Which button is which floor is `FLOORS` in `data/world.js`; where
+each one actually goes is the same `links` table every other door in this game
+uses, so a floor that moves moves in one place and the act does not know what a
+floor is. A button with no link on the level you are standing on is the floor
+you are standing on, and is drawn as such.
+
+The **3** button is taped over. CallHall has had the third floor since 2009 and
+gave it up in the restructure — the same restructure reception has been
+unstaffed since — and taking a button out of a lift is a job for a lift
+engineer, whereas putting DYMO tape on one is a job for anybody.
+
+The **5** button lights and does nothing without the keycard. It does not refuse
+you; it simply does not go, and you stand there while it does not go. Terry
+still has the keycards. Terry has everything.
+
+The car is somewhere. `Lifts.at()` is one variable and it earns its keep: the
+light over every set of doors in this building shows it, the indicator beside
+them reads it out, and it is true — press 5 and the man waiting on the ground
+floor watches it go to 5. Walking up the stairs does not move it, which is the
+whole reason it is a variable rather than a lookup.
+
+**And if you need the stairs, you need the stairs.** Every floor has them, they
+go one floor at a time, and on the fourth they do a third thing: they go *out*.
+That stair is the external fire escape, and it has been an external fire escape
+since the day somebody wrote `theView` — *"from the fire escape you can see: the
+bins, a wall, a strip of car park, and — if you lean — actual sky"* — because
+the only thing you can see all three of at once from is a steel stair bolted to
+the back of a building. It comes down by the bins in the car park. It is what the
+fire drill walks down, and `NPCM.drillPlan()` finds it the way it has always
+found an evacuation: by looking for the level one door away with an assembly
+point standing on it.
+
+**Colleagues use it too.** A waypoint in `WP` may now say which floor it is on —
+`[x, y, 'five']` — and two elements still means the hub, which is the state every
+one of them was already in. Somebody whose day names a floor they are not
+standing on walks to the lift and waits at it, and if you are on that floor you
+watch them do it. Off your floor it happens without the walk, because a colleague
+who took three minutes to cross a landing you were not looking at would be a
+colleague who is late for reasons nobody can ever observe. Colin comes down from
+Synergy for lunch at twelve. Nigel comes down to the printer at three. Neither of
+them could be seen from your desk before and both of them could be seen from
+your desk before, which was the problem.
+
 ## Outside
 
 Press `E` on the way out and you are in the car park, and Bellhaven is a town.
@@ -895,9 +964,14 @@ takes the same five things back, whichever built them.
 ### What a level may declare
 
 A level in `data/levels.js` is its size, its rooms, its doors, its arrival
-points and the links out of it. Four more tables exist for the streets, and
-they are all optional — a level that declares none of them is exactly the level
-it always was.
+points and the links out of it. Two flags on it say what it is to the building:
+`hub: true` is the floor with the twenty people and the ringing phones on it,
+and `arrive: true` is where a shift begins. Both are asked of the catalogue
+rather than written into `engine/` — `arrive` was a hard-coded `'office'` in two
+places, which was true for exactly as long as the building was one floor.
+
+Four more tables exist for the streets, and they are all optional — a level that
+declares none of them is exactly the level it always was.
 
 | | |
 | --- | --- |
@@ -910,6 +984,12 @@ Two flags on a furnishing are read by the engine and are worth knowing about:
 `sprite:` names a rect in the atlas to draw instead of the emoji, and `fromCar:`
 means the thing is meant to be reached without getting out — which is all a
 drive-thru is, and all the next one will have to be.
+
+One table is not a level's at all. `FLOORS` in `data/world.js` is the buttons in
+the lift car, in the order they are in it, and each row names a `via` — a link,
+exactly as every other way out of every other room does it. That is the whole of
+how a lift knows where it goes, and it is why `Acts.lift()` does not know what a
+floor is.
 
 The editor has no tools for any of the four and carries all four through
 untouched, which is the next best thing — see `Doc.surfaces`.

@@ -34,29 +34,59 @@ const LEVELS = {
     name: 'CALLHALL Services · Fourth Floor',
     w: 64, h: 44,
     hub: true,
+    /* Floor 4 of 3-5. It is still the hub — the level with twenty people and a
+       queue of ringing phones on it — and it is no longer the level you arrive
+       on: see `arrive` on LEVELS.ground, which is the lobby the building's own
+       directory has said was down there since the day it was written. */
     rooms: ROOM_DEFS,
     doors: DOOR_DEFS,
     /* At the lobby waypoint, not Ron's desk tile: his schedule puts him on the
        door from nine, and a counter he is never behind is worse than none.
        Reception and security share a row — they are two halves of one front
        desk, and a row apart they read as one desk with a step in it. */
-    counters: [
-      { x: 24, y: 38, w: 3, label: 'RECEPTION' },
-      { x: 29, y: 38, w: 4, label: 'SECURITY' },
-    ],
+    /* The front desk went downstairs with the lobby it was the front of — see
+       LEVELS.ground. A landing does not have a counter on it. */
+    counters: [],
     /* Visitors' side of the security counter, clear of it by a whole tile: the
        collision box is 26px tall, so a spawn on a tile boundary lands you in the
        tile above — which was inside Ron's desk once the counter became solid. */
     entries: {
-      start: [31.5, 41.5],
-      lobby: [31.5, 41.5],
+      /* Where you step out onto this floor, which is the square in front of the
+         thing you stepped out of. `start` and `lobby` are kept, pointing at the
+         landing, so that a shift saved before this building had three floors in
+         it — and anything else that still asks this level for the way in —
+         lands on carpet rather than nowhere. */
+      lift: [22.5, 37.5],
+      stairs: [19.5, 39.5],
+      start: [22.5, 37.5],
+      lobby: [22.5, 37.5],
       /* Beside the odd square of carpet, not on it: you climb out of the hatch,
          you do not materialise in it. */
       hatch: [4.5, 12.5],
     },
     links: [
       { via: 'hatch', to: 'basement', entry: 'ladder' },
-      { via: 'exit', to: 'outside', entry: 'doors' },
+      /* THE FOUR WAYS OFF THIS FLOOR, and between them they are the reason the
+         building is a building rather than a plan.
+
+         The LIFT serves the floors the directory lists; which button is which
+         is FLOORS in data/world.js, and Acts.lift() reads that table and this
+         one and nothing else. The STAIRS go one floor at a time, up and down,
+         which is what stairs do.
+
+         And the FIRE ESCAPE goes straight OUT. It is an external stair and
+         always has been: `theView` has said since it was written that from it
+         you can see the bins, a wall and a strip of car park, and the only
+         thing you can see all three of at once from is a steel stair bolted to
+         the back of a building. It is the one stair here that does not stop at
+         the ground floor. It is also what the drill walks down — NPCM.drillPlan()
+         finds an evacuation by looking for the level ONE DOOR AWAY with an
+         assembly point standing on it, and this is that door. */
+      { via: 'liftToG', to: 'ground', entry: 'lift' },
+      { via: 'liftTo5', to: 'five', entry: 'lift' },
+      { via: 'stairsDown', to: 'ground', entry: 'stairs' },
+      { via: 'stairsUp', to: 'five', entry: 'stairs' },
+      { via: 'fireExit', to: 'outside', entry: 'fireEscape' },
     ],
     furnish() {
       const A = o => this.add(o);
@@ -198,18 +228,8 @@ const LEVELS = {
       A({ x: 10, y: 10, e: '📦', name: 'The away-day box', kind: 'box', solid: true, use: 'awayday', furn: { sprite: null } });
       A({ x: 12, y: 3, e: '📇', name: 'The card index', kind: 'cab', solid: true, use: 'cardIndex', furn: { size: 30, sprite: 'obj.bookcase' } });
 
-      /* ---- MANAGEMENT ---- */
-      A({ x: 46, y: 3, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
-      A({ x: 46, y: 4, e: '🖥️', name: "Nigel’s monitor", kind: 'pc', solid: true, use: 'nigelPC' });
-      A({ x: 50, y: 2, e: '📊', name: 'Performance charts', kind: 'chart', solid: true, use: 'charts' });
-      A({ x: 53, y: 2, e: '📈', name: 'The Q3 graph', kind: 'chart', solid: true, use: 'q3' });
-      A({ x: 56, y: 4, e: '🍽️', name: 'Meeting room table', kind: 'table', solid: true, use: 'meetingTable' });
-      A({ x: 55, y: 4, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
-      A({ x: 57, y: 4, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
-      A({ x: 60, y: 3, e: '🖥️', name: 'THE SPREADSHEET', kind: 'spread', solid: true, use: 'spreadsheet' });
-      A({ x: 61, y: 6, e: '🚪', name: 'Synergy Department', kind: 'door', solid: true, use: 'synergy' });
-      A({ x: 45, y: 7, e: '🖨️', name: 'Management printer (works fine)', kind: 'printer', solid: true, use: 'mgmtPrinter' });
-      A({ x: 48, y: 7, e: '🪴', name: 'Enormous healthy plant', kind: 'plant', solid: true, use: 'bigPlant' });
+      /* Management used to be furnished here, in nineteen tiles across the
+         corridor from the sea of desks. It is LEVELS.five. */
 
       /* ---- TOILETS ---- */
       for (let i = 0; i < 3; i++) A({ x: 52 + i * 2, y: 15, e: '🚽', name: 'Cubicle ' + (i + 1), kind: 'loo', solid: true, use: 'toilet', n: i });
@@ -254,28 +274,39 @@ const LEVELS = {
       A({ x: 61, y: 30, e: '🔦', name: 'Emergency torch', kind: 'misc', solid: true, use: 'torch' });
       A({ x: 51, y: 26, e: '💿', name: 'A tower of unlabelled discs', kind: 'box', solid: true, use: 'discs' });
 
-      /* ---- LOBBY ---- */
-      A({ x: 31, y: 43, e: '🚪', name: 'The way out', kind: 'exit', solid: false, use: 'exit' });
-      A({ x: 32, y: 43, e: '🚪', name: 'The way out', kind: 'exit', solid: false, use: 'exit' });
-      A({ x: 26, y: 38, e: '🛎️', name: 'Reception desk', kind: 'recep', solid: true, use: 'reception' });
-      A({ x: 25, y: 38, e: '🖥️', name: 'Reception monitor', kind: 'pc', solid: true, use: 'pc' });
-      A({ x: 38, y: 38, e: '🛋️', name: 'Waiting sofa', kind: 'sofa', solid: true, use: 'sofa' });
-      A({ x: 40, y: 38, e: '🪴', name: 'Lobby plant (thriving)', kind: 'plant', solid: true, use: 'plant' });
-      A({ x: 22, y: 36, e: '🛗', name: 'Lift', kind: 'lift', solid: true, use: 'lift' });
+      /* ---- THE LANDING ----
+         Seven rows that used to be the ground-floor lobby, drawn on the fourth
+         floor because for a year the building had one plan. Reception, the
+         visitors' book, the awards cabinet, the sofa, the umbrellas and the
+         bike nobody claims are all downstairs now, on LEVELS.ground, where a
+         directory that says GROUND FLOOR on it has always put them.
+
+         What is left is what is actually at the bottom of every floor of every
+         office building in the country: a lift, a door to the stairs, a cooler,
+         a noticeboard, and the bit of carpet everybody stands on while they
+         wait. */
+      A({ x: 22, y: 36, e: '🛗', name: 'The lift', kind: 'lift', solid: true, use: 'lift' });
+      A({ x: 25, y: 36, e: '🔢', name: 'The floor indicator', kind: 'screen', solid: true, use: 'indicator' });
       A({ x: 42, y: 36, e: '📋', name: 'Fire evacuation notice', kind: 'board', solid: true, use: 'fireNotice' });
-      A({ x: 35, y: 42, e: '🗑️', name: 'Lobby bin', kind: 'bin', solid: false, use: 'bin' });
-      /* On the reception counter, open, with the biro: it is the end of the
-         recurring-meeting thread. Overridden because `book` means shelf
-         everywhere else in the building. */
-      A({ x: 24, y: 38, e: '📖', name: 'The visitors’ book', kind: 'book', solid: true, use: 'visitorsBook',
-        furn: { art: 'ledger', size: 17, sprite: null } });
-      A({ x: 28, y: 36, e: '🏢', name: 'Building directory', kind: 'board', solid: true, use: 'directory' });
-      A({ x: 34, y: 36, e: '🥇', name: 'Award cabinet', kind: 'cab', solid: true, use: 'awards' });
-      A({ x: 21, y: 42, e: '☂️', name: 'Lost umbrellas', kind: 'box', solid: true, use: 'umbrellas' });
-      A({ x: 43, y: 40, e: '🚲', name: 'The bike nobody claims', kind: 'bike', solid: true, use: 'bike' });
+      A({ x: 35, y: 42, e: '🗑️', name: 'The bin on the landing', kind: 'bin', solid: false, use: 'bin' });
+      A({ x: 28, y: 36, e: '📌', name: 'The noticeboard on the landing', kind: 'board', solid: true, use: 'landingBoard' });
+      A({ x: 34, y: 36, e: '🚰', name: 'The cooler on the landing', kind: 'cooler', solid: true, use: 'landingCooler' });
+      A({ x: 38, y: 38, e: '🪑', name: 'The chair on the landing', kind: 'chair', solid: true, use: 'landingChair' });
+      A({ x: 40, y: 38, e: '🪴', name: 'The plant on the landing', kind: 'plant', solid: true, use: 'plant' });
+      A({ x: 43, y: 40, e: '📦', name: 'The boxes on the landing', kind: 'box', solid: true, use: 'landingBoxes' });
+      A({ x: 21, y: 42, e: '♻️', name: 'The recycling on the landing', kind: 'recycling', solid: true, use: 'landingRecycling' });
+      /* THE SIGN IN THE LIFT LOBBY, which is the one piece of wayfinding in
+         this building that is correct, and is correct because it is about this
+         floor and this floor only. */
+      A({ x: 20, y: 36, e: '🪧', name: 'FLOOR 4 · OPERATIONS', kind: 'sign', solid: true, use: 'floorFour' });
 
       /* ---- CORRIDOR ---- */
-      A({ x: 16, y: 10, e: '🛗', name: 'Lift (upper)', kind: 'lift', solid: true, use: 'lift' });
+      /* THE GOODS LIFT, which is what the second lift on this plan turns out to
+         have been all along. There were two of them thirty tiles apart on one
+         floor, at opposite ends of a map that was secretly two floors, and the
+         one at this end is not a passenger lift and has not run since the
+         inspection. Nothing in FLOORS points at it and nothing ever will. */
+      A({ x: 16, y: 10, e: '🛗', name: 'The goods lift', kind: 'lift', solid: true, use: 'goodsLift' });
       A({ x: 24, y: 10, e: '🖼️', name: 'Poster: TEAMWORK', kind: 'poster', solid: true, use: 'poster',
         furn: { sprite: 'wall.art.peaks', size: 26 } });
       A({ x: 34, y: 10, e: '🖼️', name: 'Poster: EXCELLENCE', kind: 'poster', solid: true, use: 'poster',
@@ -345,6 +376,154 @@ const LEVELS = {
       /* The only extinguisher in the building that is not on its bracket, which
          is the whole joke, so it must not be drawn on one. */
       A({ x: 14, y: 42, e: '🧯', name: 'Fire extinguisher (propping the door)', kind: 'fire', solid: true, use: 'propExtinguisher', furn: { mount: null, size: 24 } });
+      /* AND THE STAIR ITSELF, which this room has been about since it was
+         written and has never once had in it. Up to the fifth, down to the
+         ground, and straight out at the bottom — three links on one object,
+         because an external fire escape is one flight that does all three and
+         it is the only stair in this building that does.
+
+         At the top of the flight rather than in the middle of the landing: the
+         step everybody sits on is at [17,40] and the whole point of that step
+         is that it is out of the way of the stair. */
+      A({ x: 18, y: 40, e: '🪜', name: 'The fire escape', kind: 'stairs', solid: true, use: 'stairs' });
+      /* And the door at the bottom of it, which is its own object and not part
+         of the stair, for one reason: NPCM.drillPlan() finds an evacuation by
+         looking for an object whose `use` is the link's `via`, and a stair that
+         is three links at once cannot be three objects at once. This is the one
+         the four hundred of them go down. */
+      A({ x: 18, y: 42, e: '🚪', name: 'The fire door', kind: 'exit', solid: false, use: 'fireExit' });
+    }
+  },
+
+  /* ---- THE GROUND FLOOR -------------------------------------------------
+     The lobby. It was drawn on the fourth floor's plan for a year — reception,
+     the front doors, the visitors' book and the building's own directory, all
+     seven tiles from the sea of desks — and the directory on the wall of it has
+     said GROUND FLOOR on it the whole time.
+
+     `arrive: true` is the one new flag and it says this is where a shift
+     begins. It used to be a hard-coded 'office' in two places; it is a fact
+     about the building and it lives with the building now. You come in through
+     those doors, you sign nothing, nobody is on reception, and you find the
+     lift. That is the first job the game gives you and until now there was
+     nothing to find.
+
+     Not the hub. The hub is the floor with the people on it, and that is still
+     the fourth — the one man down here is Ron, and Ron has never been anywhere
+     else. */
+  ground: {
+    name: 'CALLHALL Services · Ground Floor',
+    w: 34, h: 20,
+    arrive: true,
+    rooms: [{ z: 'lobby', r: [2, 2, 31, 17] }],
+    doors: [],
+    /* THE FRONT DESK, and it is the same two-piece desk it always was: a
+       reception counter and a security counter a tile apart, which read as one
+       desk with a step in it, because that is what they are. */
+    counters: [
+      { x: 9, y: 8, w: 3, label: 'RECEPTION' },
+      { x: 14, y: 8, w: 4, label: 'SECURITY' },
+    ],
+    entries: {
+      /* The visitors' side of the security counter, clear of it by a whole
+         tile — the same spawn this game has opened on since it had one, moved
+         down four floors and not otherwise touched. */
+      start: [16.5, 10.5],
+      doors: [16.5, 15.5],
+      lift: [26.5, 3.5],
+      stairs: [29.5, 3.5],
+    },
+    links: [
+      { via: 'exit', to: 'outside', entry: 'doors' },
+      { via: 'liftTo4', to: 'office', entry: 'lift' },
+      { via: 'liftTo5', to: 'five', entry: 'lift' },
+      { via: 'stairsUp', to: 'office', entry: 'stairs' },
+    ],
+    furnish() {
+      const A = o => this.add(o);
+      /* The way out, on the wall row under the room, exactly as it was. */
+      A({ x: 16, y: 18, e: '🚪', name: 'The way out', kind: 'exit', solid: false, use: 'exit' });
+      A({ x: 17, y: 18, e: '🚪', name: 'The way out', kind: 'exit', solid: false, use: 'exit' });
+      /* ---- the front desk ---- */
+      A({ x: 9, y: 8, e: '📖', name: 'The visitors’ book', kind: 'book', solid: true, use: 'visitorsBook',
+        furn: { art: 'ledger', size: 17, sprite: null } });
+      A({ x: 10, y: 8, e: '🖥️', name: 'Reception monitor', kind: 'pc', solid: true, use: 'pc' });
+      A({ x: 11, y: 8, e: '🛎️', name: 'Reception desk', kind: 'recep', solid: true, use: 'reception' });
+      A({ x: 17, y: 8, e: '🖥️', name: 'The security screen', kind: 'screen', solid: true, use: 'securityScreen' });
+      /* ---- the lift lobby, which is the whole point of this level ---- */
+      A({ x: 26, y: 2, e: '🛗', name: 'The lift', kind: 'lift', solid: true, use: 'lift' });
+      A({ x: 25, y: 2, e: '🔢', name: 'The floor indicator', kind: 'screen', solid: true, use: 'indicator' });
+      A({ x: 29, y: 2, e: '🪜', name: 'The stairs', kind: 'stairs', solid: true, use: 'stairs' });
+      A({ x: 22, y: 2, e: '🏢', name: 'Building directory', kind: 'board', solid: true, use: 'directory' });
+      A({ x: 19, y: 2, e: '🥇', name: 'Award cabinet', kind: 'cab', solid: true, use: 'awards' });
+      A({ x: 31, y: 5, e: '📋', name: 'Fire evacuation notice', kind: 'board', solid: true, use: 'fireNotice' });
+      /* ---- waiting, and everything nobody has claimed ---- */
+      A({ x: 5, y: 13, e: '🛋️', name: 'Waiting sofa', kind: 'sofa', solid: true, use: 'sofa' });
+      A({ x: 7, y: 13, e: '🪴', name: 'Lobby plant (thriving)', kind: 'plant', solid: true, use: 'plant' });
+      A({ x: 3, y: 16, e: '☂️', name: 'Lost umbrellas', kind: 'box', solid: true, use: 'umbrellas' });
+      A({ x: 30, y: 16, e: '🚲', name: 'The bike nobody claims', kind: 'bike', solid: true, use: 'bike' });
+      A({ x: 20, y: 16, e: '🗑️', name: 'Lobby bin', kind: 'bin', solid: false, use: 'bin' });
+      /* ---- and the things a ground floor has that a fourth floor does not ---- */
+      A({ x: 12, y: 16, e: '🧹', name: 'The mat', kind: 'view', solid: false, use: 'theMat', furn: { mount: null, size: 26 } });
+      A({ x: 3, y: 2, e: '📬', name: 'The post tray', kind: 'paper', solid: true, use: 'postTray' });
+      A({ x: 6, y: 2, e: '📦', name: 'The parcels nobody has come down for', kind: 'box', solid: true, use: 'parcels' });
+      A({ x: 14, y: 5, e: '🎫', name: 'The visitor passes', kind: 'card', solid: true, use: 'passes' });
+      A({ x: 31, y: 11, e: '🪟', name: 'The window onto the car park', kind: 'window', solid: true, use: 'lobbyWindow' });
+      A({ x: 2, y: 9, e: '🚭', name: 'NO SMOKING sign', kind: 'sign', solid: true, use: 'noSmoking' });
+      A({ x: 24, y: 16, e: '🕰️', name: 'The clock in the lobby', kind: 'clock', solid: true, use: 'lobbyClock' });
+    }
+  },
+
+  /* ---- THE FIFTH FLOOR ---------------------------------------------------
+     Management. It was nineteen tiles of the fourth floor's own plan with a
+     keycard door on it, across a corridor from the sea of desks, and calling it
+     the Management FLOOR while it shared a carpet with Operations was the
+     single largest thing this building was lying about.
+
+     There is no door to it any more. There is a button, and the button is the
+     keycard's job now — see FLOORS in data/world.js and Acts.lift(). The stairs
+     get you here too, and always will, because a fire escape that can be locked
+     is not a fire escape; what the stairs cannot get you is a reason to be
+     standing on this floor when somebody asks. */
+  five: {
+    name: 'CALLHALL Services · Fifth Floor',
+    w: 30, h: 14,
+    rooms: [{ z: 'manage', r: [2, 2, 27, 11] }],
+    doors: [],
+    entries: { lift: [12.5, 3.5], stairs: [15.5, 3.5] },
+    links: [
+      { via: 'liftToG', to: 'ground', entry: 'lift' },
+      { via: 'liftTo4', to: 'office', entry: 'lift' },
+      { via: 'stairsDown', to: 'office', entry: 'stairs' },
+    ],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 12, y: 2, e: '🛗', name: 'The lift', kind: 'lift', solid: true, use: 'lift' });
+      A({ x: 11, y: 2, e: '🔢', name: 'The floor indicator', kind: 'screen', solid: true, use: 'indicator' });
+      A({ x: 15, y: 2, e: '🪜', name: 'The stairs', kind: 'stairs', solid: true, use: 'stairs' });
+      /* ---- everything that used to be [44,2,62,8] on the floor below ---- */
+      A({ x: 5, y: 3, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 5, y: 4, e: '🖥️', name: "Nigel’s monitor", kind: 'pc', solid: true, use: 'nigelPC' });
+      A({ x: 3, y: 2, e: '📊', name: 'Performance charts', kind: 'chart', solid: true, use: 'charts' });
+      A({ x: 7, y: 2, e: '📈', name: 'The Q3 graph', kind: 'chart', solid: true, use: 'q3' });
+      A({ x: 19, y: 5, e: '🍽️', name: 'Meeting room table', kind: 'table', solid: true, use: 'meetingTable' });
+      A({ x: 20, y: 5, e: '🍽️', name: 'Meeting room table', kind: 'table', solid: true, use: 'meetingTable' });
+      A({ x: 18, y: 5, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 21, y: 5, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 24, y: 4, e: '🖥️', name: 'THE SPREADSHEET', kind: 'spread', solid: true, use: 'spreadsheet' });
+      A({ x: 26, y: 6, e: '🚪', name: 'Synergy Department', kind: 'door', solid: true, use: 'synergy' });
+      A({ x: 3, y: 9, e: '🖨️', name: 'Management printer (works fine)', kind: 'printer', solid: true, use: 'mgmtPrinter' });
+      A({ x: 6, y: 9, e: '🪴', name: 'Enormous healthy plant', kind: 'plant', solid: true, use: 'bigPlant' });
+      /* ---- and the things you only find out by getting up here ---- */
+      A({ x: 9, y: 2, e: '🪟', name: 'The window on the fifth floor', kind: 'window', solid: true, use: 'fifthWindow' });
+      A({ x: 17, y: 2, e: '🚰', name: 'The cooler that works', kind: 'cooler', solid: true, use: 'goodCooler' });
+      A({ x: 22, y: 2, e: '☕', name: 'The coffee machine up here', kind: 'coffee', solid: true, use: 'goodCoffee' });
+      A({ x: 10, y: 9, e: '🛋️', name: 'The sofa up here', kind: 'sofa', solid: true, use: 'fifthSofa' });
+      A({ x: 14, y: 9, e: '🖼️', name: 'The photograph of the building', kind: 'poster', solid: true, use: 'buildingPhoto',
+        furn: { sprite: 'wall.art.abs', size: 26 } });
+      A({ x: 24, y: 9, e: '🗄️', name: 'The filing cabinet nobody opens', kind: 'cab', solid: true, use: 'fifthCabinet' });
+      A({ x: 27, y: 3, e: '🗑️', name: 'The bin up here', kind: 'bin', solid: false, use: 'bin' });
+      A({ x: 18, y: 9, e: '🪴', name: 'The other enormous healthy plant', kind: 'plant', solid: true, use: 'bigPlant' });
     }
   },
 
@@ -1695,7 +1874,7 @@ const LEVELS = {
     /* In the walkway between the two banks of bays, facing away from the
        doors. Not in a bay: you come out of a building on foot. */
     entries: {
-      doors: [20.5, 4.5], greggs: [31.5, 22.5],
+      doors: [20.5, 4.5], fireEscape: [26.5, 3.5], greggs: [31.5, 22.5],
       /* On the pavement outside each one, which is where you are standing when
          you come back out of it. */
       pub: [86.5, 15.5], bookies: [54.5, 15.5], laund: [92.5, 15.5],
@@ -1718,7 +1897,14 @@ const LEVELS = {
       minster: [56.5, 94.5],
     },
     links: [
-      { via: 'frontDoors', to: 'office', entry: 'lobby' },
+      /* THE FRONT DOORS GO TO THE GROUND FLOOR, which is where front doors go.
+         They pointed at the fourth for a year because the fourth floor had a
+         reception drawn on it. */
+      { via: 'frontDoors', to: 'ground', entry: 'doors' },
+      /* And the foot of the fire escape, which is a way back IN and exists so
+         that four hundred people can come back off the tarmac after a drill —
+         see the note on the fourth floor's links. */
+      { via: 'fireEscape', to: 'office', entry: 'stairs' },
       /* The four shopfronts on this street with a floor behind them. */
       { via: 'greggsDoor', to: 'greggs', entry: 'door' },
       { via: 'pubDoor', to: 'pub', entry: 'door' },
@@ -2031,6 +2217,12 @@ const LEVELS = {
          Two tiles, so the doorway art reads as double doors. */
       A({ x: 20, y: 2, e: '🚪', name: 'The way back in', kind: 'exit', solid: false, use: 'frontDoors' });
       A({ x: 21, y: 2, e: '🚪', name: 'The way back in', kind: 'exit', solid: false, use: 'frontDoors' });
+      /* THE FOOT OF THE FIRE ESCAPE, on the same face of the building as the
+         doors and six tiles along it. A steel stair down the outside of a
+         building, landing on the tarmac by the bins — which is the thing
+         `theView` on the fourth floor has been describing from the top of since
+         the day it was written. */
+      A({ x: 26, y: 2, e: '🪜', name: 'The foot of the fire escape', kind: 'stairs', solid: false, use: 'fireEscape' });
 
       /* ---- THE CAR PARK ---- */
       /* At the head of the last bay before the walkway, which is the one

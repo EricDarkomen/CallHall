@@ -25,6 +25,16 @@ const ZONES = {
   meet:     { name: 'Meeting Room 2',   floor: '#343044', alt: '#2f2b3e', wall: '#1f1c2b', tint: '#b48cff'  , tile: 'floor.carpet.vio', wtile: 'wall.drywall' },
   well:     { name: 'The Wellbeing Room', floor: '#2c3b3c', alt: '#273536', wall: '#182324', tint: '#5ad48a'  , tile: 'floor.carpet.cyn', wtile: 'wall.drywall' },
   fire:     { name: 'Fire Escape',      floor: '#3a3a38', alt: '#343432', wall: '#1e1e1d', tint: '#ffb347', surf: 'concrete', wsurf: 'block'  },
+  /* THE LANDING, and it is the seven rows the lobby used to be drawn on.
+     The building directory in the lobby has said FLOOR 3-5: CALLHALL SERVICES
+     since the day it was written, and the lobby was on the same plan as the
+     fourth floor, four tiles from the sea of desks, with a lift in it that did
+     nothing. The lobby is the ground floor now — it is its own level — and what
+     is left at the bottom of this floor is what is actually at the bottom of
+     every floor of every office building in the country: a landing with a lift
+     in it, a door to the stairs, a water cooler, and a noticeboard nobody
+     reads. Same carpet as the corridor, because it is the same carpet. */
+  landing:  { name: 'The Landing',      floor: '#2d333f', alt: '#282e39', wall: '#1a1f28', tint: '#8d9bb5', tile: 'floor.carpet.dim', wtile: 'wall.drywall' },
   secret:   { name: '████████',         floor: '#1d2230', alt: '#191d29', wall: '#0d1017', tint: '#b48cff', surf: 'concrete', wsurf: 'block'  },
   /* Outdoors. Lighter than anything inside the building, because they are lit
      by the sky rather than by a strip light — see LEVELS.outside, which is the
@@ -268,6 +278,45 @@ const SURFACES = {
   steps: { tile: 'terrain.steps', floor: '#c2c8d0', alt: '#c2c8d0', map: '#6a717b' }
 };
 
+/* THE BUILDING, VERTICALLY — what is behind the buttons in the lift car.
+ *
+ * This table exists because the lobby's own building directory has said
+ *
+ *     FLOOR 1-2: a dental practice, NORTHGATE and a Greggs
+ *     FLOOR 3-5: CALLHALL SERVICES
+ *     FLOOR 6:   (adhesive residue, unreadable, ends in a Y)
+ *
+ * since long before there was more than one floor to stand on. For a year the
+ * whole of it — the reception you walk in through, the floor you work on, and
+ * the Management Floor with a keycard on the door — was drawn on one plan, side
+ * by side, seven tiles apart, and the first job the game ever gives you is
+ * "Find the fourth floor". You could see it from where you were standing.
+ *
+ * They are three levels now and this is the order of the buttons.
+ *
+ *   b     what is written on the button
+ *   via   the LINK to take, exactly as every other way out of a room does it —
+ *         the link table in data/levels.js is still the only thing that says
+ *         where anything goes, so a floor that moves moves in one place
+ *   name  what the directory calls it
+ *   key   a flag on G.flags without which the button lights and nothing happens
+ *   dead  a button that is not connected to anything, with the reason
+ *
+ * A button whose `via` resolves to no link on the level you are standing on is
+ * the floor you are already on, and is drawn as such. That is why there is no
+ * "which floor am I on" field: the link table already knows. */
+const FLOORS = [
+  { b: '5', via: 'liftTo5', name: 'Management', key: 'keycard' },
+  { b: '4', via: 'liftTo4', name: 'Operations' },
+  /* THE THIRD FLOOR. CallHall has had it since 2009 and gave it up in the
+     restructure, which is the same restructure reception has been unstaffed
+     since. The button is still in the car with a strip of DYMO tape over it,
+     because taking a button out of a lift is a job for a lift engineer and
+     putting tape on one is a job for anybody. */
+  { b: '3', via: null, name: 'CallHall Services', dead: 'taped over' },
+  { b: 'G', via: 'liftToG', name: 'Reception' },
+];
+
 /* The cars. One entry per model, keyed by `model` on a car in a level's own
    `cars:` list — the same arrangement as FURN below, and for the same reason:
    what a hatchback IS belongs in one place, and which hatchback is parked in
@@ -381,11 +430,22 @@ const FURN = {
   /* Furniture, at furniture size. A 27px sofa next to a 58px person was the
      single thing that most made the two art styles argue with each other. */
   sofa: { size: 38 }, beanbag: { size: 29 }, bike: { size: 42 },
-  lift: { size: 33 }, vend: { size: 31 }, fridge: { size: 29 },
+  vend: { size: 31 }, fridge: { size: 29 },
   server: { size: 28 }, cab: { size: 26 }, cooler: { size: 25 },
   printer: { size: 25 }, booth: { size: 25 }, trolley: { size: 23 },
   step: { size: 23 }, oldpc: { size: 22 }, spread: { size: 22 },
   heap: { size: 20 }, recep: { size: 19 },
+
+  /* THE LIFT AND THE STAIRS, both drawn — see the two cases in R's art
+     switch. A lift is a recess with two steel leaves, a seam, a call plate and
+     a light showing where the car is, and the kit this game pins has none of
+     those five things in it because the kit is mediaeval. The light is the part
+     that is not decoration: it reads Lifts.at(), and the car really is on a
+     floor.
+     Both hang on nothing and stand on the floor: a lift is a hole in a wall but
+     what is in your way is the doorway, which is most of a tile. */
+  lift: { size: 34, art: 'lift', ground: [0.86, 0.34] },
+  stairs: { size: 30, art: 'stairs', ground: [0.8, 0.5] },
 
   /* Drawn as real furniture by the renderer, so the emoji would be a second
      table sitting on the first. A cubicle draws its own stall; the pan inside
@@ -567,18 +627,21 @@ const FURN = {
   signals: { size: 34, sprite: 'sign.signals', ground: [0.24] },
 };
 
+/* THE FOURTH FLOOR'S OWN ROOMS, and Management is not among them any more.
+   It was [44,2,62,8] — nineteen tiles of Management Floor with a keycard door
+   on it, across a corridor from the sea of desks — and it is LEVELS.five now.
+   What the corridor points at is a lift. */
 const ROOM_DEFS = [
   { z: 'corridor', r: [14, 10, 62, 13] },
   { z: 'main',     r: [14, 15, 49, 34] },
   { z: 'brk',      r: [2, 16, 12, 27] },
   { z: 'training', r: [2, 29, 12, 40] },
   { z: 'archive',  r: [2, 3, 12, 13] },
-  { z: 'manage',   r: [44, 2, 62, 8] },
   { z: 'meet',     r: [16, 2, 27, 8] },
   { z: 'well',     r: [31, 2, 42, 8] },
   { z: 'toilet',   r: [51, 15, 62, 24] },
   { z: 'it',       r: [51, 26, 62, 34] },
-  { z: 'lobby',    r: [20, 36, 43, 42] },
+  { z: 'landing',  r: [20, 36, 43, 42] },
   { z: 'fire',     r: [14, 36, 18, 42] }
   /* The secret room used to be here, at [54,37,62,42]: a sealed nine-by-six in
      the corner of this grid that nothing could walk to, which is exactly the
@@ -586,6 +649,11 @@ const ROOM_DEFS = [
      basement now — a place you go down to rather than a hole in this floor. */
 ];
 
+/* The keycard door into Management is gone from this list and is not coming
+   back: Management is the FIFTH FLOOR now, which is what the directory in the
+   lobby has always said, and you do not get to it through a door in a wall on
+   the fourth. The keycard still gates it — it gates the button in the lift.
+   See FLOORS above and Acts.lift(). */
 const DOOR_DEFS = [
   { x: 13, y: 21, z: 'brk',      name: 'Break Room' },
   { x: 13, y: 34, z: 'training', name: 'Training Room' },
@@ -598,21 +666,37 @@ const DOOR_DEFS = [
   { x: 31, y: 35, z: 'main',     name: 'Main Floor' },
   { x: 21, y: 9,  z: 'meet',     name: 'Meeting Room 2' },
   { x: 36, y: 9,  z: 'well',     name: 'The Wellbeing Room' },
-  { x: 19, y: 39, z: 'fire',     name: 'Fire Escape' },
-  { x: 52, y: 9,  z: 'manage',   name: 'Management Floor', locked: 'keycard' }
+  { x: 19, y: 39, z: 'fire',     name: 'Fire Escape' }
 ];
 
-/* named spots used by NPC schedules */
+/* NAMED SPOTS USED BY NPC SCHEDULES, and now by three people who have to get
+   in a lift to reach theirs.
+
+   A waypoint is [x, y] on the hub — the fourth floor — exactly as it always
+   was. A waypoint on ANOTHER FLOOR is [x, y, levelId], and the third element is
+   the whole of the change: NPCM.wpLevel() reads it, the schedule handler
+   notices when it is not the floor somebody is standing on, and they go and
+   wait for the lift like anybody else. Everything else that reads this table
+   takes w[0] and w[1] and never asked how long the array was.
+
+   Two-element means the hub. That is not a default anybody has to remember: it
+   is the state every one of these was already in. */
 const WP = {
   coffee: [3, 18], fridge: [8, 18], vend: [11, 19], breakTable: [4, 22], breakTable2: [8, 22],
   /* In front of the sink, not on it — a waypoint on a solid tile leaves whoever
      is walking to it shuffling into the basin until the stuck timer gives up
      and stands them in it. */
   looDoor: [52, 17], looSink: [52, 23], printer: [48, 17], board: [15, 16],
-  /* Behind the security counter, which moved up a row to line up with
-     reception. A waypoint inside a counter is a waypoint nobody reaches. */
-  lobby: [30, 37], reception: [26, 39], corridor: [30, 12], lift: [22, 37],
-  training: [7, 31], archive: [6, 8], serverRoom: [54, 31], mgmt: [50, 5], synergy: [60, 6],
+  /* DOWNSTAIRS. Ron is on the door on the ground floor, which is a different
+     level, so his waypoint says so. Behind the security counter rather than in
+     it: a waypoint inside a counter is a waypoint nobody reaches. */
+  lobby: [16, 7, 'ground'], reception: [10, 7, 'ground'],
+  corridor: [30, 12], lift: [22, 37],
+  training: [7, 31], archive: [6, 8], serverRoom: [54, 31],
+  /* UPSTAIRS. The Management Floor is the fifth floor and always was — it is
+     on the directory in the lobby. Two people work up there and one comes down
+     twice a day, and all three of them now do it in the lift. */
+  mgmt: [6, 5, 'five'], synergy: [24, 5, 'five'],
   water: [15, 33], stationery: [48, 15],
   /* added with the new rooms */
   meetRoom: [22, 5], meetHead: [24, 4], wellRoom: [36, 5], beanbag: [34, 4],

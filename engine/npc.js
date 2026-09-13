@@ -472,6 +472,17 @@ const NPCM = {
       n.callOut = null;
     }
     const want = this.scheduled(n);
+    /* ANOTHER FLOOR. A waypoint may say which level it is on — see WP in
+       data/world.js — and three people's days now name one that is not the
+       floor they are standing on: the two who work in Management, and the man
+       on the fourth floor who goes up to see them twice a day.
+
+       This is the whole of what that costs. It is deliberately NOT a simulation
+       of a lift: it is somebody walking to the lift, standing at it, and then
+       being on the floor they were going to, which is what watching a colleague
+       use a lift actually looks like from where you are sitting. */
+    const commuting = this.commute(n, want);
+    if (commuting) return commuting;
     const e = n.errand;
     if (e) {
       /* Still on the way. The timetable can say what it likes. */
@@ -502,6 +513,93 @@ const NPCM = {
       return this.aim(n, want);
     }
     return this.aim(n, want);
+  },
+  /* THE OTHER HALF OF THE LIFT, and it is the half that does the work.
+
+     commute() above is what you WATCH: somebody on the floor you are standing
+     on, whose day wants them on another one, walking to the lift and then not
+     being there any more. It runs out of the walk, and the walk only runs for
+     people on the loaded level — which is correct for everything else in this
+     file and is exactly wrong for this one thing, because the whole point of a
+     person who works upstairs is that they are upstairs.
+
+     So this is the same journey for everybody who is NOT on your floor, done
+     without the walk, once a frame, off camera. It is not a shortcut: you
+     cannot see them, there is nothing to draw, and a colleague who took three
+     minutes to cross a landing you were not looking at would be a colleague who
+     is late for reasons nobody can ever observe. Nigel is on the fourth floor
+     at eleven because his day says he is on the fourth floor at eleven.
+
+     The guards are runHome's, in runHome's order and for runHome's reasons: a
+     drill outranks a timetable, going home outranks a drill in the other
+     direction, and an `out:` window — a man in a kebab shop — outranks the lot.
+     Anybody the guards catch is somebody whose level is already being decided
+     by something with a better claim on it. */
+  runCommutes() {
+    if (this.drill) return;
+    let moved = false;
+    for (const n of this.all) {
+      /* On your floor: they walk to the lift themselves, and you see them do
+         it. See commute(), off the schedule handler. */
+      if (n.level === World.level) continue;
+      if (n.homeward || n.away || n.outward || n.leaving) continue;
+      if (this.errandFor(n) || this.onErrand(n)) continue;
+      const want = this.scheduled(n);
+      if (!want || want === 'desk' || !WP[want]) continue;
+      const to = this.wpLevel(want);
+      if (to === n.level) continue;
+      const there = Levels.ensure(to);
+      const spot = there && (this.doorSide(there, 'lift') || this.doorSide(there, 'stairs'));
+      if (!spot) continue;
+      this.stepThrough(n, to, spot);
+      moved = true;
+    }
+    if (moved) this.refresh();
+  },
+  /* WHICH FLOOR A WAYPOINT IS ON. A two-element waypoint means the hub, which
+     is the state every one of them was already in, so nothing had to be
+     rewritten to give three of them a third element. */
+  wpLevel(name) {
+    const w = WP[name];
+    return (w && w[2]) || (Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office');
+  },
+  /* GOING UP.
+
+     Returns the square to aim at while somebody is between floors, or null when
+     they are on the right one and the day can carry on as it always did.
+
+     Walk to the lift on the floor you are on; when you are at it, you are on
+     the floor you were going to, beside its lift. The stairs are the fallback
+     and not a choice: if a floor has no lift on it this uses whatever stair it
+     has, which is the correct behaviour for a building and is also what stops
+     this ever stranding anybody. If neither end has either — a floor with no
+     way off it, which no floor in this building has — nobody sets off, and the
+     schedule falls through to the aim() it always had.
+
+     THE SIXTY SECONDS is the backstop rather than the mechanism. Somebody who
+     cannot get to the lift because you are standing in the doorway of it should
+     still end up where their day says they are, and a colleague stuck against a
+     lift door for a whole shift is a worse bug than one who appears upstairs
+     slightly early. */
+  commute(n, want) {
+    if (!want || want === 'desk' || !WP[want]) return null;
+    const to = this.wpLevel(want);
+    if (to === n.level) { n.lift = null; return null; }
+    const here = Levels.ensure(n.level), there = Levels.ensure(to);
+    if (!here || !there) return null;
+    const call = this.doorSide(here, 'lift') || this.doorSide(here, 'stairs');
+    const out = this.doorSide(there, 'lift') || this.doorSide(there, 'stairs');
+    if (!call || !out) return null;
+    if (!n.lift || n.lift.to !== to) n.lift = { to, since: this.now };
+    const close = Math.hypot((call[0] + .5) * TILE - n.x, (call[1] + .5) * TILE - n.y) < TILE * 1.1;
+    if (close || this.now - n.lift.since > 60) {
+      n.lift = null;
+      this.stepThrough(n, to, out);
+      this.refresh();
+      return null;
+    }
+    n.dest = n.lastAim = 'lift';
+    return call;
   },
   /* Resolve a destination name to the square it means, and record it. */
   aim(n, where) {
@@ -1683,6 +1781,10 @@ const NPCM = {
     /* After home time, which outranks it: somebody who has gone home has not
        nipped out to the shops, whatever the table says. */
     this.runErrands();
+    /* And after those, because both of them outrank it: somebody who has gone
+       home has not gone upstairs, and somebody in the pub is not due back on
+       the fifth floor until the window shuts. */
+    this.runCommutes();
     this.dynamics();
     /* Where everybody who is standing still is standing, once per frame, as
        tile keys. The walk below prices these up so a knot of people is walked

@@ -2500,6 +2500,84 @@ const R = {
         c.stroke();
         break;
       }
+      /* THE LIFT, and it is drawn rather than sprited for the reason FURN.plant
+         gives about picking a cell before writing an asset off: the kit this
+         game pins is mediaeval-through-Victorian and the nearest thing in it to
+         a lift is a panelled oak door. A lift is a recess in a wall with two
+         steel leaves in it, a seam down the middle, a call plate beside it and
+         a light over the top, and none of those five things is available.
+
+         The light over the top is the only part that is not decoration: it
+         shows the floor the car is on, and the floor the car is on is a real
+         thing — Lifts.at() in engine/levels.js, which is the same number the
+         indicator beside it reads out. */
+      case 'lift': {
+        const w = size * 0.92, h = size * 1.04;
+        const x0 = -w / 2, y0 = -h / 2;
+        /* The recess, then the architrave round it. */
+        c.fillStyle = '#1b2029';
+        c.fillRect(x0 - 2, y0 - 2, w + 4, h + 4);
+        c.fillStyle = '#3c434e';
+        c.fillRect(x0 - 2, y0 - 2, w + 4, 2);
+        c.fillStyle = '#141920';
+        c.fillRect(x0, y0, w, h);
+        /* The two leaves, brushed, lit from the left, with the seam between. */
+        for (const side of [0, 1]) {
+          const lx = x0 + side * (w / 2);
+          const g = c.createLinearGradient(lx, 0, lx + w / 2, 0);
+          g.addColorStop(0, side ? '#5a636f' : '#6b7480');
+          g.addColorStop(1, side ? '#77808c' : '#59626e');
+          c.fillStyle = g;
+          c.fillRect(lx + .5, y0 + 1, w / 2 - 1, h - 2);
+          /* The vertical brushing, which is what stops it reading as a door. */
+          c.fillStyle = 'rgba(255,255,255,.05)';
+          for (let i = 2; i < w / 2 - 2; i += 3) c.fillRect(lx + i, y0 + 2, 1, h - 4);
+        }
+        c.fillStyle = 'rgba(12,14,18,.85)';
+        c.fillRect(-0.9, y0 + 1, 1.8, h - 2);
+        /* The call plate: two buttons, one above the other, one of them lit. */
+        c.fillStyle = '#2b313a';
+        c.fillRect(x0 + w + 1, -h * .18, 3.4, h * .36);
+        c.fillStyle = 'rgba(255,179,71,.9)';
+        c.fillRect(x0 + w + 2, -h * .12, 1.6, 1.6);
+        c.fillStyle = 'rgba(120,128,140,.9)';
+        c.fillRect(x0 + w + 2, h * .04, 1.6, 1.6);
+        /* And the light over the top, showing where the car is. */
+        const floor = (typeof Lifts !== 'undefined' && Lifts.at()) || '';
+        c.fillStyle = '#0d1016';
+        c.fillRect(x0 + w * .18, y0 - 6, w * .64, 4.6);
+        if (floor) {
+          c.fillStyle = 'rgba(255,140,60,.95)';
+          c.font = '600 ' + Math.max(5, Math.round(size * .19)) + 'px ui-monospace,"Cascadia Mono",Consolas,monospace';
+          c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.fillText(String(floor), 0, y0 - 3.7);
+        }
+        break;
+      }
+      /* THE STAIRS. Three treads and a handrail, seen from above and slightly
+         on, which is the same compromise every other standing thing in this
+         game is drawn to. The kit's `terrain.steps` is a SURFACE — it tiles a
+         whole flight and it is what Fishers Steps is made of — and a surface
+         cannot stand in a doorway, which is what this has to do. */
+      case 'stairs': {
+        const w = size * .95, h = size * .8;
+        const x0 = -w / 2, y0 = -h / 2;
+        c.fillStyle = 'rgba(0,0,0,.35)';
+        c.fillRect(x0 + 1.5, y0 + 2, w, h);
+        for (let i = 0; i < 3; i++) {
+          const ty = y0 + i * (h / 3);
+          c.fillStyle = i === 0 ? '#8d949e' : i === 1 ? '#7b828c' : '#6a717a';
+          c.fillRect(x0, ty, w, h / 3 - 1);
+          c.fillStyle = 'rgba(255,255,255,.16)';
+          c.fillRect(x0, ty, w, 1);
+        }
+        /* The rail, on the open side, worn bright along the top of it. */
+        c.fillStyle = '#39404a';
+        c.fillRect(x0 - 1.5, y0 - 1, 2, h + 2);
+        c.fillStyle = 'rgba(226,229,234,.45)';
+        c.fillRect(x0 - 1.5, y0 - 1, 2, 1);
+        break;
+      }
       case 'ledger': {
         /* Not everything flat is on a wall: the sign-in book lies open on the
            reception counter with a biro on a string beside it, which is the
