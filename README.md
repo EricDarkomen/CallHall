@@ -310,6 +310,40 @@ each: the lobby's is described in its own act as a plain white battery clock
 bought in a multipack, and the minster's is an astronomical dial of 1484. Art
 that contradicts the writing is worse than no art.
 
+**Every road on this map is six tiles wide and four of them are driven on.** That
+was not a decision, it was an accident of laying the town out as
+pavement-carriageway-pavement and being generous with the middle. The traffic
+circuits run down the inner lanes — 17.5 and 20.5 on Bellhaven Road, 35.5 and
+38.5 on Fenn Street, and so on to the bottom of the map — which left the tile
+against each kerb permanently, structurally empty, for a hundred and ten tiles,
+on both sides, on every road. It read as a runway with a dashed line down it and
+the only thing to do on it was cross it.
+
+Those tiles are **kerbside parking** now, which is what a road that wide has
+always been: it was never six lanes, it was two lanes and two rows of parked
+cars, and nobody had said so. Nothing about the traffic moved to do it — not one
+route changed, and no parked car is within a tile of a lane a moving one uses.
+Where the runs stop is where a real one stops: junction mouths, both sides of
+every zebra, the length of the double yellows on the north side of the High
+Street, and seven tiles around each bus stop. Twenty-nine cars sit in them, one
+in every other stretch and never two stretches running.
+
+**And the other pavement.** On four of the five long roads, one footway had
+everything on it and the other had nothing at all — Fenn Street's southern side
+ran a hundred and four tiles with not one object on it. They were empty for a
+reason: on two of them, that was the row the pedestrians were walking down. A
+footway has a furniture strip at the kerb and a clear strip against the shops,
+which is how Station Road and Weirbank Road were already built; Bellhaven and
+Fenn had it the other way round. So the furniture went to the kerb rows and two
+ped routes moved one tile back, and now all five agree.
+
+**The old town got its own ironwork**, off a Victorian decoration kit that is
+CC-BY-SA 4.0 and is therefore `LICENSE` part 4 and a sheet of its own: a pillar
+box, fluted cast-iron litter bins in place of wheelie bins on a mediaeval
+street, and a public clock on Priorygate that everybody arranges to meet at and
+nobody can date. The benches split with the town — painted iron north of the
+railway, the wooden settle south of it.
+
 **Three things join the two halves,** and between them they are the whole shape of
 this map: two road bridges over the railway — Cargate Lane and Marlow Street — and
 the subway under it. Four more circuits of traffic run down there, two of them
@@ -972,12 +1006,13 @@ because a line in `CREDITS.md` names one source per sheet and has to stay true.
 
 Either way the licence is checked against what the sheet is allowed to contain,
 and that depends on which **part** of `LICENSE` it belongs to. A part-2 sheet
-takes OGA-BY 3.0 or CC0 and refuses ShareAlike. A sheet that says `part: 3`
-takes CC-BY-SA 3.0 — and must be a sheet of its own, which is the whole point:
-one ShareAlike crop packed in among OGA-BY ones would make the entire PNG an
-Adaptation of a ShareAlike work and drag every other artist in it into a
-licence they never chose. `assertOnePart()` in `tools/build-sprites.mjs` is
-what refuses to write such a sheet. GPL 3.0 is not accepted in either: art
+takes OGA-BY 3.0 or CC0 and refuses ShareAlike. `part: 3` takes CC-BY-SA 3.0
+and `part: 4` takes CC-BY-SA 4.0 — and each must be a sheet of its own, which
+is the whole point: one ShareAlike crop packed in among OGA-BY ones would make
+the entire PNG an Adaptation of a ShareAlike work and drag every other artist
+in it into a licence they never chose, and the two ShareAlike versions do the
+same thing to each other. `assertOnePart()` in `tools/build-sprites.mjs` is
+what refuses to write such a sheet. GPL 3.0 is not accepted in any of them: art
 offered only under the GPL is refused rather than quietly taken, for the reason
 `LICENSE` part 3 gives.
 
@@ -1161,17 +1196,24 @@ upstream's own licence data on every build and refuses to produce a sheet if it
 stops being true.
 
 ShareAlike art is not banned outright — it is kept in files of its own, and
-there are two of them. `art/sprites/sanitary.png` has always been one: a
-CC-BY-SA 3.0 tileset, in a sheet nothing else is packed into, under its own
-terms in `LICENSE` part 3. `art/sprites/wood.png` is the other, and it is the
-first one the build tool makes rather than carries — it says `part: 3`, it
-holds two crops off one CC-BY-SA 3.0 submission, and `assertOnePart()` refuses
-to write it if anything else ever ends up in there. The build refuses to mix
-the two kinds in one PNG at all: mixing would make the whole sheet an
-Adaptation of a ShareAlike work and place a term on other artists' work that is
-not ours to place. `CREDITS.md` marks a part-3 sheet in the list at the top of
-it, so the OGA-BY sentence underneath is not quietly covering something it does
-not cover. See `LICENSE`, and the build section above.
+there are three of them across two parts. `art/sprites/sanitary.png` has always
+been one: a CC-BY-SA 3.0 tileset, in a sheet nothing else is packed into, under
+its own terms in `LICENSE` part 3. `art/sprites/wood.png` is the second, and it
+is the first one the build tool makes rather than carries. `LICENSE` part 4 and
+`art/sprites/victorian.png` are the third, and they are a **different**
+ShareAlike: CC-BY-SA 4.0, which the submission offers and nothing else.
+
+Two ShareAlike parts rather than one, because 3.0 and 4.0 are not the same
+licence and a section claiming to cover both would be wrong about one of them —
+they differ on how an Adaptation may be relicensed, on how attribution and
+notice must be given, and on whether a breach can be cured. Compatibility also
+runs one way: merging the two sheets would quietly relicense the part-3 art
+under 4.0, which is not ours to do to somebody else's work. So each gets its
+own part, its own PNG, and `assertOnePart()` refusing to write a sheet that
+mixes anything with anything. `CREDITS.md` marks each non-part-2 sheet in the
+list at the top of it, so the OGA-BY sentence underneath is not quietly
+covering something it does not cover. See `LICENSE`, and the build section
+above.
 
 A work of fiction; CALLHALL Services plc and everyone in it are invented.
 "Call of Duty" is a trade mark of Activision Publishing, Inc. — this is an

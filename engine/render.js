@@ -590,6 +590,48 @@ const R = {
         c.stroke(); c.restore();
         continue;
       }
+      if (m.p === 'kerbside' && m.r) {
+        /* A LANE OF PARALLEL PARKING along a kerb, which is a different mark
+           from `bays` and a different thing on the ground. `bays` is a car
+           park: you drive in off an aisle and the dividers run away from it,
+           square to the kerb. This is a street: the cars lie ALONG the kerb,
+           nose to tail, and what is painted is a line between them and the
+           moving traffic with a short tick closing off each bay.
+
+           It exists because every carriageway in this town is six tiles wide
+           and the traffic only ever uses the middle four of them. Six tiles is
+           a nineteen-metre road, which is not a street in a market town, it is
+           a runway — and the two outer tiles were empty tarmac for the length
+           of the map because nothing was ever going to drive down them. They
+           are parking now, which is both what a road that wide actually is and
+           the reason it is allowed to be that wide.
+
+           `side` names the KERB, so the outer line is drawn on the far side
+           from it and the ticks run inwards. One tile deep, always: a parked
+           car is about a tile wide and this is a lane, not a compound. */
+        const [x1, y1, x2, y2] = m.r;
+        const px = x1 * TILE, py = y1 * TILE;
+        const w = (x2 - x1 + 1) * TILE, h = (y2 - y1 + 1) * TILE;
+        if (!near(px, py, px + w, py + h)) continue;
+        const along = w >= h;                       /* the lane runs left-right */
+        c.save();
+        c.strokeStyle = WHITE; c.lineWidth = 3;
+        c.beginPath();
+        if (along) {
+          /* The long white line, on the traffic side of the lane. */
+          const ly = m.side === 'n' ? py + h : py;
+          c.moveTo(px, ly); c.lineTo(px + w, ly);
+          /* And a tick across the lane every bay-and-a-half, which is where a
+             real one goes: long enough that a car fits between two of them. */
+          for (let x = px; x <= px + w + 1; x += TILE * 2.5) { c.moveTo(x, py); c.lineTo(x, py + h); }
+        } else {
+          const lx = m.side === 'w' ? px + w : px;
+          c.moveTo(lx, py); c.lineTo(lx, py + h);
+          for (let y = py; y <= py + h + 1; y += TILE * 2.5) { c.moveTo(px, y); c.lineTo(px + w, y); }
+        }
+        c.stroke(); c.restore();
+        continue;
+      }
       if (m.p === 'text' && m.at) {
         const px = m.at[0] * TILE, py = m.at[1] * TILE;
         if (!near(px - 60, py - 60, px + 60, py + 60)) continue;

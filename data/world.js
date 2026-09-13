@@ -681,6 +681,13 @@ const FURN = {
      tools/sheets/town.mjs. The footprint is one tile's worth of nothing much,
      because what is in your way is a row of bars. */
   railing: { size: 30, sprite: 'obj.railing', ground: [0.96, 0.22] },
+  /* THREE THINGS OFF THE VICTORIAN SHEET, which is LICENSE part 4 and its own
+     PNG and nothing here has to know either fact. They are all for the old
+     town: a pillar box, a fluted cast-iron litter bin and a public clock on a
+     post. The modern half keeps the wheelie bins it deserves. */
+  postbox: { size: 28, sprite: 'obj.postbox', ground: [0.5] },
+  ironbin: { size: 26, sprite: 'obj.bin.iron', ground: [0.62] },
+  streetclock: { size: 34, sprite: 'obj.streetclock', ground: [0.3] },
   /* A minster window: two tiles tall, in stone, and pointed. Hung like every
      other thing on a wall, which means the north face and nowhere else — the
      renderer falls back to the emoji on the other three sides, and there is

@@ -1316,6 +1316,44 @@ const Acts = {
       'A manhole cover, sitting a few millimetres proud of the road, which is why every car that goes over it makes the same noise.',
       'Cast into it, around the edge, is the name of a foundry in a town forty miles away that closed in 1987.']);
   },
+  /* --- WHAT IS NOW ON THE OTHER PAVEMENT ---
+     Four acts for the four things that got spread down the empty side of every
+     road on this map. They are deliberately small: a bench you can sit on, a
+     planter somebody is losing an argument with, a pillar box, and a clock
+     nobody can date. A hundred metres of footway does not want four hundred
+     words on it, it wants something to look at every nine tiles. */
+  streetBench(o) {
+    insp('🪑', o.name, 'Bolted down', [
+      'A painted iron bench, red slats on green ends, bolted through the paving. The borough has bought these by the hundred since about 1890 and has never found a reason to stop.',
+      pick(['One slat is a slightly different red, from a repair nobody has matched since.',
+        'The plaque on the back is for a councillor. Nobody under fifty has heard of them and nobody over fifty is surprised by that.',
+        'Somebody has left a free paper on it, folded to the crossword, three answers in, all of them wrong.'])],
+      [{ t: 'Sit down for a minute.', to: null, do() {
+          G.minutes += 5; Player.mod({ patience: 6, energy: 2 });
+          UI.toast('🪑', 'Five minutes on a bench, watching the road. The road does not need watching. That is what makes it restful.');
+        } },
+       { t: 'Keep walking.', to: null }]);
+  },
+  streetPlanter(o) {
+    insp('🪴', o.name, 'Bellhaven in Bloom', [
+      pick(['A concrete tub of bedding, planted by the council and kept alive by whoever runs the shop behind it, which is not the arrangement on paper.',
+        'A concrete tub of bedding with a takeaway cup pushed into the soil at an angle, like a small rude flag.',
+        'A concrete tub that was full of tulips in April and has been full of dry earth and one surviving geranium since June.']),
+      'It is also, and mainly, a thing too heavy to drive into the front of a shop, which is the other reason there are eleven of them.']);
+  },
+  pillarBox() {
+    insp('📮', 'The pillar box', 'Last collection 4.15pm · Sat 11.30am', [
+      'Hexagonal, fluted, on a stone plinth, painted the red it has been painted every four years since it was put here.',
+      'The collection plate says 4.15pm, and it is emptied at 4.15pm, and it has been emptied at 4.15pm for as long as anybody on this street has been on this street.',
+      pick(['There is a rubber band on the pavement beside it. There is always a rubber band on the pavement beside it.',
+        'Somebody has posted something and then stood looking at the slot for a moment, the way everybody does.'])]);
+  },
+  prioryClock() {
+    insp('🕰️', 'The Priorygate clock', 'Presented to the town', [
+      'A public clock on a fluted iron post, with a hood over the dial and a plate round the base of it.',
+      'The plate says PRESENTED TO THE TOWN and then a name and then a date, and the name and the date are under four coats of the same green paint, which is how the town says thank you.',
+      'It keeps time. Everybody in the old town arranges to meet at it and nobody has ever needed to say which clock.']);
+  },
   lamppost() {
     insp('💡', 'Lamppost', 'Council-maintained', [
       'A council lamppost, one of a matching pair, both working — which the fourth floor’s own lighting has not managed in a decade of maintenance tickets.',
