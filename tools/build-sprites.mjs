@@ -29,6 +29,7 @@ const MANAGED_SHEET_MODULES = [
   './sheets/streets.mjs',
   './sheets/wood.mjs',
   './sheets/victorian.mjs',
+  './sheets/frontage.mjs',
   './sheets/faces.mjs',
 ];
 

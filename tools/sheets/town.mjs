@@ -286,50 +286,23 @@ export default {
        canopy from above that it went unnoticed until there were six of them.
        These are the face-on cell of three of the blocks, trimmed to the awning
        and its two support arms. */
-    /* SHOPFRONTS. Three sash windows off one sheet, the same window in three
-       states: daylight, dark, and lit from inside. The parade's units were a
-       wall with an emoji hung on it; they are now a wall with a window in it,
-       and the window knows what time it is — FURN.shop carries `lit`, which
-       R.spriteOf() swaps in when the streetlights come on. Walk back up the
-       High Street at half four in December and the shops are lit.
+    /* THE SASHES ARE GONE, and the hole they leave is worth a paragraph.
 
-       The dark one is not a spare: it is the unit that is always being
-       refitted and the one with TO LET in it, which are the two frontages on
-       that parade that should stay black when everything either side of them
-       comes on. */
-    {
-      name: 'shop.window',
-      anchor: 'wall',
-      source: {
-        repo, commit,
-        path: 'Structure/Windows/Ornamental Windows A.png',
-        creditsPath: 'Structure/Windows/Credits.txt',
-        assetName: 'Ornamental Windows A',
-        rect: [32, 36, 32, 52],
-      },
-    },
-    {
-      name: 'shop.window.lit',
-      anchor: 'wall',
-      source: {
-        repo, commit,
-        path: 'Structure/Windows/Ornamental Windows A.png',
-        creditsPath: 'Structure/Windows/Credits.txt',
-        assetName: 'Ornamental Windows A',
-        rect: [64, 36, 32, 52],
-      },
-    },
-    {
-      name: 'shop.window.dark',
-      anchor: 'wall',
-      source: {
-        repo, commit,
-        path: 'Structure/Windows/Ornamental Windows A.png',
-        creditsPath: 'Structure/Windows/Credits.txt',
-        assetName: 'Ornamental Windows A',
-        rect: [0, 36, 32, 52],
-      },
-    },
+       Three of them used to live here — `shop.window`, `.lit` and `.dark` —
+       cropped out of a castle-window sheet and hung on the parade because
+       nothing in this kit was drawn as a shopfront. They filled the wall, which
+       was the improvement, and they read as the front of a terraced house,
+       which is what a sash is. The `.lit` one was how the parade came on at
+       dusk: a second copy of the window with yellow behind the panes, swapped
+       in by R.spriteOf().
+
+       Both jobs are done properly elsewhere now. The glass is a real shopfront
+       out of tools/sheets/frontage.mjs — two tiles across, mullioned, on a
+       stall riser, in four colourways — and the light in it is DRAWN, in
+       R.lamps(), as a warm room seen through glass rather than as a second
+       sprite with a different palette. Which is why these three came out
+       rather than sit in the atlas unused: an atlas that carries art nothing
+       draws is an atlas nobody can read. */
     {
       name: 'shop.awning',
       anchor: 'wall',
@@ -718,124 +691,219 @@ export default {
         rect: [64, 37, 31, 27],
       },
     },
-    /* FOUR SHOP DOORS, SHUT, FACE ON.
+    /* THE SHOP DOORS, AND THEY OPEN.
 
-       Every door in this game — office, flat, shop, cathedral — has been the
-       same leaf standing ajar at forty-five degrees, hinged out onto whatever
-       is in front of it. Indoors that is right and it is what the kit is drawn
-       for: a corridor door you are about to walk through, swung towards you.
-       On a parade of twenty shopfronts it is twenty copies of one sticker, each
-       one lying across the pavement, and it is the single most obviously wrong
-       thing on the street.
+       `15 Panel Door A` is not a door, it is a SWING: fourteen frames from the
+       leaf shut and flat in its own opening round to edge-on and wide, in eight
+       wood tones down the sheet. Every door in this game used to be frame
+       eleven of it, standing at forty-five degrees, for ever — a door caught
+       mid-open and left there, twenty times along one parade.
 
-       The kit has the answer and nothing had asked it for. `15 Panel Door A` is
-       a fourteen-frame SWING, from edge-on to shut, in eight wood tones down
-       the sheet — and frame seven of it is the leaf FULLY SHUT and flat in its
-       own opening, thirty-two across and twenty-six tall because that is how
-       much of a door you see when it is in a wall rather than swung out of one.
-       Which is exactly what a shut shop looks like from the other side of the
-       road.
+       Four frames of the swing are taken here, per tone: shut, a hand's width,
+       half, and wide. R.doorLeaves() runs them when you walk up to a shop that
+       has something behind it, and runs them back when you walk away, which is
+       what the sheet was drawn for and what nothing had ever asked it to do.
 
-       Four tones rather than one, out of rows 0, 2, 4 and 10, because a parade
-       where every door is the same orange pine is the sticker problem again in
-       a different colour. R.kitDoor() picks between them off the tile, so a
-       door does not change colour when the camera moves. */
+       PADDED TO ONE BOX, and that is the load-bearing part. Upstream's frames
+       get NARROWER and TALLER as the door opens — thirty-two wide and
+       twenty-six tall shut, four wide and forty-two tall edge-on — because that
+       is the perspective of a leaf turning away from you. They are drawn
+       left-aligned and bottom-aligned in their cells, hinged on the left. Blit
+       them centred, the way Tiles.draw does, and the door does not swing: it
+       shrinks towards its own middle and grows out of the floor. So each frame
+       is composited into one 32x42 box at the offset that puts its hinge and
+       its foot back where upstream had them, and then four sprites of the same
+       size can simply be swapped. */
     {
-      name: 'door.front.pine',
+      name: 'door.shop.pine.0',
       anchor: 'wall',
       source: {
         repo, commit,
         path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
         creditsPath: 'Structure/Doors/Credits.txt',
         assetName: '12-Panel Door, 15-Panel Door',
-        rect: [224, 38, 32, 26],
+        size: [32, 42],
+        layers: [{ rect: [224, 38, 32, 26], at: [0, 16] }],
       },
     },
     {
-      name: 'door.front.oak',
+      name: 'door.shop.pine.1',
       anchor: 'wall',
       source: {
         repo, commit,
         path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
         creditsPath: 'Structure/Doors/Credits.txt',
         assetName: '12-Panel Door, 15-Panel Door',
-        rect: [224, 166, 32, 26],
+        size: [32, 42],
+        layers: [{ rect: [160, 30, 28, 34], at: [0, 8] }],
       },
     },
     {
-      name: 'door.front.walnut',
+      name: 'door.shop.pine.2',
       anchor: 'wall',
       source: {
         repo, commit,
         path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
         creditsPath: 'Structure/Doors/Credits.txt',
         assetName: '12-Panel Door, 15-Panel Door',
-        rect: [224, 294, 32, 26],
+        size: [32, 42],
+        layers: [{ rect: [96, 25, 17, 39], at: [0, 3] }],
       },
     },
     {
-      name: 'door.front.olive',
+      name: 'door.shop.pine.3',
       anchor: 'wall',
       source: {
         repo, commit,
         path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
         creditsPath: 'Structure/Doors/Credits.txt',
         assetName: '12-Panel Door, 15-Panel Door',
-        rect: [224, 678, 32, 26],
-      },
-    },
-    /* AND THE SAME FOUR, AJAR. Frame five of the same swing rather than frame
-       seven: open by about a hand's width, still square to the wall, nothing
-       lying across the pavement.
-
-       This is the difference between a shop you can walk into and one you can
-       only read the window of, and the street needed it. Seventeen of the
-       frontages out there have no interior behind them — the superstore, the
-       bakery, the chandlery, the old bank — and every one of them was wearing
-       the same wide-open door as the five that do, which is a door promising
-       something that is not there. Ajar means go in. Shut means look. */
-    {
-      name: 'door.front.ajar.pine',
-      anchor: 'wall',
-      source: {
-        repo, commit,
-        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
-        creditsPath: 'Structure/Doors/Credits.txt',
-        assetName: '12-Panel Door, 15-Panel Door',
-        rect: [160, 30, 28, 34],
+        size: [32, 42],
+        layers: [{ rect: [32, 22, 4, 42], at: [0, 0] }],
       },
     },
     {
-      name: 'door.front.ajar.oak',
+      name: 'door.shop.oak.0',
       anchor: 'wall',
       source: {
         repo, commit,
         path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
         creditsPath: 'Structure/Doors/Credits.txt',
         assetName: '12-Panel Door, 15-Panel Door',
-        rect: [160, 158, 28, 34],
+        size: [32, 42],
+        layers: [{ rect: [224, 166, 32, 26], at: [0, 16] }],
       },
     },
     {
-      name: 'door.front.ajar.walnut',
+      name: 'door.shop.oak.1',
       anchor: 'wall',
       source: {
         repo, commit,
         path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
         creditsPath: 'Structure/Doors/Credits.txt',
         assetName: '12-Panel Door, 15-Panel Door',
-        rect: [160, 286, 28, 34],
+        size: [32, 42],
+        layers: [{ rect: [160, 158, 28, 34], at: [0, 8] }],
       },
     },
     {
-      name: 'door.front.ajar.olive',
+      name: 'door.shop.oak.2',
       anchor: 'wall',
       source: {
         repo, commit,
         path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
         creditsPath: 'Structure/Doors/Credits.txt',
         assetName: '12-Panel Door, 15-Panel Door',
-        rect: [160, 670, 28, 34],
+        size: [32, 42],
+        layers: [{ rect: [96, 153, 17, 39], at: [0, 3] }],
+      },
+    },
+    {
+      name: 'door.shop.oak.3',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        size: [32, 42],
+        layers: [{ rect: [32, 150, 4, 42], at: [0, 0] }],
+      },
+    },
+    {
+      name: 'door.shop.walnut.0',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        size: [32, 42],
+        layers: [{ rect: [224, 294, 32, 26], at: [0, 16] }],
+      },
+    },
+    {
+      name: 'door.shop.walnut.1',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        size: [32, 42],
+        layers: [{ rect: [160, 286, 28, 34], at: [0, 8] }],
+      },
+    },
+    {
+      name: 'door.shop.walnut.2',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        size: [32, 42],
+        layers: [{ rect: [96, 281, 17, 39], at: [0, 3] }],
+      },
+    },
+    {
+      name: 'door.shop.walnut.3',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        size: [32, 42],
+        layers: [{ rect: [32, 278, 4, 42], at: [0, 0] }],
+      },
+    },
+    {
+      name: 'door.shop.olive.0',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        size: [32, 42],
+        layers: [{ rect: [224, 678, 32, 26], at: [0, 16] }],
+      },
+    },
+    {
+      name: 'door.shop.olive.1',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        size: [32, 42],
+        layers: [{ rect: [160, 670, 28, 34], at: [0, 8] }],
+      },
+    },
+    {
+      name: 'door.shop.olive.2',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        size: [32, 42],
+        layers: [{ rect: [96, 665, 17, 39], at: [0, 3] }],
+      },
+    },
+    {
+      name: 'door.shop.olive.3',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Structure/Doors/32x64px Doors/15 Panel Door A.png',
+        creditsPath: 'Structure/Doors/Credits.txt',
+        assetName: '12-Panel Door, 15-Panel Door',
+        size: [32, 42],
+        layers: [{ rect: [32, 662, 4, 42], at: [0, 0] }],
       },
     },
   ],

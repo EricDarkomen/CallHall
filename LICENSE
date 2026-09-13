@@ -9,11 +9,11 @@ thing.  Read the part that covers the file you are interested in.
      the Liberated Pixel Cup community, licensed OGA-BY 3.0 (some contributions
      CC0).  NOT covered by part 1 — see below.
 
-  3. The ShareAlike sheets, art/sprites/sanitary.png and art/sprites/wood.png.
-     Third-party pixel art by Matthew Nash and by bluecarrot16 and others,
-     licensed CC-BY-SA 3.0.  ShareAlike, so it carries an obligation parts 1
-     and 2 do not, and it is kept in files of its own for exactly that
-     reason — see below.
+  3. The CC-BY-SA 3.0 sheets: art/sprites/sanitary.png, art/sprites/wood.png
+     and art/sprites/frontage.png.  Third-party pixel art by Matthew Nash and
+     by bluecarrot16 and others.  ShareAlike, so it carries an obligation parts
+     1 and 2 do not, and each work is kept in a file of its own for exactly
+     that reason — see below.
 
   4. The Victorian sheet, art/sprites/victorian.png.  Third-party pixel art
      compiled by bluecarrot16 from many LPC contributors, licensed
@@ -165,7 +165,7 @@ Liberated Pixel Cup endorses this game or is connected with it.
 PART 3 — THE SHAREALIKE SHEETS
 ===============================================================================
 
-Two files, kept apart from Part 2 and from each other on purpose.
+Three files, kept apart from Part 2 and from each other on purpose.
 
 Which files this covers
 -----------------------
@@ -177,6 +177,10 @@ Which files this covers
   * art/sprites/wood.png — the bench the town sits on and the clock on the
     wall.  Two rectangles, cut from the layered form of [LPC] Wooden Furniture
     and packed into a sheet of their own.
+
+  * art/sprites/frontage.png — the shop windows along the parade.  Four
+    rectangles, cut from [LPC] Windows & Doors and packed into a sheet of their
+    own.
 
     Each sheet holds ONE work by ONE set of artists.  They are two files rather
     than one for the same reason neither is packed into world.png: a sheet is
@@ -209,9 +213,9 @@ CC-BY-SA 3.0 (Creative Commons Attribution-ShareAlike 3.0 Unported).
 Section 4(a) permits the URI to stand in place of a copy of the licence text,
 which is why there is no local copy of it here as there is for OGA-BY 3.0.
 
-Both works are offered under CC-BY-SA 3.0 or GPL 3.0, at the licensee's option;
-[LPC] Wooden Furniture offers CC-BY-SA 4.0 as well.  This project takes
-CC-BY-SA 3.0 for both.  GPL 3.0 is the worse of the options here: its
+All three works are offered under CC-BY-SA 3.0 or GPL 3.0 (or GPL 3.0+), at the
+licensee's option; [LPC] Wooden Furniture offers CC-BY-SA 4.0 as well.  This
+project takes CC-BY-SA 3.0 for all three.  GPL 3.0 is the worse of the options here: its
 "preferred form for making modifications" would reach the build inputs, and
 tools/ is deliberately not published.  CC-BY-SA 4.0 is declined only because
 3.0 is the version this part already states and one version is simpler to
@@ -253,6 +257,14 @@ art/sprites/wood.png
   Source:           https://opengameart.org/content/lpc-wooden-furniture
   Title:            [LPC] Wooden Furniture
 
+art/sprites/frontage.png
+
+  Original authors: bluecarrot16, Lanea Zimmerman (Sharm),
+                    Daniel Armstrong (HughSpectrum), Casper Nilsson, Anamaris,
+                    Krusmira, Keith Karnage, Guido Bos, Talosaurus
+  Source:           https://opengameart.org/content/lpc-windows-doors
+  Title:            [LPC] Windows & Doors
+
 Changes were made
 -----------------
 
@@ -269,6 +281,10 @@ twenty-six unbroken pixels between them, so that it is two tiles long rather
 than nearly three.  The clock is the case from one layer with the dial from
 another stacked back onto it, which is how the submission ships it.
 
+For frontage.png: four rectangles — the same two-tile shopfront window in four
+of the submission's eleven frame colours — were cut from its single sheet and
+packed into one indexed PNG.  Nothing was recoloured or redrawn.
+
 No original sheet is reproduced here intact.
 
 Standing of this attribution
@@ -283,10 +299,10 @@ build environment at the time, which could not reach opengameart.org or
 web.archive.org; the PNG carries no tEXt chunk, and the name does not appear in
 the official Liberated Pixel Cup asset repository.
 
-For wood.png, the authors and the licence were read off the source page and off
-the CREDITS-furniture.txt the submission ships beside the art, and they are
-written into tools/sheets/wood.mjs where they can be compared against that page
-by anyone who opens it.  What the build re-checks is not the page but the
+For wood.png and frontage.png, the authors and the licences were read off the
+source pages and off the CREDITS-*.txt each submission ships beside its art, and
+they are written into tools/sheets/wood.mjs and tools/sheets/frontage.mjs where
+they can be compared against those pages by anyone who opens them.  What the build re-checks is not the page but the
 BYTES: the sheet pins the sha256 of the archive it was cut from and refuses to
 build if the download no longer matches, so a re-upload under different terms
 stops the build rather than passing through it.  That is a guarantee about the
@@ -324,8 +340,9 @@ Which files this covers
 Which files this does NOT cover
 -------------------------------
 
-  * art/sprites/sanitary.png and art/sprites/wood.png.  Those are Part 3 and
-    contain none of this art.  ShareAlike does not make two works one work.
+  * art/sprites/sanitary.png, art/sprites/wood.png and
+    art/sprites/frontage.png.  Those are Part 3 and contain none of this art.
+    ShareAlike does not make two works one work.
 
   * art/sprites/world.png, art/sprites/revised.png, art/sprites/town.png,
     art/sprites/streets.png, art/sprites/faces.png and the parts-*.png sheets.
