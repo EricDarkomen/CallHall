@@ -413,25 +413,57 @@ const LEVELS = {
      else. */
   ground: {
     name: 'CALLHALL Services · Ground Floor',
-    w: 34, h: 20,
+    w: 32, h: 20,
     arrive: true,
-    rooms: [{ z: 'lobby', r: [2, 2, 31, 17] }],
-    doors: [],
-    /* THE FRONT DESK, and it is the same two-piece desk it always was: a
-       reception counter and a security counter a tile apart, which read as one
-       desk with a step in it, because that is what they are. */
-    counters: [
-      { x: 9, y: 8, w: 3, label: 'RECEPTION' },
-      { x: 14, y: 8, w: 4, label: 'SECURITY' },
+    /* FOUR ROOMS, NOT ONE HALL.
+       The first version of this level was a single thirty by sixteen rectangle
+       with the furniture pushed out to the edges of it and a thirteen-tile
+       square of nothing in the middle. That is not a lobby. A lobby is a
+       sequence: a way in, a desk ACROSS the way in, and a lift lobby behind the
+       desk that you are not meant to reach without passing it — which is the
+       whole of what a security desk is for and is why Ron is worth putting in
+       one. The post room is off it because the post has to go somewhere and
+       because a door marked PRIVATE in a public lobby is a thing everybody has
+       tried the handle of.
+
+       Rooms are listed with the entrance first so the two openings into it
+       belong to the rooms they lead to. */
+    rooms: [
+      /* Eight rows deep and not ten. At ten it had a ten-tile square of
+         nothing in the middle of it, which is the same fault the whole level
+         had before it was four rooms: a hall is a route from a door to a desk,
+         and the part of it nobody walks through should not be there. */
+      { z: 'entrance', r: [2, 10, 29, 17] },
+      { z: 'liftlob',  r: [2, 2, 21, 7] },
+      { z: 'postrm',   r: [24, 2, 29, 7] },
+      /* The stairwell, which every floor of this building has in the same
+         corner of it, because a stairwell goes up through a building in a
+         straight line. */
+      { z: 'stairwell', r: [24, 8, 29, 9] }
     ],
+    doors: [
+      /* The two ways through the desk line: the gate beside reception, and the
+         one past security. Both are on row 8 because row 8 is the wall the
+         front desk is built into. */
+      { x: 7, y: 8, z: 'liftlob', name: 'The gate beside reception' },
+      { x: 17, y: 8, z: 'liftlob', name: 'Past security' },
+      { x: 26, y: 8, z: 'postrm', name: 'The post room' }
+    ],
+    counters: [
+      { x: 5, y: 9, w: 4, label: 'RECEPTION' },
+      { x: 13, y: 9, w: 5, label: 'SECURITY' },
+    ],
+    /* The stairwell floor is a real flight — see SURFACES.stair. */
+    surfaces: [{ s: 'stair', r: [27, 8, 29, 9] }],
     entries: {
       /* The visitors' side of the security counter, clear of it by a whole
-         tile — the same spawn this game has opened on since it had one, moved
-         down four floors and not otherwise touched. */
-      start: [16.5, 10.5],
-      doors: [16.5, 15.5],
-      lift: [26.5, 3.5],
-      stairs: [29.5, 3.5],
+         tile: the collision box is 26px tall and a spawn on a tile boundary
+         lands you in the tile above, which was inside Ron's desk once the
+         counter became solid. */
+      start: [15.5, 11.5],
+      doors: [15.5, 15.5],
+      lift: [6.5, 5.5],
+      stairs: [26.5, 9.5],
     },
     links: [
       { via: 'exit', to: 'outside', entry: 'doors' },
@@ -441,36 +473,60 @@ const LEVELS = {
     ],
     furnish() {
       const A = o => this.add(o);
-      /* The way out, on the wall row under the room, exactly as it was. */
+      /* ---- the way in ---- */
+      A({ x: 15, y: 18, e: '🚪', name: 'The way out', kind: 'exit', solid: false, use: 'exit' });
       A({ x: 16, y: 18, e: '🚪', name: 'The way out', kind: 'exit', solid: false, use: 'exit' });
-      A({ x: 17, y: 18, e: '🚪', name: 'The way out', kind: 'exit', solid: false, use: 'exit' });
-      /* ---- the front desk ---- */
-      A({ x: 9, y: 8, e: '📖', name: 'The visitors’ book', kind: 'book', solid: true, use: 'visitorsBook',
+      A({ x: 15, y: 16, e: '🧹', name: 'The mat', kind: 'view', solid: false, use: 'theMat', furn: { mount: null, size: 26 } });
+      A({ x: 16, y: 16, e: '🧹', name: 'The mat', kind: 'view', solid: false, use: 'theMat', furn: { mount: null, size: 26 } });
+      /* ---- the front desk, built into the wall line ---- */
+      A({ x: 5, y: 9, e: '📖', name: 'The visitors’ book', kind: 'book', solid: true, use: 'visitorsBook',
         furn: { art: 'ledger', size: 17, sprite: null } });
-      A({ x: 10, y: 8, e: '🖥️', name: 'Reception monitor', kind: 'pc', solid: true, use: 'pc' });
-      A({ x: 11, y: 8, e: '🛎️', name: 'Reception desk', kind: 'recep', solid: true, use: 'reception' });
-      A({ x: 17, y: 8, e: '🖥️', name: 'The security screen', kind: 'screen', solid: true, use: 'securityScreen' });
-      /* ---- the lift lobby, which is the whole point of this level ---- */
-      A({ x: 26, y: 2, e: '🛗', name: 'The lift', kind: 'lift', solid: true, use: 'lift' });
-      A({ x: 25, y: 2, e: '🔢', name: 'The floor indicator', kind: 'screen', solid: true, use: 'indicator' });
-      A({ x: 29, y: 2, e: '🪜', name: 'The stairs', kind: 'stairs', solid: true, use: 'stairs' });
-      A({ x: 22, y: 2, e: '🏢', name: 'Building directory', kind: 'board', solid: true, use: 'directory' });
-      A({ x: 19, y: 2, e: '🥇', name: 'Award cabinet', kind: 'cab', solid: true, use: 'awards' });
-      A({ x: 31, y: 5, e: '📋', name: 'Fire evacuation notice', kind: 'board', solid: true, use: 'fireNotice' });
-      /* ---- waiting, and everything nobody has claimed ---- */
-      A({ x: 5, y: 13, e: '🛋️', name: 'Waiting sofa', kind: 'sofa', solid: true, use: 'sofa' });
-      A({ x: 7, y: 13, e: '🪴', name: 'Lobby plant (thriving)', kind: 'plant', solid: true, use: 'plant' });
+      A({ x: 6, y: 9, e: '🖥️', name: 'Reception monitor', kind: 'pc', solid: true, use: 'pc' });
+      A({ x: 8, y: 9, e: '🛎️', name: 'Reception desk', kind: 'recep', solid: true, use: 'reception' });
+      A({ x: 4, y: 9, e: '🪴', name: 'The plant on reception', kind: 'plant', solid: true, use: 'plant' });
+      A({ x: 13, y: 9, e: '🖥️', name: 'The security screen', kind: 'screen', solid: true, use: 'securityScreen' });
+      A({ x: 17, y: 9, e: '🎫', name: 'The visitor passes', kind: 'card', solid: true, use: 'passes' });
+      /* Behind the desk and not in front of it, which is where Ron stands and
+         where the empty chair the other half of the day is. */
+      A({ x: 10, y: 7, e: '💺', name: 'The chair nobody is in', kind: 'chair', solid: true, use: 'emptyChair' });
+      /* ---- the entrance hall: waiting, and the things people leave ---- */
+      A({ x: 3, y: 13, e: '🛋️', name: 'Waiting sofa', kind: 'sofa', solid: true, use: 'sofa' });
+      A({ x: 6, y: 13, e: '🪴', name: 'Lobby plant (thriving)', kind: 'plant', solid: true, use: 'plant' });
       A({ x: 3, y: 16, e: '☂️', name: 'Lost umbrellas', kind: 'box', solid: true, use: 'umbrellas' });
-      A({ x: 30, y: 16, e: '🚲', name: 'The bike nobody claims', kind: 'bike', solid: true, use: 'bike' });
-      A({ x: 20, y: 16, e: '🗑️', name: 'Lobby bin', kind: 'bin', solid: false, use: 'bin' });
-      /* ---- and the things a ground floor has that a fourth floor does not ---- */
-      A({ x: 12, y: 16, e: '🧹', name: 'The mat', kind: 'view', solid: false, use: 'theMat', furn: { mount: null, size: 26 } });
-      A({ x: 3, y: 2, e: '📬', name: 'The post tray', kind: 'paper', solid: true, use: 'postTray' });
-      A({ x: 6, y: 2, e: '📦', name: 'The parcels nobody has come down for', kind: 'box', solid: true, use: 'parcels' });
-      A({ x: 14, y: 5, e: '🎫', name: 'The visitor passes', kind: 'card', solid: true, use: 'passes' });
-      A({ x: 31, y: 11, e: '🪟', name: 'The window onto the car park', kind: 'window', solid: true, use: 'lobbyWindow' });
-      A({ x: 2, y: 9, e: '🚭', name: 'NO SMOKING sign', kind: 'sign', solid: true, use: 'noSmoking' });
-      A({ x: 24, y: 16, e: '🕰️', name: 'The clock in the lobby', kind: 'clock', solid: true, use: 'lobbyClock' });
+      A({ x: 8, y: 16, e: '🗑️', name: 'Lobby bin', kind: 'bin', solid: false, use: 'bin' });
+      A({ x: 28, y: 16, e: '🚲', name: 'The bike nobody claims', kind: 'bike', solid: true, use: 'bike' });
+      A({ x: 25, y: 13, e: '🪑', name: 'The chairs by the window', kind: 'chair', solid: true, use: 'waitingChairs' });
+      A({ x: 26, y: 13, e: '🪑', name: 'The chairs by the window', kind: 'chair', solid: true, use: 'waitingChairs' });
+      A({ x: 29, y: 12, e: '🪟', name: 'The window onto the car park', kind: 'window', solid: true, use: 'lobbyWindow' });
+      A({ x: 20, y: 18, e: '🕰️', name: 'The clock in the lobby', kind: 'clock', solid: true, use: 'lobbyClock' });
+      A({ x: 11, y: 18, e: '🚭', name: 'NO SMOKING sign', kind: 'sign', solid: true, use: 'noSmoking' });
+      A({ x: 23, y: 18, e: '📋', name: 'Fire evacuation notice', kind: 'board', solid: true, use: 'fireNotice' });
+      /* THE ISLAND. A run of planters down the middle of the hall, which is
+         what every lobby of this size in the country has and which is there for
+         the reason the troughs on Priorygate are there: to make a route out of
+         a space. Walk in and you go left to reception or right to the chairs,
+         and either way you have been steered. */
+      A({ x: 18, y: 13, e: '🪴', name: 'The planters in the hall', kind: 'trough', solid: true, use: 'hallPlanters' });
+      A({ x: 19, y: 13, e: '🪴', name: 'The planters in the hall', kind: 'trough', solid: true, use: 'hallPlanters' });
+      A({ x: 20, y: 13, e: '🪴', name: 'The planters in the hall', kind: 'trough', solid: true, use: 'hallPlanters' });
+      A({ x: 12, y: 13, e: '🪧', name: 'The A-board', kind: 'sign', solid: true, use: 'aBoard', furn: { mount: null } });
+      /* ---- the lift lobby, behind the desk ---- */
+      A({ x: 6, y: 2, e: '🛗', name: 'The lift', kind: 'lift', solid: true, use: 'lift' });
+      A({ x: 5, y: 2, e: '🔢', name: 'The floor indicator', kind: 'screen', solid: true, use: 'indicator' });
+      A({ x: 12, y: 2, e: '🏢', name: 'Building directory', kind: 'board', solid: true, use: 'directory' });
+      A({ x: 16, y: 2, e: '🥇', name: 'Award cabinet', kind: 'cab', solid: true, use: 'awards' });
+      A({ x: 20, y: 2, e: '🖼️', name: 'The photograph in the lift lobby', kind: 'poster', solid: true, use: 'liftPhoto',
+        furn: { sprite: 'wall.art.peaks', size: 26 } });
+      A({ x: 3, y: 6, e: '🪴', name: 'The plant in the lift lobby', kind: 'plant', solid: true, use: 'plant' });
+      A({ x: 21, y: 6, e: '🗑️', name: 'The bin by the lift', kind: 'bin', solid: false, use: 'bin' });
+      /* ---- the post room ---- */
+      A({ x: 26, y: 2, e: '📬', name: 'The pigeonholes', kind: 'pigeonholes', solid: true, use: 'postTray' });
+      A({ x: 24, y: 4, e: '📦', name: 'The parcels nobody has come down for', kind: 'box', solid: true, use: 'parcels' });
+      A({ x: 29, y: 4, e: '🖨️', name: 'The franking machine', kind: 'printer', solid: true, use: 'franking' });
+      A({ x: 26, y: 6, e: '📦', name: 'Flattened boxes', kind: 'box', solid: true, use: 'flatBoxes' });
+      /* ---- the stairwell ---- */
+      A({ x: 25, y: 9, e: '🪜', name: 'The stairs', kind: 'stairs', solid: true, use: 'stairs' });
+      A({ x: 24, y: 8, e: '🧯', name: 'Fire extinguisher', kind: 'fire', solid: true, use: 'extinguisher' });
     }
   },
 
@@ -480,17 +536,35 @@ const LEVELS = {
      the Management FLOOR while it shared a carpet with Operations was the
      single largest thing this building was lying about.
 
-     There is no door to it any more. There is a button, and the button is the
-     keycard's job now — see FLOORS in data/world.js and Acts.lift(). The stairs
-     get you here too, and always will, because a fire escape that can be locked
-     is not a fire escape; what the stairs cannot get you is a reason to be
-     standing on this floor when somebody asks. */
+     AND IT IS NOT ONE ROOM EITHER. The first version of this level made the
+     same mistake the lobby did one floor down: a single open rectangle with an
+     Area Manager's desk standing in the middle of it. Nobody who has an Area
+     Manager sits in the open plan. That is what being the Area Manager is FOR.
+     So there is a corner office with a door, a boardroom with a door, and the
+     bit in between — which is where Colin is, and which is the joke.
+
+     There is no door to this floor from the fourth and there never will be.
+     There is a button, and the button is the keycard's job now — see FLOORS in
+     data/world.js and Acts.lift(). The stairs get you here too, and always
+     will, because a fire escape that can be locked is not a fire escape. What
+     the stairs cannot get you is a reason to be standing on this floor when
+     somebody asks. */
   five: {
     name: 'CALLHALL Services · Fifth Floor',
-    w: 30, h: 14,
-    rooms: [{ z: 'manage', r: [2, 2, 27, 11] }],
-    doors: [],
-    entries: { lift: [12.5, 3.5], stairs: [15.5, 3.5] },
+    w: 32, h: 18,
+    rooms: [
+      { z: 'manage', r: [2, 9, 29, 15] },
+      { z: 'corner', r: [2, 2, 10, 7] },
+      { z: 'board',  r: [13, 2, 23, 7] },
+      { z: 'stairwell', r: [26, 2, 29, 7] }
+    ],
+    doors: [
+      { x: 6, y: 8, z: 'corner', name: "The Area Manager's office" },
+      { x: 18, y: 8, z: 'board', name: 'The Boardroom' },
+      { x: 27, y: 8, z: 'stairwell', name: 'The Stairwell' }
+    ],
+    surfaces: [{ s: 'stair', r: [27, 2, 29, 7] }],
+    entries: { lift: [12.5, 12.5], stairs: [27.5, 8.5] },
     links: [
       { via: 'liftToG', to: 'ground', entry: 'lift' },
       { via: 'liftTo4', to: 'office', entry: 'lift' },
@@ -498,32 +572,50 @@ const LEVELS = {
     ],
     furnish() {
       const A = o => this.add(o);
-      A({ x: 12, y: 2, e: '🛗', name: 'The lift', kind: 'lift', solid: true, use: 'lift' });
-      A({ x: 11, y: 2, e: '🔢', name: 'The floor indicator', kind: 'screen', solid: true, use: 'indicator' });
-      A({ x: 15, y: 2, e: '🪜', name: 'The stairs', kind: 'stairs', solid: true, use: 'stairs' });
-      /* ---- everything that used to be [44,2,62,8] on the floor below ---- */
-      A({ x: 5, y: 3, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
-      A({ x: 5, y: 4, e: '🖥️', name: "Nigel’s monitor", kind: 'pc', solid: true, use: 'nigelPC' });
-      A({ x: 3, y: 2, e: '📊', name: 'Performance charts', kind: 'chart', solid: true, use: 'charts' });
-      A({ x: 7, y: 2, e: '📈', name: 'The Q3 graph', kind: 'chart', solid: true, use: 'q3' });
-      A({ x: 19, y: 5, e: '🍽️', name: 'Meeting room table', kind: 'table', solid: true, use: 'meetingTable' });
-      A({ x: 20, y: 5, e: '🍽️', name: 'Meeting room table', kind: 'table', solid: true, use: 'meetingTable' });
-      A({ x: 18, y: 5, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
-      A({ x: 21, y: 5, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
-      A({ x: 24, y: 4, e: '🖥️', name: 'THE SPREADSHEET', kind: 'spread', solid: true, use: 'spreadsheet' });
-      A({ x: 26, y: 6, e: '🚪', name: 'Synergy Department', kind: 'door', solid: true, use: 'synergy' });
-      A({ x: 3, y: 9, e: '🖨️', name: 'Management printer (works fine)', kind: 'printer', solid: true, use: 'mgmtPrinter' });
-      A({ x: 6, y: 9, e: '🪴', name: 'Enormous healthy plant', kind: 'plant', solid: true, use: 'bigPlant' });
-      /* ---- and the things you only find out by getting up here ---- */
-      A({ x: 9, y: 2, e: '🪟', name: 'The window on the fifth floor', kind: 'window', solid: true, use: 'fifthWindow' });
-      A({ x: 17, y: 2, e: '🚰', name: 'The cooler that works', kind: 'cooler', solid: true, use: 'goodCooler' });
-      A({ x: 22, y: 2, e: '☕', name: 'The coffee machine up here', kind: 'coffee', solid: true, use: 'goodCoffee' });
-      A({ x: 10, y: 9, e: '🛋️', name: 'The sofa up here', kind: 'sofa', solid: true, use: 'fifthSofa' });
-      A({ x: 14, y: 9, e: '🖼️', name: 'The photograph of the building', kind: 'poster', solid: true, use: 'buildingPhoto',
+      /* ---- the lift lobby, which up here is just the middle of the floor ---- */
+      A({ x: 12, y: 9, e: '🛗', name: 'The lift', kind: 'lift', solid: true, use: 'lift' });
+      A({ x: 11, y: 9, e: '🔢', name: 'The floor indicator', kind: 'screen', solid: true, use: 'indicator' });
+      A({ x: 15, y: 9, e: '🪧', name: 'FLOOR 5 · MANAGEMENT', kind: 'sign', solid: true, use: 'floorFive' });
+      A({ x: 9, y: 9, e: '🚰', name: 'The cooler that works', kind: 'cooler', solid: true, use: 'goodCooler' });
+      A({ x: 7, y: 9, e: '☕', name: 'The coffee machine up here', kind: 'coffee', solid: true, use: 'goodCoffee' });
+      A({ x: 20, y: 9, e: '🖨️', name: 'Management printer (works fine)', kind: 'printer', solid: true, use: 'mgmtPrinter' });
+      A({ x: 23, y: 9, e: '🖼️', name: 'The photograph of the building', kind: 'poster', solid: true, use: 'buildingPhoto',
         furn: { sprite: 'wall.art.abs', size: 26 } });
-      A({ x: 24, y: 9, e: '🗄️', name: 'The filing cabinet nobody opens', kind: 'cab', solid: true, use: 'fifthCabinet' });
-      A({ x: 27, y: 3, e: '🗑️', name: 'The bin up here', kind: 'bin', solid: false, use: 'bin' });
-      A({ x: 18, y: 9, e: '🪴', name: 'The other enormous healthy plant', kind: 'plant', solid: true, use: 'bigPlant' });
+      A({ x: 4, y: 14, e: '🛋️', name: 'The sofa up here', kind: 'sofa', solid: true, use: 'fifthSofa' });
+      A({ x: 7, y: 14, e: '🪴', name: 'Enormous healthy plant', kind: 'plant', solid: true, use: 'bigPlant' });
+      A({ x: 29, y: 11, e: '🪟', name: 'The window on the fifth floor', kind: 'window', solid: true, use: 'fifthWindow' });
+      A({ x: 27, y: 14, e: '🗄️', name: 'The filing cabinet nobody opens', kind: 'cab', solid: true, use: 'fifthCabinet' });
+      A({ x: 2, y: 11, e: '🪴', name: 'The other enormous healthy plant', kind: 'plant', solid: true, use: 'bigPlant' });
+      /* COLIN. The Synergy Department is four people and a door, and the door is
+         the only part of it anybody has ever seen — which is why it is a door
+         in the open plan rather than a room, and why it stays a door. */
+      A({ x: 24, y: 15, e: '🚪', name: 'Synergy Department', kind: 'door', solid: true, use: 'synergy' });
+      A({ x: 24, y: 12, e: '🖥️', name: 'THE SPREADSHEET', kind: 'spread', solid: true, use: 'spreadsheet' });
+      A({ x: 17, y: 15, e: '🗑️', name: 'The bin up here', kind: 'bin', solid: false, use: 'bin' });
+      /* ---- the corner office ---- */
+      A({ x: 5, y: 3, e: '🖥️', name: "Nigel’s desk", kind: 'deskbig', solid: true, use: 'nigelPC' });
+      A({ x: 5, y: 5, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 3, y: 2, e: '📊', name: 'Performance charts', kind: 'chart', solid: true, use: 'charts' });
+      A({ x: 8, y: 2, e: '📈', name: 'The Q3 graph', kind: 'chart', solid: true, use: 'q3' });
+      A({ x: 10, y: 5, e: '🪟', name: 'The window in the corner office', kind: 'window', solid: true, use: 'cornerWindow' });
+      A({ x: 2, y: 6, e: '🪴', name: 'The plant in the corner office', kind: 'plant', solid: true, use: 'bigPlant' });
+      A({ x: 9, y: 7, e: '🗄️', name: 'The cabinet in the corner office', kind: 'cab', solid: true, use: 'fifthCabinet' });
+      /* ---- the boardroom ---- */
+      A({ x: 17, y: 4, e: '🍽️', name: 'The boardroom table', kind: 'table', solid: true, use: 'meetingTable' });
+      A({ x: 18, y: 4, e: '🍽️', name: 'The boardroom table', kind: 'table', solid: true, use: 'meetingTable' });
+      A({ x: 19, y: 4, e: '🍽️', name: 'The boardroom table', kind: 'table', solid: true, use: 'meetingTable' });
+      A({ x: 16, y: 4, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 20, y: 4, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 17, y: 3, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 19, y: 3, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 17, y: 6, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 19, y: 6, e: '🪑', name: 'Chair', kind: 'chair', solid: false, use: 'chair' });
+      A({ x: 14, y: 2, e: '📺', name: 'The screen in the boardroom', kind: 'tv', solid: true, use: 'boardScreen' });
+      A({ x: 22, y: 2, e: '📝', name: 'The whiteboard in the boardroom', kind: 'board', solid: true, use: 'boardWhiteboard' });
+      A({ x: 23, y: 6, e: '🪴', name: 'The plant in the boardroom', kind: 'plant', solid: true, use: 'plant' });
+      /* ---- the stairwell ---- */
+      A({ x: 26, y: 4, e: '🪜', name: 'The stairs', kind: 'stairs', solid: true, use: 'stairs' });
+      A({ x: 26, y: 2, e: '🧯', name: 'Fire extinguisher', kind: 'fire', solid: true, use: 'extinguisher' });
     }
   },
 
@@ -1163,6 +1255,12 @@ const LEVELS = {
       /* And the landing itself: the post nobody has claimed, the bike nobody
          owns, the meters, the timer, and the radiator. */
       A({ x: 12, y: 5, e: '\ud83d\udcec', name: 'The post on the windowsill', kind: 'paper', solid: true, use: 'flatsPost' });
+      /* THE SIX BELLS, which the act on the door downstairs has described in
+         words since it was written — "a door, between two shops, with six bells
+         beside it and no sign saying what it is" — and which have never been a
+         thing you could look at. A bank of steel pigeonholes off the kit's
+         Mailboxes sheet is exactly what that is. */
+      A({ x: 2, y: 2, e: '\ud83d\udcec', name: 'The bells, and the post', kind: 'pigeonholes', solid: true, use: 'flatsBells' });
       A({ x: 4, y: 5, e: '\ud83d\udeb2', name: 'The bike', kind: 'bike', solid: true, use: 'flatsBike' });
       A({ x: 3, y: 7, e: '\u26a1', name: 'The meters', kind: 'server', solid: true, use: 'flatsMeters' });
       /* The switch is on the wall; the LIGHT is the bulb on the landing, out
@@ -1255,9 +1353,9 @@ const LEVELS = {
     furnish() {
       const A = o => this.add(o);
       A({ x: 7, y: 11, e: '\ud83d\udeaa', name: 'The way out', kind: 'exit', solid: false, use: 'mitreOut' });
-      A({ x: 5, y: 2, e: '\ud83c\udf7a', name: 'The bar', kind: 'cupboard', solid: true, use: 'mitreBar' });
-      A({ x: 6, y: 2, e: '\ud83c\udf7a', name: 'The bar', kind: 'cupboard', solid: true, use: 'mitreBar' });
-      A({ x: 7, y: 2, e: '\ud83c\udf7a', name: 'The bar', kind: 'cupboard', solid: true, use: 'mitreBar' });
+      A({ x: 5, y: 2, e: '\ud83c\udf7a', name: 'The bar', kind: 'woodcounter', solid: true, use: 'mitreBar' });
+      A({ x: 6, y: 2, e: '\ud83c\udf7a', name: 'The bar', kind: 'woodcounter', solid: true, use: 'mitreBar' });
+      A({ x: 7, y: 2, e: '\ud83c\udf7a', name: 'The bar', kind: 'woodcounter', solid: true, use: 'mitreBar' });
       A({ x: 9, y: 2, e: '\ud83d\udcdc', name: 'The list of landlords', kind: 'poster', solid: true, use: 'mitreLandlords' });
       A({ x: 3, y: 2, e: '\ud83c\udfc6', name: 'The shelf of trophies', kind: 'book', solid: true, use: 'mitreTrophies' });
       A({ x: 13, y: 3, e: '\ud83e\udded', name: 'The fireplace', kind: 'view', solid: true, use: 'mitreFire' });
@@ -1295,10 +1393,10 @@ const LEVELS = {
       A({ x: 9, y: 2, e: '\ud83c\udf5e', name: 'The bread stall', kind: 'shop', solid: true, use: 'stallBread', furn: { mount: 'wall' } });
       A({ x: 12, y: 2, e: '\ud83e\uddf6', name: 'The wool stall', kind: 'shop', solid: true, use: 'stallWool', furn: { mount: 'wall' } });
       A({ x: 15, y: 2, e: '\ud83d\udd27', name: 'The stall that mends things', kind: 'shop', solid: true, use: 'stallMender', furn: { mount: 'wall' } });
-      A({ x: 3, y: 8, e: '\ud83e\ude94', name: 'The haberdashery', kind: 'cupboard', solid: true, use: 'stallHaber' });
-      A({ x: 6, y: 8, e: '\ud83d\udcc0', name: 'The record stall', kind: 'cupboard', solid: true, use: 'stallRecords' });
+      A({ x: 3, y: 8, e: '\ud83e\ude94', name: 'The haberdashery', kind: 'woodcounter', solid: true, use: 'stallHaber' });
+      A({ x: 6, y: 8, e: '\ud83d\udcc0', name: 'The record stall', kind: 'woodcounter', solid: true, use: 'stallRecords' });
       A({ x: 9, y: 8, e: '\u2615', name: 'The market caff', kind: 'coffee', solid: true, use: 'stallCaff' });
-      A({ x: 12, y: 8, e: '\ud83e\uddf5', name: 'The stall with the buttons', kind: 'cupboard', solid: true, use: 'stallButtons' });
+      A({ x: 12, y: 8, e: '\ud83e\uddf5', name: 'The stall with the buttons', kind: 'woodcounter', solid: true, use: 'stallButtons' });
       A({ x: 15, y: 8, e: '\ud83d\udce6', name: 'The empty pitch', kind: 'box', solid: true, use: 'stallEmpty' });
       A({ x: 10, y: 6, e: '\ud83e\ude91', name: 'The tables in the middle', kind: 'table', solid: true, use: 'marketTables' });
       A({ x: 11, y: 6, e: '\ud83e\ude91', name: 'The tables in the middle', kind: 'table', solid: true, use: 'marketTables' });
@@ -2686,6 +2784,82 @@ const LEVELS = {
       A({ x: 63, y: 77, e: '🕳️', name: 'The hole', kind: 'drain', solid: false, use: 'theHole' });
       A({ x: 92, y: 78, e: '🖍️', name: 'The wall under the embankment', kind: 'graf', solid: true, use: 'embankmentWall',
         furn: { sprite: 'wall.graf.squad', paint: true } });
+
+      /* ---- THE BITS OF ROAD NOTHING WAS EVER PUT ON ----
+         Six stretches that the audit found with nothing standing on them at
+         all: the southern block of Aldergate Rise and of Cargate Lane, both of
+         which were laid when the grid was and never furnished; the long empty
+         middle of Station Road and Weirbank Road; Quay Road; and Marlow Street
+         south of the wall. A road with nothing on it is not a quiet road, it is
+         an unfinished one — you can see the join.
+
+         Everything here is on the row nearest the kerb or nearest the wall, and
+         nothing is on the two rows the pedestrian routes walk. */
+      /* Aldergate Rise, the south block: the overflow parking nobody polices,
+         the wall the bins go against, and the alley cat. */
+      A({ x: 7, y: 44, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 14, y: 46, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 15, y: 43, e: '🗑️', name: 'The bins on Aldergate Rise', kind: 'bin', solid: true, use: 'laneBins',
+        furn: { sprite: 'obj.wheeliebin', size: 30 } });
+      A({ x: 15, y: 45, e: '♻️', name: 'The recycling on Aldergate Rise', kind: 'recycling', solid: true, use: 'streetRecycling' });
+      A({ x: 6, y: 47, e: '🪧', name: 'PERMIT HOLDERS ONLY', kind: 'sign', solid: true, use: 'permitSign' });
+      A({ x: 15, y: 48, e: '🖍️', name: 'The wall at the bottom of Aldergate', kind: 'graf', solid: true, use: 'aldergateWall',
+        furn: { sprite: 'wall.graf.squad', paint: true } });
+      A({ x: 6, y: 42, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      /* Cargate Lane, the south block: the back of the retail park and the
+         loading bay everything for it comes through. */
+      A({ x: 58, y: 44, e: '📦', name: 'Pallets, retail park delivery', kind: 'box', solid: true, use: 'pallets' });
+      A({ x: 58, y: 46, e: '📦', name: 'Pallets, retail park delivery', kind: 'box', solid: true, use: 'pallets' });
+      A({ x: 67, y: 45, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 58, y: 48, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'strayTrolley' });
+      A({ x: 67, y: 42, e: '🪧', name: 'The loading bay sign', kind: 'sign', solid: true, use: 'loadingBay' });
+      A({ x: 66, y: 48, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      /* Marlow Street, south of the wall: the coach drop, and the back of the
+         castle gardens. */
+      A({ x: 100, y: 82, e: '🪧', name: 'The coach drop', kind: 'sign', solid: true, use: 'coachDrop' });
+      A({ x: 109, y: 86, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 100, y: 90, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 109, y: 92, e: '🗑️', name: 'Bin, Marlow Street', kind: 'bin', solid: false, use: 'streetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 100, y: 94, e: '🌳', name: 'The trees on Marlow Street', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 109, y: 80, e: '🖍️', name: 'The wall behind the gardens', kind: 'graf', solid: true, use: 'marlowWall',
+        furn: { sprite: 'wall.graf.nice', paint: true } });
+      /* Quay Road: the hill, the wall holding it up, and the works. */
+      A({ x: 8, y: 86, e: '🚧', name: 'The cones on Quay Road', kind: 'cone', solid: true, use: 'roadworks' });
+      A({ x: 8, y: 87, e: '🚧', name: 'The cones on Quay Road', kind: 'cone', solid: true, use: 'roadworks' });
+      A({ x: 16, y: 81, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      A({ x: 16, y: 89, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'strayTrolley' });
+      A({ x: 8, y: 92, e: '🌳', name: 'The trees on Quay Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 16, y: 79, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      /* Station Road's long middle, which was a hundred tiles of nothing
+         between the North Gate and the bridge. */
+      A({ x: 20, y: 70, e: '🚏', name: 'The stop outside the wall', kind: 'sign', solid: true, use: 'wallStop' });
+      A({ x: 32, y: 70, e: '🪧', name: 'The town map', kind: 'poster', solid: true, use: 'townMap' });
+      A({ x: 56, y: 70, e: '🗑️', name: 'Bin, Station Road', kind: 'bin', solid: false, use: 'streetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 44, y: 77, e: '🪑', name: 'The bench outside the gate', kind: 'bench', solid: true, use: 'gateBench' });
+      A({ x: 58, y: 77, e: '🌳', name: 'The trees on Station Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 64, y: 77, e: '🌳', name: 'The trees on Station Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 36, y: 77, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
+      A({ x: 26, y: 77, e: '🐦', name: 'The pigeons under the embankment', kind: 'pigeon', solid: false, use: 'pigeon' });
+      A({ x: 100, y: 77, e: '🖍️', name: 'The wall by the bridge', kind: 'graf', solid: true, use: 'embankmentWall',
+        furn: { sprite: 'wall.graf.sport', paint: true } });
+      /* And Weirbank Road, which was the same. */
+      A({ x: 26, y: 97, e: '🌳', name: 'The trees on Weirbank Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 46, y: 97, e: '🌳', name: 'The trees on Weirbank Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 74, y: 97, e: '🌳', name: 'The trees on Weirbank Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 34, y: 105, e: '🪑', name: 'The bench on Weirbank Road', kind: 'bench', solid: true, use: 'weirbankBench' });
+      A({ x: 82, y: 105, e: '🪑', name: 'The bench on Weirbank Road', kind: 'bench', solid: true, use: 'weirbankBench' });
+      A({ x: 96, y: 105, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      A({ x: 58, y: 97, e: '🐦', name: 'Gulls, Weirbank Road', kind: 'pigeon', solid: false, use: 'gulls' });
+      A({ x: 68, y: 105, e: '🚧', name: 'The fence round the site', kind: 'barrier', solid: true, use: 'yardFence' });
+      A({ x: 20, y: 105, e: '🪧', name: 'The hoarding on Weirbank Road', kind: 'poster', solid: true, use: 'hoarding' });
+      /* Minster Green's east lawn and the walk along the north side of the
+         minster, both of which were bare. */
+      A({ x: 69, y: 91, e: '🪑', name: 'A bench on the green', kind: 'bench', solid: true, use: 'greenBench' });
+      A({ x: 71, y: 93, e: '🌳', name: 'The trees on Minster Green', kind: 'tree', solid: true, use: 'greenTree' });
+      A({ x: 55, y: 88, e: '🪦', name: 'The tombs along the north walk', kind: 'view', solid: true, use: 'northWalkTombs', furn: { mount: null } });
+      A({ x: 60, y: 88, e: '🕯️', name: 'The candles by the north door', kind: 'misc', solid: true, use: 'minsterCandles' });
 
       /* ---- THE NORTH GATE ----
          Five rows of gateway through the wall, and the point where the town

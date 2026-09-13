@@ -559,5 +559,78 @@ export default {
         rect: [128, 128, 32, 32],
       },
     },
+    /* ---- WHAT SHOULD HAVE BEEN KIT ART THE FIRST TIME ----
+       Four things that were drawn by hand, hung on an emoji, or simply not
+       there, and that upstream has had all along. The rule at the top of this
+       file cuts both ways: kit art is not automatically an upgrade, and neither
+       is a thing somebody drew in a canvas context because they did not look. */
+    {
+      /* A CONCRETE FLIGHT, four treads to the tile and tileable straight down a
+         column, which is what a stairwell in an office block is made of. The
+         stairs in this building were drawn by hand — three rectangles and a
+         rail — because the search for stair art stopped at `Short Steps A`,
+         which is an outdoor step and is what Fishers Steps is laid in. This is
+         the indoor one and it was in the same folder.
+
+         It is a SURFACE as well as a sprite: the stairwell on each floor has a
+         run of it laid down, so a flight reads as a flight rather than as one
+         object standing on carpet. */
+      name: 'terrain.stair',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Structure/Stairs/Cement Stairs A.png',
+        creditsPath: 'Structure/Stairs/Credits.txt',
+        assetName: 'Cement Stairs A',
+        rect: [0, 96, 32, 32],
+      },
+    },
+    {
+      /* AN OFFICE DESK, and the fourth floor is not getting one: R.desks()
+         draws thirty-two of those and draws them properly. This is the OTHER
+         kind — the single grey pedestal desk that one person has because they
+         are not on a bank of them — and there are exactly two in this building:
+         the Area Manager's, and the one reception is not staffed from. */
+      name: 'obj.desk.office',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Objects/Furniture/Desk, Office.png',
+        creditsPath: 'Objects/Furniture/Credits.txt',
+        assetName: 'Desk, Office',
+        rect: [3, 96, 58, 64],
+      },
+    },
+    {
+      /* A TIMBER COUNTER. The office's front desks are drawn by R.counters()
+         with the word RECEPTION across them and should stay that way — this is
+         for the two places in this game that have a counter made of wood and
+         have been standing a cupboard sprite in for one: the bar of The Mitre,
+         and the pitches in the Market Hall. */
+      name: 'obj.counter.wood',
+      anchor: 'floor',
+      source: {
+        repo, commit,
+        path: 'Objects/Furniture/Countertop.png',
+        creditsPath: 'Objects/Furniture/Credits.txt',
+        assetName: 'Countertop',
+        rect: [128, 160, 32, 26],
+      },
+    },
+    {
+      /* NINE STEEL PIGEONHOLES. There are two banks of these in this game and
+         both of them were an emoji: the post on the ground floor, and the six
+         bells on the door between the launderette and the post office that the
+         act has described in words since it was written. */
+      name: 'wall.pigeonholes',
+      anchor: 'wall',
+      source: {
+        repo, commit,
+        path: 'Objects/Wall Items/Mailboxes (tiling).png',
+        creditsPath: 'Objects/Wall Items/Credits.txt',
+        assetName: 'Mailboxes (tiling)',
+        rect: [30, 30, 37, 37],
+      },
+    },
   ],
 };

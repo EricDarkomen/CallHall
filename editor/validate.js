@@ -146,8 +146,17 @@ const Check = {
      routes around anything — so a waypoint has to be floor, and it has to be
      floor on the same piece of floor as everybody else. */
   waypoints() {
+    /* WHICH FLOOR IT IS ON. A waypoint is [x, y] on the hub and [x, y, level]
+       anywhere else — see WP in data/world.js, and the three on the fifth floor
+       and the ground floor that two people's days name. Asking whether the
+       fifth floor's `mgmt` is standing on floor of the FOURTH is asking the
+       wrong map, and it answers no every time: [15,7] is a desk up here and a
+       stairwell down there. Anything that names another level is that level's
+       to check, and it is checked when that level is the one open. */
+    const here = Doc.id || (Levels.ids && Levels.ids().find(id => (Levels.def(id) || {}).hub)) || 'office';
     for (const k in Doc.waypoints) {
       const w = Doc.waypoints[k];
+      if (w[2] && w[2] !== here) continue;
       const x = w[0], y = w[1];
       if (x < 0 || y < 0 || x >= MAPW || y >= MAPH) {
         this.fault('error', 'Waypoint “' + k + '” is off the map.', []);

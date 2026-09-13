@@ -113,6 +113,22 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Extracted from Brick Wall Block Edging, by Lanea Zimmerman. Reconfigured and recolored by Eliza Wyatt.
 
+### `Cement Stairs A`
+
+- **Used for:** terrain.stair
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt.
+
+### `Countertop`
+
+- **Used for:** obj.counter.wood
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Adjustments and recolors by Eliza Wyatt.
+
 ### `Crate`
 
 - **Used for:** obj.crate
@@ -120,6 +136,14 @@ or by the Liberated Pixel Cup.
 - **Authors:** Eliza Wyatt (DeathsDarling)
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Original by Eliza Wyatt.
+
+### `Desk, Office`
+
+- **Used for:** obj.desk.office
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Row 1: Desk made by Eliza Wyatt, using elements from Lanea Zimmerman's cabinets and countertops. Row 2+: Original by Eliza Wyatt
 
 ### `Drain A`
 
@@ -218,6 +242,14 @@ or by the Liberated Pixel Cup.
 - **Notes:** Tilesets and street furniture drawn for the LPC style: sidewalks, road, rain gutters, drains and manholes, sign poles and signs, traffic lights and cones, bins, wheels and chain-link fencing. Cropped and packed here; no sheet is reproduced intact.
 - **Source:** <https://opengameart.org/content/lpc-modern-streets>
 - **Standing:** authors and licence reported from that page by hand, not read by the build; the file itself is pinned by checksum.
+
+### `Mailboxes (tiling)`
+
+- **Used for:** wall.pigeonholes
+- **Sheets:** town
+- **Authors:** Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Eliza Wyatt.
 
 ### `Medium 01 - Page`
 
