@@ -98,7 +98,98 @@ const ZONES = {
   /* Not a street: a walled car park with one way in, like the forecourt at the
      other end of town, and the only place out here big enough to find out what
      the pool car does above thirty. */
-  retail:    { name: 'Bellhaven Retail Park', floor: '#484c53', alt: '#43474e', wall: '#32363c', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' }
+  retail:    { name: 'Bellhaven Retail Park', floor: '#484c53', alt: '#43474e', wall: '#32363c', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+
+  /* ---- THE OTHER SIDE OF THE LINE ----------------------------------------
+     Everything below is south of the railway, and the reason it is a block of
+     its own is that it is a different town. The half you start in was built
+     between 1968 and about 1994 and it is a business park, a parade and a
+     retail shed; this half was here first. The difference is in two fields and
+     they are the same two every time:
+
+       wtile  'wall.stone' rather than 'wall.brick'. The mass between these
+              streets is random-coursed rubble in the red the ground round here
+              actually is, and it is the whole of why a lane down there reads as
+              something cut through a town rather than as a gap between units.
+       tile   still 'terrain.slab', because the council relaid the lot in 1997
+              and the paving is the same paving as the parade's. That is not a
+              shortcut, it is the joke: the one thing the two halves of this
+              town have in common is the slabs.
+
+     They are also a shade WARMER than anything north of the line — the whole
+     northern half is blue-grey, and these carry a little of the stone. */
+  stationrd: { name: 'Station Road',      floor: '#4b4d52', alt: '#46484d', wall: '#34363a', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.stone' },
+  /* The platforms, and they are a zone rather than scenery because you can
+     stand on them. Darker than a street: nobody has replaced a light down there
+     since the line stopped calling. */
+  platform:  { name: 'The old platforms', floor: '#43443f', alt: '#3e3f3a', wall: '#2a2b27', tint: '#ffb347', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.stone' },
+  /* The one interior on this map that is not inside anything: a tiled tunnel
+     under a railway, lit, on a level the sky cannot reach. The glazed tile is
+     the toilets' — it is the only other place in this game finished in it, and
+     it is finished in it for the same reason a subway is.
+     Darker than the platforms it comes up onto, and that is doing the only
+     work available: `wtile` is declared and is never drawn, because what is
+     either side of this tunnel is not a wall of it, it is the ballast it goes
+     under, and an open surface is skipped by the renderer's wall pass. So the
+     one thing that can say UNDER is the floor, and it says it. */
+  subway:    { name: 'The Subway',        floor: '#262b31', alt: '#22272d', wall: '#6e7c82', tint: '#4da3ff', surf: 'tile', wsurf: 'tile', tile: 'floor.tile', wtile: 'loo.wall' },
+  /* THE OLD TOWN. Five places and no carriageway on any of them: this is the
+     bit inside the wall, it was pedestrianised in 1988, and the signs at both
+     ends say so — see the NO ENTRY furnishing. */
+  priory:    { name: 'Priorygate',        floor: '#4e4d4a', alt: '#494845', wall: '#353431', tint: '#ffb347', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+  shambles:  { name: 'The Shambles',      floor: '#4c4b46', alt: '#474641', wall: '#33322e', tint: '#ffb347', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+  coopers:   { name: 'Cooper’s Lane', floor: '#47464a', alt: '#424145', wall: '#2f2e32', tint: '#8d9bb5', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+  drapers:   { name: 'Drapers Lane',      floor: '#46454a', alt: '#414045', wall: '#2e2d32', tint: '#8d9bb5', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+  pinfold:   { name: 'Pinfold Lane',      floor: '#454449', alt: '#403f44', wall: '#2d2c31', tint: '#8d9bb5', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+  /* The two green ones, and they are green because a SURFACE says so — the
+     same four-season grass the verge outside the building is laid in. What
+     these two carry is the WALL either side of it, which is the point of
+     having them at all. */
+  green:     { name: 'Minster Green',     floor: '#4a4c46', alt: '#454741', wall: '#31332e', tint: '#5ad48a', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+  castle:    { name: 'Castle Gardens',    floor: '#484a45', alt: '#434540', wall: '#2f312d', tint: '#5ad48a', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+  /* THE ONE BUILDING ON THIS MAP MADE OF SOMETHING ELSE. A cathedral is not
+     built out of the stone the wall round the town is built out of — it is
+     built out of the stone somebody paid to have brought in — and the paved
+     ring round it is a zone of its own for exactly one reason: a wall takes its
+     finish from the room it faces, so the only way to say that the minster is
+     pale and everything else is red is to give the minster its own pavement to
+     be seen from. See the walk round it in LEVELS.outside. */
+  minster:   { name: 'The Minster',       floor: '#51504b', alt: '#4c4b46', wall: '#373632', tint: '#ffb347', surf: 'stone', tile: 'terrain.slab', wtile: 'wall.stone.pale' },
+  close:     { name: 'The Close',         floor: '#4a4944', alt: '#45443f', wall: '#31302c', tint: '#ffb347', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+  /* Not a street and not a room: eight courses of steps between a town on a
+     hill and a river at the bottom of it, and the only ground in this game
+     that tells you which way is up. */
+  steps:     { name: 'Fishers Steps',     floor: '#494b50', alt: '#44464b', wall: '#303237', tint: '#9fb3c8', surf: 'stone', tile: 'terrain.slab', wtile: 'wall.stone' },
+  /* The two roads round the outside of the wall, which between them are the
+     whole reason the old town has no cars in it. */
+  quayrd:    { name: 'Quay Road',         floor: '#474951', alt: '#42444c', wall: '#2f3139', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.stone' },
+  weirbank:  { name: 'Weirbank Road',     floor: '#464850', alt: '#41434b', wall: '#2e3038', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.stone' },
+  /* The bottom of the town and the bottom of the map. Everything on it faces
+     the water, which is the one thing on this map nobody built. */
+  quay:      { name: 'The Quay',          floor: '#4c4a45', alt: '#474540', wall: '#33312d', tint: '#ffb347', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+
+  /* FOUR INTERIORS, AND THEY NEEDED FOUR ZONES OF THEIR OWN.
+     The first draft of the old town's shops borrowed the parade's: the
+     bookshop stood on the bookmakers' violet carpet and the coffee place on
+     the break room's wood, which cost nothing to look at and cost everything
+     the moment you walked in — a zone's `name` is what UI.zone() puts across
+     the screen, so the second-hand bookshop announced itself as BELLHAVEN
+     BOOKMAKERS and the Market Hall as THE CHARITY SHOP. A room may share a
+     floor with another room. It may not share its name.
+     (The minster does not need one: it already has a zone, because the paved
+     walk round the outside of it is that zone, and the inside and the outside
+     of a cathedral being the same place is correct.) */
+  books:     { name: 'The second-hand bookshop', floor: '#463c2e', alt: '#41372a', wall: '#2a231b', tint: '#ffb347', surf: 'vinyl', tile: 'floor.wood', wtile: 'wall.drywall' },
+  caff:      { name: 'The coffee place', floor: '#4a3f33', alt: '#453a2f', wall: '#2b241d', tint: '#ffb347', tile: 'floor.herring', wtile: 'wall.drywall' },
+  /* Carpet, red, and the darkest interior in the game that is not the
+     basement: one bar, a beam at five foot ten, and a floor that is not level
+     in any direction. */
+  mitre:     { name: 'The Mitre',          floor: '#432a26', alt: '#3e2622', wall: '#281713', tint: '#ffb347', tile: 'floor.carpet', wtile: 'wall.stone' },
+  /* Iron columns, a glazed roof and a stone floor, which is the one interior
+     out here with daylight in it: it is finished in the ground the market
+     square outside is finished in, because it is the market square with a
+     roof on it. */
+  market:    { name: 'The Market Hall',    floor: '#4e4c46', alt: '#494741', wall: '#343230', tint: '#ffb347', surf: 'stone', tile: 'terrain.slab', wtile: 'wall.stone' }
 };
 
 /* What a tile is MADE of, where that is not what its zone is made of. A level
@@ -140,7 +231,41 @@ const SURFACES = {
     floor: '#b9c0bd', alt: '#b2b9b6',
     maps: { spring: '#4a6a34', summer: '#3f5c2c', autumn: '#6b5a2a', winter: '#b9cdd4' },
     map: '#4a6a34'
-  }
+  },
+
+  /* ---- GROUND YOU CANNOT STAND ON ----------------------------------------
+     `open` is the whole of what makes these two different from everything
+     above, and it is read by World.open() and by the three loops in
+     engine/render.js that call it. Every other surface in this table lies over
+     a room and a room is walkable; these lie over nothing at all, which until
+     they existed meant a tile the renderer treated as the wall of a building
+     and roofed. A river with slates on it was the entire reason for the flag.
+
+     They are still solid. Nothing about collision changed, nothing about
+     isSolid() changed, and you can no more walk into the water than you could
+     walk into the car park wall — the difference is only that you can SEE what
+     it is, which for half the bottom of this map is the point. */
+  water: {
+    tile: 'terrain.water',
+    /* `alt` is the same as `floor`, for the road's reason and more so: the
+       kit's water is a flat, even sheet, and a shade of alternation on it is
+       not a ripple, it is a chessboard the size of the estuary. */
+    floor: '#495c54', alt: '#495c54', map: '#22383a', open: true
+  },
+  rail: {
+    tile: 'terrain.ballast',
+    /* Granite chippings and a hundred years of brake dust. The tile is brown
+       on the sheet and this is what takes it grey; it keeps a shade of
+       alternation because unlike the road it HAS a grain, and the grain is
+       what stops four hundred tiles of it reading as a car park. */
+    floor: '#74787c', alt: '#6e7276', map: '#33302b', open: true
+  },
+  /* And one that is neither: steps are ground you walk on, and they are here
+     rather than in a zone because the lane they are laid down runs through
+     three rooms and a gateway and has to look the same in all of them. Flat
+     tints, like the road: three treads to the tile is pattern enough without
+     every other tile of the flight being a different grey. */
+  steps: { tile: 'terrain.steps', floor: '#c2c8d0', alt: '#c2c8d0', map: '#6a717b' }
 };
 
 /* The cars. One entry per model, keyed by `model` on a car in a level's own
@@ -409,6 +534,37 @@ const FURN = {
      learning what a drive-thru is, so the next one — a car wash, a barrier
      with an intercom — is a furnishing and not a special case. */
   drivethru: { mount: 'wall', size: 26, art: 'sign', fromCar: true },
+
+  /* ---- THE OLD TOWN AND THE QUAY ----------------------------------------
+     Seven kinds, seven sprites, all of them from the two street sheets and all
+     of them here for the same reason the lamppost and the tree are: the half
+     of this map south of the railway is made of things the half north of it
+     has none of, and an emoji is a poor sixteenth of a drinking fountain.
+
+     Every one of them takes a footprint smaller than the square it stands in,
+     which is the rule at the top of this table and matters more down there
+     than anywhere else on the map: the lanes in the old town are three tiles
+     wide and two of those are usually the only way through. */
+  /* Two tiles of basin and a metre of nothing above it. What is in your way is
+     the plinth, which is about two thirds of a tile. */
+  fountain: { size: 46, sprite: 'obj.fountain', ground: [0.68, 0.5] },
+  /* Three of them stacked, which is goods rather than scenery. Wider than deep
+     for the same reason a bench is: you go round the end of a stack. */
+  barrels: { size: 32, sprite: 'obj.barrels', ground: [0.82, 0.58] },
+  crate: { size: 24, sprite: 'obj.crate', ground: [0.68] },
+  /* The municipal trough. A town centre puts these down the middle of a street
+     the day it stops letting cars up it, and then the street has to be walked
+     round them ever afterwards, which is why the footprint is nearly the whole
+     tile across and half of it deep. */
+  trough: { size: 30, sprite: 'obj.trough', ground: [0.8, 0.46] },
+  /* Post and rail. A run of fence is the length of the tile and no depth at
+     all, and the depth is the number that matters: a fence you had to walk a
+     tile's width around would be a hedge. */
+  fence: { size: 30, sprite: 'obj.fence', ground: [0.96, 0.26] },
+  /* Two more signs on two more posts, and both keep the give way's footprint,
+     because what is in your way is four pixels of galvanised tube. */
+  noentry: { size: 24, sprite: 'sign.noentry', ground: [0.28] },
+  signals: { size: 34, sprite: 'sign.signals', ground: [0.24] },
 };
 
 const ROOM_DEFS = [

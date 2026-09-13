@@ -295,6 +295,18 @@ const ACHS = {
   a_parked:  { n: 'Between The Lines', e: '🅿️', d: 'Put the pool car back in a bay. Straight.' },
   a_drivethru:{ n: 'No Pedestrian Service', e: '☕', d: 'Get served at the window on Corven Way without getting out.' },
   a_grid:    { n: 'Knowing The Back Way', e: '🗺️', d: 'Drive every street in Bellhaven, in one go, without getting out.' },
+  /* ---- the other side of the railway ----
+     Seven, and the thing they have in common is that not one of them is an
+     achievement in the ordinary sense: every single one is somebody spending
+     four minutes and about a pound on the wrong side of a railway line in the
+     middle of a working day. That is the whole of what the old town is for. */
+  a_localhistory:{ n: 'Wrapped In Paper', e: '📚', d: 'Buy the book about the quay from the second-hand bookshop on Priorygate.' },
+  a_prioryCoffee:{ n: 'Better Than The Machine', e: '☕', d: 'Buy a coffee on Priorygate, having walked past a free one at work to do it.' },
+  a_marketTea:{ n: 'Ninety Pence', e: '🍵', d: 'Have a tea at the counter in the Market Hall.' },
+  a_mitre:   { n: 'Under The Beam', e: '🍺', d: 'Have one in The Mitre, after five, on a floor that is not level.' },
+  a_candle:  { n: 'Any Reason At All', e: '🕯️', d: 'Light a candle in the minster. You did not decide who it was for until you had lit it.' },
+  a_minsterTea:{ n: 'Nobody Was Watching The Tin', e: '☕', d: 'Take a cup from the unattended urn at the back of the minster and put the money in.' },
+  a_clipboard:{ n: 'Four Minutes About A Roof', e: '📋', d: 'Give the man with the clipboard on Priorygate his two minutes.' },
   /* ---- the arcade ----
      Handed out by minigames/*.js, which each name theirs literally so the
      reward editor's "can this be earned at all" check can see the call. */

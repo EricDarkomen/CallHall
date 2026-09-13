@@ -127,5 +127,58 @@ export default {
       anchor: 'floor',
       source: from('decor/trash_bins.png', [136, 16, 16, 22]),
     },
+    /* TWO MORE SIGNS, BUILT THE SAME WAY THE GIVE WAY IS — a pole off one
+       sheet and a face off another, stacked here where the assembly can be
+       re-derived rather than in an image editor. Both arrived with the old
+       town, and both are there because the old town is the one part of this
+       map that tells a driver what he may not do rather than what he must
+       watch for.
+
+       The pole segment is the give way's, to the pixel. Three signs on one
+       street standing on three different posts is the sort of thing nobody
+       names and everybody sees. */
+    {
+      /* NO ENTRY. The red circle with the white bar, which is the one sign in
+         this country that everybody can draw from memory, and the sign that
+         does the whole of the work at the top of a pedestrianised street: it
+         is why there are no cars up there, and it is a thing the player can
+         stand in front of and read rather than a rule the traffic silently
+         obeys. */
+      name: 'sign.noentry',
+      anchor: 'floor',
+      source: {
+        url, sha256, page, assetName, artists, licences, details,
+        size: [20, 50],
+        layers: [
+          { entry: 'decor/sign_poles.png', rect: [14, 80, 4, 46], at: [8, 4] },
+          { entry: 'decor/traffic_sign_base.png', rect: [39, 103, 18, 18], at: [1, 0] },
+        ],
+      },
+    },
+    {
+      /* A SET OF LIGHTS, ON RED. The sheet ships the head face-on in all six
+         phases and this is the second of them, which is the one showing a red
+         and nothing else.
+
+         Fixed on red, and that is honesty rather than laziness. Nothing in
+         this game phases a signal and nothing in engine/cars.js knows what one
+         is: a light that cycled would be a light the traffic drove straight
+         through, which is a worse lie than a light that never changes. What it
+         is instead is the thing this actually is everywhere in England — a set
+         of temporary three-way lights round a hole, with no work going on in
+         the hole, stuck on red at one end since some time in the spring. The
+         lane behind it is coned off and no route in this level goes down it,
+         so the red is telling the truth to everybody, including the traffic. */
+      name: 'sign.signals',
+      anchor: 'floor',
+      source: {
+        url, sha256, page, assetName, artists, licences, details,
+        size: [14, 64],
+        layers: [
+          { entry: 'decor/sign_poles.png', rect: [14, 80, 4, 46], at: [5, 18] },
+          { entry: 'decor/traffic_lights.png', rect: [42, 8, 12, 31], at: [1, 0] },
+        ],
+      },
+    },
   ],
 };

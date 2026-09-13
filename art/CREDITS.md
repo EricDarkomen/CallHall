@@ -73,6 +73,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Original by Stephen Challener. Edited to be smaller and recolored by Eliza Wyatt. Expressions by Eliza Wyatt.
 
+### `Barrel`
+
+- **Used for:** obj.barrels
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt.
+
 ### `Bin`
 
 - **Used for:** obj.wheeliebin
@@ -105,6 +113,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Extracted from Brick Wall Block Edging, by Lanea Zimmerman. Reconfigured and recolored by Eliza Wyatt.
 
+### `Crate`
+
+- **Used for:** obj.crate
+- **Sheets:** town
+- **Authors:** Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Eliza Wyatt.
+
 ### `Drain A`
 
 - **Used for:** obj.drain
@@ -128,6 +144,14 @@ or by the Liberated Pixel Cup.
 - **Authors:** see Credits.txt
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** No per-asset entry; covered by the repository's Credits.txt, which licenses the whole pack OGA-BY 3.0.
+
+### `Fountain A`
+
+- **Used for:** obj.fountain
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt.
 
 ### `Graffiti & Graffiti Elements`
 
@@ -169,6 +193,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** No per-asset entry; covered by the repository's Credits.txt, which licenses the whole pack OGA-BY 3.0.
 
+### `Jagged Stone Walls`
+
+- **Used for:** wall.stone, wall.stone.pale
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt.
+
 ### `Lighting, Outdoors`
 
 - **Used for:** obj.lamppost
@@ -179,7 +211,7 @@ or by the Liberated Pixel Cup.
 
 ### `LPC Modern Streets`
 
-- **Used for:** terrain.road, terrain.slab, obj.cone, obj.manhole, sign.giveway, obj.tyres, obj.recycling
+- **Used for:** terrain.road, terrain.slab, obj.cone, obj.manhole, sign.giveway, obj.tyres, obj.recycling, sign.noentry, sign.signals
 - **Sheets:** streets
 - **Authors:** Faufilage
 - **Licences offered:** CC0 — used here under CC0
@@ -473,6 +505,22 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Original by Eliza Wyatt.
 
+### `Plain Fence A`
+
+- **Used for:** obj.fence
+- **Sheets:** town
+- **Authors:** Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Eliza Wyatt.
+
+### `Planter`
+
+- **Used for:** obj.trough
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolored by Eliza Wyatt.
+
 ### `Shirt 01 - Longsleeve Shirt`
 
 - **Used for:** torso
@@ -577,6 +625,14 @@ or by the Liberated Pixel Cup.
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
 - **Notes:** Original CC0 by BlueCarrot16. Edited, animated, and recolored by Eliza Wyatt.
 
+### `Short Steps A`
+
+- **Used for:** terrain.steps
+- **Sheets:** town
+- **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
+- **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0
+- **Notes:** Original by Lanea Zimmerman. Recolors by Eliza Wyatt.
+
 ### `Sign Backgrounds A`
 
 - **Used for:** sign.board
@@ -659,7 +715,7 @@ or by the Liberated Pixel Cup.
 
 ### `Terrain (all seasons)`
 
-- **Used for:** terrain.grass.spring, terrain.grass.summer, terrain.grass.autumn, terrain.grass.winter
+- **Used for:** terrain.grass.spring, terrain.grass.summer, terrain.grass.autumn, terrain.grass.winter, terrain.water, terrain.ballast
 - **Sheets:** town
 - **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0

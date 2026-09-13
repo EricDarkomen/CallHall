@@ -401,11 +401,18 @@ const R = {
   kerbs(x0, y0, x1, y1) {
     if (!World.surf) return;
     const c = this.ctx;
-    const at = (x, y) => (x < 0 || y < 0 || x >= MAPW || y >= MAPH || World.solid[y][x]) ? false
-      : { s: World.surf[y][x] };
+    /* Ground you can SEE, which is not the same as ground you can stand on:
+       an open surface is solid and still has an edge worth drawing, because
+       the edge between a wharf and the water is a wall four feet down and is
+       the most important line on that half of the map. Everything else here is
+       exactly as it was — an ordinary wall has no surface on it and so is still
+       thrown out by the first test. */
+    const vis = (x, y) => !(x < 0 || y < 0 || x >= MAPW || y >= MAPH)
+      && (!World.solid[y][x] || World.open(x, y));
+    const at = (x, y) => vis(x, y) ? { s: World.surf[y][x] } : false;
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       const s = World.surf[y][x];
-      if (!s || World.solid[y][x] || !World.zone[y][x]) continue;
+      if (!s || !vis(x, y)) continue;
       const px = x * TILE, py = y * TILE;
       /* Only ever from the surfaced side, and between two surfaced tiles only
          from the one whose name sorts first — otherwise every boundary is
@@ -446,6 +453,16 @@ const R = {
               repeat across it, which is the way you walk over them
        bays   r divided into two-tile parking bays, open on the side named
        text   words painted on the road at `at`, turned by `turn` quarter turns
+       rails  a railway track from a to b — two rails and the sleepers under
+              them, on the ballast
+
+     `rails` is the odd one and belongs here anyway, for the reason the note
+     above gives: a marking is linework laid on the ground at a position, and a
+     running line is the most position-dependent linework there is. It is not a
+     tile for the same reason the centre lines are not — a track that came in
+     32-pixel pieces would put a sleeper joint every metre, and the one thing
+     everybody knows about the sound of a train is that the joints are further
+     apart than that.
 
      Drawn every frame rather than baked: it is a few dozen fillRects behind a
      camera cull, which is cheaper than the bookkeeping of a second offscreen
@@ -485,6 +502,38 @@ const R = {
     for (const m of list) {
       if (m.a && m.b) {
         const ax = m.a[0] * TILE, ay = m.a[1] * TILE, bx = m.b[0] * TILE, by = m.b[1] * TILE;
+        if (m.p === 'rails') {
+          /* Sleepers first, then the two rails over them, then the shine along
+             the top of each — which is the only part of a railway anybody has
+             ever actually looked at. The gauge is 22px, which is a shade over
+             two thirds of a tile: on the same floor a person is 19 wide, and
+             standing somebody between the rails is the check that says whether
+             a track is the right size. */
+          if (!near(ax, ay, bx, by)) continue;
+          const len = Math.hypot(bx - ax, by - ay);
+          if (!len) continue;
+          const ux = (bx - ax) / len, uy = (by - ay) / len;
+          const nx = -uy, ny = ux, g = 11;
+          c.save();
+          c.lineCap = 'butt';
+          c.strokeStyle = 'rgba(38,30,24,.62)'; c.lineWidth = 4;
+          for (let d = 9; d < len; d += 19) {
+            const px = ax + ux * d, py = ay + uy * d;
+            c.beginPath();
+            c.moveTo(px - nx * (g + 6), py - ny * (g + 6));
+            c.lineTo(px + nx * (g + 6), py + ny * (g + 6));
+            c.stroke();
+          }
+          for (const side of [-1, 1]) {
+            const ox = nx * g * side, oy = ny * g * side;
+            c.strokeStyle = 'rgba(26,28,32,.85)'; c.lineWidth = 5;
+            c.beginPath(); c.moveTo(ax + ox, ay + oy); c.lineTo(bx + ox, by + oy); c.stroke();
+            c.strokeStyle = 'rgba(196,202,210,.42)'; c.lineWidth = 1.5;
+            c.beginPath(); c.moveTo(ax + ox, ay + oy); c.lineTo(bx + ox, by + oy); c.stroke();
+          }
+          c.restore();
+          continue;
+        }
         if (m.p === 'dash') stroke(ax, ay, bx, by, 4, WHITE, true);
         else if (m.p === 'line') stroke(ax, ay, bx, by, 5, WHITE, false);
         else if (m.p === 'yellow') {
@@ -2497,7 +2546,11 @@ const R = {
        carpet has a seam, glazed tile has grout, sheet vinyl has neither. */
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       const z = World.zone[y][x];
-      if (!z || World.solid[y][x]) continue;
+      /* An OPEN surface is ground with no room over it — the river, the
+         ballast under the railway. It has no zone and it is solid, so both of
+         the tests below throw it out; it is drawn here anyway because what it
+         is made of is the whole of what it is. See World.open(). */
+      if ((!z || World.solid[y][x]) && !World.open(x, y)) continue;
       c.drawImage(this.floorTile(z, (x + y) & 1, World.surf && World.surf[y][x]), x * TILE, y * TILE, TILE, TILE);
     }
     /* The kerb, and then the paint on the road. Both go straight onto the
@@ -2549,7 +2602,10 @@ const R = {
     }
     /* walls */
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-      if (!World.solid[y][x]) continue;
+      /* ...and never the water. An open surface is solid, so without this it
+         reaches the roof branch at the bottom of this loop and the river comes
+         out as a terrace of slate. See World.open(). */
+      if (!World.solid[y][x] || World.open(x, y)) continue;
       /* Which room's wall this is: the one it faces. A wall tile between two
          rooms belongs to whichever is below it, because that is the face you
          can see — and that's the ONLY neighbour a one-sided lookup like
@@ -3132,7 +3188,11 @@ const R = {
     const sx = cv.width / MAPW, sy = cv.height / MAPH;
     for (let y = 0; y < MAPH; y++) for (let x = 0; x < MAPW; x++) {
       const z = World.zone[y][x];
-      if (!z || World.solid[y][x]) continue;
+      /* The open surfaces are on here for the same reason they are on the
+         screen: a town map with no river on it is a map of somewhere else.
+         They have no zone at all, so the fallback below would have nothing to
+         ask — which is why an open surface must carry its own `map` colour. */
+      if ((!z || World.solid[y][x]) && !World.open(x, y)) continue;
       /* A surface paints itself, because a minimap of a town in which the
          roads are the same colour as the pavements is a minimap of a car park.
          `map` and not `floor`: a surface's floor colour is a TINT multiplied
@@ -3142,7 +3202,12 @@ const R = {
       /* And the seasonal ones paint themselves four ways, for the same reason
          the tile does: a green verge on the map in January is a lie about a
          white one. Sky.newDay() drops the baked minimap when the season turns. */
-      c.fillStyle = (S && ((S.maps && S.maps[Sky.season()]) || S.map)) || ZONES[z].floor;
+      const paint = (S && ((S.maps && S.maps[Sky.season()]) || S.map)) || (z ? ZONES[z].floor : null);
+      /* An open surface that declares no `map` has nothing to paint and no zone
+         to fall back on. Skipped rather than guessed at: a wrong colour on a
+         map is worse than a gap in one. */
+      if (!paint) continue;
+      c.fillStyle = paint;
       c.fillRect(x * sx, y * sy, sx + .5, sy + .5);
     }
     this._mmBase = b;

@@ -994,6 +994,182 @@ const LEVELS = {
     }
   },
 
+  /* ================= THE OLD TOWN'S INTERIORS =================
+     Five floors behind five of the frontages south of the railway. Same shape
+     as the ten already in this file — a room, an arrival point, a way back out
+     and a furnishing — and nothing in engine/ had to learn any of their names.
+
+     They are here rather than scattered because they share a fact: all five are
+     older than the building you work in, and three of them are older than the
+     concept of the building you work in. */
+
+  /* The one everybody finds first, because it is four doors from the North
+     Gate and because it is the only shop on Priorygate with its lights on at
+     half four in January. */
+  bookshop: {
+    name: 'The second-hand bookshop',
+    w: 15, h: 14,
+    rooms: [{ z: 'books', r: [2, 2, 12, 11] }],
+    doors: [],
+    entries: { door: [7.5, 10.5] },
+    links: [{ via: 'booksOut', to: 'outside', entry: 'books' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 7, y: 11, e: '\ud83d\udeaa', name: 'The way out', kind: 'exit', solid: false, use: 'booksOut' });
+      /* Shelves down both walls and two ranges through the middle, which is
+         four more than the floor can take and is exactly how many there are. */
+      A({ x: 3, y: 3, e: '\ud83d\udcda', name: 'Local history', kind: 'book', solid: true, use: 'shelfLocal' });
+      A({ x: 5, y: 3, e: '\ud83d\udcda', name: 'Local history', kind: 'book', solid: true, use: 'shelfLocal' });
+      A({ x: 7, y: 3, e: '\ud83d\udcda', name: 'Railways', kind: 'book', solid: true, use: 'shelfRail' });
+      A({ x: 9, y: 3, e: '\ud83d\udcda', name: 'Maritime', kind: 'book', solid: true, use: 'shelfSea' });
+      A({ x: 11, y: 3, e: '\ud83d\udcda', name: 'Everything else', kind: 'book', solid: true, use: 'shelfRest' });
+      A({ x: 3, y: 6, e: '\ud83d\udcda', name: 'The paperbacks', kind: 'book', solid: true, use: 'shelfPaper' });
+      A({ x: 3, y: 8, e: '\ud83d\udcda', name: 'The paperbacks', kind: 'book', solid: true, use: 'shelfPaper' });
+      A({ x: 11, y: 6, e: '\ud83d\udcda', name: 'The ones behind the counter', kind: 'book', solid: true, use: 'shelfBack' });
+      A({ x: 10, y: 9, e: '\ud83d\uddc2\ufe0f', name: 'The counter', kind: 'cupboard', solid: true, use: 'booksCounter' });
+      A({ x: 6, y: 6, e: '\ud83d\udcd6', name: 'The table of things nobody has bought', kind: 'table', solid: true, use: 'booksTable' });
+      A({ x: 7, y: 6, e: '\ud83d\udcd6', name: 'The table of things nobody has bought', kind: 'table', solid: true, use: 'booksTable' });
+      A({ x: 8, y: 6, e: '\ud83d\udcd6', name: 'The table of things nobody has bought', kind: 'table', solid: true, use: 'booksTable' });
+      A({ x: 5, y: 9, e: '\ud83d\udc08', name: 'The shop cat', kind: 'pigeon', solid: false, use: 'shopCat', furn: { mount: null } });
+      A({ x: 12, y: 5, e: '\ud83e\ude9f', name: 'The window from inside', kind: 'view', solid: true, use: 'booksWindow' });
+      A({ x: 2, y: 4, e: '\ud83e\ude9c', name: 'The stairs to the room upstairs', kind: 'view', solid: true, use: 'booksUpstairs' });
+    }
+  },
+
+  /* The coffee place, which has been four businesses in nine years and is the
+     only one of them anybody has liked. */
+  caff: {
+    name: 'The coffee place on Priorygate',
+    w: 14, h: 13,
+    rooms: [{ z: 'caff', r: [2, 2, 11, 10] }],
+    doors: [],
+    entries: { door: [6.5, 9.5] },
+    links: [{ via: 'caffOut', to: 'outside', entry: 'caff' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 6, y: 10, e: '\ud83d\udeaa', name: 'The way out', kind: 'exit', solid: false, use: 'caffOut' });
+      A({ x: 4, y: 2, e: '\u2615', name: 'The machine', kind: 'coffee', solid: true, use: 'caffMachine' });
+      A({ x: 6, y: 2, e: '\ud83e\uddc1', name: 'The cabinet', kind: 'cupboard', solid: true, use: 'caffCabinet' });
+      A({ x: 9, y: 2, e: '\ud83d\udcdd', name: 'The board', kind: 'board', solid: true, use: 'caffBoard' });
+      A({ x: 7, y: 3, e: '\ud83e\uddfe', name: 'The counter', kind: 'cupboard', solid: true, use: 'caffCounter' });
+      A({ x: 3, y: 6, e: '\ud83e\ude91', name: 'A table', kind: 'table', solid: true, use: 'caffTable' });
+      A({ x: 4, y: 6, e: '\ud83e\ude91', name: 'A table', kind: 'table', solid: true, use: 'caffTable' });
+      A({ x: 8, y: 6, e: '\ud83e\ude91', name: 'The table by the window', kind: 'table', solid: true, use: 'caffWindowTable' });
+      A({ x: 9, y: 6, e: '\ud83e\ude91', name: 'The table by the window', kind: 'table', solid: true, use: 'caffWindowTable' });
+      A({ x: 3, y: 8, e: '\ud83e\ude91', name: 'The wobbly table', kind: 'table', solid: true, use: 'caffWobble' });
+      A({ x: 4, y: 8, e: '\ud83e\ude91', name: 'The wobbly table', kind: 'table', solid: true, use: 'caffWobble' });
+      A({ x: 11, y: 4, e: '\ud83e\ude9f', name: 'The window from inside', kind: 'view', solid: true, use: 'caffWindow' });
+      A({ x: 2, y: 9, e: '\ud83d\udebd', name: 'The toilet', kind: 'view', solid: true, use: 'caffLoo' });
+      A({ x: 10, y: 9, e: '\ud83c\udf31', name: 'The plant', kind: 'plant', solid: true, use: 'caffPlant' });
+    }
+  },
+
+  /* The Mitre, which has been a pub since something in the fourteenth century
+     and has had eleven names. */
+  mitre: {
+    name: 'The Mitre',
+    w: 16, h: 14,
+    rooms: [{ z: 'mitre', r: [2, 2, 13, 11] }],
+    doors: [],
+    entries: { door: [7.5, 10.5] },
+    links: [{ via: 'mitreOut', to: 'outside', entry: 'mitre' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 7, y: 11, e: '\ud83d\udeaa', name: 'The way out', kind: 'exit', solid: false, use: 'mitreOut' });
+      A({ x: 5, y: 2, e: '\ud83c\udf7a', name: 'The bar', kind: 'cupboard', solid: true, use: 'mitreBar' });
+      A({ x: 6, y: 2, e: '\ud83c\udf7a', name: 'The bar', kind: 'cupboard', solid: true, use: 'mitreBar' });
+      A({ x: 7, y: 2, e: '\ud83c\udf7a', name: 'The bar', kind: 'cupboard', solid: true, use: 'mitreBar' });
+      A({ x: 9, y: 2, e: '\ud83d\udcdc', name: 'The list of landlords', kind: 'poster', solid: true, use: 'mitreLandlords' });
+      A({ x: 3, y: 2, e: '\ud83c\udfc6', name: 'The shelf of trophies', kind: 'book', solid: true, use: 'mitreTrophies' });
+      A({ x: 13, y: 3, e: '\ud83e\udded', name: 'The fireplace', kind: 'view', solid: true, use: 'mitreFire' });
+      A({ x: 4, y: 5, e: '\ud83e\ude91', name: 'The table in the corner', kind: 'table', solid: true, use: 'mitreCorner' });
+      A({ x: 5, y: 5, e: '\ud83e\ude91', name: 'The table in the corner', kind: 'table', solid: true, use: 'mitreCorner' });
+      A({ x: 9, y: 5, e: '\ud83e\ude91', name: 'The long table', kind: 'table', solid: true, use: 'mitreLong' });
+      A({ x: 10, y: 5, e: '\ud83e\ude91', name: 'The long table', kind: 'table', solid: true, use: 'mitreLong' });
+      A({ x: 11, y: 5, e: '\ud83e\ude91', name: 'The long table', kind: 'table', solid: true, use: 'mitreLong' });
+      A({ x: 2, y: 8, e: '\ud83c\udfaf', name: 'The dartboard', kind: 'view', solid: true, use: 'mitreDarts' });
+      A({ x: 12, y: 8, e: '\ud83c\udfb0', name: 'The machine', kind: 'vend', solid: true, use: 'mitreMachine' });
+      A({ x: 6, y: 8, e: '\ud83e\ude91', name: 'A table', kind: 'table', solid: true, use: 'mitreTable' });
+      A({ x: 7, y: 8, e: '\ud83e\ude91', name: 'A table', kind: 'table', solid: true, use: 'mitreTable' });
+      A({ x: 10, y: 11, e: '\ud83d\udebd', name: 'The gents', kind: 'view', solid: true, use: 'mitreGents' });
+      A({ x: 2, y: 10, e: '\ud83d\udeaa', name: 'The door to the yard', kind: 'view', solid: true, use: 'mitreYard' });
+    }
+  },
+
+  /* THE MARKET HALL. Not a shop: a roof over sixteen traders, half of whom
+     are the same family, and the only building in this town that has done one
+     job continuously since it was built. */
+  markethall: {
+    name: 'The Market Hall',
+    w: 20, h: 15,
+    rooms: [{ z: 'market', r: [2, 2, 17, 12] }],
+    doors: [],
+    entries: { door: [9.5, 11.5] },
+    links: [{ via: 'marketOut', to: 'outside', entry: 'market' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 9, y: 12, e: '\ud83d\udeaa', name: 'The way out', kind: 'exit', solid: false, use: 'marketOut' });
+      /* Two rows of stalls with an aisle down the middle, which is what the
+         inside of every pannier market in the country is. */
+      A({ x: 3, y: 2, e: '\ud83e\uddc0', name: 'The cheese stall', kind: 'shop', solid: true, use: 'stallCheese', furn: { mount: 'wall' } });
+      A({ x: 6, y: 2, e: '\ud83e\udd69', name: 'The butcher', kind: 'shop', solid: true, use: 'stallButcher', furn: { mount: 'wall' } });
+      A({ x: 9, y: 2, e: '\ud83c\udf5e', name: 'The bread stall', kind: 'shop', solid: true, use: 'stallBread', furn: { mount: 'wall' } });
+      A({ x: 12, y: 2, e: '\ud83e\uddf6', name: 'The wool stall', kind: 'shop', solid: true, use: 'stallWool', furn: { mount: 'wall' } });
+      A({ x: 15, y: 2, e: '\ud83d\udd27', name: 'The stall that mends things', kind: 'shop', solid: true, use: 'stallMender', furn: { mount: 'wall' } });
+      A({ x: 3, y: 8, e: '\ud83e\ude94', name: 'The haberdashery', kind: 'cupboard', solid: true, use: 'stallHaber' });
+      A({ x: 6, y: 8, e: '\ud83d\udcc0', name: 'The record stall', kind: 'cupboard', solid: true, use: 'stallRecords' });
+      A({ x: 9, y: 8, e: '\u2615', name: 'The market caff', kind: 'coffee', solid: true, use: 'stallCaff' });
+      A({ x: 12, y: 8, e: '\ud83e\uddf5', name: 'The stall with the buttons', kind: 'cupboard', solid: true, use: 'stallButtons' });
+      A({ x: 15, y: 8, e: '\ud83d\udce6', name: 'The empty pitch', kind: 'box', solid: true, use: 'stallEmpty' });
+      A({ x: 10, y: 6, e: '\ud83e\ude91', name: 'The tables in the middle', kind: 'table', solid: true, use: 'marketTables' });
+      A({ x: 11, y: 6, e: '\ud83e\ude91', name: 'The tables in the middle', kind: 'table', solid: true, use: 'marketTables' });
+      A({ x: 17, y: 5, e: '\ud83d\udcdc', name: 'The market charter', kind: 'poster', solid: true, use: 'marketCharter' });
+      A({ x: 2, y: 5, e: '\ud83d\udd70\ufe0f', name: 'The market clock', kind: 'clock', solid: true, use: 'marketClock' });
+      A({ x: 17, y: 11, e: '\ud83d\uddd1\ufe0f', name: 'The bins at the back', kind: 'bin', solid: true, use: 'marketBins' });
+    }
+  },
+
+  /* THE MINSTER. The largest interior in this game by some distance and the
+     only one with nothing to buy in it, which between them are the point.
+     Twenty-three by seventeen, most of it floor, because what a building like
+     this actually gives you is the floor. */
+  minster: {
+    name: 'Bellhaven Minster',
+    w: 25, h: 19,
+    rooms: [{ z: 'minster', r: [2, 2, 22, 16] }],
+    doors: [],
+    entries: { door: [12.5, 15.5] },
+    links: [{ via: 'minsterOut', to: 'outside', entry: 'minster' }],
+    furnish() {
+      const A = o => this.add(o);
+      A({ x: 12, y: 16, e: '\ud83d\udeaa', name: 'The south door', kind: 'exit', solid: false, use: 'minsterOut' });
+      /* The altar at the east end, which in here is the top of the screen,
+         because a cathedral drawn with its east end anywhere else is a
+         cathedral drawn by somebody who has not been in one. */
+      A({ x: 12, y: 2, e: '\u271d\ufe0f', name: 'The east end', kind: 'view', solid: true, use: 'minsterAltar' });
+      A({ x: 9, y: 2, e: '\ud83e\ude9f', name: 'The east window', kind: 'view', solid: true, use: 'minsterEastWindow' });
+      A({ x: 15, y: 2, e: '\ud83e\ude9f', name: 'The east window', kind: 'view', solid: true, use: 'minsterEastWindow' });
+      /* The nave: two blocks of chairs with an aisle between them. Chairs, not
+         pews — the pews went in 2003 and there is still a letter about it in
+         the parish magazine every spring. */
+      for (let r = 6; r <= 12; r += 2) {
+        for (let c = 8; c <= 10; c++) A({ x: c, y: r, e: '\ud83e\ude91', name: 'The chairs', kind: 'chair', solid: true, use: 'minsterChairs' });
+        for (let c = 14; c <= 16; c++) A({ x: c, y: r, e: '\ud83e\ude91', name: 'The chairs', kind: 'chair', solid: true, use: 'minsterChairs' });
+      }
+      A({ x: 4, y: 4, e: '\ud83c\udfb9', name: 'The organ', kind: 'cupboard', solid: true, use: 'minsterOrgan' });
+      A({ x: 20, y: 4, e: '\ud83d\udd6f\ufe0f', name: 'The candle stand', kind: 'misc', solid: true, use: 'minsterCandles' });
+      A({ x: 2, y: 8, e: '\ud83e\udea6', name: 'The tombs along the aisle', kind: 'view', solid: true, use: 'minsterTombs' });
+      A({ x: 2, y: 11, e: '\ud83e\udea6', name: 'The tombs along the aisle', kind: 'view', solid: true, use: 'minsterTombs' });
+      A({ x: 22, y: 8, e: '\ud83d\udd70\ufe0f', name: 'The astronomical clock', kind: 'clock', solid: true, use: 'minsterClock' });
+      A({ x: 22, y: 11, e: '\ud83d\udcdc', name: 'The roll of incumbents', kind: 'poster', solid: true, use: 'minsterRoll' });
+      A({ x: 6, y: 15, e: '\ud83d\udcda', name: 'The bookstall', kind: 'book', solid: true, use: 'minsterShop' });
+      A({ x: 18, y: 15, e: '\u2615', name: 'The urn and the biscuits', kind: 'coffee', solid: true, use: 'minsterUrn' });
+      A({ x: 3, y: 14, e: '\ud83d\udcb7', name: 'The box for the roof', kind: 'misc', solid: true, use: 'minsterRoofFund' });
+      A({ x: 21, y: 14, e: '\ud83d\udd6f\ufe0f', name: 'The candles by the door', kind: 'misc', solid: true, use: 'minsterCandles' });
+      A({ x: 12, y: 13, e: '\ud83d\udca7', name: 'The font', kind: 'sink', solid: true, use: 'minsterFont', furn: { mount: null } });
+    }
+  },
+
   /* ---- OUTSIDE --------------------------------------------------------
      The forecourt and the streets, which is the only level with a sky over it.
      `indoors: false` is what the renderer reads: no strip lights, daylight
@@ -1029,10 +1205,38 @@ const LEVELS = {
      `surfaces:` lays the tarmac over the middle of it. That is also why the
      rooms are listed in the order they are: they are painted in sequence and
      the later one wins, so the road zones claim their own junctions back off
-     the streets they cross. */
+     the streets they cross.
+
+     ---- AND THEN IT DOUBLED ----
+     Everything above describes the top half. The level is a hundred and
+     fourteen tiles across and a hundred and twenty down now, and the seam
+     between its two halves is the railway at row 60.
+
+     NORTH OF THE LINE is the town described above: built between about 1968
+     and 1994, a business park, a parade, a retail shed and a grid of roads
+     laid out by somebody with a ruler. Right angles all the way and the whole
+     of it blue-grey.
+
+     SOUTH OF THE LINE is what was here before that. It is inside a wall, it
+     has no cars in it, its main street was pedestrianised in 1988, and it
+     falls away westward down a flight of steps to a river with a quay on it
+     that stopped working in 1962. Everything down there is red stone, nothing
+     down there is square to anything else, and the one building made of a
+     different stone is the one somebody paid for.
+
+     The two halves are joined by exactly three things, and between them those
+     three are the whole shape of this map: two road bridges over the railway —
+     Cargate Lane and Marlow Street — and one subway under it, which is a right
+     of way, is the only way onto the closed station's platforms, and is why
+     anybody walks anywhere down there at all.
+
+     Nothing north of row 60 moved to do any of it. Every coordinate in the
+     first half of this level is the coordinate it always was: the office's
+     front doors are still at [20,2] and the Greggs is still at [31,23]. The
+     town grew off the bottom of itself, the way one does. */
   outside: {
     name: 'Outside',
-    w: 114, h: 62,
+    w: 114, h: 120,
     indoors: false,
     rooms: [
       /* The car park, and the one gap in its wall. Row 13 is claimed by
@@ -1063,7 +1267,131 @@ const LEVELS = {
       { z: 'corven', r: [6, 50, 109, 59] },
       /* And the car park, with its one gap, exactly as the forecourt has. */
       { z: 'retail', r: [18, 43, 55, 48] },
-      { z: 'retail', r: [34, 42, 37, 42] }
+      { z: 'retail', r: [34, 42, 37, 42] },
+
+      /* ================= SOUTH OF THE LINE =================
+         Rows 60 to 119. Everything above this comment was here first and none
+         of it has moved.
+
+         THE RAILWAY comes first, and what is remarkable about it is how little
+         of it is here: nine rows of `rail` surface in the list below and two
+         painted tracks, and not one room, because a railway is not a place you
+         can stand. What IS a room is the three things cut through it. */
+      /* The subway. Nine rows of tiled tunnel from the verge on Corven Way to
+         the pavement on Station Road, and the only way on foot between the two
+         halves of this town. It is declared BEFORE the platforms so that where
+         it passes them they win the tile: the middle of it is a tunnel and the
+         two ends of it are the stairs up onto a platform, which is what that
+         overlap means and is why the zone changes under your feet twice on the
+         way through. */
+      { z: 'subway', r: [78, 60, 80, 68] },
+      /* The two platforms of a station that has not had a train stop at it
+         since 1967 — see the act on the railway, which has said so since long
+         before there was a platform here to say it about. They are three rows
+         apart because a running line and a six-foot go between them, and they
+         are only reachable from the subway, because the booking hall on the
+         road side has been boarded since the year it shut. */
+      { z: 'platform', r: [74, 61, 98, 62] },
+      { z: 'platform', r: [74, 66, 98, 67] },
+      /* THE TWO BRIDGES. A road over a railway in this projection is a strip of
+         carriageway with ballast either side of it and nothing else — which is
+         exactly what a bridge looks like from above, and is why neither of
+         these needed a single line of engine to exist. Same zone as the street
+         each one carries, because it is the same street. */
+      { z: 'cargate', r: [58, 60, 67, 68] },
+      { z: 'marlow', r: [100, 60, 109, 68] },
+
+      /* THE NORTH–SOUTH STREETS of the new half, listed before the two long
+         ones for the reason the first half gives: the crossings belong to the
+         road named on the sign at the corner, and down here that is the road
+         going east and west. */
+      { z: 'quayrd', r: [7, 79, 16, 95] },
+      { z: 'marlow', r: [100, 79, 109, 95] },
+      /* THE TWO LONG ONES. Station Road runs the whole width under the railway
+         embankment; Weirbank Road runs the whole width along the bottom of the
+         wall. Between them is the old town, and the fact that you cannot drive
+         from one to the other except round the outside is the whole of what
+         makes the middle of this map walkable. */
+      { z: 'stationrd', r: [7, 69, 113, 78] },
+      { z: 'weirbank', r: [7, 96, 113, 105] },
+
+      /* ---- THE OLD TOWN ----
+         Inside the wall. The wall itself is not in this list and never will be:
+         it is the mass BETWEEN these rooms, and what makes it a city wall
+         rather than the back of a shop is one field on every zone down here —
+         `wtile: 'wall.stone'`. Rubble, in the red the ground is, instead of the
+         parade's brick.
+
+         There are four ways in and they are worth knowing before you read the
+         rectangles: the North Gate off Station Road, the East Gate onto Marlow
+         Street, the Water Gate at the bottom of the Close, and Fishers Steps,
+         which is not a gate at all but eight courses of steps down the hill.
+
+         THE LANES first, so that where each crosses Priorygate the high street
+         wins the tile — same rule as the junctions outside. */
+      { z: 'coopers', r: [23, 80, 25, 94] },
+      { z: 'drapers', r: [76, 80, 78, 94] },
+      { z: 'pinfold', r: [90, 80, 92, 94] },
+      /* PRIORYGATE, and the gate it is named after. The street is four rows
+         deep and eighty across and there is not one tile of carriageway on it;
+         the second rectangle is the gateway through the north wall, in the same
+         zone because you are already on Priorygate when you are standing under
+         the arch, which is what anybody who has walked through one will tell
+         you. The third is the East Gate, which is one tile wide and is the
+         reason Marlow Street has a queue on it at ten to nine. */
+      { z: 'priory', r: [19, 84, 98, 87] },
+      { z: 'priory', r: [50, 79, 52, 83] },
+      { z: 'priory', r: [99, 85, 99, 86] },
+      /* The market square. It is called the Shambles and there has not been a
+         butcher on it since the seventies, which is the most ordinary fact
+         about any market square in England. */
+      { z: 'shambles', r: [28, 80, 46, 83] },
+      /* THE GREEN, IN FOUR PIECES, AND THE MINSTER IN THE HOLE.
+         A room is a rectangle and a rectangle cannot have a cathedral cut out
+         of the middle of it, so the lawn is the two rects at the ends and the
+         paved walk round the building is the four that box it in. What is left
+         over — x 48 to 64, rows 90 to 92 — is covered by no room at all, which
+         is how a thing this size gets to be solid: the minster is seventeen
+         tiles of nothing, and the nothing is the building.
+
+         Seventeen and not thirteen, which is what it was first drawn as. The
+         one thing everybody knows about a building like this is that it is
+         LONG — a nave is a corridor with a roof on it and the length is the
+         whole of the effect — and at thirteen it read from Priorygate as a
+         large shed made of the wrong stone.
+
+         The walk is its own zone for one reason and it is the whole reason the
+         old town looks the way it does: a wall takes its finish from the room
+         that can see it, so the only way to say that this building is pale
+         stone and everything else in the town is red is to give it its own
+         pavement to be seen from. */
+      { z: 'green', r: [38, 88, 45, 94] },
+      { z: 'green', r: [67, 88, 72, 94] },
+      { z: 'minster', r: [46, 88, 66, 89] },
+      { z: 'minster', r: [46, 93, 66, 94] },
+      { z: 'minster', r: [46, 90, 47, 92] },
+      { z: 'minster', r: [65, 90, 66, 92] },
+      /* The Close, and the Water Gate at the bottom of it. */
+      { z: 'close', r: [30, 88, 37, 94] },
+      { z: 'close', r: [31, 95, 33, 95] },
+      /* The castle gardens, which are a lawn, a bandstand and a gatehouse with
+         no castle behind it. */
+      { z: 'castle', r: [82, 80, 98, 83] },
+      /* FISHERS STEPS. Three tiles wide, eight rows long, from the west end of
+         Priorygate down to Weirbank Road, and the only thing on this map that
+         is not flat. There is no height in this game and there does not need to
+         be: the ground is three treads to the tile all the way down it, and
+         that is enough to tell anybody which way the town falls. */
+      { z: 'steps', r: [18, 88, 20, 95] },
+
+      /* ---- THE QUAY ----
+         The apron along the water, the terrace of warehouses between it and the
+         road — which, like every other block on this map, is simply the rows
+         nothing claims — and the ramp down through them that a vehicle can
+         actually get onto, because a quay you cannot drive onto is a
+         promenade. */
+      { z: 'quay', r: [24, 109, 113, 112] },
+      { z: 'quay', r: [40, 106, 43, 108] }
     ],
     /* What the ground is MADE of, over the top of what it is. Everything out
        here is paving slabs by default; these are the bits that are not.
@@ -1119,7 +1447,90 @@ const LEVELS = {
          across the exit everybody drives out of. */
       { s: 'grass', r: [2, 14, 33, 14] },
       { s: 'grass', r: [38, 14, 41, 14] },
-      { s: 'grass', r: [6, 59, 109, 59] }
+      { s: 'grass', r: [6, 59, 109, 59] },
+
+      /* ================= SOUTH OF THE LINE =================
+         THE RAILWAY. Nine rows of ballast the width of the map, and it is a
+         SURFACE with no room under it — which is the whole trick and the one
+         new idea in this half of the level. `rail` carries `open` (see
+         SURFACES in data/world.js and World.open()), which means: solid, so
+         nothing walks on it, and drawn as what it is made of rather than as the
+         roof the renderer gives every other piece of wall mass. Without that
+         flag the line through the middle of this town came out as four hundred
+         tiles of slate.
+
+         Laid FIRST of the new surfaces, so the three things cut through it are
+         taken back off it below. */
+      { s: 'rail', r: [0, 60, 113, 68] },
+      /* AND TAKEN OFF AGAIN, which is what `s: null` is: a surface rectangle
+         that says this ground is made of whatever its room says it is made of,
+         which is the state every tile in this game starts in and the state
+         there was no way back to until a surface covered the whole width of the
+         map and four things stood on top of it.
+
+         Nothing in the engine needed telling. World.build already writes
+         `surf[y][x] = sf.s` and every reader already treats a null surface as
+         "ask the zone" — it is the value 8,043 tiles of this level carry. What
+         it buys is the difference between a platform and the ballast beside it,
+         which is the single most important line on that half of the map.
+
+         The two platforms, the subway between them, and the footways of the two
+         bridges. The carriageways of the bridges get their tarmac at the very
+         bottom of this list, after the grass, for the reason given down there. */
+      { s: null, r: [74, 61, 98, 62] },
+      { s: null, r: [74, 66, 98, 67] },
+      { s: null, r: [78, 60, 80, 68] },
+      { s: null, r: [58, 60, 67, 68] },
+      { s: null, r: [100, 60, 109, 68] },
+      /* THE WATER, and it is the other `open` one. An L: down the west edge
+         from the embankment to the bottom of the map, and then east along the
+         bottom as the basin and the cut. The town stops at it in exactly the
+         way the first half of this map stops at the railway, and for the same
+         reason — a map wants an edge that is a fact rather than a boundary.
+
+         It starts at row 69 and not row 60 because the railway crosses it on an
+         embankment, and an embankment seen from directly above is ballast, not
+         a bridge. The river comes out from under it. */
+      { s: 'water', r: [0, 69, 6, 119] },
+      { s: 'water', r: [0, 106, 23, 119] },
+      { s: 'water', r: [24, 113, 113, 119] },
+      /* THE CARRIAGEWAYS of the new half. Same rule as the first: one rectangle
+         per road, carried straight through every footway it crosses, because a
+         carriageway that stops at a junction gets a kerb laid across it. */
+      { s: 'tarmac', r: [9, 71, 113, 76] },
+      { s: 'tarmac', r: [9, 98, 113, 103] },
+      { s: 'tarmac', r: [10, 69, 15, 105] },
+      /* The ramp down through the warehouses onto the quay, carried from
+         Weirbank Road's kerb to the water's edge for the drive-thru's reason:
+         stop it at the footway and the game lays a six-inch step across the one
+         slope a vehicle can get down. */
+      { s: 'tarmac', r: [40, 104, 43, 112] },
+      /* And the quay's own parking, which is the only flat tarmac south of the
+         line and is therefore where everybody in the old town leaves the car
+         they are not supposed to have brought down here. */
+      { s: 'tarmac', r: [56, 109, 80, 112] },
+      /* THE GRASS in the old town: the two lawns of Minster Green either side
+         of the cathedral, and the whole of the castle gardens. Seasonal, like
+         every other blade on this map — which means the green in front of the
+         minster is white in January, and that is the single best argument for
+         having built the thing where you can see it from Priorygate. */
+      { s: 'grass', r: [38, 88, 45, 94] },
+      { s: 'grass', r: [67, 88, 72, 94] },
+      { s: 'grass', r: [82, 80, 98, 83] },
+      /* THE STEPS, and they are last of the ordinary surfaces because they
+         cross the south wall's gateway and must win it. */
+      { s: 'steps', r: [18, 88, 20, 95] },
+
+      /* AND THE TWO BRIDGES, WHICH ARE LAST OF EVERYTHING.
+         Cargate Lane and Marlow Street run south out of Corven Way, across its
+         footway, over its verge, and onto the railway bridges. The verge is the
+         problem: `grass` above is declared after the first half's tarmac and
+         wins row 59 for the whole width of the map, so a carriageway drawn
+         before it would have a strip of council grass laid across the one lane
+         everybody drives over the railway on. These two go after the grass, and
+         that is the only reason they are down here on their own. */
+      { s: 'tarmac', r: [60, 58, 65, 70] },
+      { s: 'tarmac', r: [102, 58, 107, 105] }
     ],
     /* The paint. Position-dependent, so none of it is a tile — see the note in
        tools/sheets/town.mjs about why the atlas has one road surface in it and
@@ -1194,7 +1605,91 @@ const LEVELS = {
       { p: 'text', at: [20.5, 7.2], s: 'KEEP CLEAR' },
       { p: 'text', at: [35.5, 11], s: 'SLOW', turn: 1 },
       { p: 'text', at: [36.5, 47.4], s: 'MAX 5 MPH' },
-      { p: 'text', at: [86, 53.4], s: 'SLOW' }
+      { p: 'text', at: [86, 53.4], s: 'SLOW' },
+
+      /* ================= SOUTH OF THE LINE =================
+         THE TWO RUNNING LINES, and they are in this list rather than in the
+         atlas for precisely the reason the centre lines are: a track is
+         linework laid on the ground at a position, and a track that came in
+         32-pixel pieces would put a sleeper joint every metre. See the `rails`
+         entry in R.roadPaint()'s vocabulary.
+
+         The down line is the one the platform at row 61 serves and the up line
+         the one at row 66, which is why they are three rows apart with the
+         six-foot between them and not two rows apart with nothing. Both run the
+         full width, over the embankment at the river and out of sight at both
+         ends of the map, because that is what a main line does to a town it
+         does not stop at.
+
+         Three segments each, and the two gaps in them are the two bridges. A
+         bridge deck is on TOP of the railway and a track painted across one is
+         a track painted on a road, which is exactly what it looked like — drawn
+         as one run — to anybody who stood in the middle of Cargate Lane and
+         looked down at their own feet.
+
+         The SUBWAY is not a gap and must not be, for the same reason from the
+         other side: it goes UNDER, so the rails run straight over the top of
+         it, and the pale strip of tunnel showing between them is the only thing
+         on that whole embankment that tells you so. */
+      { p: 'rails', a: [0, 63.5], b: [58, 63.5] },
+      { p: 'rails', a: [68, 63.5], b: [100, 63.5] },
+      { p: 'rails', a: [110, 63.5], b: [114, 63.5] },
+      { p: 'rails', a: [0, 65.5], b: [58, 65.5] },
+      { p: 'rails', a: [68, 65.5], b: [100, 65.5] },
+      { p: 'rails', a: [110, 65.5], b: [114, 65.5] },
+      /* STATION ROAD's centre line, broken at the crossing, at the two bridge
+         mouths and at both junctions. */
+      { p: 'dash', a: [7, 74], b: [10, 74] },
+      { p: 'dash', a: [16, 74], b: [46, 74] },
+      { p: 'dash', a: [50, 74], b: [60, 74] },
+      { p: 'dash', a: [66, 74], b: [86, 74] },
+      { p: 'dash', a: [90, 74], b: [102, 74] },
+      { p: 'dash', a: [108, 74], b: [113, 74] },
+      /* WEIRBANK ROAD's, the same, broken at its one crossing and at the ramp
+         down to the quay. */
+      { p: 'dash', a: [7, 101], b: [10, 101] },
+      { p: 'dash', a: [16, 101], b: [36, 101] },
+      { p: 'dash', a: [40, 101], b: [102, 101] },
+      { p: 'dash', a: [108, 101], b: [113, 101] },
+      /* The three north–south ones, each stopping short of the junction at
+         either end of it. */
+      { p: 'dash', a: [13, 79], b: [13, 96] },
+      { p: 'dash', a: [105, 79], b: [105, 96] },
+      { p: 'dash', a: [105, 60], b: [105, 69] },
+      { p: 'dash', a: [63, 60], b: [63, 69] },
+      /* GIVE WAY at every mouth where a north–south street meets one of the two
+         long ones down here, the same six-tile line in the same place relative
+         to the carriageway as the twelve upstairs: a shade outside the major
+         road's tarmac, on the minor road, where the traffic actually yields. */
+      { p: 'line', a: [10, 77.1], b: [16, 77.1] },
+      { p: 'line', a: [10, 97.9], b: [16, 97.9] },
+      { p: 'line', a: [102, 70.9], b: [108, 70.9] },
+      { p: 'line', a: [102, 77.1], b: [108, 77.1] },
+      { p: 'line', a: [102, 97.9], b: [108, 97.9] },
+      /* Cargate Lane comes off the bridge and stops dead at Station Road, which
+         is the only T-junction on this map and the reason the queue for the
+         bridge backs up onto Corven Way every morning. */
+      { p: 'line', a: [60, 70.9], b: [66, 70.9] },
+      /* No parking outside the old town's two gates, which is where the taxis
+         wait and where the delivery vans for the whole of Priorygate stop,
+         because there is nowhere else and there never has been. */
+      { p: 'yellow', a: [44, 77.2], b: [58, 77.2] },
+      { p: 'yellow', a: [94, 96.8], b: [110, 96.8] },
+      /* Three crossings, and all three are where somebody actually crosses:
+         outside the North Gate, outside the Water Gate, and outside the station
+         that shut in 1967, which still has more people crossing to it than the
+         other two put together because of where the subway comes out. */
+      { p: 'zebra', r: [46, 71, 49, 76] },
+      { p: 'zebra', r: [86, 71, 89, 76] },
+      { p: 'zebra', r: [36, 98, 39, 103] },
+      /* Twelve on the quay, in one bank along the water. The open side faces
+         the warehouses because that is the way you come in, and it means every
+         car down there is parked nose-out over four feet of nothing, which is
+         the correct amount of alarming. */
+      { p: 'bays', r: [57, 110, 78, 112], open: 'n' },
+      { p: 'text', at: [42, 107.4], s: 'RAMP' },
+      { p: 'text', at: [67.5, 109.9], s: 'PAY & DISPLAY' },
+      { p: 'text', at: [63, 67], s: 'SLOW', turn: 1 }
     ],
     doors: [],
     /* In the walkway between the two banks of bays, facing away from the
@@ -1212,6 +1707,15 @@ const LEVELS = {
       /* And five on Fenn Street, where the pavement is row 33 rather than row
          15 because the parade faces the other way round the block. */
       tyre: [20.5, 33.5], unitsix: [30.5, 33.5], club: [72.5, 33.5], tan: [82.5, 33.5],
+      /* And five in the old town, where the frontages are on row 84 of
+         Priorygate and the rule is the parade's: you come out of a shop one row
+         below its sign, standing on the street. */
+      books: [54.5, 85.5], caff: [58.5, 85.5], mitre: [48.5, 85.5],
+      market: [30.5, 81.5],
+      /* The minster is the one frontage on this map whose door faces SOUTH, for
+         the reason its own comment gives down in `furnish` — so you come out of
+         it onto the walk on the south side and the building is behind you. */
+      minster: [56.5, 94.5],
     },
     links: [
       { via: 'frontDoors', to: 'office', entry: 'lobby' },
@@ -1233,6 +1737,15 @@ const LEVELS = {
       { via: 'sixDoor', to: 'unitsix', entry: 'door' },
       { via: 'clubDoor', to: 'club', entry: 'door' },
       { via: 'tanDoor', to: 'tan', entry: 'door' },
+      /* And the old town's five. Ten frontages on Priorygate and five of them
+         have a floor behind them, which is a better hit rate than the parade
+         manages and is meant to be: the difference between a high street that
+         works and one that does not is how many of the doors open. */
+      { via: 'bookDoor', to: 'bookshop', entry: 'door' },
+      { via: 'caffDoor', to: 'caff', entry: 'door' },
+      { via: 'mitreDoor', to: 'mitre', entry: 'door' },
+      { via: 'marketDoor', to: 'markethall', entry: 'door' },
+      { via: 'minsterDoor', to: 'minster', entry: 'door' },
     ],
     /* The cars. Parked ones sit in bays and are scenery you can walk round and
        bump into; two of them are worth pressing E on and exactly one of them
@@ -1349,7 +1862,64 @@ const LEVELS = {
       { model: 'bus', body: '#2f5d43', roof: '#f0ece2', name: 'The 41', use: 'theFortyOne',
         traffic: true, cruise: 120, leg: 0, along: 62,
         route: [[9.5, 17.5], [106.5, 17.5], [106.5, 56.5], [9.5, 56.5]],
-        stops: [{ at: [26.5, 17.5], secs: 7 }, { at: [46.5, 56.5], secs: 7 }] }
+        stops: [{ at: [26.5, 17.5], secs: 7 }, { at: [46.5, 56.5], secs: 7 }] },
+
+      /* ================= SOUTH OF THE LINE =================
+         Parked first. The old town has no cars in it at all, which leaves
+         exactly three places down here anybody can leave one: the quay's
+         pay-and-display, the yellow lines outside the North Gate that nobody
+         has ever been ticketed on, and Weirbank Road. */
+      { x: 60, y: 111, face: 'n', model: 'hatch', body: '#2d3f52', roof: '#233246', name: 'A blue hatchback', use: 'someoneElsesCar' },
+      { x: 64, y: 111, face: 'n', model: 'small', name: 'A small blue car', use: 'someoneElsesCar' },
+      { x: 70, y: 111, face: 'n', model: 'estate', body: '#57624f', roof: '#434d3d', name: 'An olive estate', use: 'someoneElsesCar' },
+      { x: 76, y: 111, face: 'n', model: 'van', body: '#7b4f3a', roof: '#63402f', name: 'The chandler’s van', use: 'chandlerVan' },
+      /* On the double yellows outside the North Gate, on its hazards, with
+         nobody in it, delivering to a street no vehicle is allowed up. It is
+         there every morning and it is the reason the queue for the bridge is
+         what it is. */
+      { x: 52, y: 77.6, face: 'e', model: 'van', body: '#d8d5cc', roof: '#c2bfb5',
+        name: 'A van on the yellows, hazards going', use: 'yellowsVan' },
+
+      /* ---- TRAFFIC, SOUTH ----
+         Four more circuits, and the two halves of the table they are written to
+         are the same two as upstairs, extended:
+
+           eastbound   Station Road y 72.5   Weirbank y 99.5
+           westbound   Station Road y 75.5   Weirbank y 102.5
+           northbound  Quay Road x 11.5   Cargate x 61.5   Marlow x 103.5
+           southbound  Quay Road x 14.5   Cargate x 64.5   Marlow x 106.5
+
+         Two of these go round the old town and stay south of the line. The
+         other two are the reason the bridges exist: one drops down Cargate and
+         comes back up Marlow, the other does it the other way round, and
+         between them every vehicle you ever see cross that railway is on one or
+         the other. */
+      { model: 'saloon', body: '#4a4f58', roof: '#3a3e46', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 148, leg: 0, along: 24,
+        route: [[11.5, 72.5], [106.5, 72.5], [106.5, 102.5], [11.5, 102.5]] },
+      { model: 'small', body: '#8a6a3a', roof: '#6d532d', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 138, leg: 1, along: 12,
+        route: [[14.5, 75.5], [14.5, 99.5], [103.5, 99.5], [103.5, 75.5]] },
+      /* DOWN CARGATE AND UP MARLOW. It crosses the railway twice a lap on two
+         different bridges, which is a thing you can stand on Corven Way and
+         watch happen, and is the closest this map comes to having a view. */
+      { model: 'hatch', name: 'A car, passing', use: 'passingCar', traffic: true, cruise: 152, leg: 0, along: 6,
+        route: [[64.5, 56.5], [64.5, 72.5], [103.5, 72.5], [103.5, 56.5]] },
+      /* And the same circuit the other way about, which is what makes the two
+         bridge mouths busy rather than one-way. */
+      { model: 'taxi', name: 'A taxi, passing', use: 'passingCar', traffic: true, cruise: 160, leg: 2, along: 18,
+        route: [[106.5, 53.5], [106.5, 75.5], [61.5, 75.5], [61.5, 53.5]] },
+      /* THE 12, and it is not the 41. The 41 has run the same four roads round
+         the new town since before the old town had a bus at all; the 12 is the
+         one that crosses the line. Two stops, both of them where somebody
+         needs one — the pavement outside the boarded-up station, which is the
+         joke and is also the truth about why anybody down here owns a car, and
+         the verge on Corven Way at the mouth of the subway.
+         A red one, because the 41 and the 41A are both green and a town that
+         cannot tell its buses apart from the far end of a street has failed at
+         the one thing a bus route is for. */
+      { model: 'bus', body: '#7e3b3f', roof: '#f0ece2', name: 'The 12', use: 'theTwelve',
+        traffic: true, cruise: 118, leg: 1, along: 10,
+        route: [[64.5, 56.5], [64.5, 72.5], [103.5, 72.5], [103.5, 56.5]],
+        stops: [{ at: [88.5, 72.5], secs: 8 }, { at: [70.5, 56.5], secs: 6 }] }
     ],
     /* THE PEOPLE. Not the twenty colleagues — those are NPCM's, they are all
        upstairs, and they have schedules and opinions. These are strangers, and
@@ -1411,7 +1981,48 @@ const LEVELS = {
         route: [[6.6, 44], [6.6, 30], [6.6, 22.6], [14.6, 22.6], [14.6, 30], [14.6, 44, 3]] },
       /* And one who is simply not moving very fast, outside the bookmakers. */
       { name: 'A man who has stopped', use: 'pedStopped', sprite: 'terry', speed: 0.7, leg: 0, along: 1,
-        route: [[54, 14.6, 12], [50, 14.6, 8]] }
+        route: [[54, 14.6, 12], [50, 14.6, 8]] },
+
+      /* ================= SOUTH OF THE LINE =================
+         Seven more, and the rule they are written to has not changed: no leg
+         runs along a road, and where one crosses a carriageway it does it at a
+         crossing if there is one and straight over at a point clear of a
+         junction if there is not.
+
+         What HAS changed is that most of the old town is not a road at all, so
+         four of these are simply people walking about — which is the whole
+         difference between a pedestrianised street and a street with nobody
+         driving down it, and is the thing the old town is for. */
+      /* Station Road: up the railway side, over the zebra outside the North
+         Gate, back along the wall, and straight over again at a point well
+         clear of both bridges. */
+      { name: 'Somebody off the 12', use: 'pedBus', sprite: 'kevin', speed: 1.15, leg: 0, along: 8,
+        route: [[36, 69.6], [47.5, 69.6, 4], [47.5, 78.6], [80, 78.6, 3], [80, 69.6]] },
+      /* Weirbank Road, over its zebra at the Water Gate and back over at the
+         ramp, which is the one other place on that road where a person can get
+         across without a fifty-yard walk. */
+      { name: 'Somebody with a carrier bag', use: 'pedCarrier', sprite: 'janet', speed: 1.0, leg: 0, along: 14,
+        route: [[24, 96.6], [37.5, 96.6, 3], [37.5, 104.6], [70, 104.6, 4], [70, 96.6]] },
+      /* PRIORYGATE, and this is the one that makes the old town read as a town:
+         four rows of street with nothing on them but people, walking up one
+         side and down the other and stopping at things. */
+      { name: 'Two people walking slowly', use: 'pedPriory', sprite: 'sandra', speed: 0.78, leg: 0, along: 20,
+        route: [[24, 85.4], [50, 85.4, 6], [90, 85.4], [90, 86.6], [50, 86.6, 4], [24, 86.6]] },
+      { name: 'Somebody late for something', use: 'pedLate', sprite: 'priya', speed: 1.45, leg: 2, along: 10,
+        route: [[28, 86.6], [74, 86.6], [74, 85.4], [28, 85.4, 2]] },
+      /* Minster Green, which is a lawn with a cathedral on it and is therefore
+         the only route on this map that is not a rectangle for any practical
+         reason at all. */
+      { name: 'Somebody having their lunch outside', use: 'pedGreen', sprite: 'fiona', speed: 0.72, leg: 0, along: 3,
+        route: [[41, 89.4, 9], [41, 94.4], [69, 94.4, 7], [69, 89.4, 5]] },
+      /* The Quay, up the water and back along the warehouses. */
+      { name: 'Somebody looking at the water', use: 'pedQuay', sprite: 'alan', speed: 0.9, leg: 0, along: 12,
+        route: [[30, 110.6], [44, 110.6, 6], [52, 110.6], [52, 111.6], [44, 111.6, 4], [30, 111.6]] },
+      /* And one in the subway, down one side and back up the other, which is
+         the only way to loop a tunnel three tiles wide. Whoever it is has been
+         doing it since the station shut. */
+      { name: 'Somebody using the subway', use: 'pedSubway', sprite: 'marcus', speed: 1.3, leg: 0, along: 4,
+        route: [[78.6, 59.6], [78.6, 68.6, 2], [79.6, 68.6], [79.6, 59.6, 2]] }
     ],
     furnish() {
       const A = o => this.add(o);
@@ -1676,7 +2287,13 @@ const LEVELS = {
       A({ x: 46, y: 58, e: '🚏', name: 'The stop on Corven Way', kind: 'sign', solid: true, use: 'corvenStop' });
       A({ x: 96, y: 57, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
       A({ x: 40, y: 59, e: '🚃', name: 'The railway', kind: 'view', solid: true, use: 'railway' });
-      A({ x: 70, y: 59, e: '🕳️', name: 'The subway', kind: 'sign', solid: true, use: 'subway' });
+      /* The subway used to stand here, at x 70, and it has moved four tiles
+         east. It was a sign on a verge pointing at nothing for a year — there
+         was no other side of the railway to go to — and the column it stood in
+         was arbitrary the whole time. It is at 79 now, because 78 to 80 is
+         where the tunnel is, and the tunnel is where it is because that is
+         where the platforms it was built to serve are. See the south half of
+         this furnishing. */
       A({ x: 20, y: 59, e: '🖍️', name: 'The wall on Corven Way', kind: 'graf', solid: true, use: 'corvenWall',
         furn: { sprite: 'wall.graf.squad', paint: true } });
       /* Three along the far verge, where the town stops and the railway
@@ -1788,6 +2405,376 @@ const LEVELS = {
       A({ x: 18, y: 46, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 55, y: 46, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 44, y: 42, e: '🪧', name: 'The retail park sign', kind: 'sign', solid: true, use: 'retailRules' });
+
+      /* ==================== SOUTH OF THE LINE ====================
+         Everything from here down is on the other side of the railway, and the
+         one rule that governs all of it is the rule that governs the parade:
+         the kit's shopfront art is drawn face-on and only reads against a NORTH
+         wall, so every frontage below hangs on the top row of the street it is
+         on. That is why the whole of Priorygate faces south and why the minster
+         — the one building on this map you go INTO from its own churchyard —
+         has its great door on the south side. A cathedral with a south porch is
+         not an invention; a cathedral drawn edge-on would be. */
+
+      /* ---- THE RAILWAY AND THE OLD STATION ----
+         Two platforms, a subway, and a station that has not had a train stop at
+         it since 1967. The act on the railway has said that for as long as
+         there has been a railway to say it about; this is the first time
+         anybody has been able to walk down there and find out it is true. */
+      /* The mouth on the verge. It MOVED: it was at [70,59] for a year, which
+         was the right row and the wrong column, and the subway is at 78–80
+         because that is where the platforms it serves are. */
+      A({ x: 81, y: 59, e: '🕳️', name: 'The subway', kind: 'sign', solid: true, use: 'subway' });
+      A({ x: 81, y: 69, e: '🕳️', name: 'The subway, south end', kind: 'sign', solid: true, use: 'subwaySouth' });
+      /* Inside it. The mural is on the wall of the one place out here that has
+         walls — see the `subway` zone, which is finished in the toilets' glazed
+         brick, because that is what a subway is finished in. */
+      A({ x: 80, y: 64, e: '🖍️', name: 'The mural in the subway', kind: 'graf', solid: true, use: 'subwayMural' });
+      A({ x: 80, y: 61, e: '💡', name: 'The light in the subway', kind: 'lamp', solid: true, use: 'subwayLight' });
+      A({ x: 80, y: 67, e: '💡', name: 'The light in the subway', kind: 'lamp', solid: true, use: 'subwayLight' });
+      /* THE PLATFORMS. The name board is the whole joke and it is worth having
+         it be the first thing you meet coming up the steps. */
+      A({ x: 76, y: 61, e: '🪧', name: 'The name board', kind: 'sign', solid: true, use: 'nameBoard' });
+      A({ x: 84, y: 61, e: '🪑', name: 'The platform bench', kind: 'bench', solid: true, use: 'platformBench' });
+      A({ x: 90, y: 61, e: '🕰️', name: 'The platform clock', kind: 'sign', solid: true, use: 'platformClock' });
+      A({ x: 96, y: 62, e: '💡', name: 'A platform lamp', kind: 'lamp', solid: true, use: 'platformLamp' });
+      A({ x: 82, y: 62, e: '🐦', name: 'Pigeons under the canopy', kind: 'pigeon', solid: false, use: 'stationPigeons' });
+      /* The edge, and the two lines past it. Not a fence and not a barrier: a
+         white line and a hundred years of everybody standing behind it. */
+      A({ x: 92, y: 62, e: '🚃', name: 'The line', kind: 'view', solid: true, use: 'theLine' });
+      A({ x: 88, y: 67, e: '🪧', name: 'The poster cases', kind: 'poster', solid: true, use: 'stationPosters' });
+      A({ x: 74, y: 67, e: '🚪', name: 'The booking hall', kind: 'shop', solid: true, use: 'bookingHall' });
+      A({ x: 94, y: 66, e: '🌿', name: 'The buddleia', kind: 'tree', solid: true, use: 'buddleia' });
+      A({ x: 98, y: 67, e: '🌿', name: 'The buddleia', kind: 'tree', solid: true, use: 'buddleia' });
+
+      /* The parapets. Two objects on a bridge ninety feet long, which is not an
+         attempt to draw a parapet — the kerb between the carriageway and the
+         ballast does that already — but a thing to stand at and look over,
+         because standing on a bridge looking down at a railway is most of what
+         a bridge over a railway has ever been for. */
+      A({ x: 59, y: 64, e: '🧱', name: 'The parapet on Cargate Lane', kind: 'fence', solid: true, use: 'parapet' });
+      A({ x: 66, y: 64, e: '🧱', name: 'The parapet on Cargate Lane', kind: 'fence', solid: true, use: 'parapet' });
+      A({ x: 101, y: 64, e: '🧱', name: 'The parapet on Marlow Street', kind: 'fence', solid: true, use: 'parapet' });
+      A({ x: 108, y: 64, e: '🧱', name: 'The parapet on Marlow Street', kind: 'fence', solid: true, use: 'parapet' });
+
+      /* ---- STATION ROAD ----
+         The road under the embankment, and the only one on this map with a
+         railway along one side of it and a city wall along the other. Lamps on
+         the kerb rows — 70 and 77 — because rows 69 and 78 are the ones people
+         walk on and a lamppost in the middle of a two-tile footway is the fault
+         the skip on the High Street was moved for. */
+      A({ x: 16, y: 70, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 40, y: 70, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 68, y: 70, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 96, y: 70, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 28, y: 77, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 84, y: 77, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 110, y: 77, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 74, y: 70, e: '🪧', name: 'BELLHAVEN STATION', kind: 'sign', solid: true, use: 'stationSign' });
+      A({ x: 88, y: 70, e: '🚏', name: 'The stop for the 12', kind: 'sign', solid: true, use: 'stationStop' });
+      A({ x: 24, y: 70, e: '🗑️', name: 'Bin, Station Road', kind: 'bin', solid: false, use: 'streetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 104, y: 70, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      A({ x: 34, y: 77, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
+      A({ x: 12, y: 69, e: '🌳', name: 'The tree at the end of Station Road', kind: 'tree', solid: true, use: 'streetTree' });
+      /* GIVE WAY at the two bridge mouths and the two junctions, on the left of
+         each approach, exactly as the three upstairs are. */
+      A({ x: 66, y: 70, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      A({ x: 108, y: 70, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      A({ x: 9, y: 77, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      /* THE HOLE, THE CONES AND THE LIGHTS, and they are the one set of signals
+         on this map. Fixed on red — see the sprite's own note in
+         tools/sheets/streets.mjs — and honest about it: the lane behind them is
+         coned off, no route in this level goes down it, and nothing has come
+         the other way since March. */
+      A({ x: 59, y: 77, e: '🚧', name: 'The cones on Station Road', kind: 'cone', solid: true, use: 'roadworks' });
+      A({ x: 60, y: 77, e: '🚧', name: 'The cones on Station Road', kind: 'cone', solid: true, use: 'roadworks' });
+      A({ x: 61, y: 77, e: '🚧', name: 'The cones on Station Road', kind: 'cone', solid: true, use: 'roadworks' });
+      A({ x: 62, y: 77, e: '🚦', name: 'The temporary lights', kind: 'signals', solid: true, use: 'tempLights' });
+      A({ x: 63, y: 77, e: '🕳️', name: 'The hole', kind: 'drain', solid: false, use: 'theHole' });
+      A({ x: 92, y: 78, e: '🖍️', name: 'The wall under the embankment', kind: 'graf', solid: true, use: 'embankmentWall',
+        furn: { sprite: 'wall.graf.squad', paint: true } });
+
+      /* ---- THE NORTH GATE ----
+         Five rows of gateway through the wall, and the point where the town
+         stops being 1994 and starts being everything before it. */
+      A({ x: 49, y: 80, e: '🏛️', name: 'The North Gate', kind: 'view', solid: true, use: 'northGate' });
+      A({ x: 53, y: 81, e: '🪧', name: 'The plaque on the gate', kind: 'poster', solid: true, use: 'gatePlaque' });
+      A({ x: 50, y: 83, e: '⛔', name: 'NO ENTRY — pedestrian zone', kind: 'noentry', solid: true, use: 'noEntry' });
+      A({ x: 52, y: 79, e: '💡', name: 'The lamp in the gateway', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 50, y: 77, e: '🪧', name: 'The fingerpost', kind: 'sign', solid: true, use: 'fingerpost' });
+
+      /* ---- PRIORYGATE ----
+         Eighty tiles of street with no carriageway on it. The ten frontages are
+         all on row 84 against the north wall, for the reason at the top of this
+         block; everything else is on row 87, because rows 85 and 86 are the
+         two lanes everybody walks up and down and a bench in the middle of them
+         would shut the street.
+
+         Five of the ten open. That is a deliberately better hit rate than the
+         parade's four out of fourteen, and it is the whole difference between
+         a high street that works and one that is a row of shut doors with
+         somebody's name still over them. */
+      A({ x: 20, y: 84, e: '🥖', name: 'The bakery on Priorygate', kind: 'shop', solid: true, use: 'oldBakery' });
+      A({ x: 26, y: 84, e: '🕯️', name: 'The gift shop', kind: 'shop', solid: true, use: 'giftShop',
+        furn: { sprite: 'shop.awning.amber' } });
+      A({ x: 48, y: 84, e: '🍺', name: 'The Mitre', kind: 'shop', solid: true, use: 'theMitre',
+        furn: { sprite: 'shop.awning' } });
+      A({ x: 54, y: 84, e: '📚', name: 'The second-hand bookshop', kind: 'shop', solid: true, use: 'bookshop' });
+      A({ x: 58, y: 84, e: '☕', name: 'The coffee place on Priorygate', kind: 'shop', solid: true, use: 'coffeePlace',
+        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 62, y: 84, e: '🧀', name: 'The delicatessen', kind: 'shop', solid: true, use: 'deli' });
+      A({ x: 66, y: 84, e: '👞', name: 'The shoe shop', kind: 'shop', solid: true, use: 'shoeShop' });
+      A({ x: 70, y: 84, e: '💈', name: 'The barber on Priorygate', kind: 'shop', solid: true, use: 'barber' });
+      A({ x: 74, y: 84, e: '🏦', name: 'The old bank', kind: 'shop', solid: true, use: 'oldBank' });
+      A({ x: 80, y: 84, e: '🎣', name: 'The tackle shop', kind: 'shop', solid: true, use: 'tackleShop' });
+      /* The glass beside each of them, the parade's plate rather than a sash,
+         for the reason FURN.shopwin gives. */
+      A({ x: 22, y: 84, e: '\ud83e\ude9f', name: 'The window of the bakery', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 27, y: 84, e: '\ud83e\ude9f', name: 'The window of the gift shop', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 49, y: 84, e: '\ud83e\ude9f', name: 'The window of The Mitre', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 56, y: 84, e: '\ud83e\ude9f', name: 'The window of the bookshop', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 60, y: 84, e: '\ud83e\ude9f', name: 'The window of the coffee place', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 64, y: 84, e: '\ud83e\ude9f', name: 'The window of the delicatessen', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 68, y: 84, e: '\ud83e\ude9f', name: 'The window of the shoe shop', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 72, y: 84, e: '\ud83e\ude9f', name: 'The window of the barber', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 75, y: 84, e: '\ud83e\ude9f', name: 'The window of the old bank', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 81, y: 84, e: '\ud83e\ude9f', name: 'The window of the tackle shop', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      /* The doors, on the wall row above each frontage. Five of them are open
+         because five of them have a floor behind them; the other five are shut
+         for the honest reason the parade's are — a door you cannot go through
+         is a door that is shut, not a door that is missing. */
+      A({ x: 48, y: 83, e: '🚪', name: 'The Mitre', kind: 'exit', solid: false, use: 'theMitre', via: 'mitreDoor' });
+      A({ x: 54, y: 83, e: '🚪', name: 'The second-hand bookshop', kind: 'exit', solid: false, use: 'bookshop', via: 'bookDoor' });
+      A({ x: 58, y: 83, e: '🚪', name: 'The coffee place on Priorygate', kind: 'exit', solid: false, use: 'coffeePlace', via: 'caffDoor' });
+      A({ x: 20, y: 83, e: '🚪', name: 'The bakery on Priorygate', kind: 'exit', solid: true, use: 'oldBakery' });
+      A({ x: 26, y: 83, e: '🚪', name: 'The gift shop', kind: 'exit', solid: true, use: 'giftShop' });
+      A({ x: 62, y: 83, e: '🚪', name: 'The delicatessen', kind: 'exit', solid: true, use: 'deli' });
+      A({ x: 66, y: 83, e: '🚪', name: 'The shoe shop', kind: 'exit', solid: true, use: 'shoeShop' });
+      A({ x: 70, y: 83, e: '🚪', name: 'The barber on Priorygate', kind: 'exit', solid: true, use: 'barber' });
+      A({ x: 74, y: 83, e: '🚪', name: 'The old bank', kind: 'exit', solid: true, use: 'oldBank' });
+      A({ x: 80, y: 83, e: '🚪', name: 'The tackle shop', kind: 'exit', solid: true, use: 'tackleShop' });
+      /* THE STREET ITSELF, all of it on row 87. Troughs, because a town centre
+         puts troughs down a street the day it stops letting cars up it, and
+         then everybody has to walk round them for thirty years. */
+      A({ x: 30, y: 87, e: '🪴', name: 'A council trough', kind: 'trough', solid: true, use: 'trough' });
+      A({ x: 44, y: 87, e: '🪴', name: 'A council trough', kind: 'trough', solid: true, use: 'trough' });
+      A({ x: 68, y: 87, e: '🪴', name: 'A council trough', kind: 'trough', solid: true, use: 'trough' });
+      A({ x: 86, y: 87, e: '🪴', name: 'A council trough', kind: 'trough', solid: true, use: 'trough' });
+      A({ x: 34, y: 87, e: '🪑', name: 'A bench on Priorygate', kind: 'bench', solid: true, use: 'prioryBench' });
+      A({ x: 72, y: 87, e: '🪑', name: 'A bench on Priorygate', kind: 'bench', solid: true, use: 'prioryBench' });
+      A({ x: 40, y: 87, e: '🎸', name: 'The busker', kind: 'sign', solid: false, use: 'busker' });
+      A({ x: 60, y: 87, e: '📋', name: 'Somebody with a clipboard', kind: 'sign', solid: false, use: 'clipboard' });
+      A({ x: 52, y: 87, e: '🗑️', name: 'Bin, Priorygate', kind: 'bin', solid: false, use: 'prioryBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 78, y: 87, e: '🗑️', name: 'Bin, Priorygate', kind: 'bin', solid: false, use: 'prioryBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 94, y: 87, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 38, y: 84, e: '🐦', name: 'The Priorygate pigeons', kind: 'pigeon', solid: false, use: 'pigeon' });
+      /* THE EAST GATE, which is one tile wide, is the way out onto Marlow
+         Street, and is the reason there is a queue on Marlow Street at ten to
+         nine every morning of the world. */
+      A({ x: 99, y: 84, e: '🏛️', name: 'The East Gate', kind: 'view', solid: true, use: 'eastGate' });
+      /* The sign is on MARLOW STREET and not in the gateway, because a no entry
+         sign is for the person who might drive through it: it faces the traffic
+         on the outside of the wall, where somebody at the wheel can read it in
+         time to not be in the gate. */
+      A({ x: 100, y: 84, e: '⛔', name: 'NO ENTRY — pedestrian zone', kind: 'noentry', solid: true, use: 'noEntry' });
+
+      /* ---- THE SHAMBLES ----
+         The market square, on the other side of the wall from Station Road.
+         There has not been a butcher on it since 1974, which is the most
+         ordinary fact about any market square in England. */
+      A({ x: 36, y: 81, e: '⛲', name: 'The fountain', kind: 'fountain', solid: true, use: 'theFountain' });
+      A({ x: 30, y: 80, e: '🏛️', name: 'The Market Hall', kind: 'shop', solid: true, use: 'marketHall' });
+      A({ x: 30, y: 79, e: '🚪', name: 'The Market Hall', kind: 'exit', solid: false, use: 'marketHall', via: 'marketDoor' });
+      A({ x: 32, y: 80, e: '\ud83e\ude9f', name: 'The window of the Market Hall', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 40, y: 80, e: '🥬', name: 'The greengrocer’s', kind: 'shop', solid: true, use: 'greengrocer',
+        furn: { sprite: 'shop.awning.green' } });
+      A({ x: 44, y: 80, e: '🐟', name: 'The fish stall', kind: 'shop', solid: true, use: 'fishStall' });
+      A({ x: 33, y: 83, e: '🪧', name: 'The market rules', kind: 'sign', solid: true, use: 'marketRules' });
+      A({ x: 29, y: 82, e: '📦', name: 'Crates, behind the stalls', kind: 'crate', solid: true, use: 'marketCrates' });
+      A({ x: 45, y: 82, e: '📦', name: 'Crates, behind the stalls', kind: 'crate', solid: true, use: 'marketCrates' });
+      A({ x: 42, y: 82, e: '🐦', name: 'The Shambles pigeons', kind: 'pigeon', solid: false, use: 'marketPigeons' });
+      A({ x: 38, y: 83, e: '🗑️', name: 'Bin, The Shambles', kind: 'bin', solid: false, use: 'prioryBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 46, y: 81, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+
+      /* ---- THE LANES ----
+         Cooper’s, Drapers and Pinfold. Three tiles wide, cut straight through
+         the block, and between them the whole of what the old town has instead
+         of a service road: everything that gets put out gets put out here. */
+      A({ x: 23, y: 82, e: '🖍️', name: 'The wall in Cooper’s Lane', kind: 'graf', solid: true, use: 'lanesWall',
+        furn: { sprite: 'wall.graf.nice', paint: true } });
+      A({ x: 25, y: 90, e: '🗑️', name: 'The bins in Cooper’s Lane', kind: 'bin', solid: true, use: 'laneBins',
+        furn: { sprite: 'obj.wheeliebin', size: 30 } });
+      A({ x: 25, y: 92, e: '🗑️', name: 'The bins in Cooper’s Lane', kind: 'bin', solid: true, use: 'laneBins',
+        furn: { sprite: 'obj.wheeliebin', size: 30 } });
+      A({ x: 23, y: 88, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 76, y: 82, e: '🚲', name: 'The bike racks', kind: 'bike', solid: true, use: 'bikeRacks' });
+      A({ x: 78, y: 92, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
+      A({ x: 76, y: 90, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 90, y: 91, e: '🪧', name: 'The fire mark', kind: 'poster', solid: true, use: 'fireMark' });
+      A({ x: 92, y: 91, e: '🐈', name: 'The cat in Pinfold Lane', kind: 'pigeon', solid: false, use: 'laneCat' });
+      A({ x: 90, y: 89, e: '📦', name: 'Flattened boxes', kind: 'box', solid: true, use: 'flatBoxes' });
+      A({ x: 92, y: 80, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+
+      /* ---- THE MINSTER AND ITS GREEN ----
+         The building is seventeen tiles of nothing in the middle of the walk
+         round it — see the rooms above — and it is the only thing on this map
+         built out of a different stone, which is a fact about who paid for it.
+
+         The door is on the SOUTH side, and that is not an affectation: the
+         renderer draws a frontage face-on and it only reads against a north
+         wall, so the one wall of this building the art can hang on is the one
+         seen from the churchyard. Every English cathedral has a working porch
+         that is not the west door anyway. */
+      A({ x: 56, y: 93, e: '⛪', name: 'Bellhaven Minster', kind: 'shop', solid: true, use: 'minster', via: 'minsterDoor' });
+      A({ x: 56, y: 92, e: '🚪', name: 'Bellhaven Minster', kind: 'exit', solid: false, use: 'minster', via: 'minsterDoor' });
+      A({ x: 52, y: 93, e: '\ud83e\ude9f', name: 'The minster windows', kind: 'shopwin', solid: false, use: 'minsterGlass' });
+      A({ x: 60, y: 93, e: '\ud83e\ude9f', name: 'The minster windows', kind: 'shopwin', solid: false, use: 'minsterGlass' });
+      A({ x: 50, y: 89, e: '🪧', name: 'The notice board at the minster', kind: 'poster', solid: true, use: 'minsterNotices' });
+      A({ x: 62, y: 88, e: '🪑', name: 'A bench on the green', kind: 'bench', solid: true, use: 'greenBench' });
+      /* Standing on grass rather than hung on anything: a `view` is mounted on a
+         wall by default and there is no wall in the middle of a lawn, which is
+         the whole point of a lawn. */
+      A({ x: 44, y: 91, e: '🪦', name: 'The churchyard', kind: 'view', solid: true, use: 'churchyard', furn: { mount: null } });
+      A({ x: 38, y: 94, e: '🪧', name: 'The war memorial', kind: 'sign', solid: true, use: 'warMemorial' });
+      A({ x: 40, y: 92, e: '🌳', name: 'The trees on Minster Green', kind: 'tree', solid: true, use: 'greenTree' });
+      A({ x: 70, y: 90, e: '🌳', name: 'The trees on Minster Green', kind: 'tree', solid: true, use: 'greenTree' });
+      A({ x: 66, y: 92, e: '🪑', name: 'A bench on the green', kind: 'bench', solid: true, use: 'greenBench' });
+      A({ x: 42, y: 88, e: '🗑️', name: 'Bin, Minster Green', kind: 'bin', solid: false, use: 'prioryBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 68, y: 88, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+
+      /* ---- THE CLOSE AND THE WATER GATE ----
+         Eight tiles of lane with the backs of the minster’s own buildings on
+         one side of it, and the way out to the bottom road at the end. Nothing
+         in here hangs on a north wall, so it is all emoji and drawn art, which
+         is the honest answer rather than shopfronts pointed the wrong way. */
+      A({ x: 31, y: 90, e: '🚪', name: 'The door in the Close', kind: 'booth', solid: true, use: 'deanery' });
+      A({ x: 30, y: 93, e: '🪧', name: 'The notices in the Close', kind: 'poster', solid: true, use: 'closeNotices' });
+      A({ x: 36, y: 91, e: '🌳', name: 'The tree in the Close', kind: 'tree', solid: true, use: 'greenTree' });
+      A({ x: 33, y: 88, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 34, y: 94, e: '🏛️', name: 'The Water Gate', kind: 'view', solid: true, use: 'waterGate' });
+      A({ x: 30, y: 94, e: '🗑️', name: 'The bins in the Close', kind: 'bin', solid: true, use: 'laneBins',
+        furn: { sprite: 'obj.wheeliebin', size: 30 } });
+
+      /* ---- CASTLE GARDENS ----
+         A lawn, a bandstand, a gatehouse, and no castle. There has not been a
+         castle behind that gate since the seventeenth century and the gate is
+         still called the castle gate, which is the whole of how this town works
+         and is on a plaque nobody reads. */
+      A({ x: 88, y: 80, e: '🏰', name: 'The castle gate', kind: 'view', solid: true, use: 'castleGate' });
+      A({ x: 91, y: 82, e: '🎪', name: 'The bandstand', kind: 'booth', solid: true, use: 'bandstand' });
+      A({ x: 84, y: 81, e: '🌳', name: 'The trees in the gardens', kind: 'tree', solid: true, use: 'gardenTree' });
+      A({ x: 95, y: 82, e: '🌳', name: 'The trees in the gardens', kind: 'tree', solid: true, use: 'gardenTree' });
+      A({ x: 86, y: 83, e: '🪑', name: 'A bench in the gardens', kind: 'bench', solid: true, use: 'gardenBench' });
+      A({ x: 96, y: 80, e: '🪑', name: 'A bench in the gardens', kind: 'bench', solid: true, use: 'gardenBench' });
+      A({ x: 93, y: 80, e: '🌸', name: 'The bedding', kind: 'plant', solid: true, use: 'bedding' });
+      A({ x: 83, y: 83, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 98, y: 83, e: '🪧', name: 'The gardens sign', kind: 'sign', solid: true, use: 'gardensSign' });
+
+      /* ---- FISHERS STEPS ----
+         Eight courses between a town on a hill and a river at the bottom of it.
+         The ground is `steps` — see SURFACES — and it is the only thing in this
+         game that tells you which way is down. The handrail is on the west side
+         because the west side is the drop. */
+      A({ x: 19, y: 88, e: '🪧', name: 'The sign at the top of the steps', kind: 'sign', solid: true, use: 'stepsSign' });
+      A({ x: 18, y: 90, e: '🧱', name: 'The handrail', kind: 'fence', solid: true, use: 'stepsRail' });
+      A({ x: 18, y: 92, e: '🧱', name: 'The handrail', kind: 'fence', solid: true, use: 'stepsRail' });
+      A({ x: 18, y: 94, e: '🧱', name: 'The handrail', kind: 'fence', solid: true, use: 'stepsRail' });
+      A({ x: 20, y: 91, e: '💡', name: 'The lamp on the steps', kind: 'lamp', solid: true, use: 'lamppost' });
+
+      /* ---- QUAY ROAD AND WEIRBANK ROAD ----
+         The two roads round the outside of the wall, which between them are the
+         entire reason there are no cars in the middle of this town. */
+      A({ x: 9, y: 82, e: '🌳', name: 'The trees on Quay Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 9, y: 90, e: '🌳', name: 'The trees on Quay Road', kind: 'tree', solid: true, use: 'streetTree' });
+      A({ x: 16, y: 86, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 16, y: 94, e: '🖍️', name: 'The wall on Quay Road', kind: 'graf', solid: true, use: 'quayRoadWall',
+        furn: { sprite: 'wall.graf.sport', paint: true } });
+      A({ x: 8, y: 94, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      A({ x: 22, y: 97, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 56, y: 97, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 88, y: 97, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 44, y: 105, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 76, y: 105, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 108, y: 105, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 30, y: 97, e: '🗑️', name: 'Bin, Weirbank Road', kind: 'bin', solid: false, use: 'streetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
+      A({ x: 66, y: 97, e: '🕳️', name: 'A drain', kind: 'drain', solid: false, use: 'streetDrain' });
+      A({ x: 50, y: 105, e: '⚫', name: 'A manhole cover', kind: 'manhole', solid: false, use: 'manhole' });
+      A({ x: 100, y: 97, e: '🪧', name: 'The park and ride sign', kind: 'sign', solid: true, use: 'parkAndRide' });
+      A({ x: 102, y: 96, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      A({ x: 16, y: 96, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      A({ x: 41, y: 105, e: '🪧', name: 'The sign at the top of the ramp', kind: 'sign', solid: true, use: 'rampSign' });
+      A({ x: 94, y: 105, e: '🛒', name: 'Another trolley', kind: 'shoptrolley', solid: true, use: 'strayTrolley' });
+      A({ x: 62, y: 105, e: '🖍️', name: 'The wall on Weirbank Road', kind: 'graf', solid: true, use: 'weirbankWall',
+        furn: { sprite: 'wall.graf.nice', paint: true } });
+
+      /* ---- THE QUAY ----
+         The bottom of the town and the bottom of the map. Five frontages along
+         the warehouse terrace, on row 109, which is a north wall and is
+         therefore the last piece of proper shopfront art on this level. */
+      A({ x: 30, y: 109, e: '⚓', name: 'The chandlery', kind: 'shop', solid: true, use: 'chandlery' });
+      A({ x: 36, y: 109, e: '🍺', name: 'The Ferryman', kind: 'shop', solid: true, use: 'ferryman',
+        furn: { sprite: 'shop.awning' } });
+      A({ x: 50, y: 109, e: '🏺', name: 'The antiques warehouse', kind: 'shop', solid: true, use: 'antiques' });
+      A({ x: 88, y: 109, e: '🍦', name: 'The kiosk on the quay', kind: 'shop', solid: true, use: 'kiosk',
+        furn: { sprite: 'shop.awning.amber' } });
+      A({ x: 100, y: 109, e: '🚣', name: 'The boat hire', kind: 'shop', solid: true, use: 'boatHire' });
+      A({ x: 32, y: 109, e: '\ud83e\ude9f', name: 'The window of the chandlery', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 38, y: 109, e: '\ud83e\ude9f', name: 'The window of The Ferryman', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 52, y: 109, e: '\ud83e\ude9f', name: 'The window of the antiques warehouse', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      A({ x: 102, y: 109, e: '\ud83e\ude9f', name: 'The window of the boat hire', kind: 'shopwin', solid: false, use: 'shopWindow' });
+      /* All five shut, and this is the one parade on the map where that is the
+         point rather than a compromise: the chandlery opens at weekends, the
+         pub opens at six, the antiques warehouse opens when the man is in, and
+         the kiosk opens in July. Between them they are open for about eleven
+         hours of the week you are ever down here. */
+      A({ x: 30, y: 108, e: '🚪', name: 'The chandlery', kind: 'exit', solid: true, use: 'chandlery' });
+      A({ x: 36, y: 108, e: '🚪', name: 'The Ferryman', kind: 'exit', solid: true, use: 'ferryman' });
+      A({ x: 50, y: 108, e: '🚪', name: 'The antiques warehouse', kind: 'exit', solid: true, use: 'antiques' });
+      A({ x: 88, y: 108, e: '🚪', name: 'The kiosk on the quay', kind: 'exit', solid: true, use: 'kiosk' });
+      A({ x: 100, y: 108, e: '🚪', name: 'The boat hire', kind: 'exit', solid: true, use: 'boatHire' });
+      /* The goods. Nothing on this quay has gone anywhere by water since 1962
+         and there are still barrels on it, which is the most honest thing about
+         the place: it is a working wharf that stopped working and nobody has
+         yet found a reason to take the last of it away. */
+      /* All four of them at the ends of the apron rather than down the middle
+         of it, which is the skip's lesson from the High Street: the walkable
+         part of a quay is the two rows between the warehouse doors and the
+         edge, and a barrel in the middle of them is a barrel everybody has to
+         go round for thirty years. */
+      A({ x: 25, y: 110, e: '🛢️', name: 'The barrels on the quay', kind: 'barrels', solid: true, use: 'quayBarrels' });
+      A({ x: 84, y: 110, e: '🛢️', name: 'The barrels on the quay', kind: 'barrels', solid: true, use: 'quayBarrels' });
+      A({ x: 27, y: 110, e: '📦', name: 'A crate on the quay', kind: 'crate', solid: true, use: 'quayCrate' });
+      A({ x: 86, y: 110, e: '📦', name: 'A crate on the quay', kind: 'crate', solid: true, use: 'quayCrate' });
+      /* The rail along the edge, in four bays with the gaps where the steps
+         down to the water are. A quay with a continuous fence along it is a
+         promenade; a quay with four bays of rail and a gap you could walk
+         straight off is a quay. */
+      A({ x: 32, y: 112, e: '🧱', name: 'The rail along the quay', kind: 'fence', solid: true, use: 'quayRail' });
+      A({ x: 33, y: 112, e: '🧱', name: 'The rail along the quay', kind: 'fence', solid: true, use: 'quayRail' });
+      A({ x: 34, y: 112, e: '🧱', name: 'The rail along the quay', kind: 'fence', solid: true, use: 'quayRail' });
+      A({ x: 90, y: 112, e: '🧱', name: 'The rail along the quay', kind: 'fence', solid: true, use: 'quayRail' });
+      A({ x: 91, y: 112, e: '🧱', name: 'The rail along the quay', kind: 'fence', solid: true, use: 'quayRail' });
+      A({ x: 92, y: 112, e: '🧱', name: 'The rail along the quay', kind: 'fence', solid: true, use: 'quayRail' });
+      A({ x: 42, y: 112, e: '🕳️', name: 'The slipway', kind: 'drain', solid: false, use: 'slipway' });
+      A({ x: 54, y: 112, e: '⚓', name: 'The mooring rings', kind: 'barrier', solid: true, use: 'mooring' });
+      A({ x: 82, y: 112, e: '⚓', name: 'The mooring rings', kind: 'barrier', solid: true, use: 'mooring' });
+      A({ x: 52, y: 112, e: '🛥️', name: 'The boat that has not moved', kind: 'view', solid: true, use: 'theBoat' });
+      A({ x: 96, y: 112, e: '🦢', name: 'The swans', kind: 'pigeon', solid: false, use: 'swans' });
+      A({ x: 24, y: 110, e: '🪧', name: 'The basin', kind: 'sign', solid: true, use: 'theBasin' });
+      A({ x: 30, y: 112, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 66, y: 112, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 98, y: 112, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
+      A({ x: 96, y: 110, e: '🪑', name: 'The bench on the quay', kind: 'bench', solid: true, use: 'quayBench' });
+      A({ x: 80, y: 109, e: '🪧', name: 'The pay and display', kind: 'sign', solid: true, use: 'payAndDisplay' });
+      A({ x: 106, y: 111, e: '🌊', name: 'The river', kind: 'view', solid: true, use: 'theRiver' });
+      A({ x: 70, y: 109, e: '🗑️', name: 'Bin, the Quay', kind: 'bin', solid: false, use: 'streetBin',
+        furn: { sprite: 'obj.wheeliebin', size: 26 } });
     }
   }
 };

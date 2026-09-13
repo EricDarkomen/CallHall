@@ -311,6 +311,25 @@ const World = {
     if (this.carTiles && this.carTiles.has(tx + ',' + ty)) return true;
     return this.at(tx, ty).some(o => o.solid);
   },
+  /* GROUND YOU CAN SEE AND CANNOT STAND ON.
+
+     Everything solid in this game is a wall or a building: the renderer gives
+     it a face where a floor can see it and a roof where none can, and for a
+     year that was the whole truth, because the only solid thing outdoors was
+     the back of a parade. Then the map got a river and a railway, and both of
+     them are ground — you can look straight at them, you can drive over them
+     on a bridge, and neither is the roof of anything.
+
+     So a SURFACE may say `open`, and a tile carrying one is drawn as what it
+     is made of and skipped by the wall pass entirely. Nothing else changes:
+     it is still solid, isSolid() has not been touched, and you can no more
+     walk into the river than you could walk into the car park wall. What it
+     costs is one lookup per tile in three loops that already do one, and a
+     level that declares no open surface is exactly the level it always was. */
+  open(tx, ty) {
+    const s = this.surfAt(tx, ty);
+    return !!(s && SURFACES[s] && SURFACES[s].open);
+  },
   /* What this tile is made of, which is not always what its room is made of.
      Null means "whatever the zone says", which is every tile of every level
      that does not declare a surface. */
