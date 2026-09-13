@@ -417,8 +417,13 @@ const LEVELS = {
          parks a colleague for ever if anything ever nudges one in there.
          It is the counter's own handler, because that is what it is: you are
          served at a counter and the ovens behind it are part of the counter,
-         exactly as the door on the parade and the sign over it are one shop. */
-      A({ x: 7, y: 2, e: '\ud83d\udd25', name: 'The ovens', kind: 'micro', solid: true, use: 'greggsCounter' });
+         exactly as the door on the parade and the sign over it are one shop.
+         KINDS THAT ARE DRAWN rather than kinds that are the right word: `cab`
+         and `book` carry kit sprites, and a back wall of units and shelving is
+         what is behind a counter. `micro` and `heap` would have been nearer
+         the noun and would have put a loose emoji on the wall — the name says
+         what each one is, and nothing out here can be pressed to ask. */
+      A({ x: 7, y: 2, e: '\ud83d\udd25', name: 'The ovens', kind: 'cab', solid: true, use: 'greggsCounter' });
       A({ x: 8, y: 2, e: '\ud83e\uddfa', name: 'The racks of trays', kind: 'book', solid: true, use: 'greggsCounter' });
       /* Two tables by the window, which is one more than anybody uses. */
       A({ x: 4, y: 6, e: '\ud83e\ude91', name: 'The table by the window', kind: 'table', solid: true, use: 'greggsTable' });
@@ -465,10 +470,10 @@ const LEVELS = {
          chalkboard and the telly sealing the ends, so nobody could ever stand
          on any of it. It is the bar's own handler — the shelf behind a bar is
          the bar, and there are six colleagues in here at ten past five. */
-      A({ x: 5, y: 2, e: '🧼', name: 'The glass washer', kind: 'micro', solid: true, use: 'pubBar' });
+      A({ x: 5, y: 2, e: '🧼', name: 'The glass washer', kind: 'cab', solid: true, use: 'pubBar' });
       A({ x: 6, y: 2, e: '🍾', name: 'The shelf of bottles', kind: 'book', solid: true, use: 'pubBar' });
-      A({ x: 7, y: 2, e: '💳', name: 'The till', kind: 'oldpc', solid: true, use: 'pubBar' });
-      A({ x: 8, y: 2, e: '🥔', name: 'The crisps on the card', kind: 'heap', solid: true, use: 'pubBar' });
+      A({ x: 7, y: 2, e: '💳', name: 'The till', kind: 'cab', solid: true, use: 'pubBar' });
+      A({ x: 8, y: 2, e: '🥔', name: 'The crisps on the card', kind: 'book', solid: true, use: 'pubBar' });
       /* The quiz corner, which is where the quiz is on a Tuesday and where
          nothing at all happens for the other six days. */
       A({ x: 4, y: 6, e: '🪑', name: 'A table', kind: 'table', solid: true, use: 'pubTable' });
