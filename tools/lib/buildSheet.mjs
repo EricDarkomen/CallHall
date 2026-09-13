@@ -157,9 +157,15 @@ export async function buildManagedSheet(def) {
   const sheet = { id, src: outPath, cell: cell || 32, w: width, h: height, v: shortHash(pngBytes), sprites: rects, anchors };
 
   const src0 = sprites[0].source;
+  /* A sheet that is not part 2 says so in its own bullet, because the prose
+     under this list says "Licensed OGA-BY 3.0" and a ShareAlike sheet in an
+     unmarked list under that sentence is the list telling a lie. The pinned
+     sanitary sheet has carried the same note by hand since before this tool
+     existed; this is that, for the sheets the tool builds. */
+  const partNote = part === 2 ? '' : ` (LICENSE part ${part})`;
   const sheetBullet = first.kind === 'repo'
-    ? `- \`art/sprites/${id}.png\` — [${src0.repo}](https://github.com/${src0.repo}), commit \`${src0.commit}\``
-    : `- \`art/sprites/${id}.png\` — [${def.title || src0.assetName}](${src0.page}), each file pinned by sha256`;
+    ? `- \`art/sprites/${id}.png\` — [${src0.repo}](https://github.com/${src0.repo}), commit \`${src0.commit}\`${partNote}`
+    : `- \`art/sprites/${id}.png\` — [${def.title || src0.assetName}](${src0.page}), each file pinned by sha256${partNote}`;
 
   const artistNames = new Set();
   const assetChunks = [];

@@ -498,7 +498,14 @@ const LEVELS = {
       A({ x: 25, y: 13, e: '🪑', name: 'The chairs by the window', kind: 'chair', solid: true, use: 'waitingChairs' });
       A({ x: 26, y: 13, e: '🪑', name: 'The chairs by the window', kind: 'chair', solid: true, use: 'waitingChairs' });
       A({ x: 29, y: 12, e: '🪟', name: 'The window onto the car park', kind: 'window', solid: true, use: 'lobbyWindow' });
-      A({ x: 20, y: 18, e: '🕰️', name: 'The clock in the lobby', kind: 'clock', solid: true, use: 'lobbyClock' });
+      /* THE PLAIN WHITE BATTERY CLOCK, and it stays an emoji on purpose. The
+         kit's clock is a cased wooden one — see tools/sheets/wood.mjs — and the
+         act under this one has described it as “bought in a multipack” since it
+         was written. Art that contradicts the writing is worse than no art, so
+         this one says no, out loud, rather than by being hung on a wall the
+         renderer happens not to draw sprites on. */
+      A({ x: 20, y: 18, e: '🕰️', name: 'The clock in the lobby', kind: 'clock', solid: true, use: 'lobbyClock',
+        furn: { sprite: null } });
       A({ x: 11, y: 18, e: '🚭', name: 'NO SMOKING sign', kind: 'sign', solid: true, use: 'noSmoking' });
       A({ x: 23, y: 18, e: '📋', name: 'Fire evacuation notice', kind: 'board', solid: true, use: 'fireNotice' });
       /* THE ISLAND. A run of planters down the middle of the hall, which is
@@ -1401,7 +1408,12 @@ const LEVELS = {
       A({ x: 10, y: 6, e: '\ud83e\ude91', name: 'The tables in the middle', kind: 'table', solid: true, use: 'marketTables' });
       A({ x: 11, y: 6, e: '\ud83e\ude91', name: 'The tables in the middle', kind: 'table', solid: true, use: 'marketTables' });
       A({ x: 17, y: 5, e: '\ud83d\udcdc', name: 'The market charter', kind: 'poster', solid: true, use: 'marketCharter' });
-      A({ x: 2, y: 5, e: '\ud83d\udd70\ufe0f', name: 'The market clock', kind: 'clock', solid: true, use: 'marketClock' });
+      /* Up onto the north gable, over the pitches. It was on the west wall,
+         where a wall-anchored sprite is seen edge-on and the renderer falls back
+         to the emoji — and this is the one clock in the game the kit's cased
+         wooden one is exactly right for. A pannier market of 1872 has a wooden
+         clock in it, wound by hand, and now it has one you can see. */
+      A({ x: 10, y: 2, e: '\ud83d\udd70\ufe0f', name: 'The market clock', kind: 'clock', solid: true, use: 'marketClock' });
       A({ x: 17, y: 11, e: '\ud83d\uddd1\ufe0f', name: 'The bins at the back', kind: 'bin', solid: true, use: 'marketBins' });
     }
   },
@@ -1437,7 +1449,12 @@ const LEVELS = {
       A({ x: 20, y: 4, e: '\ud83d\udd6f\ufe0f', name: 'The candle stand', kind: 'misc', solid: true, use: 'minsterCandles' });
       A({ x: 2, y: 8, e: '\ud83e\udea6', name: 'The tombs along the aisle', kind: 'view', solid: true, use: 'minsterTombs' });
       A({ x: 2, y: 11, e: '\ud83e\udea6', name: 'The tombs along the aisle', kind: 'view', solid: true, use: 'minsterTombs' });
-      A({ x: 22, y: 8, e: '\ud83d\udd70\ufe0f', name: 'The astronomical clock', kind: 'clock', solid: true, use: 'minsterClock' });
+      /* Same refusal as the lobby's, for the opposite reason: this is a dial
+         of 1484 with the earth in the middle of it and a fleur-de-lis for an
+         hour hand, and the kit has a Victorian mantel clock. It stays where it
+         is, on the wall over the door with the cat hole in it, as an emoji. */
+      A({ x: 22, y: 8, e: '\ud83d\udd70\ufe0f', name: 'The astronomical clock', kind: 'clock', solid: true, use: 'minsterClock',
+        furn: { sprite: null } });
       A({ x: 22, y: 11, e: '\ud83d\udcdc', name: 'The roll of incumbents', kind: 'poster', solid: true, use: 'minsterRoll' });
       A({ x: 6, y: 15, e: '\ud83d\udcda', name: 'The bookstall', kind: 'book', solid: true, use: 'minsterShop' });
       A({ x: 18, y: 15, e: '\u2615', name: 'The urn and the biscuits', kind: 'coffee', solid: true, use: 'minsterUrn' });
@@ -2997,14 +3014,42 @@ const LEVELS = {
          that is not the west door anyway. */
       A({ x: 56, y: 93, e: '⛪', name: 'Bellhaven Minster', kind: 'shop', solid: true, use: 'minster', via: 'minsterDoor' });
       A({ x: 56, y: 92, e: '🚪', name: 'Bellhaven Minster', kind: 'exit', solid: false, use: 'minster', via: 'minsterDoor' });
-      A({ x: 52, y: 93, e: '\ud83e\ude9f', name: 'The minster windows', kind: 'shopwin', solid: false, use: 'minsterGlass' });
-      A({ x: 60, y: 93, e: '\ud83e\ude9f', name: 'The minster windows', kind: 'shopwin', solid: false, use: 'minsterGlass' });
+      /* FOUR WINDOWS IN THE SOUTH WALL, and they are the minster's own now
+         rather than a shop window borrowed off the High Street. `shopwin` is a
+         mirror sprite doing an impression of glass in a modern frontage, which
+         is the right answer for a bookmaker's and has never been the right one
+         for a fourteenth-century wall. These are two tiles of pointed arch in a
+         stone surround — see tools/sheets/town.mjs — and there are four of them
+         because a wall with two windows in it is a bungalow. */
+      A({ x: 48, y: 93, e: '\ud83e\ude9f', name: 'The minster windows', kind: 'gothicwin', solid: false, use: 'minsterGlass' });
+      A({ x: 52, y: 93, e: '\ud83e\ude9f', name: 'The minster windows', kind: 'gothicwin', solid: false, use: 'minsterGlass' });
+      A({ x: 60, y: 93, e: '\ud83e\ude9f', name: 'The minster windows', kind: 'gothicwin', solid: false, use: 'minsterGlass' });
+      A({ x: 64, y: 93, e: '\ud83e\ude9f', name: 'The minster windows', kind: 'gothicwin', solid: false, use: 'minsterGlass' });
       A({ x: 50, y: 89, e: '🪧', name: 'The notice board at the minster', kind: 'poster', solid: true, use: 'minsterNotices' });
+      /* IRON RAILINGS along the north side of the churchyard, in three panels
+         of two tiles. They stop where the notice board and the candles start
+         rather than running the whole face, because a churchyard railing is a
+         boundary with a way in, and this is the side the way in is on.
+         Deliberately NOT on the row below: pedGreen walks y=94.4 from one end
+         of the green to the other, and a fence across a route is a route that
+         no longer exists. */
+      for (const rx of [48, 50, 52]) {
+        A({ x: rx, y: 88, e: '🚧', name: 'The churchyard railings', kind: 'railing', solid: true, use: 'churchRailings' });
+      }
       A({ x: 62, y: 88, e: '🪑', name: 'A bench on the green', kind: 'bench', solid: true, use: 'greenBench' });
       /* Standing on grass rather than hung on anything: a `view` is mounted on a
          wall by default and there is no wall in the middle of a lawn, which is
          the whole point of a lawn. */
       A({ x: 44, y: 91, e: '🪦', name: 'The churchyard', kind: 'view', solid: true, use: 'churchyard', furn: { mount: null } });
+      /* Two beds on each half of the green, clear of the column pedGreen walks
+         up and the row it walks along. Somebody plants these and somebody else
+         has opinions about what they plant — see the act. */
+      A({ x: 44, y: 89, e: '🌸', name: 'The bedding on the green', kind: 'flowers', solid: false, use: 'greenBedding' });
+      A({ x: 44, y: 93, e: '🌸', name: 'The bedding on the green', kind: 'flowers', solid: false, use: 'greenBedding',
+        furn: { sprite: 'obj.flowers.red' } });
+      A({ x: 67, y: 89, e: '🌸', name: 'The bedding on the green', kind: 'flowers', solid: false, use: 'greenBedding',
+        furn: { sprite: 'obj.flowers.red' } });
+      A({ x: 67, y: 93, e: '🌸', name: 'The bedding on the green', kind: 'flowers', solid: false, use: 'greenBedding' });
       A({ x: 38, y: 94, e: '🪧', name: 'The war memorial', kind: 'sign', solid: true, use: 'warMemorial' });
       A({ x: 40, y: 92, e: '🌳', name: 'The trees on Minster Green', kind: 'tree', solid: true, use: 'greenTree' });
       A({ x: 70, y: 90, e: '🌳', name: 'The trees on Minster Green', kind: 'tree', solid: true, use: 'greenTree' });
@@ -3037,7 +3082,26 @@ const LEVELS = {
       A({ x: 95, y: 82, e: '🌳', name: 'The trees in the gardens', kind: 'tree', solid: true, use: 'gardenTree' });
       A({ x: 86, y: 83, e: '🪑', name: 'A bench in the gardens', kind: 'bench', solid: true, use: 'gardenBench' });
       A({ x: 96, y: 80, e: '🪑', name: 'A bench in the gardens', kind: 'bench', solid: true, use: 'gardenBench' });
-      A({ x: 93, y: 80, e: '🌸', name: 'The bedding', kind: 'plant', solid: true, use: 'bedding' });
+      /* THE BEDDING, and there is more than one bed of it now. `plant` is the
+         kit's planter — a tub — which is what stands outside a shop; what a
+         municipal garden has is beds, planted in two colours alternately
+         because one colour the whole length of a border reads as a stamp. Not
+         solid: a flower bed is ankle high, and the parks department would
+         rather you did not, but you can. */
+      A({ x: 93, y: 80, e: '🌸', name: 'The bedding', kind: 'flowers', solid: false, use: 'bedding' });
+      A({ x: 90, y: 80, e: '🌸', name: 'The bedding', kind: 'flowers', solid: false, use: 'bedding',
+        furn: { sprite: 'obj.flowers.red' } });
+      A({ x: 91, y: 80, e: '🌸', name: 'The bedding', kind: 'flowers', solid: false, use: 'bedding' });
+      A({ x: 89, y: 82, e: '🌸', name: 'The bedding', kind: 'flowers', solid: false, use: 'bedding',
+        furn: { sprite: 'obj.flowers.red' } });
+      A({ x: 94, y: 82, e: '🌸', name: 'The bedding', kind: 'flowers', solid: false, use: 'bedding' });
+      /* And railings along the back of the lawn, where the gardens stop and the
+         backs of Marlow Street begin. Three panels, west of the castle gate;
+         east of it is the bandstand and the beds, and railings round those
+         would be railings round a lawn nobody is allowed on. */
+      for (const rx of [82, 84, 86]) {
+        A({ x: rx, y: 80, e: '🚧', name: 'The garden railings', kind: 'railing', solid: true, use: 'gardenRailings' });
+      }
       A({ x: 83, y: 83, e: '💡', name: 'Lamppost', kind: 'lamp', solid: true, use: 'lamppost' });
       A({ x: 98, y: 83, e: '🪧', name: 'The gardens sign', kind: 'sign', solid: true, use: 'gardensSign' });
 
