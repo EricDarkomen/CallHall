@@ -118,7 +118,7 @@ function resetRun() {
   /* Rebuild every level from scratch and stand on the fourth floor. This also
      puts the player back at the spawn point, which is why it comes before the
      roster: NPCM.spawn() asks which level it is populating. */
-  Levels.start('office', 'start');
+  Levels.start(Levels.first(), 'start');
   NPCM.spawn();
 }
 

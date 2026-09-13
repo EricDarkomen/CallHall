@@ -25,9 +25,16 @@ const Acts = {
 
   /* --- doors & movement --- */
   door(o) { Sfx.door(); insp('🚪', o.name, 'Doorway', ['A door. It leads to ' + o.name + '. It has been propped open with a fire extinguisher, which is illegal, and permanent.']); },
+  /* The handler for ANY door a level declares `locked` on — engine/world.js
+     points every one of them here and reads the door's own name off the
+     catalogue. It named the Management Floor for a year because that was the
+     only locked door in the game; there is no such door now, because
+     Management is the fifth floor and what the keycard works is a button in
+     the lift. The mechanism stays, because the next locked door will want it. */
   lockedDoor(o) {
-    if (G.flags.keycard) { Sfx.door(); insp('🚪', 'Management Floor', 'Fourth floor', ['You tap the keycard. The light goes green. Nothing has ever gone green for you here before.']); }
-    else { Sfx.deny(); insp('🔒', 'Management Floor', 'Access restricted', ['The reader glows red.', 'A small sign says: ACCESS BY KEYCARD ONLY. A smaller sign under it says: ASK TERRY.']); }
+    const name = o.name || 'It';
+    if (G.flags.keycard) { Sfx.door(); insp('🚪', name, 'Unlocked', ['You tap the keycard. The light goes green. Nothing has ever gone green for you here before.']); }
+    else { Sfx.deny(); insp('🔒', name, 'Access restricted', ['The reader glows red.', 'A small sign says: ACCESS BY KEYCARD ONLY. A smaller sign under it says: ASK TERRY.']); }
   },
   /* The three ways off this floor. None of them names where it goes: the link
      table in data/levels.js does, and Levels.take() looks the destination up by
@@ -56,15 +63,112 @@ const Acts = {
        { t: 'Leave. Just... leave.', to: null, do() { Ach.get('a_quit'); Endings.show('escape'); } }]);
   },
   frontDoors() { Levels.take('frontDoors'); },
-  /* The lift asks the same link table everything else does and finds nothing on
-     the other end of it, which is why nothing happens — and the day somebody
-     adds a floor to the catalogue and points a link at it, this button starts
-     working without a line of it changing. */
-  lift() {
-    const link = Levels.links('lift');
-    if (link) return Levels.take('lift');
-    Sfx.door();
-    insp('🛗', 'The Lift', 'Decorative', ['You press the button.', 'Nothing happens, in a way that suggests something is happening several floors away, to somebody else.']);
+  /* THE LIFT, and it is the day somebody added a floor to the catalogue.
+
+     For a year this act asked the link table for a way out called 'lift', found
+     nothing on the other end of it, and said so: "Nothing happens, in a way
+     that suggests something is happening several floors away, to somebody
+     else." It was the funniest line in the building and it was funny because it
+     was true — the lobby, the fourth floor and the Management Floor were all
+     drawn on one plan, and there was nowhere for a lift to go.
+
+     There are three floors now. The buttons are FLOORS in data/world.js, in the
+     order they are in the car; which floor each one IS comes off this level's
+     own link table, exactly as every other way out of every other room in this
+     game does it. So a floor that moves moves in one place, and this act does
+     not know what a floor is.
+
+     A button with no link on this level is the floor you are standing on. A
+     button with a `key` lights and does nothing without it, because that is
+     what a keycard lift does — it does not refuse you, it simply does not go,
+     and you stand there while it does not go. */
+  lift(o) {
+    const here = FLOORS.filter(f => f.via && !Levels.links(f.via)).map(f => f.b);
+    const on = here.length ? here[0] : Lifts.at();
+    const rows = [];
+    const opts = [];
+    for (const f of FLOORS) {
+      const link = f.via ? Levels.links(f.via) : null;
+      /* One line rather than a stacked panel: Dialogue writes its text with
+         innerHTML into a box with no `white-space` rule on it, so a newline is
+         a space and an ASCII lift panel comes out as one run-on sentence. */
+      if (f.dead) { rows.push(f.b + ' ' + f.name + ' (' + f.dead + ')'); continue; }
+      if (!link) { rows.push(f.b + ' ' + f.name + ' — where you are'); continue; }
+      rows.push(f.b + ' ' + f.name);
+      const locked = f.key && !G.flags[f.key];
+      opts.push({
+        t: locked ? ('Press ' + f.b + '.') : ('Press ' + f.b + ' — ' + f.name + '.'),
+        to: null,
+        do() {
+          if (locked) {
+            Sfx.deny();
+            return insp('🛗', 'The lift', 'Floor ' + f.b, [
+              'The button lights.',
+              'The doors stay open. The car does not move. There is no announcement, no beep, and nothing to argue with — the reader beside the panel is simply not interested in you.',
+              'After a while you press G instead, which works, and the whole of the last eleven seconds is something you will not mention to anybody.']);
+          }
+          Lifts.send(f.b); Sfx.door(); Levels.take(f.via);
+        }
+      });
+    }
+    const car = Lifts.at();
+    insp('🛗', 'The lift', 'Car at ' + car, [
+      'A steel pair of doors, a call plate, and a light over the top that is currently showing ' + car + '.',
+      'Four buttons: ' + rows.join(' · ') + '.',
+      car === on
+        ? 'It is already here. The doors open before you have finished pressing the button, which happens about one time in nine and is the best thing that will happen to you today.'
+        : 'You press the button and the light starts counting. There is nowhere to look.'],
+      opts.concat([{ t: 'Change your mind.', to: null }]));
+  },
+  /* The floor indicator on the wall beside the doors, which is the same number
+     the light over them is showing and is here so that somebody who cannot read
+     a four-pixel digit can still find out. */
+  indicator() {
+    insp('🔢', 'The floor indicator', 'Car at ' + Lifts.at(), [
+      'A strip of seven-segment digits behind orange plastic, one of which has a segment out, so a 4 is occasionally an 11.',
+      'It says ' + Lifts.at() + '.',
+      pick(['Somebody has stood here long enough to learn that the car rests on G when nobody has called it, and that is the single most useless piece of knowledge in this building, and you have just acquired it.',
+        'It does not tell you which way the car is going. No indicator in this country tells you which way the car is going.',
+        'Watching it is a thing you do instead of looking at the person waiting beside you.'])]);
+  },
+  /* THE STAIRS. Up and down, one floor at a time, both offered only when this
+     level has a link that way — which on the fourth floor is both, because the
+     fourth floor is in the middle of the building, and on the ground floor is
+     only up, because there is nothing under it but the archive's hatch and that
+     is not a staircase.
+
+     And on the fourth floor there is a third: OUT. That stair is the external
+     fire escape and it does not stop at the ground floor, which is what a fire
+     escape is and is the entire reason `theView` from it takes in the bins, a
+     wall and a strip of car park. */
+  stairs(o) {
+    const up = Levels.links('stairsUp'), down = Levels.links('stairsDown');
+    const out = Levels.links('fireExit');
+    const opts = [];
+    if (up) opts.push({ t: 'Up.', to: null, do() { Sfx.door(); Levels.take('stairsUp'); } });
+    if (down) opts.push({ t: 'Down.', to: null, do() { Sfx.door(); Levels.take('stairsDown'); } });
+    if (out) opts.push({ t: 'All the way down, and out.', to: null, do() { Sfx.door(); Levels.take('fireExit'); } });
+    insp('🪜', o.name || 'The stairs', out ? 'Fire escape' : 'Concrete, painted', [
+      out
+        ? 'Galvanised treads with a diamond pattern worn smooth in the middle of each one, a handrail bright along the whole length of it, and a view of the car park through the gaps in your own feet.'
+        : 'Concrete, painted in the grey that every stairwell in every office building in this country is painted in, with a white line along the edge of each tread that was repainted at some point and never since.',
+      pick(['Nobody uses these. Everybody says they should use these.',
+        'There is a fire door at every landing and every one of them is propped open with something.',
+        'It smells faintly of the outside, which no other part of this building does.']),
+      'It is four floors. It takes about ninety seconds and you will arrive able to speak.'],
+      opts.concat([{ t: 'Take the lift instead.', to: null, do() {
+          UI.toast('🛗', 'You take the lift instead. Everybody takes the lift instead. That is what the lift is for and there is no shame in it whatsoever, and you feel some anyway.');
+        } },
+        { t: 'Not just now.', to: null }]));
+  },
+  /* The other lift on the fourth floor, which is what the second one on that
+     plan turns out to have been all along. */
+  goodsLift() {
+    Sfx.deny();
+    insp('🛗', 'The goods lift', 'Out of service', [
+      'Wider than the passenger lift, lined with quilted grey blankets that are held on with bulldog clips, and with a floor that has had a pallet truck on it.',
+      'A laminated notice on the door: OUT OF SERVICE PENDING INSPECTION. The date on it is in a year everybody has to think about.',
+      'Everything that has ever come up to this floor came up in here, including all thirty-two desks, and nothing has come up to this floor since.']);
   },
   hatch() {
     Ach.get('a_hatch');
@@ -2758,7 +2862,8 @@ const Acts = {
     [{ t: 'Open one.', to: null, do() { Player.xp(20); P.stats.chaos += 1; UI.toast('📦', 'Inside: 4,000 branded pens. All say CALLHALL SERVICES — LISTENING TO YOU SINCE 2009. None of them work.'); Item.give('pen'); } },
      { t: 'Walk round them like everybody else.', to: null }]); },
   wayToMgmt() { insp('🪧', 'THIS WAY TO MANAGEMENT', 'Corridor sign', [
-    'A sign pointing to the management floor. Underneath it, an older sign, painted over but visible: “THIS WAY TO CANTEEN”.',
+    'A sign pointing down the corridor, at the lift, which is the only way to the management floor and is one floor up. Underneath it, an older sign, painted over but visible: “THIS WAY TO CANTEEN”.',
+    'For years it pointed at a door across this corridor with a keycard reader on it, and everybody on this floor could see the Management Floor from their desk. The door is bricked up and the sign was never moved, which is why it is now, accidentally, correct.',
     'Somebody has taped a card underneath reading “↑ IN CASE OF GENUINE EMERGENCY USE THE OTHER STAIRS”. It is not clear whether it is a joke. It has been there for years, which is how you can tell it is.']); },
   trolley() {
     /* Step one of Ask The Bins is finding this, so finding it is where the job
@@ -3981,5 +4086,167 @@ const Acts = {
     insp('💧', 'The font', 'Norman', [
       'A tub of stone on four squat columns, older than everything around it by a hundred and fifty years, with a lid on a counterweight and a step worn in front of it.',
       'It was in a garden in the eighteen-nineties. Somebody found it and brought it back. Nobody has ever established whose garden.']);
+  },
+
+  /* ===================== THE BUILDING, VERTICALLY =====================
+     One entry per thing that arrived when the lobby became the ground floor,
+     Management became the fifth, and what was left at the bottom of the fourth
+     became a landing. */
+
+  /* --- THE FIRE ESCAPE, from both ends --- */
+  fireExit() {
+    if (!Sky.working()) {
+      return insp('🚪', 'The fire door', 'It is ' + clockStr(G.minutes), [
+        'The bar across it. Push it and you are on a steel stair on the outside of the building with the car park four floors under you.',
+        'It is not the way out. It is a way out, and it is the only one on this floor.'],
+        [{ t: 'Push the bar.', to: null, do() { Sfx.door(); Levels.take('fireExit'); } },
+         { t: 'Use the lift like a person.', to: null }]);
+    }
+    insp('🚪', 'The fire door', 'FIRE EXIT — KEEP CLEAR', [
+      'A push bar, a green running man, and a sign saying KEEP CLEAR which is being read from behind a fire extinguisher somebody has propped it open with.',
+      'It sets an alarm off. It says so on the door. It does not set an alarm off — it has not set an alarm off since 2019, which four people on this floor know and none of them has told Facilities.'],
+      [{ t: 'Go down it anyway.', to: null, do() {
+          Sfx.door(); G.flags.usedFireDoor = true; Levels.take('fireExit');
+        } },
+       { t: 'Leave it.', to: null }]);
+  },
+  fireEscape() {
+    insp('🪜', 'The foot of the fire escape', 'Four floors of it', [
+      'Galvanised stair, bolted to the back of the building, zig-zagging up past the third floor and the fourth and stopping at a landing with a door on it.',
+      'The bottom flight is a counterweighted ladder that is supposed to come down under the weight of somebody standing on it and has not moved since it was installed. Everybody goes up the fixed part and swings round it.',
+      pick(['You can see the smoking step from here, four floors up, and whoever is on it.',
+        'It is the only part of this building anybody has ever described as having a view.',
+        'A drill comes down this about twice a year and it takes eleven minutes, and eleven minutes is a good time.'])],
+      [{ t: 'Go up.', to: null, do() { Sfx.door(); Levels.take('fireEscape'); } },
+       { t: 'Walk round to the front doors.', to: null }]);
+  },
+
+  /* --- THE LANDING, floor 4 --- */
+  floorFour() {
+    insp('🪧', 'FLOOR 4 · OPERATIONS', 'Wayfinding', [
+      'A sign beside the lift doors, in the company typeface, correct, current, and the only piece of wayfinding in this building that is all three.',
+      'It is correct because it is about one floor and says one thing. The floor plan in the corridor tries to say everything about everywhere and has been wrong since 2019.']);
+  },
+  landingBoard() {
+    insp('📌', 'The noticeboard on the landing', 'Cork, A4, out of date', [
+      pick(['A fire drill notice from the spring, a minibus to a charity walk that has happened, and a card for a man who does windows.',
+        'Four things about parking. Four. On a floor nobody parks on.',
+        'A printed sheet headed COMING SOON with nothing under it, pinned up eleven months ago by somebody who left in July.']),
+      'Everybody reads this board while waiting for the lift and nobody has ever read it anywhere else, which means the whole of its readership is people with about forty seconds to kill.']);
+  },
+  landingCooler() {
+    insp('🚰', 'The cooler on the landing', 'Room temperature', [
+      'The third water cooler on this floor and the one nobody drinks from, because it is by the lift and drinking by the lift means being seen to be not at your desk.',
+      'The bottle is full. It has been full for a fortnight.']);
+  },
+  landingChair() {
+    insp('🪑', 'The chair on the landing', 'Nobody knows', [
+      'One chair, by the lift, facing the lift. It does not match anything on this floor.',
+      'It has been there longer than anybody currently employed on this floor. Two people have theories. The theories do not agree and both people are certain.']);
+  },
+  landingBoxes() {
+    insp('📦', 'The boxes on the landing', 'Marked ARCHIVE', [
+      'Six boxes, stacked three by two, every one of them marked ARCHIVE in the same marker in the same hand.',
+      'They are not going to the archive. The archive is on this floor and is thirty tiles that way, and whoever carried them out of it got as far as the lift.']);
+  },
+  landingRecycling() {
+    insp('♻️', 'The recycling on the landing', 'Paper only', [
+      'A blue wheeled bin with PAPER ONLY on a sticker and, in it, paper only, which is genuinely impressive and is entirely down to one person on this floor whose name is not on the bin.']);
+  },
+
+  /* --- THE GROUND FLOOR --- */
+  securityScreen() {
+    insp('🖥️', 'The security screen', 'Four cameras, one feed', [
+      'A monitor cycling four views: the car park, the front doors from the inside, the lift lobby, and a corridor that is not in this building.',
+      'The fourth one has been on the cycle for years. It shows a carpeted corridor with a fire door at the end of it and a light that is always on. Ron has been asked about it and Ron says "that’ll be the other place", which is not an answer and has never been followed up.']);
+  },
+  theMat() {
+    insp('🧹', 'The mat', 'Contract cleaned', [
+      'Six feet of bristled matting sunk flush into the floor inside the doors, the sort that is on a contract and gets swapped for an identical one every fortnight by a man with a van.',
+      pick(['It has today’s rain in it and it is doing exactly what it is for.',
+        'The edge of it has lifted at one corner and has been taped, and the tape is older than the lift’s inspection certificate.',
+        'Everybody wipes their feet on it. Everybody. In a building where nobody washes a mug.'])]);
+  },
+  postTray() {
+    insp('📬', 'The post tray', 'Internal · external · other', [
+      'Three wire trays on the ledge by the doors, labelled INTERNAL, EXTERNAL and — in a different hand, added later, and by a long way the fullest — OTHER.',
+      pick(['Four things in OTHER today. None of them is addressed to anybody who still works here.',
+        'A padded envelope that has been in OTHER for so long that it has gone the shape of the tray.',
+        'Somebody has put a Christmas card in EXTERNAL. It is not December.'])]);
+  },
+  parcels() {
+    insp('📦', 'The parcels nobody has come down for', 'Signed for', [
+      'Nine of them behind the counter, each with a slip on it saying who signed for it and when. Ron signs for everything, which is the single most useful thing anybody in this building does for anybody else.',
+      'Four are for the dental practice on the first floor and have been delivered to the wrong reception, which happens about twice a week and which Ron has stopped mentioning.'],
+      [{ t: 'Look for one with your name on it.', to: null, do() {
+          Player.mod({ patience: -2 });
+          UI.toast('📦', 'There is not one with your name on it. You knew there would not be one with your name on it. You looked anyway, and so does everybody, every single time they walk past.');
+        } },
+       { t: 'Leave them.', to: null }]);
+  },
+  passes() {
+    insp('🎫', 'The visitor passes', 'Numbered 1 to 40', [
+      'A rack of clip-on visitor passes on a board, numbered 1 to 40. Thirty-nine are on the board.',
+      'Number 17 has been out since a Tuesday in 2023 and is written in the visitors’ book against the entry that says only MEETING.',
+      G.flags.knowTuesday
+        ? 'You know exactly where number 17 is. It is in a drawer four floors up and one floor over, and the man who took it is the man who signed himself in.'
+        : 'Nobody has ever chased it. It is a plastic card with a number on it.']);
+  },
+  lobbyWindow() {
+    insp('🪟', 'The window onto the car park', 'Ground floor, full height', [
+      'Floor to ceiling, and the only window in this building you can see the whole of the car park out of at once: twenty-two spaces, the barrier, the trees along the wall, and the road beyond it.',
+      pick(['Somebody is sitting in a car with the engine off. From up on the fire escape that reads as a small sad thing. From down here, at eye level, through glass, it reads as a person.',
+        'The 41 goes past. Not the 41A — you can tell from here, which is the whole point of the green being different.',
+        'It is raining on it, and being inside a warm building looking at rain on a car park is one of the four or five genuinely good things about working indoors.'])]);
+  },
+  lobbyClock() {
+    insp('🕰️', 'The clock in the lobby', 'Four minutes fast', [
+      'A plain white wall clock, battery, of the kind bought in a multipack.',
+      'It is four minutes fast, and it has been four minutes fast for as long as anybody can remember, and every single person in this building has factored those four minutes into their morning without ever once agreeing to.',
+      'Correcting it would make eleven people late.']);
+  },
+
+  /* --- THE FIFTH FLOOR --- */
+  fifthWindow() {
+    insp('🪟', 'The window on the fifth floor', 'One floor up', [
+      'The same aluminium frame as the ones on the fourth, one floor further up, and it is astonishing how much difference one floor makes.',
+      'From here you can see over the parade: the retail park, the railway, and — on a clear one — the top of the minster on the other side of the line.',
+      'Everybody who works on the fourth floor has been up here exactly once and every one of them mentioned this window.']);
+  },
+  goodCooler() {
+    insp('🚰', 'The cooler that works', 'Chilled', [
+      'It is chilled. It has a filter. There is a lever for still and a lever for sparkling, and both of them work.',
+      'There are three coolers on the fourth floor and not one of them is cold. This is not a conspiracy and nobody has ever decided it; it is just that when this one broke somebody rang the company that day.']);
+  },
+  goodCoffee() {
+    insp('☕', 'The coffee machine up here', 'Beans', [
+      'Beans, a grinder, a steam wand and a little drawer for the grounds. It makes a noise like something being taken seriously.',
+      'The machine on the fourth floor is a jug that has been on a hotplate since ten past eight.'],
+      [{ t: 'Have one. Nobody is looking.', to: null, do() {
+          G.minutes += 4; Player.mod({ energy: 14, patience: 6 });
+          count('coffee'); Ach.get('a_fifthcoffee');
+          UI.toast('☕', 'It is a genuinely excellent cup of coffee and you drink it standing up, facing the lift, in four minutes flat.', 'gold');
+        } },
+       { t: 'Do not touch anything up here.', to: null }]);
+  },
+  fifthSofa() {
+    insp('🛋️', 'The sofa up here', 'Three seats, unworn', [
+      'A three-seat sofa against the wall by the window, in a grey that was chosen from a swatch, with the seams still sharp on all three cushions.',
+      'The one in the Wellbeing Room downstairs was procured, photographed and never used, and everybody on the fourth floor knows that and says it. This one is the same sofa. It is also never used. Nobody says anything about this one because nobody has seen it.']);
+  },
+  buildingPhoto() {
+    insp('🖼️', 'The photograph of the building', 'Framed, 2009', [
+      'The building, photographed from the car park on a day with a sky, with the signage new and the trees along the wall about a third of the height they are now.',
+      'Six people are standing outside the front doors in the picture, at the distance from each other that people stand at when somebody has said "can we get a few of you out the front".',
+      G.flags.knowTuesday
+        ? 'You can name two of them. One of them still works here. One of them signs himself in.'
+        : 'You do not recognise any of them, and one of them is standing slightly apart from the other five in a way you will think about later.']);
+  },
+  fifthCabinet() {
+    insp('🗄️', 'The filing cabinet nobody opens', 'Four drawers', [
+      'Four drawers, a lock, and no key in it. The top drawer has a strip of label tape on it with a year on it and the year is not recent.',
+      pick(['The bottom drawer is not locked. The bottom drawer is never the one.',
+        'There is a dent in the side of it at about knee height and it is the only violent thing in this entire building.',
+        'On top of it: a plant that is not real, and eleven years of the dust that settles on a plant that is not real.'])]);
   },
 };

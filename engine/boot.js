@@ -450,7 +450,7 @@ const Boot = {
        the trial level is the one that gets built. */
     const trial = Trial.want();
     if (trial) Trial.apply(trial);
-    Levels.start(trial ? trial.level.id : 'office', (trial && trial.entry) || 'start');
+    Levels.start(trial ? trial.level.id : Levels.first(), (trial && trial.entry) || 'start');
     NPCM.spawn(); bindInput();
     Arcade.init();
     Track.init();

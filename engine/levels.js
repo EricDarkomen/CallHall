@@ -332,18 +332,57 @@ const Levels = {
   /* ---- boot and save ----
      resetRun() and a restored save both come through here, so there is one
      definition of "the game is on a level" and it cannot be half-done. */
+  /* WHERE A SHIFT BEGINS, asked of the catalogue rather than written down in
+     two places in engine/. It was a hard-coded 'office' in boot.js and in
+     state.js, which was true for as long as the building was one floor and
+     stopped being true the day the lobby became the ground floor. Same shape
+     as `hub`, and for the same reason: it is a fact about the building. */
+  first() {
+    return this.ids().find(id => (this.def(id) || {}).arrive)
+      || this.ids().find(id => (this.def(id) || {}).hub) || 'office';
+  },
   start(id, entry) {
     this.cache.clear(); this.order = []; this.current = null; this.moving = false;
-    return this.go(id || 'office', entry || 'start', { quiet: true });
+    return this.go(id || this.first(), entry || 'start', { quiet: true });
   },
   /* Put a restored save back on the level it was saved on. The position comes
      from the save rather than from the entry point — you are where you were
      standing, not at the door. */
   resume() {
-    const id = this.def(G.level) ? G.level : 'office';
+    const id = this.def(G.level) ? G.level : this.first();
     const x = P.x, y = P.y;
     this.start(id, 'start');
     P.x = x; P.y = y;
     Cam.snap();
   }
+};
+
+/* ---------------- The lift ----------------
+   Which floor the car is on, and nothing else. It is four lines and it earns
+   them: the light over every set of lift doors in this building reads this, the
+   indicator beside them reads this, and what it says is true — press 5 and the
+   car is on 5, and the man waiting on the ground floor can see that it is.
+
+   `at()` is the BUTTON, not the level id, because that is what is written on a
+   lift: FLOORS in data/world.js is the one table that knows which is which, and
+   it is the same table the act reads. Nothing here knows what a floor IS.
+
+   It starts on G because a lift left overnight is on the ground floor, which is
+   where the last person out of the building left it. */
+const Lifts = {
+  floor: 'G',
+  /* What the light over the doors says, and what the indicator beside them
+     reads out. It is the BUTTON — 'G', '4', '5' — and not a level id, because
+     that is what is written on a lift. FLOORS in data/world.js is the one table
+     that knows which button is which floor, and nothing in here knows what a
+     floor is. */
+  at() { return this.floor; },
+  /* Called by Acts.lift() the instant a button is pressed, so the car has moved
+     before the doors have opened — which is the correct order, and is also the
+     only order this game can draw.
+
+     Arriving on a floor by the STAIRS does not call it, and that is the whole
+     reason this is a variable rather than a lookup: walk up, and the light over
+     the doors still says where the last person left it. */
+  send(button) { if (button) this.floor = button; }
 };
