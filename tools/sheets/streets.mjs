@@ -160,15 +160,21 @@ export default {
          phases and this is the second of them, which is the one showing a red
          and nothing else.
 
-         Fixed on red, and that is honesty rather than laziness. Nothing in
-         this game phases a signal and nothing in engine/cars.js knows what one
-         is: a light that cycled would be a light the traffic drove straight
-         through, which is a worse lie than a light that never changes. What it
-         is instead is the thing this actually is everywhere in England — a set
-         of temporary three-way lights round a hole, with no work going on in
-         the hole, stuck on red at one end since some time in the spring. The
-         lane behind it is coned off and no route in this level goes down it,
-         so the red is telling the truth to everybody, including the traffic. */
+         Fixed on red, and it was honesty rather than laziness: when this was
+         cropped nothing in the game phased a signal and nothing in
+         engine/cars.js knew what one was, so a light that cycled would have
+         been a light the traffic drove straight through, which is a worse lie
+         than a light that never changes.
+
+         Bellhaven has working lights now — engine/signals.js, and three sets of
+         them — and they are DRAWN rather than cropped, for the same reason the
+         cars are: the whole of what a signal does is change, and a crop cannot.
+         So this sprite did not become wrong, it became specific. It is the one
+         head in this town that has never shown anything but a red, on a set of
+         temporary three-way lights round a hole with no work going on in it,
+         stuck at one end since some time in the spring. The lane behind it is
+         coned off and no route in this level goes down it, so the red is still
+         telling the truth to everybody, including the traffic. */
       name: 'sign.signals',
       anchor: 'floor',
       source: {

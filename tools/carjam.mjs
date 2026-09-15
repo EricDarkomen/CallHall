@@ -11,8 +11,8 @@
  * front. That is what this reproduces: four scenarios, a few seconds each, and
  * four numbers that say whether the recovery rules in engine/cars.js worked.
  *
- * It runs the REAL Cars, Peds, World and Collide on the REAL town out of
- * data/levels.js, with a stub of everything a car talks to that is not being
+ * It runs the REAL Cars, Peds, Signals, World and Collide on the REAL town out
+ * of data/levels.js, with a stub of everything a car talks to that is not being
  * measured — the sound, the particles, the toasts, the colleagues upstairs.
  * Nothing here patches the driving; these are the shipped files.
  *
@@ -90,7 +90,7 @@ vm.runInContext(`
   var P = { x: -9999, y: -9999, dir: 2, moving: false };
   var NPCM = { list: [] };
   var Sprites = { dirOf: (x, y) => Math.abs(x) > Math.abs(y) ? (x > 0 ? 1 : 3) : (y > 0 ? 2 : 0) };
-  var Sfx = { on: false, horn(){}, thud(){}, scrape(){}, door(){}, deny(){}, engine(){} };
+  var Sfx = { on: false, horn(){}, thud(){}, scrape(){}, door(){}, deny(){}, engine(){}, bleep(){}, blip(){} };
   var FX = { motion: false, shake(){}, parts: [] };
   var UI = { toast(){} };
   var Ach = { get(){} };
@@ -108,10 +108,18 @@ vm.runInContext(`
   function zoneCheck(){}
 `, ctx);
 load('engine/peds.js');
+/* AND THE LIGHTS, which are part of the driving now rather than part of the
+   scenery a car is stubbed against. A car stops at a red, so a harness that
+   leaves Signals undefined is a harness in which engine/cars.js throws on the
+   first frame — and one that stubbed it out would be measuring a town that no
+   longer exists. tools/lightjam.mjs is the one that asks questions ABOUT the
+   signals; this one just has to have them. */
+load('engine/signals.js');
 
 const g = name => vm.runInContext(name, ctx);
-const { LEVELS, Cars, World, Peds, Keys, Cam, P, TILE } = {
+const { LEVELS, Cars, World, Peds, Signals, Keys, Cam, P, TILE } = {
   LEVELS: g('LEVELS'), Cars: g('Cars'), World: g('World'), Peds: g('Peds'),
+  Signals: g('Signals'),
   Keys: g('Keys'), Cam: g('Cam'), P: g('P'), TILE: g('TILE')
 };
 
@@ -149,12 +157,27 @@ const rand = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7ffffff
    the cars, the people they stop for, and a camera that follows whoever is
    driving. `each` is the scenario's chance to interfere. */
 const dt = 1 / 60;
+/* Held at a signal, or behind somebody who is. The queue matters as much as the
+   car at the front of it: three vehicles at a red are three vehicles going
+   nowhere for a legitimate reason, and only the first of them is the one the
+   lights are actually talking to. Walked rather than recursed, and bounded,
+   because a ring of cars each blocked by the next is exactly the deadlock the
+   give-way rule exists to break and is not something to hang the harness on. */
+function atLights(car) {
+  let c = car;
+  for (let n = 0; c && n < 6; n++) {
+    if (c.atRed) return true;
+    c = c.blockedBy;
+  }
+  return false;
+}
 function run(secs, each) {
   const seen = new Map();
   for (const c of traffic()) seen.set(c, { x: c.x, y: c.y, still: 0, worst: 0, off: 0, legs: 0, leg: c.leg });
   let frames = 0, offFrames = 0;
   for (let f = 0; f < secs * 60; f++) {
     if (each) each(f);
+    Signals.update(dt);
     Cars.update(dt);
     Peds.update(dt);
     Cam.x = P.x - Cam.w / 2; Cam.y = P.y - Cam.h / 2;
@@ -163,7 +186,16 @@ function run(secs, each) {
       frames++;
       if (!onRoad(c)) { offFrames++; s.off++; }
       if (c.leg !== s.leg) { s.legs++; s.leg = c.leg; }
-      if (Math.hypot(c.x - s.x, c.y - s.y) < 2) { s.still += dt; s.worst = Math.max(s.worst, s.still); }
+      /* A CAR AT A RED IS NOT STILL. This number is how long a vehicle went
+         nowhere, and it was written when there was nothing on this map that
+         could stop one on purpose for longer than a bus stop's dwell. There is
+         now: a phase is twenty-two seconds at the outside, which is twice what
+         this calls a stall. Held at a signal is therefore not counted at all —
+         the same exemption the bus already has by being in motion — and what
+         is left is what this file was always measuring, which is a car that is
+         stopped for no reason anybody can name. tools/lightjam.mjs is where
+         holds at a signal are counted, and where they are supposed to be. */
+      if (Math.hypot(c.x - s.x, c.y - s.y) < 2 && !atLights(c)) { s.still += dt; s.worst = Math.max(s.worst, s.still); }
       else { s.x = c.x; s.y = c.y; s.still = 0; }
     }
   }

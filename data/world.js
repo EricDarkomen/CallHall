@@ -680,6 +680,15 @@ const FURN = {
      because what is in your way is four pixels of galvanised tube. */
   noentry: { size: 24, sprite: 'sign.noentry', ground: [0.28] },
   signals: { size: 34, sprite: 'sign.signals', ground: [0.24] },
+  /* A WORKING SET OF LIGHTS, and it is `drawn` rather than a sprite for the
+     same reason the cars are: the whole of what a signal does is change, and a
+     crop out of a sheet cannot. There is one head in the atlas — `sign.signals`
+     above — and it is a red and nothing else, which is why it is on the one set
+     of lights in this town that has been red since March. See engine/render.js
+     for what this draws and engine/signals.js for what it is doing.
+     The footprint is a post's. You walk round it the way you walk round a
+     lamppost, and there is a good deal less of it than the pole is tall. */
+  signal: { size: 34, drawn: true, ground: [0.26] },
   /* WROUGHT IRON, two tiles of it at a time. Same argument as the fence above
      and then one further: railings go round things, so they are laid in runs
      of two tiles and the sprite is cut to join to itself at that pitch — see

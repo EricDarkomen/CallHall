@@ -120,6 +120,7 @@ const Emit = {
     if (Doc.paint && Doc.paint.length) L.push(this.listBlock('paint', Doc.paint, i));
     if (Doc.cars && Doc.cars.length) L.push(this.listBlock('cars', Doc.cars, i));
     if (Doc.peds && Doc.peds.length) L.push(this.listBlock('peds', Doc.peds, i));
+    if (Doc.signals && Doc.signals.length) L.push(this.listBlock('signals', Doc.signals, i));
 
     const ek = Object.keys(Doc.entries);
     if (ek.length === 1) {

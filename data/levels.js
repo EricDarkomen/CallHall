@@ -1852,10 +1852,12 @@ const LEVELS = {
       { p: 'dash', a: [0, 19], b: [8, 19] },
       { p: 'dash', a: [14, 19], b: [30, 19] },
       { p: 'dash', a: [34, 19], b: [60, 19] },
-      { p: 'dash', a: [66, 19], b: [102, 19] },
+      { p: 'dash', a: [66, 19], b: [91, 19] },
+      { p: 'dash', a: [96, 19], b: [102, 19] },
       { p: 'dash', a: [108, 19], b: [114, 19] },
       { p: 'dash', a: [0, 37], b: [8, 37] },
-      { p: 'dash', a: [14, 37], b: [44, 37] },
+      { p: 'dash', a: [14, 37], b: [17, 37] },
+      { p: 'dash', a: [22, 37], b: [44, 37] },
       { p: 'dash', a: [48, 37], b: [60, 37] },
       { p: 'dash', a: [66, 37], b: [102, 37] },
       { p: 'dash', a: [108, 37], b: [114, 37] },
@@ -1878,7 +1880,16 @@ const LEVELS = {
       { p: 'line', a: [8, 33.9], b: [14, 33.9] },
       { p: 'line', a: [8, 40.1], b: [14, 40.1] },
       { p: 'line', a: [8, 51.9], b: [14, 51.9] },
-      { p: 'line', a: [60, 22], b: [66, 22] },
+      /* EXCEPT AT CARGATE LANE, which has lights on it now. A give-way line
+         is the thin one you may cross when the road is clear and a stop line
+         is the fat one you may not cross at all, and putting the wrong one
+         under a signal is the same class of error as the centre line painted
+         through a zebra. The two on the High Street are new: until there were
+         lights there was nothing to stop the main road, so the main road had
+         no line. See `signals:` below. */
+      { p: 'stop', a: [60, 22.2], b: [66, 22.2] },
+      { p: 'stop', a: [59, 16], b: [59, 19] },
+      { p: 'stop', a: [66, 19], b: [66, 22] },
       { p: 'line', a: [60, 33.9], b: [66, 33.9] },
       { p: 'line', a: [60, 40.1], b: [66, 40.1] },
       { p: 'line', a: [60, 51.9], b: [66, 51.9] },
@@ -1895,6 +1906,27 @@ const LEVELS = {
       { p: 'zebra', r: [30, 16, 33, 21] },
       { p: 'zebra', r: [44, 34, 47, 39] },
       { p: 'zebra', r: [76, 52, 79, 57] },
+      /* AND TWO THAT ARE NOT ZEBRAS. One word rather than two, because on the
+         ground it is one marking: `pelican` draws the studs across the road
+         and the zig-zags up both approaches, and between them they are how you
+         know which kind of crossing you are looking at from further away than
+         you can see a lamp.
+
+         Both are exactly where somebody was already crossing without one. The
+         man on the phone has walked over the High Street at this point every
+         lap since the day there were people out here, and the hi-vis has
+         crossed Fenn Street at that one — `peds:` below says as much, in a
+         comment about the difference between jaywalking and walking into a
+         car. A crossing goes where the desire line is or it goes nowhere. */
+      { p: 'pelican', r: [92, 16, 95, 21] },
+      { p: 'pelican', r: [18, 34, 21, 39] },
+      /* Their stop lines, a tile back from the studs on each approach, which is
+         where a stop line goes: far enough that a car at it is not standing on
+         the crossing and near enough that the driver can still see the studs. */
+      { p: 'stop', a: [91, 16], b: [91, 19] },
+      { p: 'stop', a: [97, 19], b: [97, 22] },
+      { p: 'stop', a: [17, 34], b: [17, 37] },
+      { p: 'stop', a: [23, 37], b: [23, 40] },
       /* Twenty-two spaces at the office, and the writing has said twenty-two
          for months. Seven, then the walkway to the doors, then four; eleven
          along the south wall. The `open` side is the one you drive in from. */
@@ -2035,17 +2067,22 @@ const LEVELS = {
       { p: 'kerbside', r: [34, 21, 46, 21], side: 's' },
       { p: 'kerbside', r: [52, 21, 59, 21], side: 's' },
       { p: 'kerbside', r: [66, 21, 78, 21], side: 's' },
-      { p: 'kerbside', r: [84, 21, 96, 21], side: 's' },
+      /* Cut at x=87: the new crossing's zig-zags start there, and the whole
+         point of a zig-zag is that nothing may be left on one. */
+      { p: 'kerbside', r: [84, 21, 86, 21], side: 's' },
       { p: 'kerbside', r: [0, 16, 1, 16], side: 'n' },
       { p: 'kerbside', r: [108, 21, 113, 21], side: 's' },
+      /* Fenn Street, north kerb. The run that used to start at x=14 has gone
+         entirely: the crossing and its zig-zags take thirteen of the fourteen
+         tiles between the Aldergate junction and x=27, and a bay that is one
+         tile long is a dropped kerb. */
       /* Fenn Street, north kerb */
-      { p: 'kerbside', r: [14, 34, 26, 34], side: 'n' },
       { p: 'kerbside', r: [32, 34, 37, 34], side: 'n' },
       { p: 'kerbside', r: [48, 34, 59, 34], side: 'n' },
       { p: 'kerbside', r: [66, 34, 78, 34], side: 'n' },
       { p: 'kerbside', r: [84, 34, 96, 34], side: 'n' },
+      /* Fenn Street, south kerb — same stretch, gone for the same reason. */
       /* Fenn Street, south kerb */
-      { p: 'kerbside', r: [14, 39, 26, 39], side: 's' },
       { p: 'kerbside', r: [32, 39, 43, 39], side: 's' },
       { p: 'kerbside', r: [48, 39, 59, 39], side: 's' },
       { p: 'kerbside', r: [66, 39, 78, 39], side: 's' },
@@ -2090,6 +2127,89 @@ const LEVELS = {
       { p: 'kerbside', r: [44, 103, 56, 103], side: 's' },
       { p: 'kerbside', r: [62, 103, 74, 103], side: 's' },
       { p: 'kerbside', r: [80, 103, 92, 103], side: 's' }
+    ],
+
+    /* ---------- THE LIGHTS ----------
+       Three sets of them, which for a town this size is about right and is two
+       more than Bellhaven had. What they DO is engine/signals.js; this is only
+       where they are, and it is written the way every other table out here is
+       written — in tiles, with the pixels worked out at build time.
+
+       An arm is one approach. `at` is the tile the post stands on, and the post
+       is real: World.build makes furniture of it, so it is solid, you walk
+       round it, and on a crossing you can press it. `go` is the direction the
+       traffic it holds is TRAVELLING, which is how the head knows which way to
+       face and how a westbound signal knows to leave an eastbound car alone.
+       `stop` is the point on the lane where the line is painted, and it is the
+       only number here that is not a whole tile: a lane is half a tile off the
+       grid and a stop line is painted across a lane, not across a square.
+       `g` groups arms that get the road together.
+
+       Every stop line below has a `{ p: 'stop', ... }` in `paint:` above at the
+       same place, and they have to agree — the line is what the driver sees and
+       this is what the driver obeys. They are two entries rather than one on
+       purpose: what is painted on a road and what a signal is doing are
+       different facts, and there is a set of lights on Station Road that has
+       painted lines and no phases at all. */
+    signals: [
+      /* THE HIGH STREET AND CARGATE LANE, which is a T because Cargate Lane
+         does not go north of the shops, and which is the busiest junction on
+         this map: everything on four wheels that goes round the west block or
+         the east block comes through it, and the two buses go straight over.
+
+         It was a give way sign until today. What the sign could never do is the
+         thing you can now stand on the corner and watch: a car coming up
+         Cargate in the gap between the 41 and the 41A used to wait for both of
+         them, because giving way means waiting for a gap and there is no gap on
+         the High Street between ten past nine and four. The lights make one.
+
+         `rest: 0` is the High Street, and it is the whole of the difference
+         between these and a fixed cycle. A junction that rests on the side
+         street is a junction that stops the main road at three in the morning
+         for a lane with nothing in it — so this one sits green to the High
+         Street and only ever changes because something has come up Cargate and
+         asked. See Signals.nextGroup(). */
+      /* `green` is the MINIMUM. It holds the road for nine seconds whatever is
+         waiting on Cargate Lane, then goes at the first gap in its own traffic
+         — and if there is no gap, at twenty-six. See Signals.junctionTick(). */
+      { id: 'cargate', kind: 'junction', green: 9, rest: 0,
+        arms: [
+          { g: 0, at: [59, 15], go: 'e', stop: [59, 17.5] },
+          { g: 0, at: [66, 22], go: 'w', stop: [66, 20.5] },
+          { g: 1, at: [59, 22], go: 'n', stop: [61.5, 22.4] }
+        ] },
+
+      /* THE CROSSING ON THE HIGH STREET. A pelican, with the button, the WAIT
+         plate, the green man, the bleeper and the five seconds of flashing
+         amber at the end that are the only aspect in this game meaning "go if
+         you can" — and which need no code at all, because a car in Bellhaven
+         has stopped for anybody in front of it since long before there was a
+         crossing to do it on.
+
+         Two poles, diagonally opposite, each carrying the head that holds the
+         traffic on its own side and the man facing back across the road. That
+         is not a simplification: it is the layout of every pelican in the
+         country, and the reason the button you press is never the one on the
+         side you are going to. */
+      { id: 'highcross', kind: 'pelican', over: [92, 16, 95, 21],
+        arms: [
+          { g: 0, at: [91, 15], go: 'e', stop: [91, 17.5] },
+          { g: 0, at: [97, 22], go: 'w', stop: [97, 20.5] }
+        ] },
+
+      /* AND THE ONE ON FENN STREET, which is four tiles from the mouth of
+         Aldergate Rise and is therefore too close to the junction. It is too
+         close to the junction because that is where people cross: the hi-vis
+         has walked over Fenn Street at this point every lap since the day there
+         were people out here, and a crossing put somewhere tidier would be a
+         crossing nobody uses and a desire line still worn across the road forty
+         yards away. Every highway authority in England has had this argument
+         and most of them have lost it in the same direction. */
+      { id: 'fenncross', kind: 'pelican', over: [18, 34, 21, 39],
+        arms: [
+          { g: 0, at: [17, 33], go: 'e', stop: [17, 35.5] },
+          { g: 0, at: [23, 40], go: 'w', stop: [23, 38.5] }
+        ] }
     ],
     doors: [],
     /* In the walkway between the two banks of bays, facing away from the
@@ -2298,11 +2418,16 @@ const LEVELS = {
       { x: 16, y: 21.5, face: 'e', model: 'hatch', body: '#6b3350', roof: '#552840', name: 'A plum hatchback', use: 'parkedCar' },
       { x: 54, y: 21.5, face: 'e', model: 'estate', body: '#57624f', roof: '#434d3d', name: 'An olive estate', use: 'parkedCar' },
       { x: 86, y: 21.5, face: 'e', model: 'small', name: 'A small blue car', use: 'parkedCar' },
-      { x: 95, y: 21.5, face: 'w', model: 'van', body: '#d8d5cc', roof: '#c2bfb5', name: 'A white van', use: 'parkedCar' },
+      /* ON THE ZIG-ZAGS, which is the only thing this van was ever going to
+         do. It used to be at x=95, in a bay; x=95 is the middle of the new
+         crossing, so it had to move, and this is where it moved to. Nothing
+         about it is in a live lane and nothing about it is legal. */
+      { x: 89, y: 21.5, face: 'w', model: 'van', body: '#d8d5cc', roof: '#c2bfb5', name: 'A white van on the zig-zags', use: 'zigzagVan' },
       { x: 34, y: 34.5, face: 'e', model: 'small', body: '#7d6a4f', roof: '#63543f', name: 'A beige runabout', use: 'parkedCar' },
       { x: 68, y: 34.5, face: 'e', model: 'saloon', body: '#8a2f34', roof: '#6b242a', name: 'A red saloon', use: 'parkedCar' },
-      { x: 16, y: 39.5, face: 'e', model: 'hatch', body: '#6b3350', roof: '#552840', name: 'A plum hatchback', use: 'parkedCar' },
-      { x: 25, y: 39.5, face: 'w', model: 'saloon', body: '#3b3f48', roof: '#2e323a', name: 'A grey saloon', use: 'parkedCar' },
+      /* Two came off this stretch with the paint: the crossing on Fenn Street
+         is where they were parked. Twenty-nine became twenty-seven, and the
+         twenty-eighth is on the zig-zags on the High Street above. */
       { x: 50, y: 39.5, face: 'e', model: 'estate', body: '#57624f', roof: '#434d3d', name: 'An olive estate', use: 'parkedCar' },
       { x: 86, y: 39.5, face: 'e', model: 'small', name: 'A small blue car', use: 'parkedCar' },
       { x: 34, y: 52.5, face: 'e', model: 'small', body: '#7d6a4f', roof: '#63543f', name: 'A beige runabout', use: 'parkedCar' },
@@ -2415,14 +2540,14 @@ const LEVELS = {
          at each end — well clear of both junctions, which is the difference
          between jaywalking and walking into a car. */
       { name: 'A man on the phone', use: 'pedPhone', sprite: 'colin', speed: 1.25, leg: 3, along: 6,
-        route: [[68, 14.6], [80, 14.6], [92, 14.6, 5], [92, 23.4], [80, 23.4], [68, 23.4, 2]] },
+        route: [[68, 14.6], [80, 14.6], [93.5, 14.6, 5], [93.5, 23.4], [80, 23.4], [68, 23.4, 2]] },
       /* Outside the office, doing the thing everybody does outside an office. */
       { name: 'Two people not going back in yet', use: 'pedSmokers', sprite: 'gary', speed: 0.8, leg: 0, along: 2,
         route: [[24, 14.6, 9], [20, 14.6, 7], [16, 14.6, 5]] },
       /* Fenn Street, past the units and the car wash, over the zebra at the
          east end and straight across at the west. Stops short of Cargate. */
       { name: 'Somebody in a hi-vis', use: 'pedHiVis', sprite: 'tomasz', speed: 1.3, leg: 0, along: 14,
-        route: [[18, 33.4], [45.5, 33.4, 3], [45.5, 41.4], [18, 41.4, 2]] },
+        route: [[19.5, 33.4], [45.5, 33.4, 3], [45.5, 41.4], [19.5, 41.4, 2]] },
       /* Corven Way and the retail park, which is where the trolleys come from. */
       { name: 'Somebody pushing a trolley', use: 'pedTrolley', sprite: 'marjorie', speed: 0.85, leg: 0, along: 4,
         route: [[26, 51.4], [40, 51.4, 4], [56, 51.4], [56, 58.6], [40, 58.6], [26, 58.6, 3]] },
@@ -2555,7 +2680,11 @@ const LEVELS = {
          side street at row 22 and has always been in the right place; the post
          is now beside it, on the footway, where a post goes. */
       A({ x: 14, y: 22, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
-      A({ x: 66, y: 22, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
+      /* x=66 y=22 was a give way sign until Cargate Lane got lights. The
+         pole that stands there now is the westbound signal head, and it is
+         added by World.build off the `signals:` table rather than here — one
+         declaration, so a set of lights and the posts holding it up cannot
+         drift apart. */
       A({ x: 108, y: 22, e: '⚠️', name: 'Give way', kind: 'roadsign', solid: true, use: 'giveWay' });
       /* NORTH OF THE LINE THE BENCHES ARE PAINTED IRON. The wooden settle in
          art/sprites/wood.png stays where it belongs — the churchyard, the
