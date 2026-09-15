@@ -542,6 +542,14 @@ const R = {
         }
         if (m.p === 'dash') stroke(ax, ay, bx, by, 4, WHITE, true);
         else if (m.p === 'line') stroke(ax, ay, bx, by, 5, WHITE, false);
+        /* A STOP LINE, which is not a give-way line and is the difference
+           between a junction with a sign on it and a junction with lights. A
+           give-way line is the thin one you may cross when the road is clear;
+           this is the fat one you may not cross at all while the light says
+           so, and it is wider and whiter on the ground for exactly that
+           reason. Nine inches against six, in a country that still paints them
+           in inches. */
+        else if (m.p === 'stop') stroke(ax, ay, bx, by, 7, 'rgba(238,240,234,.7)', false);
         else if (m.p === 'yellow') {
           /* Two of them, three pixels apart, because one is a restriction and
              two is a prohibition and everybody in the country knows which. */
@@ -550,6 +558,70 @@ const R = {
           stroke(ax - nx, ay - ny, bx - nx, by - ny, 2.5, YELLOW, false);
           stroke(ax + nx, ay + ny, bx + nx, by + ny, 2.5, YELLOW, false);
         }
+        continue;
+      }
+      /* A PELICAN, which is one word for the whole marking because on the
+         ground it is one marking. A zebra is stripes; a pelican is two rows of
+         square studs across the road and the zig-zags on the approach to it,
+         and you can tell which of the two you are looking at from fifty yards
+         away before you have seen a single lamp. Drawing the studs without the
+         zig-zags would be a crossing wearing half its clothes, and making them
+         two words would be two entries that have to agree about where a
+         crossing is.
+
+         The zig-zags are the part that is doing the work. Their whole job is
+         to be visible from further back than the crossing is, which is why
+         they run twenty-odd metres up each approach and why nothing may park
+         on them — and it is the reason the kerbside parking in data/levels.js
+         stops where it does at both of these. */
+      if (m.p === 'pelican' && m.r) {
+        const [x1, y1, x2, y2] = m.r;
+        const px = x1 * TILE, py = y1 * TILE;
+        const w = (x2 - x1 + 1) * TILE, h = (y2 - y1 + 1) * TILE;
+        if (!near(px - TILE * 5, py - TILE * 5, px + w + TILE * 5, py + h + TILE * 5)) continue;
+        /* Which way the road runs, by the same test the zebra uses and for the
+           same reason: a crossing is a few tiles ALONG the road and the whole
+           width of it across. */
+        const horiz = h >= w;
+        c.save();
+        c.fillStyle = 'rgba(232,234,228,.62)';
+        /* THE STUDS. Two rows, one on each edge the traffic meets, square and
+           spaced about their own width apart. */
+        const STUD = 7, GAP = 11;
+        for (const at of horiz ? [px, px + w - STUD] : [py, py + h - STUD]) {
+          if (horiz) for (let y = py + 4; y + STUD <= py + h - 2; y += STUD + GAP) c.fillRect(at, y, STUD, STUD);
+          else for (let x = px + 4; x + STUD <= px + w - 2; x += STUD + GAP) c.fillRect(x, at, STUD, STUD);
+        }
+        /* THE ZIG-ZAGS. Four runs: one along each side of the carriageway, on
+           each approach. A tooth to the tile, a third of a tile deep, set in
+           from the kerb by a tooth's depth so the line has room to zig. */
+        const RUN = TILE * 4.5, PITCH = TILE, AMP = TILE * .34, IN = TILE * .5;
+        c.strokeStyle = 'rgba(228,230,222,.5)'; c.lineWidth = 2.5;
+        c.lineCap = 'butt'; c.lineJoin = 'miter';
+        const zig = (sx, sy, ux, uy, len) => {
+          const nx = -uy, ny = ux;
+          c.beginPath();
+          let d = 0, up = 1;
+          c.moveTo(sx, sy);
+          while (d < len) {
+            d = Math.min(len, d + PITCH / 2);
+            c.lineTo(sx + ux * d + nx * AMP * up, sy + uy * d + ny * AMP * up);
+            up = -up;
+          }
+          c.stroke();
+        };
+        if (horiz) {
+          for (const sideY of [py + IN, py + h - IN]) {
+            zig(px - 1, sideY, -1, 0, RUN);
+            zig(px + w + 1, sideY, 1, 0, RUN);
+          }
+        } else {
+          for (const sideX of [px + IN, px + w - IN]) {
+            zig(sideX, py - 1, 0, -1, RUN);
+            zig(sideX, py + h + 1, 0, 1, RUN);
+          }
+        }
+        c.restore();
         continue;
       }
       if (m.p === 'zebra' && m.r) {
@@ -698,6 +770,166 @@ const R = {
      wet the paint is — the polish is the one part of a car that knows what the
      weather is doing — and the wet is quantised, so drizzle turning into rain
      does not rebake eleven vehicles a frame. */
+  /* ---- THE LIGHTS ----
+     Drawn rather than cropped, and for exactly the reason the cars are. The
+     whole of what a signal DOES is change: a sheet would have to carry every
+     head in every aspect, and the atlas carries one — a red and nothing else,
+     which is why it is on the one set of lights in this town that has never
+     shown anything else (see FURN.signals and tools/sheets/streets.mjs).
+
+     What is on the pole depends on what the pole is for. Every arm gets the
+     three-aspect head the traffic reads. A crossing's poles get two more
+     things, because a pelican pole is three units bolted to one post and
+     everybody knows the shape of it without ever having looked: the man
+     facing across the road, and under him the box with the button in it and
+     the word WAIT over the top.
+
+     The lenses are visible when they are off. That is not decoration — an
+     unlit signal head in this country is three dark coloured circles in a
+     black board, and a head drawn with three grey holes reads as broken. What
+     lighting one does is make it bright and put a bloom round it, which is
+     also the only part of this that is drawn with 'lighter'. */
+  SIG: { red: '#e8342c', amber: '#f0a42a', green: '#34c759' },
+  signalHead(arm, ex, ey) {
+    const c = this.ctx, inst = arm.inst;
+    const asp = Signals.aspect(arm);
+    /* Flashing amber is a phase in its own right and has to flash: five
+       seconds of a steady amber is a different instruction. Four a second,
+       which is what the real ones do and is fast enough to read as flashing
+       rather than as a fault. */
+    const flash = (this.t * 4 | 0) & 1;
+    const on = {
+      red: asp === 'red' || asp === 'redamber',
+      amber: asp === 'amber' || asp === 'redamber' || (asp === 'flash' && flash),
+      green: asp === 'green'
+    };
+    /* The post. Three tiles of it, anchored by its foot like the lamp columns,
+       and leaning a few pixels out over the approach it holds so that which
+       way a head faces is a thing you can see from above without an arrow on
+       it. */
+    const lean = 4;
+    const bx = ex - arm.gx * lean, base = ey + 14, top = ey - 52;
+    this.shadow(ex, base - 1, 9, 4);
+    c.save();
+    c.fillStyle = '#4a4e54'; c.fillRect(bx - 2.5, top, 5, base - top);
+    c.fillStyle = '#6b7076'; c.fillRect(bx - 2.5, top, 1.5, base - top);
+    /* The base flange, which is the bit that makes a post look bolted down
+       rather than pushed in. */
+    c.fillStyle = '#3a3e44'; c.fillRect(bx - 5, base - 3, 10, 3);
+
+    /* The head: a black board with a pale border, which is the retroreflective
+       backing every signal in the country has had since the seventies. */
+    const hw = 13, hh = 31, hx = bx - hw / 2, hy = top - 2;
+    c.fillStyle = '#16181c';
+    c.beginPath(); c.roundRect(hx, hy, hw, hh, 3); c.fill();
+    c.strokeStyle = 'rgba(214,218,222,.72)'; c.lineWidth = 1.4;
+    c.beginPath(); c.roundRect(hx + .7, hy + .7, hw - 1.4, hh - 1.4, 2.6); c.stroke();
+    const lamps = [['red', on.red], ['amber', on.amber], ['green', on.green]];
+    lamps.forEach(([k, lit], i) => {
+      const cy = hy + 6.5 + i * 9, cx = bx;
+      /* The hood over each lens. A signal you can read in low sun is a signal
+         with a peak on it, and a head without them is a toy. */
+      c.fillStyle = '#0c0e11';
+      c.beginPath(); c.arc(cx, cy - 1.4, 4.4, Math.PI, 0); c.fill();
+      c.fillStyle = lit ? this.SIG[k] : this.shade(this.SIG[k], -.62);
+      c.beginPath(); c.arc(cx, cy, 3.2, 0, 6.3); c.fill();
+      if (lit) {
+        c.fillStyle = 'rgba(255,255,255,.55)';
+        c.beginPath(); c.arc(cx - .9, cy - 1, 1.1, 0, 6.3); c.fill();
+      }
+    });
+    c.restore();
+
+    /* THE OTHER TWO UNITS, and only on a crossing. */
+    if (inst.kind === 'pelican') this.crossingUnit(inst, bx, top + 34);
+
+    /* And the light itself, put back over the grade rather than left out of
+       it — the same rule as R.lamps(), and the reason a red light in this game
+       has something round it at eight o'clock and nothing round it at two in
+       the afternoon. Signals glow a little in daylight too, because they are
+       the only thing on a street bright enough to. */
+    const night = (typeof Sky !== 'undefined') ? clamp(-Sky.sunPos() * 1.6 + .55, .22, 1) : .5;
+    c.save();
+    c.globalCompositeOperation = 'lighter';
+    lamps.forEach(([k, lit], i) => {
+      if (!lit) return;
+      const g = this.glow(this.rgba(this.SIG[k], 'ALPHA'), 15);
+      c.globalAlpha = .5 * night;
+      c.drawImage(g, bx - g.width / 2, top + 4.5 + i * 9 - g.height / 2);
+    });
+    if (inst.kind === 'pelican' && Signals.man(inst) !== 'red') {
+      const lit = Signals.man(inst) === 'green' || flash;
+      if (lit) {
+        const g = this.glow('rgba(52,199,89,ALPHA)', 14);
+        c.globalAlpha = .42 * night;
+        c.drawImage(g, bx - g.width / 2, top + 41 - g.height / 2);
+      }
+    }
+    c.restore();
+  },
+  /* The man, and the box with the button in it. Both face ACROSS the road
+     rather than along it, so both are drawn square to the screen — which is
+     also the only way a ten-pixel figure is ever going to read as a person.
+     He is six rectangles: a head, a body, two arms and two legs, standing with
+     his feet together when he is red and mid-stride when he is green, because
+     that is the entire difference between the two and everybody knows it. */
+  crossingUnit(inst, bx, uy) {
+    const c = this.ctx;
+    const st = Signals.man(inst);
+    const flash = (this.t * 4 | 0) & 1;
+    const walk = st === 'green' || (st === 'flash' && flash);
+    const lit = st === 'red' ? 'red' : (walk ? 'green' : null);
+    c.save();
+    /* The box. Smaller than the traffic head, which is what it is. */
+    c.fillStyle = '#16181c';
+    c.beginPath(); c.roundRect(bx - 6.5, uy, 13, 13, 2.5); c.fill();
+    c.strokeStyle = 'rgba(214,218,222,.6)'; c.lineWidth = 1.1;
+    c.beginPath(); c.roundRect(bx - 5.9, uy + .6, 11.8, 11.8, 2); c.stroke();
+    if (lit) {
+      const col = lit === 'red' ? this.SIG.red : this.SIG.green;
+      c.fillStyle = col;
+      const my = uy + 2.4;
+      c.fillRect(bx - .9, my, 1.9, 1.9);                     /* head */
+      c.fillRect(bx - 1.1, my + 2.4, 2.3, 3.6);              /* body */
+      if (walk) {
+        c.fillRect(bx - 3.4, my + 2.8, 2.4, 1.1);            /* arms, swinging */
+        c.fillRect(bx + 1.2, my + 3.6, 2.4, 1.1);
+        c.fillRect(bx - 3, my + 6.2, 2.6, 1.2);              /* legs, mid-stride */
+        c.fillRect(bx + .6, my + 6.2, 2.6, 1.2);
+        c.fillRect(bx - 1.4, my + 5.8, 1.2, 1.6);
+        c.fillRect(bx + .4, my + 5.8, 1.2, 1.6);
+      } else {
+        c.fillRect(bx - 2.4, my + 2.6, 1.1, 3.2);            /* arms, down */
+        c.fillRect(bx + 1.4, my + 2.6, 1.1, 3.2);
+        c.fillRect(bx - 1.1, my + 6, 1, 2.4);                /* legs, together */
+        c.fillRect(bx + .2, my + 6, 1, 2.4);
+      }
+    }
+    /* THE WAIT PLATE AND THE BUTTON. The plate is lit from the moment the
+       button goes in until the man goes green, which is the whole of the
+       interval anybody has ever had an opinion about. The button under it is
+       always there, because the button is always there. */
+    const w = Signals.waiting(inst);
+    const py = uy + 14;
+    c.fillStyle = w ? '#c8a23a' : '#2a2c30';
+    c.beginPath(); c.roundRect(bx - 6.5, py, 13, 6, 1.5); c.fill();
+    c.fillStyle = w ? '#1a1509' : '#6a6e74';
+    c.font = 'bold 5px system-ui, sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('WAIT', bx, py + 3.2);
+    c.fillStyle = '#3b3e44';
+    c.beginPath(); c.roundRect(bx - 4, py + 7, 8, 6, 1.5); c.fill();
+    c.fillStyle = '#8d9298';
+    c.beginPath(); c.arc(bx, py + 10, 1.9, 0, 6.3); c.fill();
+    c.restore();
+  },
+  /* A hex colour as an rgba template R.glow() can fill in. Two lines, and it
+     exists because every glow in this file was written with its colour spelt
+     out and a signal's is picked at runtime. */
+  rgba(hex, alpha) {
+    const n = parseInt(hex.slice(1), 16);
+    return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + alpha + ')';
+  },
   CAR_PAD: 10,
   carArt(d) {
     const S = this.CARSHAPES[d.shape] || this.CARSHAPES.car;
@@ -3252,7 +3484,8 @@ const R = {
           c.translate(mid.x, mid.y); c.rotate(turn * Math.PI / 2); c.translate(-mid.x, -mid.y);
         }
         if (edgeOn || !(fsprite && Tiles.draw(c, fsprite, ex, ey + bob, canFlip))) {
-          if (o.art) this.wallArt(o, ex, ey + bob, size);
+          if (o.arm) this.signalHead(o.arm, ex, ey);
+          else if (o.art) this.wallArt(o, ex, ey + bob, size);
           else if (!o.noEmoji) this.emoji(o.e, ex, ey + bob, size);
         }
         if (turn) c.restore();

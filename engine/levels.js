@@ -53,7 +53,17 @@ const Levels = {
        is still in the middle of Fenn Street. `carTiles` travels with them for
        the same reason `blocked` does — it is what the level's own collision
        reads, and a stale one from the last level is a set of invisible cars. */
-    'cars', 'carTiles', 'peds'],
+    'cars', 'carTiles', 'peds',
+    /* And the lights, for the same reason and with a sharper edge on it. A
+       signal has a clock in it: leave the crossing bleeping, walk into the
+       Greggs, come out, and it should be where you left it rather than back at
+       the start of its cycle. Left off this list it was worse than stale — it
+       was GONE, because building any level at all writes World.signals and
+       every level but this one has none, so the first background prefetch
+       after walking outside quietly emptied the town of its lights while the
+       poles went on standing there. Which is the failure the note above this
+       list describes, arriving on schedule. */
+    'signals'],
 
   /* Object fields that a level's own state may change after it is built, and
      that therefore have to survive being evicted and rebuilt. Everything else

@@ -234,6 +234,9 @@ const ACHS = {
   a_march:   { n: 'I’ll Be About In March', e: '🌱', d: 'Promise Marcus something small and mean it.' },
   a_complaint:{ n: 'It Was Never The £38', e: '📮', d: 'Take a formal complaint all the way, with Alan saying nothing beside you.' },
   a_queue:   { n: 'The 16:55 Queue', e: '📞', d: 'Face the last surge of the day and still be standing at five.' },
+  /* ---- the lights ---- */
+  a_greenman:{ n: 'The Green Man', e: '🚶', d: 'Press the button. Wait for it. Actually wait for it.' },
+  a_pressed: { n: 'It Was Already Lit', e: '🚦', d: 'Press a button that is already pressed. Everybody does this.' },
   a_allhands:{ n: 'Any Questions?', e: '📽️', d: 'Survive an all-staff briefing. Ask a question. Ask the question.' },
   a_pigeon:  { n: 'Colleague', e: '🐦', d: 'Visit the pigeon five times. Be given something.' },
   a_step:    { n: 'Seven Minutes', e: '🪜', d: 'Sit on the step outside.' },

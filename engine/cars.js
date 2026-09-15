@@ -84,6 +84,12 @@ const Cars = {
            at the same thing, and how long it has left of going round something
            and on which side. See the note above steerTraffic(). */
         stuck: 0, lost: 0, back: 0, shunt: 0, pull: 0, pullBy: 0, rerouted: false,
+        /* Which set of lights is holding it, and whether it is being held.
+           `sig` is an arm's id rather than the arm itself, for the reason
+           Cars.driving is not hung off P: a level rebuild makes new arms, and
+           a car carrying a stale one would be stopped at a line that is no
+           longer there. See Signals.hold(). */
+        sig: null, atRed: false,
         /* What is holding it up, published for the car behind: the give-way
            rule is the only thing out there that needs to know what somebody
            ELSE can see. */
@@ -622,15 +628,47 @@ const Cars = {
        about one. It is the most realistic traffic this town has. */
     if (car.stops.length) want = this.serveStop(car, want, c, s, dt);
 
+    /* ---- THE LIGHTS ------------------------------------------------
+       The one thing out here that is not geometry. Everything above this line
+       stops a car because of where something is; this stops it because of what
+       a lamp on a pole is doing, at a painted line, in front of a junction
+       that may well be empty. See engine/signals.js.
+
+       It is shaped like the bus stop above it on purpose, and for the same
+       reason: a vehicle brought to a halt by a ramp over the last few metres
+       arrives at a line, and a vehicle that reads a boolean and sets its speed
+       to nothing arrives at the line by emergency-braking on top of it. Half a
+       tile of slack at the end, because a stop line is a line you stop AT and
+       not a line you stop on.
+
+       `atRed` is published for three rules below that must all sit this one
+       out. A car queueing at a signal is not stuck, is not deadlocked, and is
+       not something to be gone round — it is doing what it is told, and every
+       recovery in this file was written for a car that is not. */
+    const sigD = Signals.hold(car, dt);
+    car.atRed = sigD >= 0;
+    if (car.atRed) {
+      want = Math.min(want, Math.max(0, (sigD - TILE * .5) * 1.5));
+      car.pull = 0;
+    }
+
     const block = this.blocker(car);
     /* What is holding THIS car up, for the car behind to read next frame — see
        the give-way rule below. A person is not recorded: nobody negotiates
        priority with somebody on a crossing. */
     car.blockedBy = (block && block !== 'person') ? block : null;
-    car.braking = !!block;
+    car.braking = !!block || car.atRed;
     if (block) want = 0;
 
-    if (block && block !== 'person') {
+    /* A QUEUE AT A RED IS NOT A DEADLOCK, and the three rules below all have to
+       be told so. Each of them was written for a car that is stopped for no
+       good reason — and a car at a red light has the best reason there is.
+       Without this, four vehicles waiting out fourteen seconds of red creep
+       into the back of each other one at a time from the fourth second on, go
+       round each other down the oncoming lane, and sound the horn about it.
+       The car in front counts as much as this one: what is holding up the
+       front of the queue is what everybody behind it is waiting for. */
+    if (block && block !== 'person' && !car.atRed && !block.atRed) {
       /* NOBODY WAITS FOR EVER, and the reason two cars can wait for ever is
          that each of them can see the other in the way. The rule for that is
          the one on the sign: give way to the right. Each car publishes what is
@@ -668,7 +706,11 @@ const Cars = {
     /* A bus at a stop is not stuck: it is doing the one thing it is for. The
        ramp above can leave it asking for a little speed while barely moving,
        which is exactly the shape this detector was written to catch. */
-    if (car.stopFor > 0 || car.stopCool > 0 || car.serving) car.stuck = 0;
+    /* And a car at a red light is not stuck either, for the same reason and
+       with the same shape: the ramp leaves it asking for a few pixels a second
+       over the last half tile while it is barely rolling, which is exactly the
+       pattern below. It is standing at a line because it was told to. */
+    if (car.stopFor > 0 || car.stopCool > 0 || car.serving || car.atRed) car.stuck = 0;
     else if (!block && want > 12 && Math.abs(car.fwd) < 8) car.stuck += dt;
     else car.stuck = Math.max(0, car.stuck - dt * 2);
     if (car.stuck > 1.1) {
@@ -683,8 +725,11 @@ const Cars = {
     if (car.fwd < 1.5 && car.fwd > -1.5) car.fwd = 0;
 
     /* Held up for long enough to have an opinion about it. Once, quietly, and
-       then it waits like everybody else. */
-    if (car.braking && car.stopped > 2.4 && !car.honkT) { Sfx.horn(); car.honkT = 6; }
+       then it waits like everybody else — and never at a red, because nobody
+       sounds the horn at a traffic light. They sound it at the car in front of
+       them a second after the light has changed, which is a different game. */
+    if (car.braking && !car.atRed && !(car.blockedBy && car.blockedBy.atRed)
+        && car.stopped > 2.4 && !car.honkT) { Sfx.horn(); car.honkT = 6; }
   },
 
   /* Reversing out of it. Not a special case for kerbs but the manoeuvre any

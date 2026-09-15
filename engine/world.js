@@ -61,6 +61,13 @@ const World = {
        cars and for the same reason: at a pixel, walking, and not the twenty
        colleagues in NPCM — see engine/peds.js. */
     this.peds = (typeof Peds !== 'undefined' && def.peds) ? Peds.build(def.peds) : [];
+    /* And the lights, which are the third thing on this map that is not on a
+       tile — a signal is a pole at a tile and a stop line at a point on a lane,
+       and the lane is half a tile off the grid. Built here with the cars and
+       the people because it has state that has to travel with the level: walk
+       into the building while the crossing is bleeping and come back out, and
+       it is where it was, not back at the start of its cycle. */
+    this.signals = (typeof Signals !== 'undefined' && def.signals) ? Signals.build(def.signals) : [];
     (def.doors || []).forEach(d => {
       this.solid[d.y][d.x] = 0;
       /* Whether this door is a HOLE CUT IN A WALL or a leaf standing on floor a
@@ -74,6 +81,23 @@ const World = {
       this.zone[d.y][d.x] = this.zone[d.y][d.x] || d.z;
       this.add({ x: d.x, y: d.y, e: d.locked ? '🔐' : '🚪', name: d.name, kind: 'door', solid: false, use: d.locked ? 'lockedDoor' : 'door', locked: d.locked || null });
     });
+    /* THE POLES. A signal's arms declare where its posts stand, and a post on
+       a pavement is furniture: it is on a tile, it is solid, you walk round it
+       and you can press it. So they are added here rather than written out a
+       second time in furnish() — one declaration, and nothing can drift out of
+       step with the lights it is carrying. Before furnish(), so a level is
+       still free to put something next to one. */
+    this.signals.forEach(inst => inst.arms.forEach(arm => {
+      this.add({
+        x: arm.tx, y: arm.ty, e: '🚦', kind: 'signal', solid: true, noEmoji: true,
+        name: inst.kind === 'pelican' ? 'The crossing' : 'The lights',
+        use: inst.kind === 'pelican' ? 'crossingButton' : 'trafficLights',
+        /* The back-reference, and it is what the renderer draws from and what
+           the act reads. An arm knows its installation, so one field is the
+           whole of the link. */
+        arm
+      });
+    }));
     def.furnish.call(this);
     this.computeAO();
     this.buildDoorways();

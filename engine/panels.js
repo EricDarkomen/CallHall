@@ -109,6 +109,10 @@ const Interact = {
       : kind === 'car' ? 'Look at ' + best.name
       : best.ringing ? 'ANSWER — ' + best.name
       : (best.kind === 'chair' || best.use === 'playerDesk') ? 'Use ' + best.name
+      /* A push button is the one piece of street furniture out there that
+         DOES something, so it says so. "Inspect the crossing" is what you do
+         to a bollard. */
+      : best.use === 'crossingButton' ? 'Press the button'
       : 'Inspect ' + best.name;
     if (label === this._label) return;      /* only touch the DOM when it changes */
     this._label = label;

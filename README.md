@@ -325,8 +325,11 @@ cars, and nobody had said so. Nothing about the traffic moved to do it — not o
 route changed, and no parked car is within a tile of a lane a moving one uses.
 Where the runs stop is where a real one stops: junction mouths, both sides of
 every zebra, the length of the double yellows on the north side of the High
-Street, and seven tiles around each bus stop. Twenty-nine cars sit in them, one
-in every other stretch and never two stretches running.
+Street, and seven tiles around each bus stop. Twenty-seven cars sit in them, one
+in every other stretch and never two stretches running — and one more sits on the
+zig-zags outside the new crossing on the High Street, which is where that one was
+always going to end up. Two came off Fenn Street with the paint when the crossing
+there took the kerb.
 
 **And the other pavement.** On four of the five long roads, one footway had
 everything on it and the other had nothing at all — Fenn Street's southern side
@@ -442,17 +445,162 @@ Eleven new sprites came with it, all through the same fetch-crop-licence-check-p
 pipeline as the rest: the water and the ballast off the four-season terrain sheet,
 red rubble and pale ashlar off the castle walls, a drinking fountain, barrels, a
 crate, a council trough, a bay of post-and-rail fence, a NO ENTRY sign and a set
-of temporary traffic lights. The lights are fixed on red, and that is honesty
-rather than laziness: nothing in this game phases a signal and nothing in
-`engine/cars.js` knows what one is, so they are the thing they actually are
-everywhere in England — temporary three-way lights round a hole with nobody
-working in it, stuck on red since March, with the lane behind them coned off and
-no route in the level going down it.
+of temporary traffic lights. The lights are fixed on red, and that was honesty
+rather than laziness: when they were cropped, nothing in this game phased a
+signal and nothing in `engine/cars.js` knew what one was. Bellhaven has working
+lights now — see **Three sets of lights** below — and this sprite did not become
+wrong, it became specific. It is the one head in this town that has never shown
+anything but a red: temporary three-way lights round a hole with nobody working
+in it, stuck since March, with the lane behind them coned off and no route in the
+level going down it.
 
 Seven more achievements are down there. Not one of them is an achievement in the
 ordinary sense: every single one is somebody spending four minutes and about a
 pound on the wrong side of a railway line in the middle of a working day. That is
 the whole of what the old town is for.
+
+## Three sets of lights
+
+Everything on this map is geometry. A car stops because there is a car in the
+way; it gives way because the other one is on its right; a pedestrian goes round
+a bin because the bin is there. All of it is a fact about where things are,
+which is why none of it needed a clock.
+
+**A red light is not a fact about where anything is.** It is an instruction, it
+comes from somewhere else, and obeying it means stopping at a painted line in
+front of an empty junction. It is the first rule out there that has to be told
+to the traffic rather than discovered by it, and that is why `engine/signals.js`
+is a file rather than a paragraph in `engine/cars.js`.
+
+**The junction is the High Street and Cargate Lane**, which is a T because
+Cargate does not go north of the shops, and which is the busiest piece of road
+on this map: everything that laps the west block or the east block comes through
+it and both buses go straight over. It was a give way sign. What a give way sign
+cannot do is the thing you can now stand on the corner and watch — a car coming
+up Cargate used to wait for the 41, and then for the 41A, and then for the car
+behind the 41A, because giving way means waiting for a gap and there is no gap
+on the High Street between ten past nine and four. **The lights make a gap
+instead of waiting for one.**
+
+Green, amber, all red, red-and-amber, green, and the periods are the real ones —
+three seconds of amber and about two of red-and-amber, which is a detail nobody
+would notice if it were missing and everybody notices when it is wrong, because
+they have been watching it from a driving seat since they were seventeen.
+
+**And they are vehicle-actuated,** which is the part that matters in a town with
+sixteen vehicles in it. A fixed cycle would stop the High Street for an empty
+lane twice a minute. This one rests on the main road and only changes because
+something came up Cargate and asked; having served a minimum green it changes at
+the first break in its own traffic rather than the instant the clock runs out,
+so the car eight feet from the line goes and the one twelve tiles back does not
+get to hold the side road up for it; and it gives up at the maximum whatever is
+still coming, which is what stops a solid stream keeping Cargate waiting until
+five. The car being driven counts as traffic, so sitting at a red in the pool
+car is a thing the lights are actually waiting for rather than a punishment.
+
+**The other two are pelican crossings**, and both of them are exactly where
+somebody was already crossing without one. The man on the phone has walked over
+the High Street at that point every lap since the day there were people out
+here, and the hi-vis has crossed Fenn Street at that one; the level's own
+comments have said so for months, in a note about the difference between
+jaywalking and walking into a car. A crossing goes on the desire line or it goes
+nowhere. The Fenn Street one is four tiles from a junction mouth and is
+therefore too close to the junction, which is where people cross, and which is
+an argument every highway authority in England has had and most have lost in the
+same direction.
+
+A pelican has the button, the **WAIT** plate, the green man, the bleeper at
+2.5kHz because that is where the ear is sharpest, and five seconds of flashing
+amber at the end. That last one is the only aspect in this game that means *go
+if you can* — and it needed no code at all, because a car in Bellhaven has
+stopped for anybody in front of it since long before there was a crossing to do
+it on. The oldest rule out there turned out to be the one that made the newest
+phase work.
+
+The people press it themselves. That is the difference between a crossing and a
+decoration: walk up the High Street at any point in a shift and one of them is
+mid-cycle for somebody who is not you. You can press it as well, and if it is
+already lit you will press it again anyway, as will everybody, for ever.
+
+### What the cars had to be told
+
+Four rules in `engine/cars.js` had to be told that a queue at a red is not a
+fault, because every one of them was written for a car that is stopped for no
+good reason and a car at a red light has the best reason there is. Without it,
+four vehicles waiting out a phase creep into the back of each other one at a
+time from the fourth second on, go round each other down the oncoming lane, and
+sound the horn about it. The stuck detector sits it out, the deadlock-breaker
+sits it out, the pull-round sits it out, and nobody sounds the horn at a traffic
+light — they sound it at the car in front of them a second after the light has
+changed, which is a different game and not one this town plays.
+
+The stop itself is shaped like the bus stop rule above it, which is the piece of
+this that was already written: a vehicle brought to a halt by a ramp over the
+last few metres arrives at a line, and a vehicle that reads a boolean and sets
+its speed to nothing arrives at the line by emergency-braking on top of it.
+
+And which arm is holding a car is **latched onto the car** rather than asked
+fresh every frame. A car creeping up to a line arrives with a few pixels of it
+in front and then a few pixels of it behind; a question asked again on the frame
+it drifted past releases it, and what you have then is a car in the middle of a
+junction on a red with no reason left to stop. A real driver does not re-derive
+whether the light applies to them either.
+
+### The markings
+
+`stop` and `pelican` are two new words in the road paint vocabulary, which takes
+it to ten. A stop line is not a give-way line — one is the thin one you may
+cross when the road is clear and the other is the fat one you may not cross at
+all — and putting the wrong one under a signal is the same class of error as a
+centre line painted through a zebra.
+
+`pelican` is one word for the whole marking because on the ground it is one
+marking: the two rows of square studs across the road *and* the zig-zags up both
+approaches. You can tell a pelican from a zebra at fifty yards, before you have
+seen a single lamp, and it is the zig-zags that do it. They are also the reason
+a run of kerbside parking came off Fenn Street and another was cut short on the
+High Street — nothing may be left on a zig-zag, which is a rule the white van
+outside the new crossing has considered carefully and rejected.
+
+The heads are drawn rather than cropped, for the same reason the cars are: the
+whole of what a signal does is change. A black board with a white border, a hood
+over each lens, and the two lenses that are off drawn as what they are — dark
+coloured glass, not grey holes, because an unlit head is three dark circles and
+a head with holes in it reads as broken. Lighting one puts a bloom round it over
+the sky grade rather than under it, exactly as `R.lamps()` does the streetlights,
+which is why a red light has something round it at eight o'clock and nothing
+round it at two in the afternoon.
+
+### Proving it
+
+`tools/lightjam.mjs` is the third of the headless harnesses and it asks the
+three questions a signal introduces, none of which you can answer by driving
+around and looking:
+
+```sh
+node tools/lightjam.mjs          # five minutes of Bellhaven, nobody watching
+SEED=7 MINS=20 node tools/lightjam.mjs
+node tools/lightjam.mjs path/to/signals.js   # some other copy of the lights
+```
+
+**Does anybody run a red** — measured as a car *crossing* a stop line during a
+red, per car, per arm, every frame, with the geometry done again from the arm's
+own numbers by something that does not know what a latch is. A harness that asks
+the code under test whether the code under test is happy is not a harness.
+**Does the town still move** — the holds, and the shunts, pull-rounds and horns
+that must all be zero at a red. **And does anybody ever get across**, because
+two of the three installations do nothing at all unless a pedestrian asks.
+
+It exits non-zero on any of them, so a change to the lights cannot land quietly.
+
+`tools/carjam.mjs` runs the lights too now — they are part of the driving rather
+than scenery a car is stubbed against — and its first scenario, the undisturbed
+control, is the argument for the whole thing. Signalising that junction took it
+from **1.67% of car-frames off the road to 0.05%**, and the longest any vehicle
+went nowhere from **53 seconds to 28**. The give-way scramble at the mouth of
+Cargate Lane was the single largest source of beached traffic in the town, and
+the fix for it turned out to be the thing every real junction that busy already
+has.
 
 ## The away-day box
 
@@ -1002,8 +1150,10 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
 | `tools/carjam.mjs` | Dev-time only: the traffic put through the four things that used to beach it, headless, so a change to the driving can be measured rather than driven into. |
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
+| `tools/lightjam.mjs` | Dev-time only: the traffic and the crossings put through three sets of lights, headless, so that "nobody ran a red" is a number rather than an impression. |
 | `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
 | `engine/sky.js` | The clock past five, the light, the weather and the season. Everything that draws asks it what time it is; nothing that draws knows. |
+| `engine/signals.js` | The lights: the cycle, the demand, and the two questions everything else asks of it — how far in front of you is a line you may not cross, and may you step off this kerb. The only rule outside that is an instruction rather than a fact about where something is. |
 | `engine/guns.js` | The away-day box: five things drawn from a grid of characters rather than fetched — three you fire and two you swing — what they do to the people they land on, the arm the person holding them raises to do it, and the twist that lets somebody walk one way and point another. |
 | `engine/title.js`, `css/title.css` | The title screen: the wallboard, the switchboard behind it, and the menu. |
 | `scripts/release.sh` | Checks the build and moves the version string. Run it before you ship. |
@@ -1087,7 +1237,7 @@ and `arrive: true` is where a shift begins. Both are asked of the catalogue
 rather than written into `engine/` — `arrive` was a hard-coded `'office'` in two
 places, which was true for exactly as long as the building was one floor.
 
-Four more tables exist for the streets, and they are all optional — a level that
+Five more tables exist for the streets, and they are all optional — a level that
 declares none of them is exactly the level it always was.
 
 | | |
@@ -1096,6 +1246,7 @@ declares none of them is exactly the level it always was.
 | `paint:` | The markings. `dash`, `line`, `yellow`, `zebra`, `bays`, `text`, `rails`, all in tiles, all drawn by `R.roadPaint()` rather than cropped — a marking is position-dependent and a tile is not, and a running line least of all. |
 | `cars:` | What is parked, and what is driving. A car is not furniture: it is at a pixel, at an angle, at a speed, so it lives here and in `engine/cars.js` rather than in `furnish()`. `model:` names an entry in `CARS`; `body:`/`roof:` repaint that model for one car; `drive: true` lets you in; `route:` makes it traffic. |
 | `peds:` | Who is walking about. Same shape as a traffic car and for the same reason — a pixel, a route, a speed — and deliberately not the machinery in `engine/npc.js`, which is twenty colleagues with schedules and a grudge about a doorway. A route is `[x, y]` waypoints in tiles, with an optional third number to stand there for that many seconds. See `engine/peds.js`. |
+| `signals:` | The lights. One entry per installation, `junction` or `pelican`. An arm is one approach: `at` is the tile its post stands on, `go` is the direction the traffic it holds is travelling, `stop` is the point on the lane the line is painted across, and `g` groups the arms that get the road together. A crossing adds `over`, the piece of carriageway people walk on. The posts are real furniture — `World.build` makes them from this table rather than from `furnish()`, so a set of lights and the poles holding it up cannot drift apart. See `engine/signals.js`. |
 
 Two flags on a furnishing are read by the engine and are worth knowing about:
 `sprite:` names a rect in the atlas to draw instead of the emoji, and `fromCar:`
@@ -1108,7 +1259,7 @@ exactly as every other way out of every other room does it. That is the whole of
 how a lift knows where it goes, and it is why `Acts.lift()` does not know what a
 floor is.
 
-The editor has no tools for any of the four and carries all four through
+The editor has no tools for any of the five and carries all five through
 untouched, which is the next best thing — see `Doc.surfaces`.
 
 ### What collides with what

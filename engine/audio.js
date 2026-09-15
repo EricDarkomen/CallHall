@@ -129,6 +129,11 @@ const Sfx = {
      soft, and low enough to be felt rather than heard. */
   bonk() { this.tone(150, 0.09, 'sine', 0.2); this.noise(0.07, 0.09); },
   horn() { this.tone(392, 0.3, 'sawtooth', 0.16); this.tone(330, 0.3, 'sawtooth', 0.14, 0.01); },
+  /* THE BLEEPER on a pelican crossing. Deliberately the ugliest noise in this
+     file: a hard square wave at 2.5kHz, which is where the ear is sharpest and
+     which is exactly why the real ones are pitched there. It is the only sound
+     in this game made for people who cannot see the thing making it. */
+  bleep() { this.tone(2500, 0.09, 'square', 0.09); },
   thud(force) {
     const v = clamp(force || 0.5, 0.1, 1);
     this.noise(0.14 + v * 0.1, 0.16 + v * 0.24);

@@ -1291,6 +1291,58 @@ const Acts = {
       'A give way sign at the top of the street, with the triangle painted on the road under it to match.',
       'The traffic out here does actually yield at these, and to the right where two of them want the junction at once, which makes this the best-observed rule in Bellhaven by a distance nobody wants to think about.']);
   },
+  /* ---- THE LIGHTS ----
+     Three sets of them and two of the three have a button on. The act on the
+     button is the only place in the game that can press one — engine/peds.js
+     presses the crossings people arrive at by themselves, which is why they go
+     off all day without you. */
+  crossingButton(o) {
+    const inst = o.arm && o.arm.inst;
+    if (!inst) { insp('🚦', 'The crossing', 'Push button', ['A push-button unit on a post.']); return; }
+    const st = Signals.man(inst);
+    if (st === 'green') {
+      insp('🚶', 'The crossing', 'Cross now', [
+        'The man is green and the bleeper is going, at the pitch the ear is sharpest at, which is not an accident.',
+        'Seven seconds. The traffic on both sides has stopped, which from this side of the kerb feels like considerably more authority than a button ought to carry.']);
+      return;
+    }
+    if (st === 'flash') {
+      insp('🚶', 'The crossing', 'Finish crossing', [
+        'The man is flashing and so is the amber on the other side of the pole. Nobody may start; anybody already out there finishes.',
+        'It is the only instruction on this road that trusts two parties to work something out between themselves, and it is the one that works best.']);
+      return;
+    }
+    if (Signals.press(inst)) {
+      inst.mine = true;
+      Sfx.blip();
+      insp('🚦', 'The crossing', 'WAIT', [
+        'The button goes in about a millimetre with a click you feel rather than hear, and the WAIT plate above it lights up.',
+        'Nothing else happens. The traffic keeps coming. This is the part everybody has an opinion about, and the opinion is wrong: it is counting.']);
+      return;
+    }
+    Ach.get('a_pressed');
+    insp('🚦', 'The crossing', 'WAIT — already lit', [
+      'You press it again. It was already lit. It was lit before you got here.',
+      'Everybody does this. Every single person does this. The button is a request, not a switch, and the entire country presses it a second time anyway in case the first one did not take.']);
+  },
+  trafficLights(o) {
+    const inst = o.arm && o.arm.inst;
+    const asp = inst ? Signals.aspect(o.arm) : 'red';
+    const say = asp === 'green' ? 'Green' : asp === 'amber' ? 'Amber'
+      : asp === 'redamber' ? 'Red and amber' : 'Red';
+    insp('🚦', 'The lights', say + ' this way', [
+      'A signal head on a post: three lenses in a black board with a white border, a hood over each, and a stop line painted across the lane in front of it.',
+      'This was a give way sign until recently. The difference is that giving way means waiting for a gap, and there is no gap on the High Street between ten past nine and four — so anybody coming up Cargate Lane waited for both buses and then for the car behind the second one. The lights make a gap instead of waiting for one.',
+      pick(['It will not change for nobody. Stand here at the wrong end of the afternoon and it simply stays as it is.',
+        'Somebody has put a sticker on the pole, at the height a sticker goes, advertising a phone number for a thing that no longer exists.',
+        'The controller box at the foot of it is humming. It is the only thing on this street doing arithmetic.'])]);
+  },
+  zigzagVan(car) {
+    insp('🚐', car.name, 'On the zig-zags', [
+      'A white van parked square across the zig-zags at the west end of the crossing, on the side where the studs are, four feet from where a person steps off the kerb.',
+      'Nobody is in it. The hazards are not on, which means it is not delivering; it is parked. It has been parked there long enough that the crossing was painted round it.',
+      'Two people have looked at it in the time you have been standing here. Neither of them did anything, and neither will you, and that is the whole of why it is still there.']);
+  },
   streetTyres() {
     insp('\ud83d\udede', 'The tyres', 'Nobody\u2019s', [
       'A stack of tyres against the wall of the unit that is always being refitted, with two more leaning off it.',
