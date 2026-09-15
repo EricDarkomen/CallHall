@@ -117,6 +117,7 @@ const Emit = {
        must not lose — see the note on Doc.surfaces. Emitted here, in the
        geometry block, because that is the half of a level that round-trips. */
     if (Doc.surfaces && Doc.surfaces.length) L.push(this.listBlock('surfaces', Doc.surfaces, i));
+    if (Doc.roofs && Doc.roofs.length) L.push(this.listBlock('roofs', Doc.roofs, i));
     if (Doc.paint && Doc.paint.length) L.push(this.listBlock('paint', Doc.paint, i));
     if (Doc.cars && Doc.cars.length) L.push(this.listBlock('cars', Doc.cars, i));
     if (Doc.peds && Doc.peds.length) L.push(this.listBlock('peds', Doc.peds, i));

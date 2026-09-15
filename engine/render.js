@@ -132,6 +132,9 @@ const R = {
        baked bitmap is the only thing that reaches the screen, so an editor that
        can change what a thing looks like has to be able to say so. */
     if (this._cars) this._cars.clear();
+    /* And which baked tile each roof tile was holding, since every one of them
+       is a key into the map that was just emptied. */
+    this._roofOf = null; this._roofLevel = null;
   },
   _bake(key, draw) {
     this._tiles = this._tiles || new Map();
@@ -365,12 +368,417 @@ const R = {
       }
     });
   },
-  /* Roofs, for the wall mass outdoors that has no floor beside it to be seen
-     from — the middle of a terrace, and everything past the edge of the map.
-     Slate: courses of tile with the joints staggered, dark enough that the
-     streets between them are obviously the lit part of the picture. Baked like
-     every other surface, so a whole block of it costs one blit a tile. */
-  roofTile(v) {
+  /* ---- the roofs ----
+
+     Everything solid outdoors that no floor can see is a roof: the middle of a
+     block, and the whole of the town past the edge of the map. That used to be
+     roofBaked() below and nothing else — four courses of slate in two variants,
+     with a black square on about a quarter of them standing for a vent. On one
+     tile it is a decent piece of drawing. On the four hundred tiles between
+     Cargate Lane and the retail park it is a swatch, and a swatch cannot do the
+     one thing a roof has to do from above: say where one building stops and the
+     next one starts. A town seen from overhead is not a texture. It is a
+     hundred roofs butted up against each other, in four or five materials, each
+     with a parapet round it and its own junk on it, and the lines between them
+     ARE the town.
+
+     So the roof is drawn in three steps, and the first of them is the one that
+     matters.
+
+     ONE: cut the mass into PLOTS. See roofPlot(). Nothing in a level says where
+     a building ends — a block is one rectangle of solid with a shop front drawn
+     on the south side of it — so the plots are derived, the way R.kerbs()
+     derives a kerb from wherever two surfaces meet. What comes out is a terrace:
+     runs of three to five tiles across, cut again front to back, and cut
+     differently in each run so the party walls of one street do not line up with
+     the street behind it.
+
+     TWO: ask the corner-matched set for the tile. Thirteen tiles per material
+     off art/sprites/roofs.png (tools/sheets/roofs.mjs) — field, four edges, four
+     outer corners, four inner corners — chosen by which of this tile's four
+     CORNERS are inside the same plot. That is what puts a coping all the way
+     round every building, mitred at the corners and returned into the inner
+     ones, without anybody drawing one.
+
+     THREE: put something on it. A flat roof is never empty: there is plant on
+     it, or a rooflight, or a tank, or a stack, or an aerial somebody put up for
+     analogue television and never took down. roofDeco() draws those, baked into
+     the same tile, so a roof with a lift overrun on it still costs one blit. */
+
+  /* What a roof is MADE of, as a bag to draw from rather than a list to cycle:
+     six slates to three leads to two felts to two pantiles to one oxblood,
+     which is roughly the mix of an English market town that got bombed in one
+     half and listed in the other. The odds are the whole of the reason it reads
+     as a town rather than as a chessboard — an even split between five colours
+     would look deliberate, and nothing about a roofscape is deliberate. */
+  ROOF_MATS: [
+    'slate', 'slate', 'slate', 'slate', 'slate', 'slate',
+    'lead', 'lead', 'lead',
+    'felt', 'felt',
+    'pantile', 'pantile',
+    'oxblood',
+  ],
+  /* Which of the thirteen, indexed by this tile's four corners as bits:
+     1 north-west, 2 north-east, 4 south-west, 8 south-east, set when that
+     corner is inside the same plot. A name here is the roof's own word for
+     which way its open side faces — `n` is the tile whose plot carries on to
+     the SOUTH of it, so the coping is along its north edge.
+
+     Three of the sixteen are not roof shapes at all: 0 is a tile with no
+     corner in its own plot (a one-tile plot, which only happens where the mass
+     narrows to a sliver) and 6 and 9 are the two diagonals, where two plots
+     touch at a point. All three take the field tile, because there is no
+     honest coping to draw for a shape that has no side. */
+  ROOF_WANG: [
+    'mid', 'se', 'sw', 's', 'ne', 'e', 'mid', 'in.se',
+    'nw', 'mid', 'w', 'in.sw', 'n', 'in.ne', 'in.nw', 'mid',
+  ],
+  /* The junk. Weighted the same way the materials are and for the same reason:
+     most roofs have a vent and a puddle on them, one in a street has a lift
+     overrun, and the empty string is the commonest thing on the list because
+     most of a roof is roof. */
+  ROOF_DECO: ['vent', 'vent', 'light', 'light', 'plant', 'tank', 'aerial', 'lift', 'stack'],
+
+  /* THE PLOTS.
+
+     A pure function of the tile, like R.toneOf() and for the same reason: a
+     building that changed shape when the camera moved would be worse than no
+     buildings at all. There is no level data behind it and none is wanted —
+     every outdoor level in the game gets a townscape for free, including the
+     ones nobody has drawn a block on yet.
+
+     How the cuts are made: the map is taken in periods of sixteen tiles, and
+     within each period the cut positions are drawn off a hash of the period's
+     own index, three to five apart. A tile's BAND is which period it is in and
+     how many of that period's cuts it is past. Memoised because a period's cuts
+     are drawn once and then asked for by every tile in it, and thrown away with
+     the baked tiles when the editor repaints a level.
+
+     The salt is what stops the result being a grid. Columns are banded once,
+     for the whole map; rows are banded ONCE PER COLUMN BAND, with the column
+     band in the salt — so the run of buildings on Marlow Street is cut front to
+     back in different places from the run behind it, which is what a terrace
+     looks like from above and a chessboard does not. */
+  ROOF_PERIOD: 16,
+  roofCuts(salt) {
+    this._roofCuts = this._roofCuts || new Map();
+    let cuts = this._roofCuts.get(salt);
+    if (cuts) return cuts;
+    const rnd = this._rand(this._hash(salt));
+    cuts = [];
+    /* Never within three of a cut or of the period's own edge: a two-tile
+       building has no field tile in it, and four parapets with nothing between
+       them reads as a wall, not a roof. */
+    for (let o = 3 + Math.floor(rnd() * 3); o <= this.ROOF_PERIOD - 3; o += 3 + Math.floor(rnd() * 3)) cuts.push(o);
+    this._roofCuts.set(salt, cuts);
+    return cuts;
+  },
+  roofBand(v, salt) {
+    const P = this.ROOF_PERIOD;
+    const p = Math.floor(v / P), o = v - p * P;
+    const cuts = this.roofCuts(salt + p);
+    let n = 0;
+    while (n < cuts.length && cuts[n] <= o) n++;
+    /* Four cuts is the most sixteen tiles can hold at three apart, so five
+       bands per period and eight is room to spare. */
+    return p * 8 + n;
+  },
+  roofPlot(x, y) {
+    const cb = this.roofBand(x, 'c');
+    return cb * 65536 + this.roofBand(y, 'r' + cb);
+  },
+  /* The first tile of the band v is in — the plot's own north-west corner,
+     which is the ONE tile in a plot that everything about the plot as a whole
+     should be decided at. See roofMatsAt(). */
+  roofBandStart(v, salt) {
+    const P = this.ROOF_PERIOD;
+    const p = Math.floor(v / P), o = v - p * P;
+    let s = 0;
+    for (const cut of this.roofCuts(salt + p)) if (cut <= o) s = cut;
+    return p * P + s;
+  },
+  /* WHAT THIS PART OF TOWN IS ROOFED IN.
+
+     A level may say, and most do not. `roofs: [{ m: [...], r: [x1,y1,x2,y2] }]`
+     in a level def is the same shape of thing as `surfaces:` and does the same
+     kind of job — it says what a piece of the map is MADE of, over the top of
+     what the default would have been. The default is ROOF_MATS, which is the
+     mix of a town that grew normally.
+
+     It exists because this map is two towns. The half north of the railway was
+     flattened and rebuilt in the sixties and is roofed the way that half of
+     England is: slate, lead, and a lot of felt. The half south of it is a
+     walled mediaeval centre with a minster in the middle, and a conservation
+     area officer who will not have felt. Giving those two the same bag to draw
+     from made the old town look like the retail park from above, which is the
+     one thing the whole southern half of this map exists not to be.
+
+     Asked of the plot's north-west corner and not of the tile, which matters
+     at the boundary: a plot that straddles the edge of a rect would otherwise
+     come out half pantile and half felt inside one unbroken parapet, and a
+     building that changes material halfway across reads as a fault rather than
+     as a boundary. One plot, one material, and the line between two palettes
+     falls where the party walls already are. */
+  roofMatsAt(x, y) {
+    const list = World.def && World.def.roofs;
+    if (list) {
+      for (const p of list) {
+        const r = p.r;
+        if (x >= r[0] && y >= r[1] && x <= r[2] && y <= r[3] && p.m && p.m.length) return p.m;
+      }
+    }
+    return this.ROOF_MATS;
+  },
+  /* Is this tile roof — solid, outdoors, and with no walkable tile beside it to
+     be seen from. The same question the wall pass asks itself before it reaches
+     the roof branch; asked here as well because the corner test has to ask it
+     of eight neighbours, four of which may be off the map. Off the map is NOT
+     roof: the edge of the world gets a parapet like anything else, which is
+     honest — you are looking at the last building before the ring road. */
+  roofAt(x, y) {
+    if (x < 0 || y < 0 || x >= MAPW || y >= MAPH) return false;
+    if (!World.solid[y][x] || World.open(x, y)) return false;
+    if (y + 1 < MAPH && !World.solid[y + 1][x] && World.zone[y + 1][x]) return false;
+    if (x + 1 < MAPW && !World.solid[y][x + 1]) return false;
+    if (x > 0 && !World.solid[y][x - 1]) return false;
+    if (y > 0 && !World.solid[y - 1][x]) return false;
+    return true;
+  },
+  /* One tile of roof, with the plot worked out and the tile picked. Returns
+     null when the sheet has not decoded yet, which is what sends the wall pass
+     back to roofBaked() for that frame. */
+  roofTile(x, y) {
+    /* CACHED PER TILE, and that is not an optimisation so much as the price of
+       doing it this way at all. Picking one tile means asking roofPlot() of
+       this tile and its eight neighbours, and each of those is two banded
+       lookups — call it twenty per tile, six hundred tiles on screen, sixty
+       times a second. Nothing about the answer can change while a level is up:
+       the plots are a function of the coordinate and the mass is a function of
+       the map. So it is worked out once per tile and the wall pass gets an
+       array lookup and a blit, which is what it had before any of this. Thrown
+       away with the baked tiles, and when the level changes under it. */
+    const i = y * MAPW + x;
+    if (!this._roofOf || this._roofLevel !== World.level) { this._roofLevel = World.level; this._roofOf = []; }
+    const hit = this._roofOf[i];
+    if (hit) return hit;
+    const plot = this.roofPlot(x, y);
+    const cb = this.roofBand(x, 'c');
+    const mats = this.roofMatsAt(this.roofBandStart(x, 'c'), this.roofBandStart(y, 'r' + cb));
+    const mat = mats[this._hash('plot' + plot) % mats.length];
+    if (!Tiles.has('roof.' + mat + '.mid')) return null;
+    const same = (ax, ay) => this.roofAt(ax, ay) && this.roofPlot(ax, ay) === plot;
+    /* A CORNER is inside the plot when all three tiles touching it are — this
+       one is by definition, so it is the other three that decide. */
+    const c = (dx, dy) => (same(x + dx, y) && same(x, y + dy) && same(x + dx, y + dy)) ? 1 : 0;
+    const bits = c(-1, -1) | (c(1, -1) << 1) | (c(-1, 1) << 2) | (c(1, 1) << 3);
+    const key = this.ROOF_WANG[bits];
+    /* Weathering and junk go on the FIELD tile only. On an edge or a corner
+       most of the tile is coping and there is nowhere to put either, and a
+       water tank sat half over a parapet is the one thing on a roof that reads
+       as a bug rather than as a building. */
+    if (key !== 'mid') return (this._roofOf[i] = this.roofBake(mat, key, 0, '', ''));
+    /* A SLIVER. `mid` with anything but all four corners set means this tile is
+       field because there was no honest coping to draw, not because it is in
+       the middle of anything — a plot one tile deep, which is what the terrace
+       of warehouses along the quay is and what the nave of the minster is. The
+       corner-matched set has no piece for that and no kit's does: a run one
+       tile wide is drawn as a run, not as four parapets back to back.
+
+       What it gets instead is a PARTY WALL: a line of the gutter's own dark
+       down each side the plot does not carry on into. That is the difference
+       between a row of little buildings and a stripe, and on a one-deep terrace
+       it is the only thing saying there is more than one shop there. */
+    if (bits !== 15) {
+      let cut = '';
+      if (!same(x, y - 1)) cut += 'n';
+      if (!same(x, y + 1)) cut += 's';
+      if (!same(x - 1, y)) cut += 'w';
+      if (!same(x + 1, y)) cut += 'e';
+      return (this._roofOf[i] = this.roofBake(mat, 'mid', 0, '', cut));
+    }
+    const h = this._hash('roof' + x + ',' + y);
+    const deco = (h % 7) ? '' : this.ROOF_DECO[(h >>> 5) % this.ROOF_DECO.length];
+    return (this._roofOf[i] = this.roofBake(mat, key, h & 1, deco, ''));
+  },
+  /* The crop, the weathering and the junk, baked together. One canvas per
+     combination that actually occurs — about a hundred and thirty of them on a
+     level with all five materials on it — and one blit a tile after that, which
+     is what the procedural version cost. */
+  roofBake(mat, key, v, deco, cut) {
+    const name = 'roof.' + mat + '.' + key;
+    return this._bake('R' + name + v + deco + '|' + cut, (g, N, rnd) => {
+      const r = Tiles.rects[name];
+      g.imageSmoothingEnabled = false;
+      g.drawImage(Tiles.imgFor(name), r[0], r[1], r[2], r[3], 0, 0, N, N);
+      if (key === 'mid') {
+        /* WEATHERING, which is here to kill the repeat. The field tile is one
+           32-pixel square laid over a whole building and the eye finds that
+           grid immediately; two variants of a few soft patches of damp and
+           lichen is enough to stop it, and is what a flat roof looks like
+           anyway three winters after anybody last went up there. */
+        for (let i = 0; i < 4; i++) {
+          g.fillStyle = rnd() > .45 ? 'rgba(0,0,0,.09)' : 'rgba(184,196,170,.055)';
+          g.beginPath();
+          g.ellipse(rnd() * N, rnd() * N, 5 + rnd() * 13, 4 + rnd() * 10, rnd() * 3, 0, 6.3);
+          g.fill();
+        }
+        if (deco) this.roofDeco(g, N, rnd, deco, mat);
+      }
+      /* The party wall, drawn last so nothing sits over it. Two source pixels
+         of gutter and one of damp course above it, on whichever sides were
+         asked for — see the note about slivers in roofTile(). */
+      if (cut) {
+        const u = N / 32, edge = (a, b, w, h) => {
+          g.fillStyle = 'rgba(12,14,19,.80)'; g.fillRect(a, b, w, h);
+        };
+        if (cut.includes('n')) edge(0, 0, N, 2 * u);
+        if (cut.includes('s')) edge(0, N - 2 * u, N, 2 * u);
+        if (cut.includes('w')) edge(0, 0, 2 * u, N);
+        if (cut.includes('e')) edge(N - 2 * u, 0, 2 * u, N);
+        g.fillStyle = 'rgba(255,255,255,.10)';
+        if (cut.includes('n')) g.fillRect(0, 2 * u, N, u);
+        if (cut.includes('w')) g.fillRect(2 * u, 0, u, N);
+      }
+    });
+  },
+  /* What is on the roof. Drawn rather than cropped: the kit these tiles come
+     from has no rooftop plant in it, nobody's does, and the things on a British
+     flat roof are five boxes and an aerial — which is about forty lines of
+     canvas and does not need to be somebody else's pixels.
+
+     Every one of them is lit from the north-west and drops its shadow to the
+     south-east, which is where everything else in this game puts one. */
+  roofDeco(g, N, rnd, kind, mat) {
+    const u = N / 32;                       /* one source pixel, at bake scale */
+    const shadow = (x, y, w, h) => { g.fillStyle = 'rgba(0,0,0,.34)'; g.fillRect(x + 2 * u, y + 2 * u, w, h); };
+    /* A box with a lit top edge and a dark south face: the whole vocabulary of
+       everything up here, so it is one function and five callers. */
+    const box = (x, y, w, h, top, side) => {
+      shadow(x, y, w, h);
+      g.fillStyle = side; g.fillRect(x, y, w, h);
+      g.fillStyle = top; g.fillRect(x, y, w, h - 3 * u);
+      g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x, y, w, u);
+      g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x, y + h - u, w, u);
+    };
+    switch (kind) {
+      case 'vent': {
+        /* A mushroom cowl on a stub of pipe. There are four of these on every
+           flat roof in England and not one of them is straight. */
+        const x = (6 + rnd() * 14) * u, y = (8 + rnd() * 12) * u;
+        shadow(x - 4 * u, y, 9 * u, 6 * u);
+        g.fillStyle = '#4a5058'; g.fillRect(x - 2 * u, y + 2 * u, 4 * u, 5 * u);
+        g.fillStyle = '#767d86';
+        g.beginPath(); g.ellipse(x, y + 2 * u, 5 * u, 3 * u, 0, 0, 6.3); g.fill();
+        g.fillStyle = 'rgba(255,255,255,.22)';
+        g.beginPath(); g.ellipse(x - u, y + u, 3 * u, 1.6 * u, 0, 0, 6.3); g.fill();
+        break;
+      }
+      case 'light': {
+        /* A ROOFLIGHT. Wired glass in a kerb, two panes, and the sky in it —
+           which is the only thing on a roof that is ever brighter than the
+           roof. Colder than the daylight on the street on purpose: you are
+           looking at reflected sky, not at lit ground. */
+        const w = 14 * u, h = 10 * u, x = (32 * u - w) / 2 + (rnd() * 6 - 3) * u, y = (32 * u - h) / 2 + (rnd() * 6 - 3) * u;
+        shadow(x, y, w, h);
+        g.fillStyle = '#9aa0a6'; g.fillRect(x - u, y - u, w + 2 * u, h + 2 * u);   /* the upstand */
+        g.fillStyle = '#7d9fb4'; g.fillRect(x, y, w, h);
+        g.fillStyle = 'rgba(226,240,248,.45)'; g.fillRect(x, y, w, h / 2);
+        g.fillStyle = 'rgba(40,52,62,.55)'; g.fillRect(x + w / 2 - u / 2, y, u, h);
+        g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x - u, y - u, w + 2 * u, u);
+        break;
+      }
+      case 'plant': {
+        /* An air-handling unit on a timber frame, with louvres down the front
+           and a duct off the side of it. The thing that keeps a shop cold and
+           is the reason the flat above it can hear a hum. */
+        const w = 16 * u, h = 11 * u, x = (7 + rnd() * 3) * u, y = (9 + rnd() * 5) * u;
+        box(x, y, w, h, '#69707a', '#464c55');
+        g.fillStyle = 'rgba(0,0,0,.30)';
+        for (let i = 1; i < 6; i++) g.fillRect(x + 2 * u, y + h - 3 * u - i * 1.4 * u, w - 4 * u, u);
+        g.fillStyle = '#5b626b'; g.fillRect(x + w, y + 3 * u, 5 * u, 4 * u);       /* the duct */
+        g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + w, y + 3 * u, 5 * u, u);
+        break;
+      }
+      case 'tank': {
+        /* A water tank on four legs, which is a Victorian answer to a problem
+           the building stopped having in about 1970 and which is still up
+           there because taking it down costs more than leaving it. */
+        const w = 13 * u, h = 9 * u, x = (9 + rnd() * 4) * u, y = (8 + rnd() * 4) * u;
+        /* The legs first and the tank over them, so what you see of a leg is
+           the bit that sticks out below — which is the only part of a gantry
+           you can see from directly above, and the whole of how it reads as
+           standing OFF the roof rather than sitting on it. */
+        g.fillStyle = 'rgba(0,0,0,.26)'; g.fillRect(x + 2 * u, y + 3 * u, w, h + 3 * u);
+        g.fillStyle = '#3f4650';
+        for (const lx of [x + u, x + w - 2.5 * u]) g.fillRect(lx, y + 2 * u, 1.5 * u, h + 4 * u);
+        box(x, y, w, h, '#6d6459', '#4b453d');
+        g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(x + 3 * u, y + 2 * u, w - 6 * u, u);
+        g.fillStyle = 'rgba(120,150,110,.22)'; g.fillRect(x, y + h - 4 * u, w, u);  /* the algae line */
+        break;
+      }
+      case 'lift': {
+        /* The overrun: the stair head and the lift motor room, which is the one
+           thing up here that is the same material as the building under it and
+           is drawn that way — a small windowless single storey with a parapet
+           of its own, standing on a roof. */
+        const w = 17 * u, h = 13 * u, x = (6 + rnd() * 4) * u, y = (8 + rnd() * 4) * u;
+        g.fillStyle = 'rgba(0,0,0,.36)'; g.fillRect(x + 3 * u, y + 3 * u, w, h);
+        /* Brick where the building is brick, render where it is not, because
+           the one thing everybody gets right about an overrun is that it was
+           built by whoever built the rest of it. */
+        const body = mat === 'oxblood' || mat === 'pantile' ? '#6a4133' : '#575d64';
+        g.fillStyle = body; g.fillRect(x, y, w, h);
+        /* Its own little flat roof inside its own little parapet — which is
+           the joke of the thing: there is a roof on the roof. */
+        g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(x + 2 * u, y + 2 * u, w - 4 * u, h - 6 * u);
+        g.fillStyle = 'rgba(255,255,255,.10)'; g.fillRect(x + 2 * u, y + 2 * u, w - 4 * u, u);
+        g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(x, y, w, 1.5 * u);
+        g.fillStyle = 'rgba(0,0,0,.30)'; g.fillRect(x, y + h - 3 * u, w, 3 * u);
+        g.fillStyle = 'rgba(0,0,0,.50)'; g.fillRect(x + 4 * u, y + h - 6 * u, 4.5 * u, 3.5 * u);  /* the door out */
+        g.fillStyle = '#8b9199'; g.fillRect(x + w - 5 * u, y + h - 5 * u, 1.5 * u, 4 * u);       /* the vent pipe */
+        break;
+      }
+      case 'aerial': {
+        /* An H aerial and a dish, on the same bracket, pointing two different
+           ways. Analogue stopped in 2012 and the aerial is still there, because
+           the aerial is always still there. */
+        const x = (10 + rnd() * 12) * u, y = (20 + rnd() * 4) * u;
+        g.fillStyle = 'rgba(0,0,0,.30)'; g.fillRect(x + 2 * u, y - 10 * u, 1.5 * u, 12 * u);
+        g.fillStyle = '#8b9199';
+        g.fillRect(x, y - 12 * u, 1.5 * u, 13 * u);
+        g.fillRect(x - 4 * u, y - 12 * u, 9.5 * u, 1.2 * u);
+        g.fillRect(x - 3 * u, y - 9 * u, 7.5 * u, 1.2 * u);
+        g.fillStyle = '#cfd3d6';
+        g.beginPath(); g.ellipse(x + 7 * u, y - 5 * u, 3.4 * u, 4.2 * u, .4, 0, 6.3); g.fill();
+        g.fillStyle = 'rgba(0,0,0,.30)';
+        g.beginPath(); g.ellipse(x + 7.8 * u, y - 4.4 * u, 2.4 * u, 3.2 * u, .4, 0, 6.3); g.fill();
+        break;
+      }
+      case 'stack': {
+        /* A CHIMNEY STACK with four pots on it. Nothing is lit under any of
+           them and has not been since the clean air acts, which is why three of
+           the four have a cowl on and the fourth has a bird in it. */
+        const w = 15 * u, h = 8 * u, x = (8 + rnd() * 4) * u, y = (12 + rnd() * 4) * u;
+        g.fillStyle = 'rgba(0,0,0,.38)'; g.fillRect(x + 3 * u, y + 3 * u, w, h + 3 * u);
+        g.fillStyle = '#7a4a3a'; g.fillRect(x, y, w, h);                 /* the brickwork */
+        g.fillStyle = 'rgba(0,0,0,.20)';
+        for (let i = 1; i < 4; i++) g.fillRect(x, y + i * 2 * u, w, u);
+        g.fillStyle = '#9b9083'; g.fillRect(x - u, y - 2 * u, w + 2 * u, 2.5 * u);   /* the flaunching */
+        for (let i = 0; i < 4; i++) {
+          const px = x + (1.5 + i * 3.4) * u;
+          g.fillStyle = i === 3 ? '#8d5a41' : '#5c6169';
+          g.fillRect(px, y - 6 * u, 2.6 * u, 4.5 * u);
+          g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(px, y - 6 * u, 2.6 * u, u);
+        }
+        break;
+      }
+    }
+  },
+  /* The roof this game had before it had a sheet of them, kept because the
+     sheet is a separate PNG and a separate PNG is a separate thing that might
+     not have decoded yet. One frame of slate courses on the first frame after a
+     level loads is nothing; a hole in the middle of the town is not. */
+  roofBaked(v) {
     return this._bake('roof' + v, (g, N, rnd) => {
       const base = v ? '#2b3038' : '#292e35';
       g.fillStyle = base; g.fillRect(0, 0, N, N);
@@ -383,8 +791,6 @@ const R = {
         }
         g.fillStyle = 'rgba(0,0,0,.32)'; g.fillRect(0, y, N, 2);
       }
-      /* One ridge or vent per few tiles, so a big roof is not a texture swatch
-         repeated eighty times. */
       if (rnd() > .72) {
         g.fillStyle = 'rgba(0,0,0,.35)';
         g.fillRect(N * .3, N * .3, N * .3, N * .3);
@@ -3184,7 +3590,21 @@ const R = {
          a town. */
       if (!anyNear) {
         if (World.indoors()) { c.fillStyle = '#080b11'; c.fillRect(x * TILE, y * TILE, TILE, TILE); }
-        else c.drawImage(this.roofTile((x * 5 + y * 3) & 1), x * TILE, y * TILE, TILE, TILE);
+        else {
+          /* THE GAP FIRST, and then the roof over it. A corner-matched roof
+             tile is not opaque to its own edges — the two pixels outside the
+             coping are clear, because upstream drew these to sit over whatever
+             is behind the building. Here what is behind the building is the
+             next building, so those two pixels are the reveal between two
+             parapets: four pixels of shadow wherever two plots meet, and two
+             at the outside of the block. That line is the single thing doing
+             the most work in this whole pass. It is not black — black reads as
+             a hole cut in the world — it is the colour of a gutter nobody has
+             cleared. */
+          c.fillStyle = '#14181f'; c.fillRect(x * TILE, y * TILE, TILE, TILE);
+          const roof = this.roofTile(x, y) || this.roofBaked((x * 5 + y * 3) & 1);
+          c.drawImage(roof, x * TILE, y * TILE, TILE, TILE);
+        }
         continue;
       }
       const px = x * TILE, py = y * TILE;

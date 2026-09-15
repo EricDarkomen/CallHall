@@ -401,6 +401,56 @@ the leaf, and the same shop with the door swinging back **throws a wedge of its
 own inside across the pavement** — a slot-shaped light, because a doorway is a
 slot. Walking up a parade at night is worth doing now.
 
+**And there are roofs on it now**, which is the largest single thing on this map
+that was not there. Everything solid outdoors that no floor can see is a roof —
+the middle of a block, and the whole of the town past the edge of what is drawn.
+That used to be one baked slate texture in two variants with a black square on a
+quarter of them standing for a vent. On one tile it is a decent piece of drawing.
+On the four hundred tiles between Cargate Lane and the retail park it is a
+swatch, and the one thing a swatch cannot do from above is say where one
+building stops and the next one starts.
+
+So the roof is derived in three steps and the first is the one that matters.
+**The mass is cut into plots** — `R.roofPlot()`, a pure function of the tile the
+way `R.toneOf()` is, banding the map in runs of three to five and banding each
+run front to back differently from the run behind it. Nothing in a level says
+where a building ends, the same way nothing in a level says where a kerb is:
+both are derived, and the party walls a terrace gets out of this are what turn
+one rectangle of solid into eleven shops. **Then the tile** — thirteen per
+material off `art/sprites/roofs.png` (`tools/sheets/roofs.mjs` — sixty-five
+crops off the [LPC] Roofs submission), a corner-matched set of field, edges, outer corners and inner
+corners, picked by which of this tile's four corners are inside the same plot.
+That is what puts a coping all the way round every building, mitred at the
+corners and returned into the inner ones, without anybody drawing one. Two
+pixels outside that coping are clear, and what shows through them is the gutter
+between two parapets — the single line doing the most work in the whole pass.
+**Then what is on it,** because a flat roof is never empty: a mushroom vent, a
+wired-glass rooflight, an air-handling unit with a duct off the side, a water
+tank on a gantry, a stair-and-lift overrun with its own little parapet, an
+H aerial and a dish pointing two different ways, a chimney stack with four pots
+on it and nothing lit under any of them since the clean air acts. Those are
+drawn in code and baked into the same tile, so a roof with a lift overrun on it
+still costs one blit.
+
+**Five materials, and the railway decides which.** Slate, lead, felt, pantile
+and oxblood, drawn from a weighted bag so that a street is mostly slate with a
+couple of felts and one red one rather than an even split between five colours,
+which would read as deliberate — and nothing about a roofscape is deliberate.
+North of row 60 that is the default bag, which is what a town centre rebuilt
+between 1958 and 1971 is roofed in. South of it a level may say otherwise:
+`roofs:` is a list of rectangles and palettes, the same shape of thing as
+`surfaces:` and doing the same kind of job, and the old town's says pantile and
+oxblood and slate and **no felt at all**, because there is a conservation area
+officer in this town whose entire job, as far as anybody on Priorygate can tell,
+is that. The minster gets a line of its own and one material: a building that
+size is roofed in lead.
+
+A plot one tile deep has no honest coping to draw and no kit has a piece for it
+— the terrace of warehouses along the quay is one, and so is the nave. Those get
+a **party wall** instead, a line of the gutter's own dark down each side the
+plot does not carry on into, which is the difference between a row of little
+buildings and a stripe.
+
 **Three things join the two halves,** and between them they are the whole shape of
 this map: two road bridges over the railway — Cargate Lane and Marlow Street — and
 the subway under it. Four more circuits of traffic run down there, two of them
@@ -1145,7 +1195,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | | |
 | --- | --- |
 | `data/*.js` | The content: people and dialogue, items, callers, the office, the streets, and what happens when you press E. |
-| `art/sprites/*.png` | The character, world and street art. Third-party, separately licensed. |
+| `art/sprites/*.png` | The character, world, street and roof art. Third-party, separately licensed. |
 | `art/sprites/manifest.js` | Generated: the rectangles that describe those PNGs. |
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
 | `tools/carjam.mjs` | Dev-time only: the traffic put through the four things that used to beach it, headless, so a change to the driving can be measured rather than driven into. |
@@ -1243,6 +1293,7 @@ declares none of them is exactly the level it always was.
 | | |
 | --- | --- |
 | `surfaces:` | Rectangles of `SURFACES` (data/world.js) painted over the rooms. What a tile is MADE of, where that differs from what its room is made of: a street is one zone with one name and a carriageway down the middle. `R.kerbs()` derives the kerb from wherever two of them meet. A surface that says `open` is ground you can see and cannot stand on — the river, the ballast — still solid, still uncollidable, and drawn as itself rather than as the roof the wall pass gives every other piece of wall mass. `{ s: null, r: [...] }` takes a surface back off again, which is how a platform is a platform and the ballast beside it is not. |
+| `roofs:` | What the buildings here are roofed in, where that differs from the default mix. `{ m: ['pantile', 'slate'], r: [...] }` — a bag of material names for a rectangle, read by `R.roofMatsAt()` and asked of a plot's north-west corner rather than of the tile, so a building that straddles the edge of one is a whole building in one material. A level that declares none gets `R.ROOF_MATS`, which is the mix of a town that grew normally. Like `surfaces:`, it is art and nothing else. |
 | `paint:` | The markings. `dash`, `line`, `yellow`, `zebra`, `bays`, `text`, `rails`, all in tiles, all drawn by `R.roadPaint()` rather than cropped — a marking is position-dependent and a tile is not, and a running line least of all. |
 | `cars:` | What is parked, and what is driving. A car is not furniture: it is at a pixel, at an angle, at a speed, so it lives here and in `engine/cars.js` rather than in `furnish()`. `model:` names an entry in `CARS`; `body:`/`roof:` repaint that model for one car; `drive: true` lets you in; `route:` makes it traffic. |
 | `peds:` | Who is walking about. Same shape as a traffic car and for the same reason — a pixel, a route, a speed — and deliberately not the machinery in `engine/npc.js`, which is twenty colleagues with schedules and a grudge about a doorway. A route is `[x, y]` waypoints in tiles, with an optional third number to stand there for that many seconds. See `engine/peds.js`. |
@@ -1379,7 +1430,7 @@ python3 -m http.server 8000    # then http://localhost:8000/editor.html
 
 ## Licence
 
-Three parts, because there are three kinds of thing here. See [LICENSE](LICENSE).
+Four parts, because there are four kinds of thing here. See [LICENSE](LICENSE).
 
 **The game** — code, writing, characters, design. Copyright © 2026 Grant van Zyl,
 licensed [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) —
@@ -1401,12 +1452,15 @@ upstream's own licence data on every build and refuses to produce a sheet if it
 stops being true.
 
 ShareAlike art is not banned outright — it is kept in files of its own, and
-there are three of them across two parts. `art/sprites/sanitary.png` has always
+there are five of them across two parts. `art/sprites/sanitary.png` has always
 been one: a CC-BY-SA 3.0 tileset, in a sheet nothing else is packed into, under
 its own terms in `LICENSE` part 3. `art/sprites/wood.png` is the second, and it
-is the first one the build tool makes rather than carries. `LICENSE` part 4 and
-`art/sprites/victorian.png` are the third, and they are a **different**
-ShareAlike: CC-BY-SA 4.0, which the submission offers and nothing else.
+is the first one the build tool makes rather than carries; `frontage.png` (the
+shop windows) and `roofs.png` (the roofs of the whole town) are the third and
+fourth, on the same terms in the same part, each in a PNG nothing else is packed
+into. `LICENSE` part 4 and `art/sprites/victorian.png` are the fifth, and they
+are a **different** ShareAlike: CC-BY-SA 4.0, which that submission offers and
+nothing else.
 
 Two ShareAlike parts rather than one, because 3.0 and 4.0 are not the same
 licence and a section claiming to cover both would be wrong about one of them —

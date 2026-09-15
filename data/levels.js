@@ -1834,6 +1834,33 @@ const LEVELS = {
       { s: 'tarmac', r: [60, 58, 65, 70] },
       { s: 'tarmac', r: [102, 58, 107, 105] }
     ],
+    /* WHAT THE TOWN IS ROOFED IN, which is the one thing that says from above
+       what the whole of this map says from the ground: that the railway at row
+       60 is a boundary between two different centuries.
+
+       R.roofMatsAt() reads these and R.ROOF_MATS is what it falls back to, so
+       everything NORTH of the railway gets the default bag — slate and lead
+       with a fair amount of flat felt in it, which is what a town centre
+       rebuilt between 1958 and 1971 is roofed in, and what the retail park and
+       the multi-storey and the parades are.
+
+       South of it is the old town, and the only thing that half of the map is
+       for is being four hundred years older than the other half. Pantile,
+       mostly, because that is what this coast roofs things in; some oxblood
+       clay; slate where a Victorian filled a gap; one run of lead. NO FELT, and
+       that is a joke rather than an oversight — there is a conservation area
+       officer in this town who has never once approved a flat roof and whose
+       whole job, as far as anybody on Priorygate can tell, is that.
+
+       The minster gets its own line and its own material. A building that size
+       is roofed in lead and nothing else, and it is seventeen tiles of nothing
+       at x 48–64 rows 90–92 — see THE GREEN, IN FOUR PIECES above. It comes
+       FIRST because the first rect that contains a plot wins, and the old town
+       rect below contains this one. */
+    roofs: [
+      { m: ['lead'], r: [47, 89, 65, 93] },
+      { m: ['pantile', 'pantile', 'pantile', 'pantile', 'oxblood', 'oxblood', 'slate', 'slate', 'lead'], r: [0, 61, 113, 119] }
+    ],
     /* The paint. Position-dependent, so none of it is a tile — see the note in
        tools/sheets/town.mjs about why the atlas has one road surface in it and
        no markings at all. R.roadPaint() draws these; the vocabulary is six

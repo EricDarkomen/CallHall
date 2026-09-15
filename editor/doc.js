@@ -34,14 +34,15 @@ const Doc = {
   name: '', w: 0, h: 0, indoors: true, hub: false,
   rooms: [], doors: [], counters: [], entries: {}, links: [],
   objects: [], desks: [],
-  /* CARRIED, NOT EDITED. Five tables a level may declare that this editor has
-     no tools for: what the ground is made of, the paint on it, the cars parked
-     on it, the people walking about, and the traffic signals. They are cloned in on load, handed back to the builder so
+  /* CARRIED, NOT EDITED. Six tables a level may declare that this editor has
+     no tools for: what the ground is made of, what the buildings are roofed in,
+     the paint on the road, the cars parked on it, the people walking about, and
+     the traffic signals. They are cloned in on load, handed back to the builder so
      the preview is the real level, and written out again by Emit — because the
      one thing worse than not being able to edit something is quietly deleting
      it on the way past. Give one of them a tab one day and it comes out of
      this comment and into the file proper. */
-  surfaces: [], paint: [], cars: [], peds: [], signals: [],
+  surfaces: [], roofs: [], paint: [], cars: [], peds: [], signals: [],
   /* The NPC schedule waypoints from data/world.js. Global rather than per-level
      because the schedules are: WP is one table and the colleagues who walk it
      all work on the hub, so that is the level it is edited on. Empty everywhere
@@ -77,6 +78,7 @@ const Doc = {
     this.entries = clone(def.entries || {});
     this.links = clone(def.links || []);
     this.surfaces = clone(def.surfaces || []);
+    this.roofs = clone(def.roofs || []);
     this.paint = clone(def.paint || []);
     this.cars = clone(def.cars || []);
     this.peds = clone(def.peds || []);
@@ -131,7 +133,7 @@ const Doc = {
       indoors: this.indoors, hub: this.hub,
       rooms: this.rooms, doors: this.doors, counters: this.counters,
       entries: this.entries, links: this.links,
-      surfaces: this.surfaces, paint: this.paint, cars: this.cars, peds: this.peds,
+      surfaces: this.surfaces, roofs: this.roofs, paint: this.paint, cars: this.cars, peds: this.peds,
       signals: this.signals,
       furnish() {
         objects.forEach(o => {
@@ -172,7 +174,7 @@ const Doc = {
       name: this.name, w: this.w, h: this.h, indoors: this.indoors, hub: this.hub,
       rooms: this.rooms, doors: this.doors, counters: this.counters,
       entries: this.entries, links: this.links,
-      surfaces: this.surfaces, paint: this.paint, cars: this.cars, peds: this.peds,
+      surfaces: this.surfaces, roofs: this.roofs, paint: this.paint, cars: this.cars, peds: this.peds,
       signals: this.signals,
       objects: this.objects, desks: this.desks, waypoints: this.waypoints
     });
