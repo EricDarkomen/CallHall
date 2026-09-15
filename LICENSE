@@ -9,9 +9,9 @@ thing.  Read the part that covers the file you are interested in.
      the Liberated Pixel Cup community, licensed OGA-BY 3.0 (some contributions
      CC0).  NOT covered by part 1 — see below.
 
-  3. The CC-BY-SA 3.0 sheets: art/sprites/sanitary.png, art/sprites/wood.png
-     and art/sprites/frontage.png.  Third-party pixel art by Matthew Nash and
-     by bluecarrot16 and others.  ShareAlike, so it carries an obligation parts
+  3. The CC-BY-SA 3.0 sheets: art/sprites/sanitary.png, art/sprites/wood.png,
+     art/sprites/frontage.png and art/sprites/roofs.png.  Third-party pixel art
+     by Matthew Nash and by bluecarrot16 and others.  ShareAlike, so it carries an obligation parts
      1 and 2 do not, and each work is kept in a file of its own for exactly
      that reason — see below.
 
@@ -131,8 +131,8 @@ CC0.  Many LPC assets are offered only under CC-BY-SA 3.0 and/or GPL 3.0; none
 of those were used in the files THIS Part covers.  That choice is what keeps
 this Part's obligation to attribution alone.
 
-One ShareAlike asset is used elsewhere in the project, in a file of its own,
-under its own terms.  It is Part 3.  tools/build-sprites.mjs refuses to pack
+ShareAlike assets are used elsewhere in the project, each in a file of its own,
+under its own terms.  They are Parts 3 and 4.  tools/build-sprites.mjs refuses to pack
 ShareAlike art into a Part 2 sheet — assertOnePart() — because doing so would
 make that sheet an Adaptation of a ShareAlike work and force every OGA-BY
 contribution in it into a licence its artists did not choose.
@@ -165,7 +165,7 @@ Liberated Pixel Cup endorses this game or is connected with it.
 PART 3 — THE SHAREALIKE SHEETS
 ===============================================================================
 
-Three files, kept apart from Part 2 and from each other on purpose.
+Four files, kept apart from Part 2 and from each other on purpose.
 
 Which files this covers
 -----------------------
@@ -182,11 +182,15 @@ Which files this covers
     rectangles, cut from [LPC] Windows & Doors and packed into a sheet of their
     own.
 
-    Each sheet holds ONE work by ONE set of artists.  They are two files rather
-    than one for the same reason neither is packed into world.png: a sheet is
-    an Adaptation of everything in it, and two unrelated ShareAlike works
-    sharing a file would make each an Adaptation of the other's art with no
-    way to say afterwards which artist's term reached which pixel.
+  * art/sprites/roofs.png — the roofs of the town, seen from above.  Sixty-five
+    rectangles: five corner-matched sets of thirteen tiles each, cut from
+    [LPC] Roofs and packed into a sheet of their own.
+
+    Each sheet holds ONE work by ONE set of artists.  They are four files
+    rather than one for the same reason none of them is packed into world.png:
+    a sheet is an Adaptation of everything in it, and two unrelated ShareAlike
+    works sharing a file would make each an Adaptation of the other's art with
+    no way to say afterwards which artist's term reached which pixel.
 
 Which files this does NOT cover
 -------------------------------
@@ -213,9 +217,9 @@ CC-BY-SA 3.0 (Creative Commons Attribution-ShareAlike 3.0 Unported).
 Section 4(a) permits the URI to stand in place of a copy of the licence text,
 which is why there is no local copy of it here as there is for OGA-BY 3.0.
 
-All three works are offered under CC-BY-SA 3.0 or GPL 3.0 (or GPL 3.0+), at the
+All four works are offered under CC-BY-SA 3.0 or GPL 3.0 (or GPL 3.0+), at the
 licensee's option; [LPC] Wooden Furniture offers CC-BY-SA 4.0 as well.  This
-project takes CC-BY-SA 3.0 for all three.  GPL 3.0 is the worse of the options here: its
+project takes CC-BY-SA 3.0 for all four.  GPL 3.0 is the worse of the options here: its
 "preferred form for making modifications" would reach the build inputs, and
 tools/ is deliberately not published.  CC-BY-SA 4.0 is declined only because
 3.0 is the version this part already states and one version is simpler to
@@ -265,6 +269,14 @@ art/sprites/frontage.png
   Source:           https://opengameart.org/content/lpc-windows-doors
   Title:            [LPC] Windows & Doors
 
+art/sprites/roofs.png
+
+  Original authors: bluecarrot16, Lanea Zimmerman (Sharm),
+                    Michele Bucelli (Buch), Casper Nilsson, Xenodora,
+                    keith karnage, NaRNeRZz, Talon (Talosaurus)
+  Source:           https://opengameart.org/content/lpc-roofs
+  Title:            [LPC] Roofs
+
 Changes were made
 -----------------
 
@@ -285,6 +297,14 @@ For frontage.png: four rectangles — the same two-tile shopfront window in four
 of the submission's eleven frame colours — were cut from its single sheet and
 packed into one indexed PNG.  Nothing was recoloured or redrawn.
 
+For roofs.png: sixty-five rectangles were cut from the submission's single
+2048x2048 sheet and packed into one indexed PNG.  They are five of its
+corner-matched sets — the thirteen tiles of field, edge and corner that make up
+one roof material — chosen for colour and taken whole.  Nothing was recoloured
+or redrawn.  What the game draws ON TOP of them at run time (the weathering,
+and the plant, tanks, rooflights, aerials and chimney stacks) is drawn in code
+in engine/render.js and is no part of this art.
+
 No original sheet is reproduced here intact.
 
 Standing of this attribution
@@ -299,9 +319,10 @@ build environment at the time, which could not reach opengameart.org or
 web.archive.org; the PNG carries no tEXt chunk, and the name does not appear in
 the official Liberated Pixel Cup asset repository.
 
-For wood.png and frontage.png, the authors and the licences were read off the
-source pages and off the CREDITS-*.txt each submission ships beside its art, and
-they are written into tools/sheets/wood.mjs and tools/sheets/frontage.mjs where
+For wood.png, frontage.png and roofs.png, the authors and the licences were
+read off the source pages and off the CREDITS-*.txt each submission ships
+beside its art, and they are written into tools/sheets/wood.mjs,
+tools/sheets/frontage.mjs and tools/sheets/roofs.mjs where
 they can be compared against those pages by anyone who opens them.  What the build re-checks is not the page but the
 BYTES: the sheet pins the sha256 of the archive it was cut from and refuses to
 build if the download no longer matches, so a re-upload under different terms
@@ -340,8 +361,8 @@ Which files this covers
 Which files this does NOT cover
 -------------------------------
 
-  * art/sprites/sanitary.png, art/sprites/wood.png and
-    art/sprites/frontage.png.  Those are Part 3 and contain none of this art.
+  * art/sprites/sanitary.png, art/sprites/wood.png, art/sprites/frontage.png
+    and art/sprites/roofs.png.  Those are Part 3 and contain none of this art.
     ShareAlike does not make two works one work.
 
   * art/sprites/world.png, art/sprites/revised.png, art/sprites/town.png,
