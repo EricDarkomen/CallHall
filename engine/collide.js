@@ -260,80 +260,169 @@ const Collide = {
   },
 
   /* ---- cars ----
-     A car's feet are its body: the whole rectangle is on the ground. Tested as
-     a rotated box against the same three things everything else is tested
-     against, which is why a car can now pass a lamppost it visibly clears. */
-  carFits(car, x, y) {
-    const d = car.def, c = Math.cos(car.a), s = Math.sin(car.a);
-    const hl = d.len / 2 - 1, hw = d.wid / 2 - 1;
-    /* Its own corners and side midpoints against the tiles. Eight of them, not
-       six: a car is nearly two tiles long and a bollard can sit between two
-       samples 28 pixels apart. */
-    for (const [u, v] of [[hl, hw], [hl, -hw], [-hl, hw], [-hl, -hw],
-      [0, hw], [0, -hw], [hl * .5, hw], [hl * .5, -hw], [-hl * .5, hw], [-hl * .5, -hw]]) {
-      const px = x + u * c - v * s, py = y + u * s + v * c;
-      const tx = Math.floor(px / TILE), ty = Math.floor(py / TILE);
-      if (tx < 0 || ty < 0 || tx >= MAPW || ty >= MAPH) return false;
-      if (World.solid[ty][tx]) return false;
-      if (World.blocked && World.blocked.has(tx + ',' + ty)) return false;
-    }
-    /* Furniture, at its drawn size, tested as box against box in the car's own
-       frame. This is the half that gives a car back the room it always looked
-       like it had. */
-    const tx0 = Math.floor((x - d.len / 2) / TILE) - 1, tx1 = Math.floor((x + d.len / 2) / TILE) + 1;
-    const ty0 = Math.floor((y - d.len / 2) / TILE) - 1, ty1 = Math.floor((y + d.len / 2) / TILE) + 1;
+     A car's feet are its body: the whole rectangle is on the ground, at
+     whatever angle it happens to be holding. It is the only thing in this game
+     that is not square to the world, and for a long time that fact was papered
+     over twice, differently, in two functions that had to agree and did not.
+
+     carFits() SAMPLED THE OUTLINE. Ten points round the rectangle, tested one
+     at a time, on the hope that nothing on this map is small enough to sit
+     between two samples twenty-eight pixels apart. A bollard is.
+
+     carPush() GAVE UP ON THE RECTANGLE ALTOGETHER and used the axis-aligned box
+     drawn AROUND it. The box round a bus at forty-five degrees is half as big
+     again as the bus, so it reported overlaps with things the bus was nowhere
+     near — and because the push is applied every frame and the drive is applied
+     every frame, the two cancelled exactly. The 41A stood at the corner of
+     Aldergate Rise with its engine reading sixty-four and its position not
+     changing in the third decimal place, for the rest of the shift, being
+     shoved backwards by a lamppost it was four feet clear of. Three of the
+     stalls in the traffic harness were that, and none of them was a traffic
+     bug: they were two functions that could not agree where a bus was.
+
+     So: ONE SHAPE, ONE WALK, TWO CALLERS. carHits() below is the walk, and the
+     shape is the rectangle. carFits() asks it whether the list is empty and it
+     stops at the first thing; carPush() asks it for the shortest way out of
+     everything on the list and it sums them. They cannot disagree about where a
+     car is, because they are the same function. */
+
+  /* The overlap between two rotated rectangles, as the shortest vector that
+     pushes A out of B — or null if they are apart, which is the same question
+     and is why one function answers both.
+
+     Separating axes: A's two and B's two. Project both half-extents onto each,
+     and a gap on any one of the four is a gap; with no gap anywhere, the
+     smallest overlap among them is the way out. An axis-aligned box is a
+     rotated one with its angle set to nothing, so tiles and furniture come
+     through here as well and there is exactly one piece of geometry in this
+     file rather than three. */
+  obb(ax, ay, ac, as, al, aw, bx, by, bc, bs, bl, bw) {
+    const dx = ax - bx, dy = ay - by;
+    let best = Infinity, px = 0, py = 0;
+    /* How far a box with axes (c, s) and (-s, c) reaches along a unit axis. */
+    const half = (ux, uy, c, s, hl, hw) =>
+      Math.abs(ux * c + uy * s) * hl + Math.abs(uy * c - ux * s) * hw;
+    const axis = (ux, uy) => {
+      const d = dx * ux + dy * uy;
+      const o = half(ux, uy, ac, as, al, aw) + half(ux, uy, bc, bs, bl, bw) - Math.abs(d);
+      if (o <= 0) return false;
+      if (o < best) { best = o; const g = d < 0 ? -1 : 1; px = ux * g; py = uy * g; }
+      return true;
+    };
+    if (!axis(ac, as) || !axis(-as, ac) || !axis(bc, bs) || !axis(-bs, bc)) return null;
+    return [px * best, py * best];
+  },
+
+  /* A car's rectangle, a pixel and a half inside the paintwork on every side.
+     The skin is what lets two cars stand bumper to bumper without each of them
+     pushing the other away for ever, and it is small enough that the gap it
+     leaves is invisible. */
+  carBox(car) {
+    const d = car.def;
+    return [Math.max(4, d.len / 2 - 1.5), Math.max(4, d.wid / 2 - 1.5)];
+  },
+
+  /* Everything a car's rectangle is inside, if the car were at (x, y). With
+     `push`, the shortest way out of each of them is summed into it and the walk
+     goes all the way round — summing rather than taking the largest is what
+     gets a car out of a CORNER, where two walls each push it one way and the
+     diagonal is the way out of both. Without, it stops at the first thing,
+     because "does it fit" only ever needed one. */
+  carHits(car, x, y, push) {
+    const c = Math.cos(car.a), s = Math.sin(car.a);
+    const [hl, hw] = this.carBox(car);
+    /* The tiles the rectangle can possibly reach: the box around it. Used to
+       decide WHAT TO ASK ABOUT and never to decide the answer, which is the
+       whole of the difference between this and what carPush used to do. */
+    const rx = Math.abs(c) * hl + Math.abs(s) * hw;
+    const ry = Math.abs(s) * hl + Math.abs(c) * hw;
+    const tx0 = Math.floor((x - rx) / TILE), tx1 = Math.floor((x + rx) / TILE);
+    const ty0 = Math.floor((y - ry) / TILE), ty1 = Math.floor((y + ry) / TILE);
+    let any = false;
     for (let ty = ty0; ty <= ty1; ty++) {
       for (let tx = tx0; tx <= tx1; tx++) {
+        const bad = tx < 0 || ty < 0 || tx >= MAPW || ty >= MAPH || World.solid[ty][tx]
+          || (World.blocked && World.blocked.has(tx + ',' + ty));
+        if (!bad) continue;
+        const p = this.obb(x, y, c, s, hl, hw, (tx + .5) * TILE, (ty + .5) * TILE, 1, 0, TILE / 2, TILE / 2);
+        if (!p) continue;
+        if (!push) return true;
+        any = true; push[0] += p[0]; push[1] += p[1];
+      }
+    }
+    /* The furniture, at its drawn size. One tile of margin round the scan,
+       because an object is keyed to the tile it stands in and its footprint may
+       lean out of it. */
+    for (let ty = ty0 - 1; ty <= ty1 + 1; ty++) {
+      for (let tx = tx0 - 1; tx <= tx1 + 1; tx++) {
         const here = World.at(tx, ty);
         for (let i = 0; i < here.length; i++) {
           const b = this.footBox(here[i]);
           if (!b) continue;
-          const dx = b.x - x, dy = b.y - y;
-          const u = dx * c + dy * s, v = -dx * s + dy * c;
-          const gu = d.len / 2 + Math.abs(c) * b.rx + Math.abs(s) * b.ry;
-          const gv = d.wid / 2 + Math.abs(s) * b.rx + Math.abs(c) * b.ry;
-          if (Math.abs(u) < gu && Math.abs(v) < gv) return false;
+          const p = this.obb(x, y, c, s, hl, hw, b.x, b.y, 1, 0, b.rx, b.ry);
+          if (!p) continue;
+          if (!push) return true;
+          any = true; push[0] += p[0]; push[1] += p[1];
         }
       }
     }
-    /* And the other cars. */
-    for (const other of (World.cars || [])) {
-      if (other === car) continue;
-      const dx = other.x - x, dy = other.y - y;
-      const u = dx * c + dy * s, v = -dx * s + dy * c;
-      const ol = (d.len + other.def.len) / 2 - 6, ow = (d.wid + other.def.wid) / 2 - 4;
-      if (Math.abs(u) < ol * 0.78 && Math.abs(v) < ow * 0.86) return false;
+    /* And the other cars, as the rectangles THEY are rather than as boxes drawn
+       round them. This is what a car lying broadside across a lane used to be
+       invisible to — it was measured by its width whichever way round it was
+       lying — and it is why two vehicles now stop touching instead of parking
+       twenty pixels inside one another. */
+    const rr = Math.hypot(hl, hw);
+    for (const o of (World.cars || [])) {
+      if (o === car) continue;
+      const [ol, ow] = this.carBox(o);
+      const dx = o.x - x, dy = o.y - y, reach = rr + Math.hypot(ol, ow);
+      if (dx * dx + dy * dy > reach * reach) continue;
+      const p = this.obb(x, y, c, s, hl, hw, o.x, o.y, Math.cos(o.a), Math.sin(o.a), ol, ow);
+      if (!p) continue;
+      if (!push) return true;
+      any = true; push[0] += p[0]; push[1] += p[1];
     }
-    return true;
+    return any;
   },
+  carFits(car, x, y) { return !this.carHits(car, x, y); },
   /* Which way is out, for a car that is inside something. Same rule as for a
      person and for the same reason: a car wedged at an angle used to be a car
      nobody could move again, because every axis-separated step was rejected
      including the ones going the right way. */
   carPush(car) {
-    const d = car.def, c = Math.cos(car.a), s = Math.sin(car.a);
-    let px = 0, py = 0;
-    const hl = d.len / 2, hw = d.wid / 2;
-    /* Approximated by the car's bounding box, which is all an escape needs: it
-       is a direction to shuffle in, not a resting place. */
-    const rx = Math.abs(c) * hl + Math.abs(s) * hw;
-    const ry = Math.abs(s) * hl + Math.abs(c) * hw;
-    const p = this.pushOut(car.x, car.y, rx, ry, { ignore: car });
-    if (p) { px += p[0]; py += p[1]; }
-    /* And out of the other cars, along their axes. */
-    for (const other of (World.cars || [])) {
-      if (other === car) continue;
-      const oc = Math.cos(other.a), os = Math.sin(other.a);
-      const dx = car.x - other.x, dy = car.y - other.y;
-      const u = dx * oc + dy * os, v = -dx * os + dy * oc;
-      const gu = (d.len + other.def.len) / 2 - 6, gv = (d.wid + other.def.wid) / 2 - 4;
-      if (Math.abs(u) >= gu * 0.78 || Math.abs(v) >= gv * 0.86) continue;
-      const ou = gu * 0.78 - Math.abs(u), ov = gv * 0.86 - Math.abs(v);
-      let du = 0, dv = 0;
-      if (ou < ov) du = (u < 0 ? -ou : ou); else dv = (v < 0 ? -ov : ov);
-      px += du * oc - dv * os;
-      py += du * os + dv * oc;
-    }
-    return (px || py) ? [px, py] : null;
+    const p = [0, 0];
+    if (!this.carHits(car, car.x, car.y, p)) return null;
+    return (p[0] || p[1]) ? p : null;
+  },
+
+  /* ---- and the one thing a car may never be inside ----
+     Somebody on foot. Cars have stopped for people since long before there were
+     any people out there to stop for, and that rule lives in engine/cars.js
+     where the driving is — but a rule about SLOWING DOWN is only ever as good
+     as the thing that spotted them, and for a year the thing that spotted them
+     was a single point a stopping distance in front of the bumper. A point is
+     not a car. Somebody standing between the bumper and that point was not
+     there at all, which is exactly where a person stepping off a kerb in front
+     of a moving car is.
+
+     So this is the floor under it: the rectangle, against the people, asked of
+     the position the car is about to be in. It does not slow anything down and
+     it does not steer — engine/cars.js does both, earlier and better. It is
+     what makes the outcome of failing to do either of them a car that stops
+     against somebody rather than a car that goes through them. */
+  PERSON_R: TILE * 0.26,
+  carOnPerson(car, x, y) {
+    const c = Math.cos(car.a), s = Math.sin(car.a);
+    const [hl, hw] = this.carBox(car);
+    const r = this.PERSON_R, rr = Math.hypot(hl, hw) + r;
+    const hit = (px, py) => {
+      const dx = px - x, dy = py - y;
+      if (dx * dx + dy * dy > rr * rr) return false;
+      return Math.abs(dx * c + dy * s) < hl + r && Math.abs(dy * c - dx * s) < hw + r;
+    };
+    if (typeof Cars !== 'undefined' && !Cars.driving && hit(P.x, P.y)) return true;
+    if (typeof NPCM !== 'undefined') for (const n of NPCM.list) if (hit(n.x, n.y)) return true;
+    if (typeof Peds !== 'undefined') for (const p of Peds.list()) if (hit(p.x, p.y)) return true;
+    return false;
   }
 };

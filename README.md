@@ -160,24 +160,73 @@ wheels only turn it while it is moving, the back end goes where it was already
 going, and reversing out of a bay is its own small event. Everything else parked
 out there is somebody's, and locked, and will say so.
 
-There is traffic. Nine of them, including a learner and the 41A, running four
-circuits through the same nine junctions on the correct side of the road. They
-brake for corners, queue behind each other, stop for anybody on foot, and sound
-the horn when they have been waiting a while. They are not scenery: drive into
-one and both of you will know about it.
+There is traffic. Sixteen of them, including a learner, three buses and the 41A,
+running eight circuits through the same nine junctions on the correct side of the
+road. They brake for corners, fall in behind each other, give way at junctions,
+stop for anybody on foot, and sound the horn when they have been waiting a while.
+They are not scenery: drive into one and both of you will know about it.
 
 They also know where the road is, which sounds like the least a driver could do
 and took a while to arrive. A route is a line somebody drew down a lane, and a
 car shoved off that line — by you, mostly — used to go on steering for its
 target from wherever it had been left, which was frequently the pavement, and on
 the pavement it stayed, because forwards was a shop front and forwards was the
-only direction it had. So they read the tarmac now: they steer away from a kerb
+only direction it had. So they read the tarmac: they steer away from a kerb
 rather than up one, they reverse out of the things a route cannot know about,
-they work out which leg of their route they are actually nearest before driving
-back to it, and where two of them want the same junction the one with the other
-on its right gives way. And after a few seconds behind something parked that is
-plainly never going to move, one of them will pull out and go round it. Not for
-a person: nothing out there ever does anything about a person except stop.
+and they work out which leg of their route they are actually nearest before
+driving back to it.
+
+### What a driver has in front of it
+
+The rest of it changed because of one idea, which is that a driver should have a
+PATH and not a heading. Every vehicle out there plots the next two and a half
+seconds of its own lane every frame — round however many corners that reaches,
+onto the next leg of its route without having to notice that a route has legs —
+and then everything else is a question about that path rather than about the
+nose of the car.
+
+It is the difference between traffic and a row of cars having a nervous
+breakdown, and it is worth saying what it replaced, because all four of these
+were visible from the pavement.
+
+**They stopped dead for moving traffic.** The whole speed rule for anything in
+front was: if there is something there, stop. A car that caught a slower one
+braked to a standstill, sat for four seconds, crept forward at walking pace until
+it was moving, found the thing in front had gone out of range and floored it
+again. Every queue in this town was that, sixty times a second. It is a following
+model now — a gap, a closing speed, and the speed it could still stop from — so
+cars slot in behind each other and stay there, and a bus at a stop has a queue
+rather than a pile-up.
+
+**They queued behind parked cars they could see past.** Twenty-seven cars are
+parked at kerbs out there, each a tile off its lane centre; a car is thirty-five
+pixels wide and a tile is thirty-two, so "is it within a tile of my nose" said
+yes to every one of them. The whole of Bellhaven Road used to stop for a
+hatchback that was not in the road. What matters is how far into the corridor
+something reaches: a few pixels is a thing you move over for, and they do, which
+is also how a bus gets down Corven Way past the estate on the south kerb — it
+cannot do it on the lane centre, and it knows.
+
+**They could not see people they were about to hit.** The check was one POINT a
+stopping distance in front of the bumper, so anybody between the bumper and that
+point — which is exactly where somebody stepping off a kerb is — was not there at
+all. It is the whole corridor now, and there is a floor under it in
+`engine/collide.js`: no car may move onto a person, which for the first time
+includes the one you are driving. Drive at somebody and you stop against them.
+
+**They found out about junctions by arriving at one.** Priority used to be
+settled after two cars had stopped facing each other, by a timer. Now two paths
+are compared before either car gets there: whoever arrives first goes, ties are
+give way to the right, and a car that decides to wait pulls up far enough back
+that the car it is giving way to can actually use what it has been given. That
+last clause is not a detail — the 41 spent forty seconds of every lap correctly
+giving way to the 12 while parked across the junction it was giving way in.
+
+After a few seconds behind something parked that is plainly never going to move,
+one of them will still pull out and go round it — checking now that nothing is
+coming the other way, which nobody thought to ask when nothing overtook anything.
+Not for a person: nothing out there ever does anything about a person except
+stop.
 
 There are people, too. Eight of them, walking circuits of the pavements: up the
 parade and over the zebra by the Greggs, along Fenn Street in a hi-vis, a trolley
@@ -651,6 +700,29 @@ went nowhere from **53 seconds to 28**. The give-way scramble at the mouth of
 Cargate Lane was the single largest source of beached traffic in the town, and
 the fix for it turned out to be the thing every real junction that busy already
 has.
+
+Giving the drivers a path rather than a heading, and the collision one shape
+rather than two, is the next column of the same table. Seed 12345, the same four
+scenarios:
+
+| | before | after |
+|---|---|---|
+| left alone: vehicles stalled over 12s | 5/16, longest 28s | **2/16, longest 20s** |
+| twelve sustained shoves: off the road | 3.50% (67 car-seconds) | **0.00%** |
+| twelve sustained shoves: still off the road at the end | 3 | **0** |
+| a car left across a lane: stalled over 12s | 1/16, longest 28s | **0/16, longest 10s** |
+| all nine put on the footway: off the road | 24.88% | **20.10%** |
+| all nine put on the footway: still stranded at the end | 1 | **0** |
+
+The last of those is close to its floor rather than close to nothing, and that is
+on purpose: a car beached where no lane can reach it waits half a minute before
+it is allowed to rejoin its route, and it is only allowed to do it off camera.
+Nine cars times thirty seconds is most of what is left in that row. A lost driver
+is a better thing to watch than a car that was not there when you looked.
+
+Five minutes of `lightjam.mjs` over the same change: **58 stop lines crossed
+instead of 53**, nobody through a red in either, the same 217 car-seconds held,
+and 224 horns instead of 249.
 
 ## The away-day box
 
@@ -1338,6 +1410,23 @@ stuck is a state the collision system has to end, not one it is allowed to
 enforce — which is what a car wedged against a wall at an angle used to be,
 permanently, because every candidate move was refused including the ones going
 the right way.
+
+**A car is a rectangle**, and that is one sentence because it took two functions
+to disagree about it before anybody noticed. A car is the only thing out here
+that is not square to the world, and the two halves of its collision each papered
+over that differently: "does it fit" sampled the outline at ten points and hoped
+nothing was small enough to sit between two of them, and "which way is out" gave
+up on the rectangle altogether and used the axis-aligned box drawn AROUND it.
+The box round a bus at forty-five degrees is half as big again as the bus, so it
+found overlaps with things the bus was nowhere near — and since the push is
+applied every frame and the drive is applied every frame, the two cancelled
+exactly. The 41A stood at the corner of Aldergate Rise with its engine reading
+sixty-four and its position unchanged in the third decimal place, all afternoon,
+being shoved backwards by a lamppost it was four feet clear of. Three of the
+stalls in the traffic harness were that, and none of them was a traffic bug.
+There is one shape and one walk over it now, with two callers: the fit test stops
+at the first thing it finds and the push test sums the way out of all of them.
+They cannot disagree about where a bus is, because they are the same function.
 
 `World.isSolid` is untouched and still thinks in whole tiles. That is on
 purpose: it is what colleagues' pathfinding, the waypoint checks and the
