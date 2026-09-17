@@ -270,6 +270,15 @@ const Check = {
       if (Doc.objects.some(o => o.use === l.via || o.via === l.via)) return;
       if (typeof Writing !== 'undefined'
         && Writing.calls('Levels', 'take').some(c => c.id === l.via)) return;
+      /* AND THE LIFT, which takes a link nothing names. Its act reads FLOORS
+         in data/world.js and calls Levels.take(f.via) with whatever it finds
+         there, so a scan for the literal finds nothing and this warned about
+         all six of the shipped lift links — a validator crying wolf on the
+         game it ships with, which is the one thing that teaches people to
+         stop reading it. A floor in the panel, and a lift on this level to
+         press it in, is a way to take it. */
+      if (typeof FLOORS !== 'undefined' && FLOORS.some(f => f.via === l.via)
+        && Doc.objects.some(o => o.use === 'lift')) return;
       this.fault('warn', 'Link “' + l.via + '” has no object on this level with that `use` or '
         + '`via`, and nothing in the writing calls Levels.take(' + Emit.str(l.via) + '), '
         + 'so there is no way to take it.', []);
@@ -314,8 +323,12 @@ const Check = {
     Doc.rooms.forEach(rm => {
       const [x1, y1, x2, y2] = rm.r;
       /* A room touching the edge has no wall to draw on that side, and the
-         renderer's boundary is what makes a level read as enclosed. */
-      if (x1 < 1 || y1 < 1 || x2 > Doc.w - 2 || y2 > Doc.h - 2)
+         renderer's boundary is what makes a level read as enclosed. INDOORS
+         only: out of doors there is no ceiling and no boundary to breach — a
+         street that stops short of the edge of the map is a street that stops,
+         and every road in the town runs off it on purpose. Seven roads, seven
+         warnings, on the one level this cannot be true of. */
+      if (Doc.indoors && (x1 < 1 || y1 < 1 || x2 > Doc.w - 2 || y2 > Doc.h - 2))
         this.fault('warn', ((ZONES[rm.z] || {}).name || rm.z)
           + ' reaches the edge of the map, so it has no boundary wall.', []);
     });

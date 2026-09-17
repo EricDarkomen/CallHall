@@ -434,7 +434,16 @@ const LEVELS = {
          had before it was four rooms: a hall is a route from a door to a desk,
          and the part of it nobody walks through should not be there. */
       { z: 'entrance', r: [2, 10, 29, 17] },
-      { z: 'liftlob',  r: [2, 2, 21, 7] },
+      /* DOWN TO ROW 8, which is the staff side of the front desk and was a row
+         of wall. The desk line is row 9 — the counters below say so — so a lift
+         lobby that stopped at row 7 left TWO rows of wall between it and the
+         hall, and the two gates punched through the first of them opened onto
+         the second. Every tile of this room was floor nobody could ever stand
+         on unless they arrived out of the lift: the flood fill in the editor
+         says two pieces, 115 tiles and 255, and what that is on screen is a
+         building whose lift you cannot walk to from its own front door.
+         A desk across the way in has a floor behind it. This is that floor. */
+      { z: 'liftlob',  r: [2, 2, 21, 8] },
       { z: 'postrm',   r: [24, 2, 29, 7] },
       /* The stairwell, which every floor of this building has in the same
          corner of it, because a stairwell goes up through a building in a
@@ -443,10 +452,14 @@ const LEVELS = {
     ],
     doors: [
       /* The two ways through the desk line: the gate beside reception, and the
-         one past security. Both are on row 8 because row 8 is the wall the
-         front desk is built into. */
-      { x: 7, y: 8, z: 'liftlob', name: 'The gate beside reception' },
-      { x: 17, y: 8, z: 'liftlob', name: 'Past security' },
+         one past security. Both are on row 9, because row 9 IS the desk line —
+         the counters are on it and so is everything standing on them — and a
+         gate is a gap in the thing it is a gate in. Beside the counters rather
+         than inside them: reception runs to x8 and security to x17, and a
+         hinged flap through the middle of somebody's desk is not a gate, it is
+         a hole in a desk. */
+      { x: 9, y: 9, z: 'liftlob', name: 'The gate beside reception' },
+      { x: 18, y: 9, z: 'liftlob', name: 'Past security' },
       { x: 26, y: 8, z: 'postrm', name: 'The post room' }
     ],
     counters: [
