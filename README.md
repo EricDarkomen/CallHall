@@ -1339,6 +1339,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `art/sprites/*.png` | The character, world, street and roof art. Third-party, separately licensed. |
 | `art/sprites/manifest.js` | Generated: the rectangles that describe those PNGs. |
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
+| `tools/levelcheck.mjs` | Dev-time only: every level in the catalogue built with the real builder and walked, headless, so that "you can get from the front door to the lift" is a check rather than a thing somebody noticed. Run by `release.sh`. |
 | `tools/carjam.mjs` | Dev-time only: the traffic put through the five things that break it, headless, so a change to the driving can be measured rather than driven into. |
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
 | `tools/lightjam.mjs` | Dev-time only: the traffic and the crossings put through three sets of lights, headless, so that "nobody ran a red" is a number rather than an impression. |
@@ -1518,10 +1519,27 @@ level, for ten minutes, silently. One string for the whole release, deliberately
 because a per-file hash is what would let a browser hold a mixed set in the first
 place.
 
-It also parses every shipped script, refuses if the sprite atlas or `CREDITS.md`
-is stale, and refuses if a page references a file that is not there. It does not
-publish: the public repository is built from this one and its remote is not
-recorded here.
+It also parses every shipped script, builds every level and refuses if one of
+them is broken, refuses if the sprite atlas or `CREDITS.md` is stale, and
+refuses if a page references a file that is not there. It does not publish: the
+public repository is built from this one and its remote is not recorded here.
+
+```sh
+node tools/levelcheck.mjs          # every level, built and walked
+node tools/levelcheck.mjs ground   # one of them
+```
+
+`levelcheck` is the editor's own checks with nobody sitting at the editor. It
+builds each of the twenty-four levels with `World.build()` and asks the two
+questions that have shipped wrong before — how many separate pieces the
+walkable floor is in, and whether every arrival point, every waypoint a
+colleague walks to and every object carrying a `use:` can be reached from one
+of them — and then asks whether the catalogue agrees with itself: links that
+name a level or an arrival point that is not there, handlers `data/acts.js`
+does not have, sprites the atlas does not describe. The ground floor's lift
+lobby was cut off from its own front door for eight releases, and the check
+that finds it in half a second existed the whole time — in `editor/validate.js`,
+where it only ever ran on whichever level somebody had open.
 
 ## The level editor
 

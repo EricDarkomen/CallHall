@@ -24,6 +24,14 @@ const Doc = {
      moved. */
   DERIVED: ['id', 'wob', 'fdef', 'mount', 'art', 'noEmoji', 'wallSide',
     'onTable', 'onTop', 'onCounter',
+    /* The arm a signal post is carrying. Derived twice over: the post itself
+       is made by World.build() out of `signals` and never by furnish(), and
+       the arm it is handed points back at its installation, which points back
+       at the arm. clone() is JSON and JSON does not do circles, so capturing
+       one threw on the way in and took the whole town with it — the only
+       level in the game with lights on it was the only level this editor
+       could not open. */
+    'arm',
     /* The cached collision footprint. Worked out from `fdef` and `wallSide`,
        both of which are already on this list and for the same reason: it is an
        answer, not a fact about the object, and an answer written back into
@@ -84,11 +92,11 @@ const Doc = {
     this.peds = clone(def.peds || []);
     this.signals = clone(def.signals || []);
 
-    /* World.build() adds one object per door BEFORE calling furnish(), so the
-       furniture is everything after them. Those door objects are regenerated
-       from `doors` on every build and must not be captured as furniture, or
-       every rebuild doubles them. */
-    const skip = (def.doors || []).length;
+    /* World.build() adds objects of its own BEFORE calling furnish(), so the
+       furniture is everything after them. They are regenerated from the
+       tables they came from on every build and must not be captured as
+       furniture, or every rebuild doubles them. */
+    const skip = this.preface();
     /* `_k` is a stable identity for the change list, and the ONLY reason it
        exists: the doc is snapshotted by value for undo, so without it there is
        no way to tell "this object moved" from "one was deleted and another
@@ -105,13 +113,25 @@ const Doc = {
     this.rebase();
     return true;
   },
-  /* The built object a doc object became. World.build() adds one object per
-     door BEFORE calling furnish(), and the doc's furnish() replays this list in
-     order — so the doc's own index IS the build order, exactly. Searching
-     World.objects for something on the same tile with the same name is a guess
-     that two objects on one tile get wrong, and it is a walk of three hundred
-     objects per question where this is an array index. */
-  built(i) { return World.objects[this.doors.length + i] || null; },
+  /* The built object a doc object became. World.build() adds its own objects
+     BEFORE calling furnish() — see preface() — and the doc's furnish() replays
+     this list in order, so the doc's own index IS the build order, exactly.
+     Searching World.objects for something on the same tile with the same name
+     is a guess that two objects on one tile get wrong, and it is a walk of
+     three hundred objects per question where this is an array index. */
+  built(i) { return World.objects[this.preface() + i] || null; },
+
+  /* How many objects World.build() puts in front of the furniture: one per
+     door, and one post per signal arm. Both are made from a table rather than
+     by furnish() — see the note over `skip` in load() — and both have to be
+     counted, because the doc's own index into its furniture IS this many
+     places along World.objects and a town with seven posts in it was seven
+     objects out. Read off the built signals rather than off `this.signals`,
+     because an installation's arms are what World made of it. */
+  preface() {
+    return this.doors.length
+      + ((World.signals || []).reduce((n, inst) => n + (inst.arms || []).length, 0));
+  },
 
   /* An object as it was written, without what the build worked out about it. */
   strip(o) {
