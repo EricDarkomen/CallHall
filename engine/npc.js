@@ -1870,6 +1870,16 @@ const NPCM = {
       else {
         if (n.walking) this.repath(n);
         n.walking = false; n.parked = true; n.waitDoor = 0;
+        /* AND THEY ARE NOT WAITING FOR ANYBODY ANY MORE. `waitingFor` is set
+           and cleared inside the walk, and somebody who has arrived does not
+           go through the walk again — so the last person they queued behind on
+           the way here stayed written on them for the rest of the day. Two
+           readers believe it: makeWay, which has them stepping aside for a
+           walk that finished ten minutes ago, and holdOn, which reads a
+           standing person carrying a stale one as the middle of a queue and
+           makes whoever is behind them hold the line for twenty-five seconds
+           in front of somebody who is never going to move. */
+        n.waitingFor = null;
         /* Got there. From here the errand is a thing that happened rather than
            a thing being attempted, and the clock on standing about starts. */
         if (n.errand && !n.errand.arrived) n.errand.arrived = this.now;
@@ -2067,6 +2077,29 @@ const NPCM = {
       return;
     }
     n.waitingFor = null;
+    /* THE DOOR IS CLEAR AND THE ROOM BEHIND YOU IS NOT.
+
+       doorClear() promises that somebody facing a wall of people turns sideways
+       and edges out of a doorway, and they do — `squeeze` is handed out from
+       inside one. Nobody ever handed it out to the person trying to get INTO
+       one, and that is the person the whole queue is behind.
+
+       What it looks like from the floor: ten people converge on the square
+       outside a doorway, pack in until every gap is the shoulder's width canGo
+       allows, and then the one at the front — walking, with the doorway empty
+       and its turn to use it — cannot take a single step, because every
+       direction closes the gap with somebody and canGo refuses a step that
+       closes any gap with anybody. The door stayed empty for ninety-two per
+       cent of a three-minute run with twelve people queueing to use it.
+
+       So the same breathing-in, on the same terms, a square earlier: they have
+       been trying and failing to move for a third of a second, the square they
+       want is a doorway, and it is theirs to take. Narrow on purpose — handed
+       to everybody who is held up, it is not a person edging through a gap, it
+       is a crowd with its collision turned off, and they all end up standing on
+       the same square. */
+    if (step && n.stuck > .35 && this.inDoorway(step[0], step[1])
+      && this.doorClear(n, step[0], step[1])) n.squeeze = Math.max(n.squeeze, 1.2);
     if (step && this.inDoorway(step[0], step[1]) && !this.doorClear(n, step[0], step[1])) {
       n.walking = false; n.waitDoor = .2;
       n.noProg = Math.max(0, n.noProg - dt);
@@ -2156,6 +2189,24 @@ const NPCM = {
         const ok = this.canGo(n, rx * TILE * .3, ry * TILE * .3);
         n.evadeX = ok ? rx : -rx; n.evadeY = ok ? ry : -ry; n.evade = .6;
       }
+      /* AND NOT MOVING AT ALL IS NOT PROGRESS, whatever the field says.
+
+         `noProg` is measured in steps left to walk, which is the right measure
+         and has one property nobody accounted for: it is a number about a map
+         with PEOPLE in it. Eight of them shuffling round a doorway move the
+         count up and down by a step or two a second, and every new low resets
+         the clock — so somebody wedged in the middle of them, who has not moved
+         a pixel in nine and a half seconds, reads frame after frame as a walk
+         that is getting somewhere. It is not. It is a person who cannot move,
+         and the clock that would have given the walk up and sent them round
+         another way never starts.
+
+         Half a second of that is a stumble and is what `evade` above is for.
+         Three seconds is the walk failing, and then the two clocks are made to
+         agree. Twice the ordinary rate, which nets out against the queueing
+         credit above at about a second to the give-up threshold either way —
+         and a second rather than never is the whole of the difference. */
+      if (n.stuck > 3) n.noProg += dt * 2;
     }
     /* And whether or not this frame moved them, has the walk as a whole given
        up on itself. */
@@ -2323,7 +2374,56 @@ const NPCM = {
        a ring of nine is still the bounded wait's problem — but a pair at a
        doorway is the one that happens every lunchtime. */
     if (who.waitingFor === n.id) return n.queued < 2.5;
-    return n.queued < (who.waitingFor ? 25 : 2.5);
+    /* AND A RING IS NOT A QUEUE, which is the whole of why the long wait is
+       ever wrong. A queue has a FRONT: follow the chain of who is waiting for
+       whom and it ends at somebody who is waiting for nobody, who is about to
+       move, and holding the line behind them is exactly right. Follow it in a
+       ring — nine people round a break room door, each politely waiting for
+       the next — and it comes back round to you. There is no front, nothing is
+       about to move, and every one of them settles in for twenty-five seconds.
+       Half a minute of an entire floor standing still, which is what it looked
+       like: the longest frozen stretch in the doorway harness was thirty
+       seconds, and every second of it was people being immaculately polite.
+
+       So the long wait is for a queue with a front, and a ring gets the short
+       one. Pairs were already caught above; this is the same question asked of
+       the whole knot rather than of the person in front. */
+    return n.queued < (who.waitingFor && this.hasFront(who) ? 25 : 2.5);
+  },
+  /* IS THERE A FRONT TO THIS QUEUE.
+
+     The long wait is only ever justified by one thing: that somewhere ahead of
+     you is a person who is waiting for nobody, who is therefore about to move,
+     and whose moving will move everybody between the two of you. So ask that
+     exact question — walk the chain of who is waiting for whom and see what it
+     ends at.
+
+     A person waiting for nobody is a front, and the line clears.
+
+     A CIRCLE is not. Asking only whether the ring comes back round to YOU is
+     not enough and was the first version of this: three people at a doorway
+     waiting for each other, and a fourth waiting for one of the three, whose
+     chain never reaches a front and never reaches itself either. There is
+     nothing about to move in front of any of the four of them. Seen as a
+     cycle anywhere in the chain, all four take the short wait and one of them
+     edges past.
+
+     And a chain longer than the floor is not a front either — it cannot
+     happen with twenty people, and returning "no front" is the safe answer to
+     a question this has run out of patience with. Walked rather than
+     remembered because it changes every frame; a handful of hops, asked only
+     of somebody already standing still with a person in front of them. */
+  hasFront(who) {
+    const seen = new Set();
+    for (let c = who, i = 0; i < 24; i++) {
+      if (!c || c === P) return false;
+      if (seen.has(c)) return false;                     /* round in a circle */
+      seen.add(c);
+      if (!c.waitingFor) return true;                    /* somebody is about to move */
+      if (c.waitingFor === 'player') return true;        /* and you are a person, who moves */
+      c = this.list.find(o => o.id === c.waitingFor);
+    }
+    return false;
   },
   /* Nowhere to go for the moment. Stand somewhere out of the way — not in a
      doorway, not on top of anybody — and try again in a few seconds.

@@ -1215,6 +1215,71 @@ Where it shows:
 Off with Animation — `Esc · Settings`, or the operating system's reduced-motion
 setting — along with the breath and the walk. Nothing is said by a blink.
 
+## A queue has a front
+
+Twenty colleagues share about a dozen destinations between them and most of the
+ways between those destinations are one square wide. That is the whole of the
+crowd problem in this building, and `engine/npc.js` already had the good half
+of the answer: routes that price a person standing still at six squares of
+walking, so a knot of people is gone round rather than walked into; a wait on
+the square in front of you rather than a shove; and a doorway that holds one
+person, because a doorway holds one person.
+
+What it did not have was an answer to the failure those three make TOGETHER.
+`tools/doorjam.mjs` is where it shows: twelve people shuttling both ways through
+one door for three minutes. The door was empty for ninety-two per cent of a run
+in which somebody wanted through it the whole time, and from forty seconds to a
+hundred and sixty the twelve of them stood in one unchanging arrangement — the
+same people on the same squares waiting for the same people.
+
+Four things, and the first is the one you would see:
+
+**The person at the front of the queue could not move.** `canGo` refuses any
+step that closes the gap with anybody, which is right for two people passing and
+wrong for ten packed round a doorway: with somebody on every side there is no
+step at all that opens every gap at once. So the one at the front — walking,
+with the doorway empty and its turn to use it — was frozen solid. `doorClear()`
+has always promised that somebody facing a wall of people turns sideways and
+edges out of a doorway; nobody ever extended that to the person trying to get
+INTO one, who is the person the entire queue is behind. They do now, on the same
+terms and one square earlier: a third of a second of trying and failing to move,
+and the square they want is a doorway that is theirs to take.
+
+**A ring is not a queue.** The long wait — hold the line, because a queue clears
+from the front — was granted whenever the person in front was themselves waiting
+for somebody. In a ring everybody is, so everybody held, for twenty-five
+seconds, and the longest frozen stretch in the harness was half a minute of
+people being immaculately polite at each other. The question is now asked
+properly: follow the chain of who is waiting for whom and see what it ends at. A
+person waiting for nobody is a front and the line will clear. A circle anywhere
+in the chain is not, and everybody in it takes the short wait instead.
+
+**Somebody who has arrived is not waiting for anybody.** `waitingFor` was set
+and cleared inside the walk, and a person who has arrived does not walk again —
+so the last person they ever queued behind stayed written on them for the rest
+of the day, and anybody who came up behind them read a standing ornament as the
+middle of a moving queue.
+
+**And not moving at all is not progress.** The clock that gives up on a hopeless
+walk counts steps-left-to-walk, which is the right measure and is a number about
+a map with people in it: eight of them shuffling round a doorway move the count
+by a step or two a second, and every new low resets the clock. Somebody wedged
+among them, who had not moved a pixel in nine and a half seconds, read frame
+after frame as a walk that was getting somewhere.
+
+Twenty runs of `tools/doorjam.mjs`, before and after:
+
+| | crossings | never got through | longest frozen stretch |
+| --- | --- | --- | --- |
+| before | 430 | 50/240 | 5.8s |
+| after | 546 | 38/240 | 2.5s |
+
+All four are dead code until something jams, which is the point and is also
+checked: a working day on the real fourth floor, and the lunchtime rush at the
+break room with somebody standing in its doorway, come out identical to the
+frame. The break room has a wide way in and never needed any of this. The
+one-square doors are where people live.
+
 ## The wallboard
 
 Every call centre has one bolted above the desks: how many people are holding,

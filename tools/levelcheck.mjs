@@ -4,7 +4,7 @@
  * here — editor/validate.js, on every edit — but it asks them of the ONE level
  * somebody has opened, and nobody opens twenty-four of them. So the faults it
  * is best at are exactly the ones that ship: a lobby whose lift lobby was cut
- * off from its own front door for four releases, because the flood fill that
+ * off from its own front door for eight releases, because the flood fill that
  * would have said so in half a second was never run on that level by anybody.
  *
  * It builds every entry in data/levels.js with the REAL engine/world.js and
