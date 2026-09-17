@@ -494,6 +494,7 @@ const R = {
       return this._plots;
     this._plotsLevel = World.level; this._plotsStamp = World.objects.length;
     const id = new Int32Array(MAPW * MAPH);
+    const grp = new Int32Array(MAPW * MAPH);
     const mat = new Map();
     /* The blocks. `seen` is the block each tile is in, 0 for "not roof". */
     const seen = new Int32Array(MAPW * MAPH);
@@ -512,6 +513,18 @@ const R = {
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const nx = jx + dx, ny = jy + dy;
           if (nx < 0 || ny < 0 || nx >= MAPW || ny >= MAPH) continue;
+          /* AND THE FILL DOES NOT CROSS THE EDGE OF THE MAP.
+
+             The outermost ring of tiles is not a building. It is the town
+             carrying on past the view — see the note over roofAt() — and it
+             runs all the way round, so a fill that walks through it comes back
+             round the other side and joins every block that happens to touch
+             the border into one. It did: nine hundred and thirty-two tiles,
+             one material, the high street and the car park and the retail park
+             all the same roof, because they are all connected through two rows
+             at the top of the map that nobody can see. The rim is its own
+             region and the blocks inside are their own. */
+          if (this.onRim(nx, ny) !== this.onRim(jx, jy)) continue;
           const k = ny * MAPW + nx;
           if (seen[k] || !this.roofAt(nx, ny)) continue;
           seen[k] = block; stack.push(k);
@@ -574,7 +587,31 @@ const R = {
           const mid = Math.round((at[k - 1] + at[k]) / 2);
           if (mid > 0 && mid < run && mid !== out[out.length - 1]) out.push(mid);
         }
-        if (at.length) return { cuts: out, doors: true };
+        if (at.length) {
+          /* AND THE STRETCHES WITH NO DOOR ON THEM ARE STILL BUILDINGS.
+
+             A door is the only frontage this map writes down, and plenty of a
+             real street has none you can see: the car wash you drive into, the
+             blind side of a corner unit, the twenty yards of a parade nobody
+             has furnished yet. The Bellhaven parade between Aldergate and
+             Cargate has two doors on forty tiles, which made a single
+             twenty-six tile building with no party wall anywhere along it —
+             one shop the length of the street. Anything longer than eight
+             tiles gets subdivided on the hash, four to seven apart, which is
+             the same rule the unfurnished mass gets and is what a terrace is
+             underneath. The known boundaries still win; this only fills in
+             between them. */
+          const rnd2 = this._rand(this._hash('gap' + b + ':' + x0 + ',' + y0 + ':' + rank));
+          const edges = [0].concat(out, [run]);
+          const filled = out.slice();
+          for (let k = 1; k < edges.length; k++) {
+            const from = edges[k - 1], to = edges[k];
+            if (to - from <= 8) continue;
+            for (let o = from + 4 + Math.floor(rnd2() * 4); o <= to - 4; o += 4 + Math.floor(rnd2() * 4))
+              filled.push(o);
+          }
+          return { cuts: filled.sort((a, c) => a - c), doors: true };
+        }
         const rnd = this._rand(this._hash('blk' + b + ':' + x0 + ',' + y0 + ':' + rank));
         const hashed = [];
         for (let o = 3 + Math.floor(rnd() * 3); o <= run - 3; o += 3 + Math.floor(rnd() * 3)) hashed.push(o);
@@ -605,31 +642,97 @@ const R = {
         while (unit < mine2.length && mine2[unit] <= along) unit++;
         id[j] = ((b + 1) << 10) | (unit << 1) | rank;
       }
-      /* WHICH MATERIAL, decided once per unit at the unit's own NORTH-WEST
-         CORNER, which is the one tile everything about a unit as a whole should
-         be decided at — see roofMatsAt(). A unit that straddles the edge of a
-         `roofs:` rect would otherwise come out half pantile and half felt
-         inside one unbroken parapet, and a building that changes material
-         halfway across reads as a fault rather than as a boundary. The
-         smallest row-major index IS that corner: furthest north, then furthest
-         west. */
+      /* WHICH MATERIAL, and A TERRACE IS ROOFED ALL AT ONCE.
+
+         The bag was drawn from per UNIT, which is what a row of shops looks
+         like if every shopkeeper re-roofed independently in a different decade
+         — and it is not what a street looks like. A terrace goes up together
+         and is covered together: twelve houses, one roof, one material, from
+         the day it was built. What varies along a real run is one or two of
+         them, where somebody took the slate off in 1988 and had it felted, or
+         a bomb site was filled in with whatever was going. That is the
+         exception and it reads as one BECAUSE the rest of the run agrees.
+
+         So the bag is drawn from once per BLOCK, and each unit then has about
+         one chance in seven of having been done since. Decided at the block's
+         own north-west corner and at each unit's, so both are stable and
+         neither moves when the camera does.
+
+         The smallest row-major index IS that corner: furthest north, then
+         furthest west. Asked of the corner rather than of the tile because a
+         unit that straddles the edge of a `roofs:` rect would otherwise come
+         out half pantile and half felt inside one unbroken parapet. */
       const first = new Map();
+      let blockFirst = Infinity;
       for (const j of mine) {
         const plot = id[j];
         if (!first.has(plot) || j < first.get(plot)) first.set(plot, j);
+        if (j < blockFirst) blockFirst = j;
       }
+      const bfx = blockFirst % MAPW, bfy = (blockFirst - bfx) / MAPW;
+      /* THE RIM IS NOT A TERRACE. It is the one region that wraps the entire
+         map, and roofing it all at once means one draw deciding the colour of
+         every edge of the world — including both sides of a railway the whole
+         southern half of this map exists to be older than, since the draw is
+         taken at (0,0) and the old town's own palette never gets asked. What
+         is out there is not a row of buildings, it is a town: many roofs,
+         decided one at a time, each from the bag for the part of the map it is
+         actually on. */
+      const rim = this.onRim(bfx, bfy);
+      const blockBag = this.roofMatsAt(bfx, bfy);
+      const blockMat = blockBag[this._hash('terrace' + b + ':' + bfx + ',' + bfy) % blockBag.length];
       for (const [plot, j] of first) {
         const jx = j % MAPW, jy = (j - jx) / MAPW;
         const bag = this.roofMatsAt(jx, jy);
-        mat.set(plot, bag[this._hash('plot' + plot) % bag.length]);
+        if (rim) { mat.set(plot, bag[this._hash('rim' + plot) % bag.length]); continue; }
+        /* Re-roofed since, and never the same as its neighbours by accident:
+           the pick is taken from the bag with the block's own material left
+           out, or one unit in seven would come out identical to the run it is
+           supposed to be an exception to. */
+        const redone = (this._hash('redone' + plot) % 7) === 0;
+        const others = bag.filter(m => m !== blockMat);
+        mat.set(plot, (redone && others.length)
+          ? others[this._hash('newroof' + plot) % others.length]
+          : blockMat);
+      }
+      /* AND WHICH ROOF PLANE EACH TILE IS ON, which is not the same question as
+         which building it is. Two houses in a terrace under one unbroken run of
+         slate share a roof: there is one plane, one coping round the outside of
+         the pair, and a party wall drawn ON it rather than a parapet returned
+         between them. A unit that has been re-roofed is a different plane and
+         gets a coping of its own, because a change of material at a boundary is
+         a real step in the roof and is exactly where a parapet goes.
+
+         So the group is the block AND the material, and the corner matching
+         below runs on that. `id` is still the unit, and is what the party walls
+         are drawn from. */
+      /* AND A LONG RUN ALWAYS HAS ONE. A chance in seven means a terrace of
+         thirteen comes out with none about one time in eight, and a whole
+         street where every roof agrees is the thing this was trying to get
+         away from in the other direction — the point is a run with an
+         exception in it. Six units or more and nothing drawn yet, and one of
+         them gets done, chosen the same stable way as everything else. */
+      const units = [...first.keys()];
+      if (!rim && units.length >= 6 && units.every(k => mat.get(k) === blockMat)) {
+        const pick = units[this._hash('atleastone' + b + ':' + bfx + ',' + bfy) % units.length];
+        const others = blockBag.filter(m => m !== blockMat);
+        if (others.length) mat.set(pick, others[this._hash('newroof' + pick) % others.length]);
+      }
+      for (const j of mine) {
+        const m = mat.get(id[j]);
+        /* On the rim every unit is its own roof, so the group is the unit. */
+        grp[j] = rim ? ((b + 1) << 14) | id[j]
+                     : ((b + 1) << 4) | (blockBag.indexOf(m) + 1);
       }
     }
-    return (this._plots = { id, mat });
+    return (this._plots = { id, grp, mat });
   },
   roofPlot(x, y) {
     if (x < 0 || y < 0 || x >= MAPW || y >= MAPH) return 0;
     return this.roofPlots().id[y * MAPW + x];
   },
+  /* The last tile before the edge of the drawn world. */
+  onRim(x, y) { return x === 0 || y === 0 || x === MAPW - 1 || y === MAPH - 1; },
   /* WHAT THIS PART OF TOWN IS ROOFED IN.
 
      A level may say, and most do not. `roofs: [{ m: [...], r: [x1,y1,x2,y2] }]`
@@ -714,10 +817,14 @@ const R = {
     const hit = this._roofOf[i];
     if (hit) return hit;
     const plots = this.roofPlots();
-    const plot = plots.id[i];
+    const plot = plots.id[i], group = plots.grp[i];
     const mat = plots.mat.get(plot) || this.ROOF_MATS[0];
     if (!Tiles.has('roof.' + mat + '.mid')) return null;
-    const same = (ax, ay) => this.roofAt(ax, ay) && this.roofPlot(ax, ay) === plot;
+    /* SAME ROOF, not same building — see the note on `grp` in roofPlots(). A
+       run of houses under one unbroken slope is one plane with one coping
+       round the outside of the whole run; the boundaries inside it are party
+       walls drawn on the roof, not parapets returned between two of them. */
+    const same = (ax, ay) => this.roofAt(ax, ay) && plots.grp[ay * MAPW + ax] === group;
     /* A CORNER is inside the plot when all three tiles touching it are — this
        one is by definition, so it is the other three that decide. */
     const c = (dx, dy) => (same(x + dx, y) && same(x, y + dy) && same(x + dx, y + dy)) ? 1 : 0;
@@ -749,7 +856,33 @@ const R = {
     }
     const h = this._hash('roof' + x + ',' + y);
     const deco = (h % 7) ? '' : this.ROOF_DECO[(h >>> 5) % this.ROOF_DECO.length];
-    return (this._roofOf[i] = this.roofBake(mat, key, h & 1, deco, ''));
+    /* AND THE PARTY WALLS INSIDE THE RUN.
+
+       Field tile, so this is the middle of a roof plane — but a plane can have
+       more than one building under it, and where the boundary between two of
+       them falls you can see it: a party wall carried up through the covering,
+       a change of pitch, a line of flashing, a gutter that stops. Same two
+       pixels of dark the sliver case uses, drawn on the edge the boundary is
+       on, from both sides, so a run of houses reads as a run of houses rather
+       than as one very long building.
+
+       NOT ALWAYS, which is the other half of it. Roofs get done two and three
+       at a time, and a covering laid over a neighbour's wall as well as your
+       own leaves nothing on top to see. One boundary in five is invisible, and
+       because the decision is taken for the BOUNDARY rather than for the tile,
+       it is invisible down its whole length instead of flickering along it. */
+    let party = '';
+    const wallOn = (dx, dy, letter) => {
+      const ax = x + dx, ay = y + dy;
+      if (!this.roofAt(ax, ay)) return;
+      const k = ay * MAPW + ax;
+      if (plots.grp[k] !== group || plots.id[k] === plot) return;
+      const lo = Math.min(plot, plots.id[k]), hi = Math.max(plot, plots.id[k]);
+      if ((this._hash('party' + lo + '|' + hi) % 5) === 0) return;
+      party += letter;
+    };
+    wallOn(0, -1, 'n'); wallOn(0, 1, 's'); wallOn(-1, 0, 'w'); wallOn(1, 0, 'e');
+    return (this._roofOf[i] = this.roofBake(mat, key, h & 1, deco, party));
   },
   /* The crop, the weathering and the junk, baked together. One canvas per
      combination that actually occurs — about a hundred and thirty of them on a

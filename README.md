@@ -506,10 +506,33 @@ on it and nothing lit under any of them since the clean air acts. Those are
 drawn in code and baked into the same tile, so a roof with a lift overrun on it
 still costs one blit.
 
-**Five materials, and the railway decides which.** Slate, lead, felt, pantile
-and oxblood, drawn from a weighted bag so that a street is mostly slate with a
-couple of felts and one red one rather than an even split between five colours,
-which would read as deliberate — and nothing about a roofscape is deliberate.
+**Five materials, and a terrace is roofed all at once.** Slate, lead, felt,
+pantile and oxblood, drawn from a weighted bag — and drawn from once per
+TERRACE, not once per building. Twelve houses go up together and are covered
+together; what varies along a real run is one or two of them, where somebody
+took the slate off in 1988 and had it felted. So the block draws, each unit has
+about a chance in seven of having been done since, and a run of six or more
+always has at least one, because the exception is the point. A unit that has
+been re-roofed is a different plane and gets a parapet of its own, which is what
+a change of material at a boundary actually is; the rest of the run is one roof
+with **party walls drawn on it** — two pixels of dark on the boundary, from both
+sides — and one boundary in five has none at all, because a covering laid over
+your neighbour's wall as well as your own leaves nothing on top to see. The
+decision is taken for the boundary rather than for the tile, so it is invisible
+down its whole length rather than flickering along it.
+
+The one region that is not a terrace is the **rim**: the outermost ring of the
+map, which is the town carrying on past the view. It wraps the whole map, so
+roofing it in one go put one colour on every edge of the world — including both
+sides of a railway the southern half of this map exists to be four hundred years
+older than. Out there every unit draws its own, from the bag for the part of the
+map it is standing on. The fill does not cross the rim either, or every block
+that touches the border comes back round the top of the map as one nine-hundred
+tile building.
+
+The bag is weighted so that a street is mostly slate with a couple of felts and
+one red one rather than an even split between five colours, which would read as
+deliberate — and nothing about a roofscape is deliberate.
 North of row 60 that is the default bag, which is what a town centre rebuilt
 between 1958 and 1971 is roofed in. South of it a level may say otherwise:
 `roofs:` is a list of rectangles and palettes, the same shape of thing as
