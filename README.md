@@ -1563,9 +1563,35 @@ the places that used the value AS a name had to change, and they ask
 
 | | before | after |
 | --- | --- | --- |
-| 1000×1000 (1 km²) | 67 MB | 23 MB |
-| 1500×1500 (2.25 km²) | 176 MB | 43 MB |
+| 1000×1000 (1 km²) | 67 MB | 23 MB, 150 ms to build |
+| 1500×1500 (2.25 km²) | 176 MB | 43 MB, 302 ms |
 | per tile | ~75 bytes | ~16 bytes |
+
+Those build times are the ones to trust and the first set was not: the headless
+harnesses replace `Math.random` with a seeded closure so that two runs agree,
+which is right for a digest and wrong for a stopwatch — it is about thirty times
+slower than the engine's own, and `World.build()` calls it once per tile. A CPU
+profile of a one-kilometre build put twelve hundred milliseconds in
+`Math.random` and five hundred in everything else. Timing the rig instead of the
+engine had put a seven-fold tax on every figure.
+
+Nothing else on a build of that size is close. The three passes that walk the
+whole map all run once per level rather than once per frame, and at a million
+tiles they cost 9ms for the contact shadows, 17ms for the roof plots and one
+rasterise for the minimap, which is cached because the floor plan never changes.
+
+And the pathfinding, which is the thing that actually stops scaling: `Nav.build`
+sweeps a Dijkstra over every square anybody could reach, per destination, and
+keeps forty-eight of them. On a floor of three thousand squares that is nothing;
+on a map a kilometre across it is a million squares swept and four megabytes
+held because a colleague decided to put the kettle on. The sweep stops after
+`Nav.CAP` squares — forty thousand, which is a hundred and thirteen on a side
+and three times the longest walk on the biggest level in this game, so every
+field on every level today comes out complete and the number changes nothing at
+all. It is a ceiling, not a budget. A field that hits it is marked `partial`,
+which matters to one reader: unreachable and not-swept-yet are the same −1 in
+the array and the opposite thing on the floor — one is a locked door and a
+reason to stand and wait, the other is a long walk and a reason to set off.
 
 `zoneName` and `surfName` are on `Levels.FIELDS` for the reason everything on
 that list is: an index means nothing without the table it indexes, and a level

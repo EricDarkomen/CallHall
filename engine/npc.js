@@ -98,9 +98,32 @@ const Nav = {
     this.fields.set(k, f);
     return f;
   },
+  /* HOW FAR A SWEEP IS ALLOWED TO GO, in tiles actually expanded.
+
+     A field is a step count per tile and the sweep that makes one is a
+     Dijkstra over every square somebody could reach. On a floor of three
+     thousand squares that is nothing. On a map a kilometre across it is a
+     million squares swept and four megabytes held — per destination, and
+     LIMIT keeps forty-eight of them — because a colleague decided to go and
+     put the kettle on.
+
+     So the sweep stops after this many squares. It stops at the cheapest ones
+     first, which is what Dijkstra does, so what it keeps is a disc of the
+     nearest floor to the destination and what it throws away is the far half
+     of a town nobody is walking in from. Forty thousand squares is a hundred
+     and thirteen on a side: three times the longest walk on the biggest level
+     in this game, so every field on every level in it today comes out complete
+     and this number changes nothing at all. It is a ceiling, not a budget.
+
+     A field that hit the ceiling is marked `partial`, and that matters to
+     exactly one reader — see `far === null` in walk(). Unreachable and
+     not-swept-yet look identical in the array and mean opposite things: one is
+     a locked door, the other is a long way off. */
+  CAP: 40000,
   build(tx, ty, plain) {
     const w = MAPW, h = MAPH, N = w * h;
     const d = new Int32Array(N).fill(-1);
+    let taken = 0;
     const m = plain ? null : this.mask;
     /* A binary heap of (cost, tile) packed into one number, which is all
        Dijkstra needs and avoids an object per square. */
@@ -136,6 +159,7 @@ const Nav = {
       const v = pop(), i = v % N, cost = (v - i) / N;
       if (d[i] !== -1) continue;
       d[i] = cost;
+      if (++taken >= this.CAP) { d.partial = true; break; }
       const x = i % w, y = (i - x) / w;
       const step = (nx, ny) => {
         if (!open(nx, ny)) return;
@@ -153,6 +177,14 @@ const Nav = {
   steps(fx, fy, tx, ty, plain) {
     const v = this.at(this.field(tx, ty, plain), fx, fy);
     return v < 0 ? null : v;
+  },
+  /* Did the sweep for this destination run out of ceiling before it got here.
+     "No route" and "not swept this far" are the same -1 in the array and the
+     opposite thing on the floor: one is a locked door and is a reason to stand
+     and wait, the other is a long walk and is a reason to set off. */
+  partial(tx, ty, plain) {
+    const f = this.field(tx, ty, plain);
+    return !!(f && f.partial);
   },
   /* The next tile on the way. Downhill on the field, and diagonally where that
      is genuinely shorter — the sweep is four-connected, so a diagonal neighbour
@@ -1923,8 +1955,14 @@ const NPCM = {
        array lookup. */
     const far = Nav.steps(fx, fy, tx, ty);
     /* There is no way there at all right now — somebody is standing in the only
-       door. Not a reason to walk at it: a reason to wait. */
-    if (far === null && Nav.mask) return this.waitOut(n);
+       door. Not a reason to walk at it: a reason to wait.
+
+       Unless the sweep simply has not come this far. A field is capped at forty
+       thousand squares — see Nav.CAP — and beyond that edge every tile reads
+       -1, exactly as a tile behind a locked door does. Waiting there would be
+       standing still because the kettle is a long way off. Walk towards it on
+       the straight line below until the field has something to say. */
+    if (far === null && Nav.mask && !Nav.partial(tx, ty)) return this.waitOut(n);
     const d = far === null ? Math.hypot(tx - (n.x / TILE - .5), ty - (n.y / TILE - .5)) : far;
     if (d < n.best - .1) { n.best = d; n.noProg = 0; } else n.noProg += dt;
     /* Which tile to cross to, decided ONCE per tile entered and then held.
