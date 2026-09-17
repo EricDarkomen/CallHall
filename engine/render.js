@@ -135,6 +135,9 @@ const R = {
     /* And which baked tile each roof tile was holding, since every one of them
        is a key into the map that was just emptied. */
     this._roofOf = null; this._roofLevel = null;
+    /* And which building each tile of roof is part of, which is derived from
+       the mass and therefore from the map the editor has just repainted. */
+    this._plots = null; this._plotsLevel = null;
   },
   _bake(key, draw) {
     this._tiles = this._tiles || new Map();
@@ -439,63 +442,193 @@ const R = {
      most of a roof is roof. */
   ROOF_DECO: ['vent', 'vent', 'light', 'light', 'plant', 'tank', 'aerial', 'lift', 'stack'],
 
-  /* THE PLOTS.
+  /* THE PLOTS, AND THEY ARE CUT OUT OF THE MASS RATHER THAN OFF A GRID.
 
-     A pure function of the tile, like R.toneOf() and for the same reason: a
-     building that changed shape when the camera moved would be worse than no
-     buildings at all. There is no level data behind it and none is wanted —
-     every outdoor level in the game gets a townscape for free, including the
-     ones nobody has drawn a block on yet.
+     One rectangle of solid between two streets is a BLOCK, and a block is not
+     a building: it is a row of buildings that share party walls. Working out
+     where those walls fall is the whole job here, because everything else
+     about a roof — its material, its coping, the junk on it — is a fact about
+     the building and not about the tile.
 
-     How the cuts are made: the map is taken in periods of sixteen tiles, and
-     within each period the cut positions are drawn off a hash of the period's
-     own index, three to five apart. A tile's BAND is which period it is in and
-     how many of that period's cuts it is past. Memoised because a period's cuts
-     are drawn once and then asked for by every tile in it, and thrown away with
-     the baked tiles when the editor repaints a level.
+     The first version of this asked the COORDINATE. The map was taken in
+     periods of sixteen, cut three to five apart off a hash of the period, and
+     the rows were banded once per column band so the cuts would not line up
+     into a chessboard. It is a tidy piece of arithmetic and it is wrong in the
+     one way that matters: it knows nothing about the mass it is cutting. A
+     block eleven deep and seventy wide came out as sixty-odd plots of three by
+     four, each drawing its own material out of the bag, and what that is from
+     above is not a town. It is a quilt. A high street where the roof changes
+     colour every three metres in both directions reads as a rendering fault,
+     which is what it was.
 
-     The salt is what stops the result being a grid. Columns are banded once,
-     for the whole map; rows are banded ONCE PER COLUMN BAND, with the column
-     band in the salt — so the run of buildings on Marlow Street is cut front to
-     back in different places from the run behind it, which is what a terrace
-     looks like from above and a chessboard does not. */
-  ROOF_PERIOD: 16,
-  roofCuts(salt) {
-    this._roofCuts = this._roofCuts || new Map();
-    let cuts = this._roofCuts.get(salt);
-    if (cuts) return cuts;
-    const rnd = this._rand(this._hash(salt));
-    cuts = [];
-    /* Never within three of a cut or of the period's own edge: a two-tile
-       building has no field tile in it, and four parapets with nothing between
-       them reads as a wall, not a roof. */
-    for (let o = 3 + Math.floor(rnd() * 3); o <= this.ROOF_PERIOD - 3; o += 3 + Math.floor(rnd() * 3)) cuts.push(o);
-    this._roofCuts.set(salt, cuts);
-    return cuts;
-  },
-  roofBand(v, salt) {
-    const P = this.ROOF_PERIOD;
-    const p = Math.floor(v / P), o = v - p * P;
-    const cuts = this.roofCuts(salt + p);
-    let n = 0;
-    while (n < cuts.length && cuts[n] <= o) n++;
-    /* Four cuts is the most sixteen tiles can hold at three apart, so five
-       bands per period and eight is room to spare. */
-    return p * 8 + n;
+     So: find the blocks, and cut each one the way a terrace is actually built.
+
+     ONE, THE BLOCKS. Flood the roof mass four ways. Every connected piece is
+     one block and gets one id. This is the only part that costs anything and
+     it is one pass over the map, once per level.
+
+     TWO, WHICH WAY THE PARTY WALLS RUN. Down the block's SHORT axis, always,
+     because that is what a party wall is: the frontage is on the long side and
+     the building runs back from it. A block seventy wide and eleven deep is cut
+     into units three to five wide, each of them eleven deep, and that is a
+     terrace. Cutting it the other way — or both ways, which is what the grid
+     did — makes a building with a party wall across the middle of it.
+
+     THREE, BACK TO BACK. A block deep enough to have a street on both sides
+     has two rows of buildings in it, not one, and they meet down the middle
+     with their backs together. Nine tiles is the threshold: below it the plot
+     runs the full depth, at or above it the block is split once down its
+     middle and each half is its own run of units. Once, not repeatedly — the
+     one thing a deep block is never divided into is a grid.
+
+     The cuts inside a run are three to five apart, drawn off a hash of the
+     block so the same block is cut the same way every frame and two blocks are
+     not cut alike. Same as it ever was, and asked once per block rather than
+     once per period of the map.
+
+     Cached per level and thrown away with the baked tiles, exactly as the tile
+     cache is: the mass is a function of the map and cannot change while a
+     level is up. */
+  roofPlots() {
+    if (this._plots && this._plotsLevel === World.level && this._plotsStamp === World.objects.length)
+      return this._plots;
+    this._plotsLevel = World.level; this._plotsStamp = World.objects.length;
+    const id = new Int32Array(MAPW * MAPH);
+    const mat = new Map();
+    /* The blocks. `seen` is the block each tile is in, 0 for "not roof". */
+    const seen = new Int32Array(MAPW * MAPH);
+    let block = 0;
+    const cells = [];
+    for (let y = 0; y < MAPH; y++) for (let x = 0; x < MAPW; x++) {
+      const i = y * MAPW + x;
+      if (seen[i] || !this.roofAt(x, y)) continue;
+      block++;
+      const mine = [];
+      const stack = [i];
+      seen[i] = block;
+      while (stack.length) {
+        const j = stack.pop(), jx = j % MAPW, jy = (j - jx) / MAPW;
+        mine.push(j);
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = jx + dx, ny = jy + dy;
+          if (nx < 0 || ny < 0 || nx >= MAPW || ny >= MAPH) continue;
+          const k = ny * MAPW + nx;
+          if (seen[k] || !this.roofAt(nx, ny)) continue;
+          seen[k] = block; stack.push(k);
+        }
+      }
+      cells.push(mine);
+    }
+    /* And the units inside each block. */
+    for (let b = 0; b < cells.length; b++) {
+      const mine = cells[b];
+      let x0 = MAPW, y0 = MAPH, x1 = -1, y1 = -1;
+      for (const j of mine) {
+        const jx = j % MAPW, jy = (j - jx) / MAPW;
+        if (jx < x0) x0 = jx; if (jx > x1) x1 = jx;
+        if (jy < y0) y0 = jy; if (jy > y1) y1 = jy;
+      }
+      const w = x1 - x0 + 1, h = y1 - y0 + 1;
+      /* The frontage is the long side; the party walls are square to it. */
+      const alongX = w >= h;
+      const run = alongX ? w : h, depth = alongX ? h : w;
+      /* WHERE THE PARTY WALLS GO, and the first answer is: BETWEEN THE SHOPS.
+
+         A block with frontages on it is not an anonymous lump of mass to be
+         divided up by arithmetic — it is a known terrace, and where one unit
+         stops and the next starts is already written down in data/levels.js,
+         because that is where somebody put a door. Cutting on a hash instead
+         put the party walls in the middle of shops: the Bellhaven parade's
+         doors are six tiles apart and the roof over them was changing material
+         every three, so one shop wore two roofs and the roofs belonged to
+         nothing. Halfway between one door and the next is where the wall
+         between two shops is, and once the cuts are there every unit on the
+         parade is one building, one material, one coping, the width of its own
+         frontage — which is also what stops a shop reading as half the size of
+         the room you walk into.
+
+         Per RANK, not per block: a block between two streets has a row of
+         shops facing each way and they are not the same shops. Rank 0 takes
+         the doors off the block's north (or west) edge, rank 1 the ones off
+         its south (or east) edge.
+
+         A block with no doors on it — the middle of the retail park, the mass
+         past the edge of the map — keeps the old rule, which is a cut every
+         three to five tiles drawn off a hash of the block. That is a terrace
+         nobody has drawn a frontage on yet, and it is what the whole town
+         looked like before there were any. */
+      const doors = (World.objects || []).filter(o => o.kind === 'exit');
+      const cutsFor = rank => {
+        const nearEdge = (rank === 1)
+          ? (alongX ? o => o.y >= y1 && o.y <= y1 + 3 : o => o.x >= x1 && o.x <= x1 + 3)
+          : (alongX ? o => o.y <= y0 && o.y >= y0 - 3 : o => o.x <= x0 && o.x >= x0 - 3);
+        const at = doors
+          .filter(o => nearEdge(o))
+          .map(o => (alongX ? o.x : o.y) - (alongX ? x0 : y0))
+          .filter(v => v >= 0 && v < run)
+          .sort((a, c) => a - c);
+        /* Two doors make one party wall; one door makes none, and a single
+           shop the width of the block is a perfectly good building. */
+        const out = [];
+        for (let k = 1; k < at.length; k++) {
+          const mid = Math.round((at[k - 1] + at[k]) / 2);
+          if (mid > 0 && mid < run && mid !== out[out.length - 1]) out.push(mid);
+        }
+        if (at.length) return { cuts: out, doors: true };
+        const rnd = this._rand(this._hash('blk' + b + ':' + x0 + ',' + y0 + ':' + rank));
+        const hashed = [];
+        for (let o = 3 + Math.floor(rnd() * 3); o <= run - 3; o += 3 + Math.floor(rnd() * 3)) hashed.push(o);
+        return { cuts: hashed, doors: false };
+      };
+      /* AND WHETHER THIS IS ONE TERRACE OR TWO BACK TO BACK, which is a
+         question about frontages and not about depth. A block with doors on
+         both of its long sides has a row of buildings facing each way and they
+         meet down the middle with their backs together. A block with doors on
+         only one side — the high street, whose far side is the edge of the map
+         — is ONE terrace however deep it is, and its buildings run all the way
+         through from the shop at the front to the yard at the back. Splitting
+         that on depth alone gave the backs of the buildings their own party
+         walls in different places from the fronts, which is a roofline that
+         disagrees with itself along the length of the street. */
+      const north = cutsFor(0), south = cutsFor(1);
+      const both = depth >= 9 && north.doors && south.doors;
+      const split = both ? Math.floor(depth / 2) : -1;
+      const one = north.doors ? north : south.doors ? south : north;
+      const cuts = both ? [north.cuts, south.cuts] : [one.cuts, null];
+      for (const j of mine) {
+        const jx = j % MAPW, jy = (j - jx) / MAPW;
+        const along = alongX ? jx - x0 : jy - y0;
+        const across = alongX ? jy - y0 : jx - x0;
+        const rank = (split >= 0 && across >= split) ? 1 : 0;
+        const mine2 = cuts[rank] || cuts[0];
+        let unit = 0;
+        while (unit < mine2.length && mine2[unit] <= along) unit++;
+        id[j] = ((b + 1) << 10) | (unit << 1) | rank;
+      }
+      /* WHICH MATERIAL, decided once per unit at the unit's own NORTH-WEST
+         CORNER, which is the one tile everything about a unit as a whole should
+         be decided at — see roofMatsAt(). A unit that straddles the edge of a
+         `roofs:` rect would otherwise come out half pantile and half felt
+         inside one unbroken parapet, and a building that changes material
+         halfway across reads as a fault rather than as a boundary. The
+         smallest row-major index IS that corner: furthest north, then furthest
+         west. */
+      const first = new Map();
+      for (const j of mine) {
+        const plot = id[j];
+        if (!first.has(plot) || j < first.get(plot)) first.set(plot, j);
+      }
+      for (const [plot, j] of first) {
+        const jx = j % MAPW, jy = (j - jx) / MAPW;
+        const bag = this.roofMatsAt(jx, jy);
+        mat.set(plot, bag[this._hash('plot' + plot) % bag.length]);
+      }
+    }
+    return (this._plots = { id, mat });
   },
   roofPlot(x, y) {
-    const cb = this.roofBand(x, 'c');
-    return cb * 65536 + this.roofBand(y, 'r' + cb);
-  },
-  /* The first tile of the band v is in — the plot's own north-west corner,
-     which is the ONE tile in a plot that everything about the plot as a whole
-     should be decided at. See roofMatsAt(). */
-  roofBandStart(v, salt) {
-    const P = this.ROOF_PERIOD;
-    const p = Math.floor(v / P), o = v - p * P;
-    let s = 0;
-    for (const cut of this.roofCuts(salt + p)) if (cut <= o) s = cut;
-    return p * P + s;
+    if (x < 0 || y < 0 || x >= MAPW || y >= MAPH) return 0;
+    return this.roofPlots().id[y * MAPW + x];
   },
   /* WHAT THIS PART OF TOWN IS ROOFED IN.
 
@@ -529,6 +662,15 @@ const R = {
     }
     return this.ROOF_MATS;
   },
+  /* A wall you can see the FACE of: solid, with walkable floor of some room
+     directly below it. The same question the wall band asks itself as `below`,
+     and the reason it is here is that the roof has to ask it of its neighbours
+     as well as of itself. */
+  wallFace(x, y) {
+    if (x < 0 || y < 0 || x >= MAPW || y >= MAPH) return false;
+    if (!World.solid[y][x]) return false;
+    return y + 1 < MAPH && !World.solid[y + 1][x] && !!World.zone[y + 1][x];
+  },
   /* Is this tile roof — solid, outdoors, and with no walkable tile beside it to
      be seen from. The same question the wall pass asks itself before it reaches
      the roof branch; asked here as well because the corner test has to ask it
@@ -538,7 +680,17 @@ const R = {
   roofAt(x, y) {
     if (x < 0 || y < 0 || x >= MAPW || y >= MAPH) return false;
     if (!World.solid[y][x] || World.open(x, y)) return false;
-    if (y + 1 < MAPH && !World.solid[y + 1][x] && World.zone[y + 1][x]) return false;
+    if (this.wallFace(x, y)) return false;
+    /* AND THE TILE ABOVE ONE IS THE TOP HALF OF THAT WALL, not roof.
+       A wall you can see the face of is drawn TWO tiles high — see `below` in
+       the wall band — and the second one is drawn over this tile. So a roof
+       drawn here is a roof drawn underneath a wall: invisible, and, worse,
+       it made this tile part of the same plot as the one behind it, so the
+       parapet that should finish the top of the wall was drawn down here and
+       covered, and the roof plane started a row further back with no edge on
+       it at all. The building had no top. Excluded, and the coping lands on
+       the true top of the wall, where the building actually stops. */
+    if (this.wallFace(x, y + 1)) return false;
     if (x + 1 < MAPW && !World.solid[y][x + 1]) return false;
     if (x > 0 && !World.solid[y][x - 1]) return false;
     if (y > 0 && !World.solid[y - 1][x]) return false;
@@ -561,10 +713,9 @@ const R = {
     if (!this._roofOf || this._roofLevel !== World.level) { this._roofLevel = World.level; this._roofOf = []; }
     const hit = this._roofOf[i];
     if (hit) return hit;
-    const plot = this.roofPlot(x, y);
-    const cb = this.roofBand(x, 'c');
-    const mats = this.roofMatsAt(this.roofBandStart(x, 'c'), this.roofBandStart(y, 'r' + cb));
-    const mat = mats[this._hash('plot' + plot) % mats.length];
+    const plots = this.roofPlots();
+    const plot = plots.id[i];
+    const mat = plots.mat.get(plot) || this.ROOF_MATS[0];
     if (!Tiles.has('roof.' + mat + '.mid')) return null;
     const same = (ax, ay) => this.roofAt(ax, ay) && this.roofPlot(ax, ay) === plot;
     /* A CORNER is inside the plot when all three tiles touching it are — this
@@ -1062,13 +1213,22 @@ const R = {
         c.save();
         c.strokeStyle = WHITE; c.lineWidth = 3;
         c.beginPath();
+        /* THE HEAD OF THE BAY, drawn INSIDE the rectangle rather than along
+           its edge. It used to be laid exactly on the boundary, which is the
+           boundary with whatever the bays are backed onto — a car park wall,
+           a kerb — and that is drawn after the paint and over the top of it.
+           Half a line of three pixels survived, under a wall, which on screen
+           is no line at all: every bay in both car parks was two sides and an
+           open end, and a bay with no head is not a bay, it is a pair of
+           lines. Half the width in is the whole line showing. */
+        const in2 = 2;
         if (acrossX) {
           for (let x = px; x <= px + w + 1; x += TILE * 2) { c.moveTo(x, py); c.lineTo(x, py + h); }
-          const cy = m.open === 's' ? py : py + h;
+          const cy = m.open === 's' ? py + in2 : py + h - in2;
           c.moveTo(px, cy); c.lineTo(px + w, cy);
         } else {
           for (let y = py; y <= py + h + 1; y += TILE * 2) { c.moveTo(px, y); c.lineTo(px + w, y); }
-          const cx = m.open === 'e' ? px : px + w;
+          const cx = m.open === 'e' ? px + in2 : px + w - in2;
           c.moveTo(cx, py); c.lineTo(cx, py + h);
         }
         c.stroke(); c.restore();
@@ -3635,8 +3795,18 @@ const R = {
            the bottom half standing, which is the one thing on this wall that
            reads as a fault rather than as depth. */
         const head = World.isOpening(x, y + 1);
+        /* AND THERE IS NOWHERE BEHIND THIS ONE TO BE. The fade answers "which
+           side of this wall is the player on", and it is worth the loss of a
+           solid wall only where the player can actually get behind it — an
+           interior partition with a room on the other side of it. A shop front
+           on a high street has a building behind it: the tile this second
+           storey is drawn on is roof, nobody can ever stand there, and fading
+           the front of the parade to fifteen per cent whenever you walk up the
+           pavement north of it made the whole row go transparent for no reason
+           anybody could see. Solid behind means no fade. */
+        const behind = y > 0 && World.solid[y - 1][x];
         const rel = (P.y - py) / (TILE * 1.6);
-        const wallAlpha = head ? 1 : Math.max(.15, Math.min(1, rel + .35));
+        const wallAlpha = (head || behind) ? 1 : Math.max(.15, Math.min(1, rel + .35));
         c.save();
         c.globalAlpha = wallAlpha;
         c.drawImage(this.wallTile(nz || 'main', (x * 3 + y + 1) & 1), px, py - TILE, TILE, TILE);
@@ -3896,7 +4066,22 @@ const R = {
            anchored to, or a bookcase would swing out of the room when it
            turned. The shadow, the highlight and the ringing pool stay square
            to the map above: they are the floor and the UI, not the object. */
-        const turn = (o.turn || 0) & 3;
+        /* AND PAINT TURNS WITH THE WALL IT IS ON.
+
+           `paint` is what lets a tag hang on a wall you are not looking square
+           at: it goes ON the wall tile rather than standing in front of it,
+           because paint has no thickness. What nobody said was which way up.
+           A tag is two or three tiles of WIDE, and on Aldergate Rise and Marlow
+           Street the wall it is sprayed on runs north to south — so a
+           horizontal tag lay across the street instead of along the wall, with
+           a third of it on the pavement and a third on the carriageway. Turned
+           a quarter, it runs down the wall, which is the only way a tag that
+           shape fits on a wall that shape. East and west only: a wall to the
+           south runs east–west already and a tag on it is the right way round
+           without anybody doing anything. */
+        const paintTurn = f.paint && o.mount === 'wall'
+          ? (o.wallSide === 'e' ? 1 : o.wallSide === 'w' ? 3 : 0) : 0;
+        const turn = ((o.turn || 0) + paintTurn) & 3;
         if (turn) {
           const mid = (fsprite && Tiles.has(fsprite))
             ? Tiles.centre(fsprite, ex, ey + bob) : { x: ex, y: ey + bob };

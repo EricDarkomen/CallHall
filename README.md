@@ -460,12 +460,37 @@ swatch, and the one thing a swatch cannot do from above is say where one
 building stops and the next one starts.
 
 So the roof is derived in three steps and the first is the one that matters.
-**The mass is cut into plots** — `R.roofPlot()`, a pure function of the tile the
-way `R.toneOf()` is, banding the map in runs of three to five and banding each
-run front to back differently from the run behind it. Nothing in a level says
-where a building ends, the same way nothing in a level says where a kerb is:
-both are derived, and the party walls a terrace gets out of this are what turn
-one rectangle of solid into eleven shops. **Then the tile** — thirteen per
+**The mass is cut into plots** — `R.roofPlots()` floods the roof mass four ways,
+and every connected piece of it is a BLOCK: not a building, a row of buildings
+that share party walls. Where those walls fall is the whole job, because
+everything else about a roof is a fact about the building and not about the
+tile.
+
+The first version of this asked the COORDINATE — the map banded in runs of three
+to five, each run banded front to back differently from the run behind it. Tidy
+arithmetic, and wrong in the one way that matters: it knows nothing about the
+mass it is cutting. A block eleven deep and seventy wide came out as sixty-odd
+plots of three by four, each drawing its own material, and what that is from
+above is not a town, it is a quilt. A high street whose roof changes colour
+every three metres in both directions reads as a rendering fault, which is what
+it was.
+
+A block is cut the way a terrace is actually built. **Down the short axis,
+always** — the frontage is on the long side and the building runs back from it,
+so a block seventy wide and eleven deep is units three to five wide and eleven
+deep, and cutting it the other way puts a party wall across the middle of a
+building. **Between the shops, where there are shops**: a frontage is a door,
+the doors are in `data/levels.js`, and halfway between one door and the next is
+where the wall between two shops is. Cut on a hash instead and the Bellhaven
+parade's six-tile units wore a new roof every three. **And back to back only
+when there are frontages on both sides** — a block with a street each side is
+two terraces meeting down the middle, a block whose far side is the edge of the
+map is one terrace running all the way through, and telling them apart by depth
+alone gave the backs of the buildings party walls in different places from their
+fronts. Mass with no door on it anywhere keeps the hashed three-to-five rule,
+which is a terrace nobody has drawn a frontage on yet.
+
+**Then the tile** — thirteen per
 material off `art/sprites/roofs.png` (`tools/sheets/roofs.mjs` — sixty-five
 crops off the [LPC] Roofs submission), a corner-matched set of field, edges, outer corners and inner
 corners, picked by which of this tile's four corners are inside the same plot.
@@ -499,6 +524,47 @@ A plot one tile deep has no honest coping to draw and no kit has a piece for it
 a **party wall** instead, a line of the gutter's own dark down each side the
 plot does not carry on into, which is the difference between a row of little
 buildings and a stripe.
+
+### The front of a shop
+
+Four things about the street were wrong in ways you could see from the pavement
+and nobody had written down.
+
+**The doors were half a door.** `tools/sheets/town.mjs` crops the shop doors out
+of a sheet called `32x64px Doors`, in four colourways and four frames of swing,
+and every one of the sixteen crops was short by exactly thirty-two pixels — one
+tile — so what got packed into the atlas was the top two-thirds of a door. On
+screen that is a door a head shorter than the person walking through it, on a
+parade where the wall behind it is two tiles high. The crops take the whole door
+now: a shut leaf is fifty-eight pixels against a fifty-six pixel person, which
+is a door. Nothing else changed — same source, same licence, same swing.
+
+**The roof was drawn under the wall.** A wall you can see the face of is drawn
+two tiles high, and the second tile is drawn over the tile above it — which was
+roof, and which was in the same plot as the roof behind it. So the parapet that
+finishes the top of a building was drawn a row too low and then covered up, and
+the roof plane started a row further back with no edge on it at all. The
+building had no top. `R.roofAt()` calls that tile wall now, and the coping lands
+where the building actually stops.
+
+**And it went transparent when you walked past it.** The wall fade answers
+"which side of this wall is the player on", which is worth the loss of a solid
+wall for an interior partition with a room behind it and worth nothing at all
+for a shop front with a building behind it. Walking up the pavement north of the
+parade faded the whole row to fifteen per cent. Solid mass behind means no fade.
+
+**The parking bays had no heads.** Every bay in both car parks was two parallel
+lines and an open end, because the line closing the head was laid exactly on the
+boundary of the bay rectangle — which is the boundary with the car park wall,
+which is drawn after the paint and over the top of it. Half a line of three
+pixels survived, under a wall. Drawn two pixels in, it is a bay.
+
+The graffiti moved with the same pass. A tag is two or three tiles of WIDE, and
+on Aldergate Rise and Marlow Street the wall it is sprayed on runs north to
+south — so it lay across the street instead of along the wall, a third of it on
+the pavement and a third on the carriageway. `paint` turns with its wall now:
+east and west get a quarter turn, and a wall to the south is already the right
+way round.
 
 **Three things join the two halves,** and between them they are the whole shape of
 this map: two road bridges over the railway — Cargate Lane and Marlow Street — and
