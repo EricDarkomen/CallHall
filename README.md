@@ -228,6 +228,22 @@ coming the other way, which nobody thought to ask when nothing overtook anything
 Not for a person: nothing out there ever does anything about a person except
 stop.
 
+**And they indicate before they turn**, which is the one thing out there that
+exists entirely for somebody else to read. The amber used to be taken from where
+the steering actually was, so every vehicle in town signalled *during* its turn —
+correct to the frame, and not what an indicator is for. A driver signals before
+the wheel moves, far enough back that the car behind can do something about it,
+and that is a thing a driver can only do if it knows where it is going. They do
+now: ninety-three per cent of the turns begun in a three-minute run are
+signalled, a median of one and a third seconds before the wheel moves. They also
+signal moving out round something and pulling away from a stop, and they do not
+signal the six-inch corrections they are making all day round the cars parked on
+every kerb in town — a town of cars indicating constantly tells you nothing at
+all. The brake lights got the same treatment from the other end: latched for a
+quarter of a second, because a car easing along behind a bus sits a hair either
+side of the speed it wants and every one of those crossings used to be a flash
+of red.
+
 There are people, too. Eight of them, walking circuits of the pavements: up the
 parade and over the zebra by the Greggs, along Fenn Street in a hi-vis, a trolley
 back to the retail park, a dog on Corven Way, and two outside the office who are
@@ -812,6 +828,59 @@ is a better thing to watch than a car that was not there when you looked.
 Five minutes of `lightjam.mjs` over the same change: **58 stop lines crossed
 instead of 53**, nobody through a red in either, the same 217 car-seconds held,
 and 224 horns instead of 249.
+
+There is a fifth scenario now, and it is there because of a fault none of the
+other four can see. A car steers at a point on its own lane; a car turns in a
+circle of radius speed-over-lock; and when the point is nearer than the circle it
+does not converge on it, it **orbits** it. A car shoved a tile and a half
+sideways at a junction mouth has exactly that — the nearest bit of its lane is
+ninety degrees off its nose — and it is not off the road, not stopped and not
+stuck. It is doing forty pixels a second, round and round, in a circle the width
+of a bus, with a queue building behind it, and every number above calls it
+healthy. So scenario five leaves four cars across junction mouths and is read on
+**legs completed**: a town whose vehicles are all driving and none of which is
+arriving anywhere is not a working town.
+
+It earns its place immediately. Three plausible cures for the orbit were written
+and all three were thrown out on these numbers — rounding the route's corners
+into arcs, lengthening the look-ahead for a displaced car, and slowing hard when
+pointing the wrong way — along with a fourth change, settling merges in the
+give-way rule, that looked like an improvement on the control and cost four
+vehicles' worth of legs here. A harness is only worth having if it is allowed to
+say no.
+
+### What it costs per frame
+
+The traffic, the people and the lights, measured headless over six thousand
+frames of the real town:
+
+| | before | after |
+|---|---|---|
+| the whole street, per frame | 5050 µs | **1302 µs** |
+| the cars | 2575 µs | **1144 µs** |
+| the people | 2462 µs | **147 µs** |
+
+Nothing in the driving changed to get that — `carjam` comes out identical on all
+five scenarios, to the second, which is the point. Four things were wrong and all
+four were the same kind of wrong, which is arithmetic being done again that was
+done last frame:
+
+- **A car's rectangle was rebuilt for every test.** It is two numbers off a
+  model in `CARS`, and the fit test asks for them once per vehicle on the map
+  every time anything moves — sixteen hundred throwaway arrays a second for the
+  length and width of a saloon, which is the same length and width it was last
+  frame. Cached on the model: the collision test went from 49 µs to 5.5 µs.
+- **Every step every person took was tested against all sixty vehicles**, in
+  full rotated-box arithmetic, including the ones parked on the other side of
+  the railway — and a pedestrian takes several steps' worth of tests, because
+  going round a lamppost is a ladder of candidate angles. Two subtractions and a
+  compare throw out fifty-nine of them.
+- **The tile scans took a ring of neighbours they did not need.** A footprint
+  cannot leave the tile it is keyed to, which `foot()` now guarantees rather
+  than merely manages, so the ring was forty-nine map lookups per test for a
+  bus of which thirty-four could never match.
+- **The tiles a parked car covers were recomputed sixty times a second.** Fifty
+  of the sixty vehicles out there have not moved since the level was built.
 
 ## The away-day box
 
@@ -1427,7 +1496,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
 | `tools/fidelity.mjs` | Dev-time only: every level built and digested to one number per level, so a change that is not supposed to change anything can be proved not to. `--save` then `--check`. |
 | `tools/levelcheck.mjs` | Dev-time only: every level in the catalogue built with the real builder and walked, headless, so that "you can get from the front door to the lift" is a check rather than a thing somebody noticed. Run by `release.sh`. |
-| `tools/carjam.mjs` | Dev-time only: the traffic put through the four things that used to beach it, headless, so a change to the driving can be measured rather than driven into. |
+| `tools/carjam.mjs` | Dev-time only: the traffic put through the five things that break it, headless, so a change to the driving can be measured rather than driven into. |
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
 | `tools/lightjam.mjs` | Dev-time only: the traffic and the crossings put through three sets of lights, headless, so that "nobody ran a red" is a number rather than an impression. |
 | `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
