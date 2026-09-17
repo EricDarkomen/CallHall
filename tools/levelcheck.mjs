@@ -70,6 +70,7 @@ const load = rel => vm.runInContext(fs.readFileSync(path.join(ROOT, rel), 'utf8'
 load('art/sprites/manifest.js');
 load('data/world.js');
 load('data/levels.js');
+load('data/outskirts.js');
 load('data/npcs.js');
 load('data/items.js');
 load('engine/core.js');

@@ -167,6 +167,30 @@ const ZONES = {
   /* THE OLD TOWN. Five places and no carriageway on any of them: this is the
      bit inside the wall, it was pedestrianised in 1988, and the signs at both
      ends say so — see the NO ENTRY furnishing. */
+  /* ---- THE OUTSKIRTS, east of the town. See data/outskirts.js, which is the
+     one level in this game nobody wrote down tile by tile. Same five fields as
+     every street above: what the ground is, what a wall of it is, and the kit
+     tile laid over both. Out here that kit tile is grass rather than paving for
+     everything but the roads, because it is. */
+  marley:    { name: 'Marley Road',        floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  avenue:    { name: 'The avenues',        floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  /* ONE ZONE PER STREET, for the reason the note above SURFACES gives and for
+     one more out here: an estate is a place you get lost in, and the only thing
+     that stops you is that the street you turned into has a name and said so.
+     A band of the estate — the avenue, the gardens either side of it and the
+     houses in them — is all one zone, because that is what an address is. */
+  ashfield:  { name: 'Ashfield Avenue',     floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  elmtree:   { name: 'Elm Tree Avenue',     floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  sycamore:  { name: 'Sycamore Close',      floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  hazel:     { name: 'Hazel Way',           floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  lindens:   { name: 'The Lindens',         floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  beechway:  { name: 'Beech Way',           floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  rowan:     { name: 'Rowan Drive',         floor: '#4a4e56', alt: '#45494f', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  /* A garden is grass and a garden wall is brick, and the two of them together
+     are most of what an estate looks like from above. */
+  field:     { name: 'The fields',         floor: '#47503f', alt: '#424b3b', wall: '#34372f', tint: '#5ad48a', tile: 'terrain.grass.autumn', wtile: 'wall.stone' },
+  wood:      { name: "Prior's Wood",       floor: '#3f4a38', alt: '#3a4434', wall: '#2f3529', tint: '#5ad48a', tile: 'terrain.grass.autumn', wtile: 'wall.stone' },
+  yard:      { name: 'The farmyard',       floor: '#4b4942', alt: '#46443e', wall: '#34322c', tint: '#ffb347', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
   priory:    { name: 'Priorygate',        floor: '#4e4d4a', alt: '#494845', wall: '#353431', tint: '#ffb347', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
   shambles:  { name: 'The Shambles',      floor: '#4c4b46', alt: '#474641', wall: '#33322e', tint: '#ffb347', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
   coopers:   { name: 'Cooper’s Lane', floor: '#47464a', alt: '#424145', wall: '#2f2e32', tint: '#8d9bb5', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
@@ -246,6 +270,20 @@ const SURFACES = {
      and on that the alternation stopped being a texture and became a
      chequerboard you could count the squares of. */
   tarmac: { tile: 'terrain.road', floor: '#a6acb5', alt: '#a6acb5', map: '#2c2f38' },
+  /* THE PAVEMENT, and until the outskirts there was no need to name it: every
+     street in town is a zone whose own `tile` is the slab, so the paving beside
+     a road was simply the floor of the room the road is in. That stops working
+     the moment a road runs across open country — there the ground under the
+     zone is grass, laid as a surface, and a surface can only be overridden by
+     another surface. So the paving is one too, and R.kerbs() gets what it
+     wanted all along: a named thing either side of the boundary, and a kerb
+     drawn between them instead of between tarmac and a field. */
+  slab: { tile: 'terrain.slab', floor: '#4a4e56', alt: '#45494f', map: '#565b64' },
+  /* An unmade track: the chippings off the railway sheet, which is what the
+     lane up to a farm is made of and is near enough what a ploughed field
+     reads as from above. Used for both, and the only difference between them
+     is the shape of the patch. */
+  track: { tile: 'terrain.ballast', floor: '#8d7f68', alt: '#877963', map: '#5f5340', soft: true },
   /* Grass, and the one surface in the game that is not the same thing twice.
      `tiles` rather than `tile`: the LPC terrain sheets ship the same square in
      four seasons at the same pixel, so this is one crop taken four times and
@@ -259,7 +297,7 @@ const SURFACES = {
   grass: {
     tiles: { spring: 'terrain.grass.spring', summer: 'terrain.grass.summer',
              autumn: 'terrain.grass.autumn', winter: 'terrain.grass.winter' },
-    floor: '#b9c0bd', alt: '#b2b9b6',
+    floor: '#b9c0bd', alt: '#b2b9b6', soft: true,
     maps: { spring: '#4a6a34', summer: '#3f5c2c', autumn: '#6b5a2a', winter: '#b9cdd4' },
     map: '#4a6a34'
   },

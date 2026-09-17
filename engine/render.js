@@ -1106,6 +1106,13 @@ const R = {
     const vis = (x, y) => !(x < 0 || y < 0 || x >= MAPW || y >= MAPH)
       && (!World.solid[y][x] || World.open(x, y));
     const at = (x, y) => vis(x, y) ? { s: World.surfAt(x, y) } : false;
+    /* A KERB IS A MADE EDGE, which is the whole of why `soft` exists. Grass
+       meeting tarmac is a verge and has a kerb along it; grass meeting the
+       track up to a farm is one sort of ground meeting another and has
+       nothing along it at all, and until this test was here it had four
+       inches of pale concrete down both sides of it through the middle of a
+       wood. Two soft surfaces have no edge between them worth drawing. */
+    const soft = n => !!(n && SURFACES[n] && SURFACES[n].soft);
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       const s = World.surfAt(x, y);
       if (!s || !vis(x, y)) continue;
@@ -1114,7 +1121,7 @@ const R = {
          from the one whose name sorts first — otherwise every boundary is
          drawn twice, which doubles the shadow and shows as a dark line down
          the middle of the kerb. */
-      const edge = n => n && n.s !== s && (!n.s || s < n.s);
+      const edge = n => n && n.s !== s && (!n.s || s < n.s) && !(soft(s) && soft(n.s));
       /* North and west get the kerb TOP (the pavement is up or left of here,
          so the lit face is on that side); south and east get it likewise. The
          gutter shadow is always inside the tarmac. */

@@ -1421,6 +1421,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | | |
 | --- | --- |
 | `data/*.js` | The content: people and dialogue, items, callers, the office, the streets, and what happens when you press E. |
+| `data/outskirts.js` | The one level that is not written down: 580 lines of rules and a hash that build an estate, a wood, a hamlet and four hundred acres of field. See **A place nobody wrote down**. |
 | `art/sprites/*.png` | The character, world, street and roof art. Third-party, separately licensed. |
 | `art/sprites/manifest.js` | Generated: the rectangles that describe those PNGs. |
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
@@ -1606,6 +1607,83 @@ lights — and the roof plots, which are derived from the mass and are therefore
 the most sensitive thing on the list to a change in how the mass is stored. One
 number per level, `Math.random()` seeded so two runs of the same code agree
 exactly. All twenty-four came out identical.
+
+### A place nobody wrote down
+
+`data/outskirts.js` is 580 lines and builds 147,456 tiles — eleven times the
+town — in **17 milliseconds**. It is the first level in this game that is not
+authored. `data/levels.js` is three and a half thousand lines for 0.0137 km²,
+which is the right way to build somewhere the player is meant to know by heart
+and the wrong way to build the twenty minutes of housing estate, wood and field
+between one town and the next. Nobody hand-places two thousand trees.
+
+So it is DERIVED, the way `R.roofPlots()` derives a townscape out of the mass
+and `R.kerbs()` derives a kerb out of where two surfaces meet: a handful of
+rules, a hash of the coordinate for the variation, and a level def at the end
+of it. `Math.random()` is not used anywhere in it and could not be — the level
+is rebuilt from scratch every time you walk into it, and a wood that is
+somewhere else when you walk back is not a wood.
+
+Nothing in the engine knows. `World.build()` is the same builder, collision is
+the same collision, and the roof pass floods the same mass — so a semi comes out
+as two units under one roof with a party wall drawn between them because that is
+what the mass says, and a block of lock-up garages comes out as eight units
+under one unbroken roof with two of them re-roofed, and neither of those was
+asked for anywhere.
+
+The one thing a derived level has to do that an authored one does not is put its
+MASS back. A room carves walkable floor out of a map that starts solid; a house
+is the opposite, mass standing in the middle of a garden, and there is no such
+thing as an un-room. So the land is carved by `rooms`, and `furnish()` — the one
+hook that runs with the map in front of it — puts the houses, the walls and the
+pond back into `this.solid`.
+
+**What went in, and what it taught:**
+
+*Grids are the tell.* The first build laid every row of pairs from the same x,
+every avenue at the same pitch, the wood as an ellipse and the fields as
+identical rectangles, and from the air it read as a spreadsheet. One hash per
+band jogs the row; one per wall picks the step; three cosines of the bearing
+give the wood a ragged edge and three more give the track through it a wander.
+None of that is more than a line, and it is the whole difference between a place
+and a diagram.
+
+*A kerb is a MADE edge.* `R.kerbs()` drew four inches of pale concrete down both
+sides of a farm track through a wood, because it draws wherever two named
+surfaces meet and it had two. `SURFACES` entries now carry `soft`, and two soft
+surfaces have no edge between them worth drawing — grass against tarmac is a
+verge and keeps its kerb; grass against a track is one sort of ground meeting
+another.
+
+*The pavement had to become a surface.* Every street in town is a zone whose own
+`tile` is the slab, so the paving beside a road was simply the floor of the room
+the road is in. That stops working the moment a road runs across open country,
+where the ground under the zone is grass laid as a surface and only another
+surface can override it. `slab` and `track` are surfaces now, and the kerbs came
+right on their own.
+
+*A house has a pitched roof.* The default material bag is a market town's — six
+slates to three leads to two felts — and `lead` and `felt` are both flat roofs,
+which is correct for the backs of the shops on the High Street and reads on a
+semi as solar panels. The estate declares its own bag and the farm declares
+another, split at the road.
+
+*And a house five deep has no roof on it.* The wall band draws the bottom two
+rows of any mass as its tall south face and the roof pass puts a mitred coping
+round what is left, so five deep gave three rows, all three of them edge, and
+every house read as a grey tray with one stripe of slate in it. Seven gives
+five, and five gives three of field between the copings.
+
+The estate, the hamlet, the farm and the fields between them are 2,200 objects,
+35 parked cars and 8 people walking circuits, and it runs at **16.7 ms a frame**
+against the town's 20.1 — because the camera culls and there is less on screen
+out there, which is the point of somewhere being out there.
+
+`tools/levelcheck.mjs` earns its place here more than anywhere else in the
+repository. A derived level fails in ways an authored one cannot: a field wall
+laid straight through a cottage garden, a copse dense enough to trap a single
+tile of grass inside it, a back garden walled off with no gate. It found all
+three, by name and by coordinate, before any of them were ever on screen.
 
 ### What collides with what
 

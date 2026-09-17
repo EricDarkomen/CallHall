@@ -2261,6 +2261,9 @@ const LEVELS = {
       pub: [86.5, 15.5], bookies: [54.5, 15.5], laund: [92.5, 15.5],
       postoff: [98.5, 15.5], charity: [60.5, 15.5], kebab: [104.5, 15.5], vapour: [66.5, 15.5],
       nails: [46.5, 15.5],
+      /* Back off Marley Road, on the south pavement of Corven Way where the
+         signpost is. */
+      corvenEast: [110.5, 58.5],
       /* The door between the launderette and the post office, which is where
          the door to the flats above a parade always is. */
       flats: [96.5, 15.5],
@@ -2282,6 +2285,9 @@ const LEVELS = {
          They pointed at the fourth for a year because the fourth floor had a
          reception drawn on it. */
       { via: 'frontDoors', to: 'ground', entry: 'doors' },
+      /* East, out of the town altogether — see data/outskirts.js, which is the
+         one level here nobody wrote down. */
+      { via: 'outskirtsRoad', to: 'outskirts', entry: 'road' },
       /* And the foot of the fire escape, which is a way back IN and exists so
          that four hundred people can come back off the tarmac after a drill —
          see the note on the fourth floor's links. */
@@ -2940,6 +2946,13 @@ const LEVELS = {
          where the tunnel is, and the tunnel is where it is because that is
          where the platforms it was built to serve are. See the south half of
          this furnishing. */
+      /* THE ROAD OUT. Corven Way has run off the east edge of this map since it
+         was drawn — see the note on the rooms about a road at the edge of a
+         map doing what a road does — and there is something on the other side
+         of it now. A signpost rather than a door, because that is what a road
+         out of a town has. */
+      A({ x: 112, y: 58, e: '🛣️', name: 'The road east out of Bellhaven',
+        kind: 'sign', solid: false, use: 'outskirtsRoad', via: 'outskirtsRoad' });
       A({ x: 20, y: 59, e: '🖍️', name: 'The wall on Corven Way', kind: 'graf', solid: true, use: 'corvenWall',
         furn: { sprite: 'wall.graf.squad', paint: true } });
       /* Three along the far verge, where the town stops and the railway

@@ -23,6 +23,113 @@ const cab = use => Arcade.cabinets(use).map(c => ({
 const Acts = {
   generic(o) { insp(o.e, o.name, 'Office fixture', ['It is what it appears to be. That is rare here.']); },
 
+  /* --- THE OUTSKIRTS ---
+     One handler per KIND of thing rather than one per thing, because there are
+     sixty houses out there and they were not written down: see
+     data/outskirts.js. A level that is derived needs acts that are derived
+     too, which here means acts that do not know which house they are in. */
+  outskirtsRoad() {
+    insp('🛣️', 'The road east', 'Corven Way, and then not', [
+      'The last of the kerb, the last of the lamp posts, and then a road with a hedge either side of it going somewhere that is not here.',
+      'There is a sign. It says MARLEY ROAD and, under that, a mileage somebody has shot at.'],
+      [{ t: 'Go on, then.', to: null, do() { Levels.take('outskirtsRoad'); } },
+       { t: 'Another time.', to: null }]);
+  },
+  backToTown() {
+    insp('🛣️', 'The road west', 'Back towards Bellhaven', [
+      'The way you came. From here the town is a water tower, a church, and the top two floors of one office block.',
+      'It takes about twenty minutes, and it is the only twenty minutes of the day nobody can ring you in.'],
+      [{ t: 'Head back.', to: null, do() { Levels.take('townRoad'); } },
+       { t: 'Not yet.', to: null }]);
+  },
+  /* Every front door on the estate, and it is the same door. Which is the
+     joke, and is also true: they were built in one go by one firm. */
+  frontDoor(o) {
+    Sfx.deny();
+    insp('🚪', 'A front door', 'Somebody lives here', [pick([
+      'Frosted glass, a brass number, and a doorbell that has been painted over at least twice.',
+      'There is a porch on it that was not on the plans and has been there since 1994.',
+      'Somebody is in. You can hear a television doing the football results through the door.',
+      'Three deliveries on the step, all of them for next door.',
+      'A cat in the window, which looks at you with the specific contempt of a cat on the correct side of a window.',
+      'The knocker is a brass fox. Nobody in this house has ever used it.'])]);
+  },
+  wheelieBin() { insp('🗑️', 'A wheelie bin', 'Out on the wrong day', [pick([
+    'Out on Tuesday for a Thursday collection, which is a statement about the person who put it there.',
+    'The house number is painted on the lid in a hand that meant it.',
+    'It has been blown over and righted so many times the lid no longer sits down properly.'])]); },
+  gardenTree() { insp('🌳', 'A tree in a front garden', 'Planted too close to the house', [
+    'Somebody planted it in 1981 without asking what it would be in 1981 plus forty years. It is now most of the front garden and a conversation with the neighbours.']); },
+  streetLamp() { insp('💡', 'A street light', 'Sodium, replaced with LED', [
+    'The new ones are white and everybody hated them for about a fortnight and now nobody remembers the orange.']); },
+  woodTree() { insp('🌳', "A tree in Prior's Wood", 'Beech, mostly', [pick([
+    'Somebody has carved two sets of initials into it. One of them has been scratched out, thoroughly, and much more recently.',
+    'A rope hangs off the lowest branch with nothing on the end of it.',
+    'It is the sort of tree that has been here longer than the estate and will be here after it.',
+    'Bracket fungus all up one side, which means it is dying, which will take another eighty years.'])]); },
+  farmShed(o) { Sfx.deny(); insp('🚪', o.name || 'A shed', 'Padlocked', [
+    'Corrugated everything. Through the gap in the doors: a quad bike, forty blue barrels, and a boat.']); },
+  tractor() { insp('🚜', 'A tractor', 'Not going anywhere today', [
+    'Mud to the axles, a door held shut with a bungee, and a radio in the cab tuned to something with a lot of talking on it.']); },
+  marleyStop() { insp('🚏', 'The bus stop on Marley Road', 'Hourly, allegedly', [
+    'A pole, a flag, and a timetable in a frame that has gone opaque with twenty years of sun.',
+    'The 41 goes past here. Whether it stops depends on whether it has seen you, and whether it has seen you depends on the rain.']); },
+  marleyPost() { insp('📮', 'A postbox', 'Last collection 9.15am', [
+    'Cast iron, repainted so many times the cypher on it has gone soft at the edges. It is older than every house that can see it.']); },
+  woodBench() { insp('🪑', 'A bench in the wood', 'With a plaque on it', [
+    'IN MEMORY OF PAT, WHO LOVED THIS VIEW. The view is now four beeches and the back of the Hazel Way garages, and Pat would probably still have taken it.']); },
+  farmHouse(o) { Sfx.deny(); insp('🚪', o.name || 'The farmhouse door', 'Round the back, like everyone else', [
+    'Nobody has come to this door since the meter reader stopped coming. There are boots by it, four pairs, all the same size and all of them ruined.']); },
+  farmSign() { insp('🪧', 'A sign at the top of the farm lane', 'PLEASE SHUT THE GATE', [
+    'PLEASE SHUT THE GATE, in a hand that has had to write it more than once, and under that, smaller and newer: NO, REALLY.']); },
+  farmDrums() { insp('🛢️', 'A stack of oil drums', 'Blue, mostly', [
+    'Forty of them, stacked three high against the shed, and every one of them has something different in it that nobody has written down.']); },
+  farmTyres() { insp('🛞', 'A heap of old tyres', 'Holding down a sheet', [
+    'Tractor tyres, a dozen of them, sat on the edge of a silage sheet. It is the cheapest engineering on this farm and the only part of it that has never failed.']); },
+  fieldHurdles() { insp('🚧', 'A run of hurdles', 'Moved last week, by the look of it', [
+    'Galvanised sheep hurdles, eight of them pinned together into a pen with nothing in it, and a crush at one end that folds up and never has.']); },
+  fieldBales() { insp('📦', 'A stack of bales', 'Wrapped, and getting on', [
+    'Black plastic, stacked in a pyramid, with the crows having made a start on the top row and a good deal of opinion about you being here.']); },
+  fieldFence() { insp('🚧', 'A length of fencing', 'Propped, not fixed', [
+    'Post and rail, four sections of it, leaning against nothing in the middle of a field. It has been going to be a fence since about 2011.']); },
+  pondWillow() { insp('🌳', 'A willow by the pond', 'Half in the water', [
+    'Crack willow, split down the middle in a gale about fifteen years ago, and both halves still alive and still growing, one of them horizontally.']); },
+  pondSign() { insp('🪧', 'A sign by the pond', 'DEEP WATER', [
+    'DEEP WATER — NO SWIMMING, on a post, at a pond that is about four feet deep at the middle. Everybody in Bellhaven under thirty has been in it.']); },
+  lockUp() { Sfx.deny(); insp('🚪', 'A lock-up garage', 'Up-and-over, painted once', [pick([
+    'Nobody on this estate has ever put a car in one of these. There is a motorbike in it that has not run since 2004 and a chest freezer with a padlock on it.',
+    'Rented out to somebody two streets away for forty pounds a month, cash, and neither of them has mentioned it to anybody.',
+    'The door has been sprung for years. It goes up eight inches and stops, which is enough to see a bicycle in it and not enough to get the bicycle out.'])]); },
+  greenBench() { insp('🪑', 'A bench on the green', 'Slats replaced, frame original', [
+    'Faces the road rather than the green, which whoever installed it clearly thought about and got exactly wrong.']); },
+  greenBin() { insp('🗑️', 'A litter bin', 'Emptied Mondays', [
+    'Half of what is in it was put in it properly. The other half is on the grass within about four feet, which is the exact radius of nearly bothering.']); },
+  cottageFlowers() { insp('💐', 'A flower bed', 'Somebody is out here every day', [
+    'Dug, edged, dead-headed and weeded to within an inch of its life. Across the road are nine hundred houses with gravel.']); },
+  /* The people on the estate. One act per KIND of person, for the reason the
+     note at the top of this block gives: there are six of them and they were
+     not written down either. */
+  pedEstateDog(ped) { insp('🐕', ped.name, 'Third time round today', [pick([
+    'A spaniel that has stopped at a gatepost and will not be moved off it, and somebody at the other end of the lead who has stopped expecting to be.',
+    'The dog is delighted with you. The person is not unfriendly, exactly, but is here for the dog.',
+    '“He’s fine,” they say, before the dog has done anything at all.'])]); },
+  pedPostie(ped) { insp('📮', ped.name, 'Round finishes at two', [pick([
+    'A bag over one shoulder, a route he could walk asleep and probably has, and the specific gait of somebody who has done eleven miles a day for nineteen years.',
+    '“Nothing for you,” he says, which is a joke he makes to everybody and which lands about a third of the time.'])]); },
+  pedShopping(ped) { insp('🛍️', ped.name, 'Got off at the wrong stop', [
+    'Two bags, both heavy, both in the same hand because the other one is doing the keys. The walk from the bus stop is four minutes and she has done it three hundred times.']); },
+  pedKid(ped) { insp('🛹', ped.name, 'Not going anywhere in particular', [pick([
+    'Fourteen, on a bike two sizes too small for him, doing laps of a cul-de-sac because that is what there is.',
+    'He looks at you with the flat, total indifference that only somebody that age can manage.'])]); },
+  pedTalking(ped) { insp('💬', ped.name, 'Twenty minutes so far', [
+    'Two of them, at a gate, at the exact point in a conversation where both of them have said they should get on and neither of them has moved.']); },
+  pedSteps(ped) { insp('⌚', ped.name, 'Nine thousand of them', [
+    'Arms going, headphones in, a lap of the estate that takes twenty-two minutes and gets done twice a day since the doctor said something about it.']); },
+  pedBusStop(ped) { insp('🚏', ped.name, 'Since ten past', [
+    'She has looked up the road four times in the time you have been watching. The 41 is not up the road. The 41 has never once been up the road when anybody looked.']); },
+  pedWalker(ped) { insp('🥾', ped.name, 'Doing the loop', [
+    'Boots, a proper coat and a laminated card in a pocket, going up through the wood and round the top of the fields. It is five miles and she does it most Sundays.']); },
+
   /* --- doors & movement --- */
   door(o) { Sfx.door(); insp('🚪', o.name, 'Doorway', ['A door. It leads to ' + o.name + '. It has been propped open with a fire extinguisher, which is illegal, and permanent.']); },
   /* The handler for ANY door a level declares `locked` on — engine/world.js
