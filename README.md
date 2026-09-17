@@ -1424,6 +1424,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `art/sprites/*.png` | The character, world, street and roof art. Third-party, separately licensed. |
 | `art/sprites/manifest.js` | Generated: the rectangles that describe those PNGs. |
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
+| `tools/fidelity.mjs` | Dev-time only: every level built and digested to one number per level, so a change that is not supposed to change anything can be proved not to. `--save` then `--check`. |
 | `tools/levelcheck.mjs` | Dev-time only: every level in the catalogue built with the real builder and walked, headless, so that "you can get from the front door to the lift" is a check rather than a thing somebody noticed. Run by `release.sh`. |
 | `tools/carjam.mjs` | Dev-time only: the traffic put through the four things that used to beach it, headless, so a change to the driving can be measured rather than driven into. |
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
@@ -1539,6 +1540,46 @@ floor is.
 
 The editor has no tools for any of the five and carries all five through
 untouched, which is the next best thing — see `Doc.surfaces`.
+
+### How big a map can be, and what it costs
+
+A person is 56px and a tile is 32px, so a tile is about a metre and this town —
+114 by 120 — is about 0.0137 km². Going a great deal bigger than that used to
+mean going nowhere: `World.build()` made four arrays of arrays of boxed numbers,
+strings and nulls, which V8 keeps at roughly ten bytes a tile EACH, and the
+contact shadows made a fifth. Fine for sixty-four by forty-four. Seventy-five
+bytes a tile is a hundred and seventy megabytes for a map a kilometre and a half
+across.
+
+They are flat typed buffers now — one per grid, with a **subarray per row** hung
+off it, so every reader in the engine and the editor still says
+`World.solid[y][x]` and gets the same answer at the same cost. A view is a
+window onto the buffer, not a copy. The two grids that held NAMES hold an index
+into a table instead: a zone is two bytes, a surface is one, and index 0 is
+"none" in both — which is falsy, which is what `null` was, which is why every
+truthiness test in the engine went on working without being told anything. Only
+the places that used the value AS a name had to change, and they ask
+`World.zoneAt()` and `World.surfAt()`, which is what those were always for.
+
+| | before | after |
+| --- | --- | --- |
+| 1000×1000 (1 km²) | 67 MB | 23 MB |
+| 1500×1500 (2.25 km²) | 176 MB | 43 MB |
+| per tile | ~75 bytes | ~16 bytes |
+
+`zoneName` and `surfName` are on `Levels.FIELDS` for the reason everything on
+that list is: an index means nothing without the table it indexes, and a level
+swapped in without its own would read its tiles through the last level's table
+and come out painted in somebody else's rooms.
+
+Proving that changed nothing is what `tools/fidelity.mjs` is for. It builds
+every level and digests the walls, the zones, the surfaces, the contact shadows,
+the per-tile noise, every object and what the build worked out about it, the
+doorways, the worktops, the counters, the desks, the cars, the people, the
+lights — and the roof plots, which are derived from the mass and are therefore
+the most sensitive thing on the list to a change in how the mass is stored. One
+number per level, `Math.random()` seeded so two runs of the same code agree
+exactly. All twenty-four came out identical.
 
 ### What collides with what
 

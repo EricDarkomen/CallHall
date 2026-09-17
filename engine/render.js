@@ -1105,9 +1105,9 @@ const R = {
        thrown out by the first test. */
     const vis = (x, y) => !(x < 0 || y < 0 || x >= MAPW || y >= MAPH)
       && (!World.solid[y][x] || World.open(x, y));
-    const at = (x, y) => vis(x, y) ? { s: World.surf[y][x] } : false;
+    const at = (x, y) => vis(x, y) ? { s: World.surfAt(x, y) } : false;
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-      const s = World.surf[y][x];
+      const s = World.surfAt(x, y);
       if (!s || !vis(x, y)) continue;
       const px = x * TILE, py = y * TILE;
       /* Only ever from the surfaced side, and between two surfaced tiles only
@@ -2135,7 +2135,7 @@ const R = {
         /* Nothing behind it, so the reveal is the reveal and stops there: the
            wall's own colour, sunk, which is what the inside of a frame looks
            like when the thing filling it is a shut door. */
-        const z = World.zone[d.y] && World.zone[d.y][d.x];
+        const z = World.zoneAt(d.x, d.y);
         c.fillStyle = this.shade((ZONES[z] && ZONES[z].wall) || '#1a212e', -.35);
         c.fillRect(ox, oy, ow, oh);
       }
@@ -2199,7 +2199,7 @@ const R = {
            standing in a foot of brick. Asking the wrong one drew the jambs
            back onto all fourteen of them. */
         if (kit && World.solid[d.y] && World.solid[d.y][d.x]) continue;
-        const z = World.zone[d.y] && World.zone[d.y][d.x];
+        const z = World.zoneAt(d.x, d.y);
         const wall = (ZONES[z] && ZONES[z].wall) || '#1a212e';
         const px = d.x * TILE, py = d.y * TILE;
         const JAMB = 9;                     /* how far the wall reaches in */
@@ -2542,7 +2542,7 @@ const R = {
         if (sd < .90) continue;
         /* Puddles gather on the road, not on the camber of a pavement — and
            not on grass, which is the other thing World.surf can say now. */
-        const road = World.surf && World.surf[y][x] === 'tarmac';
+        const road = World.surfAt(x, y) === 'tarmac';
         const px = x * TILE, py = y * TILE;
         c.globalAlpha = (road ? .34 : .20) * w;
         c.fillStyle = '#2b3a4e';
@@ -2575,7 +2575,7 @@ const R = {
       c.fillStyle = '#8f9cad';
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
         if (!World.zone[y][x] || World.solid[y][x]) continue;
-        if (World.surf && World.surf[y][x] === 'tarmac') c.fillRect(x * TILE, y * TILE, TILE, TILE);
+        if (World.surfAt(x, y) === 'tarmac') c.fillRect(x * TILE, y * TILE, TILE, TILE);
       }
     }
     if (splashing) {
@@ -3758,13 +3758,13 @@ const R = {
     /* The tile seam belongs to the sprite, not to a grid stroke over the top:
        carpet has a seam, glazed tile has grout, sheet vinyl has neither. */
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-      const z = World.zone[y][x];
+      const z = World.zoneAt(x, y);
       /* An OPEN surface is ground with no room over it — the river, the
          ballast under the railway. It has no zone and it is solid, so both of
          the tests below throw it out; it is drawn here anyway because what it
          is made of is the whole of what it is. See World.open(). */
       if ((!z || World.solid[y][x]) && !World.open(x, y)) continue;
-      c.drawImage(this.floorTile(z, (x + y) & 1, World.surf && World.surf[y][x]), x * TILE, y * TILE, TILE, TILE);
+      c.drawImage(this.floorTile(z, (x + y) & 1, World.surfAt(x, y)), x * TILE, y * TILE, TILE, TILE);
     }
     /* The kerb, and then the paint on the road. Both go straight onto the
        floor, before the wear and the wall shadows: a marking is painted on the
@@ -3788,7 +3788,7 @@ const R = {
     c.fillStyle = 'rgba(255,255,255,.018)';
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       if (!World.zone[y][x] || World.solid[y][x]) continue;
-      if (World.surf && World.surf[y][x] === 'tarmac') continue;
+      if (World.surfAt(x, y) === 'tarmac') continue;
       if (World.seed[y][x] > .82) c.fillRect(x * TILE, y * TILE, TILE, TILE);
     }
     c.fillStyle = 'rgba(0,0,0,.13)'; c.beginPath();
@@ -3846,8 +3846,8 @@ const R = {
          the rest of the column stayed office drywall. Left as the only wrong
          tile on that wall, in the one room whose finish is light enough to
          see it. */
-      const nz = (World.zone[y + 1] && World.zone[y + 1][x])
-        || (!World.isOpening(x, y - 1) && World.zone[y - 1] && World.zone[y - 1][x])
+      const nz = World.zoneAt(x, y + 1)
+        || (!World.isOpening(x, y - 1) && World.zoneAt(x, y - 1))
         /* WEST before east, and that is a tie-break rather than a symmetry.
            A vertical wall run has wall above and below it, so it never reaches
            the two cases above and is decided entirely here — and whichever way
@@ -3858,13 +3858,13 @@ const R = {
            toilets, and it went pale the day that room got a light wall. It did
            not matter while every zone was a dark variation of the same
            navy-grey, which is why it surfaced only now. */
-        || World.zone[y][x - 1] || World.zone[y][x + 1]
+        || World.zoneAt(x - 1, y) || World.zoneAt(x + 1, y)
         /* A CORNER has wall on all four sides and so reached none of the above:
            it fell through to the generic 'main' tint and stopped matching the
            two walls it joins, which is what makes a room look like it does not
            close. Its room is diagonally adjacent, so ask there. */
-        || (World.zone[y + 1] && World.zone[y + 1][x + 1]) || (World.zone[y + 1] && World.zone[y + 1][x - 1])
-        || (World.zone[y - 1] && World.zone[y - 1][x + 1]) || (World.zone[y - 1] && World.zone[y - 1][x - 1])
+        || World.zoneAt(x + 1, y + 1) || World.zoneAt(x - 1, y + 1)
+        || World.zoneAt(x + 1, y - 1) || World.zoneAt(x - 1, y - 1)
         || null;
       const below = y + 1 < MAPH && !World.solid[y + 1][x] && World.zone[y + 1][x];
       const anyNear = below || (x + 1 < MAPW && !World.solid[y][x + 1]) || (x > 0 && !World.solid[y][x - 1]) || (y > 0 && !World.solid[y - 1][x]);
@@ -4440,7 +4440,7 @@ const R = {
     const c = b.getContext('2d');
     const sx = cv.width / MAPW, sy = cv.height / MAPH;
     for (let y = 0; y < MAPH; y++) for (let x = 0; x < MAPW; x++) {
-      const z = World.zone[y][x];
+      const z = World.zoneAt(x, y);
       /* The open surfaces are on here for the same reason they are on the
          screen: a town map with no river on it is a map of somewhere else.
          They have no zone at all, so the fallback below would have nothing to
@@ -4450,7 +4450,7 @@ const R = {
          roads are the same colour as the pavements is a minimap of a car park.
          `map` and not `floor`: a surface's floor colour is a TINT multiplied
          through a texture, and there is no texture down here to multiply. */
-      const s = World.surf && World.surf[y][x];
+      const s = World.surfAt(x, y);
       const S = s && SURFACES[s];
       /* And the seasonal ones paint themselves four ways, for the same reason
          the tile does: a green verge on the map in January is a lie about a

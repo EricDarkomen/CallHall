@@ -47,6 +47,14 @@ const Levels = {
      complete: anything left off is silently retained from the previous level,
      and a stale `desks` draws the fourth floor's workstations on the road. */
   FIELDS: ['def', 'level', 'solid', 'zone', 'seed', 'surf', 'ao', 'objects', 'byTile',
+    /* AND THE NAMES BEHIND THE ZONE AND SURFACE GRIDS. Those grids hold an
+       index per tile rather than a string — see the note over the buffers in
+       World.build() — and an index means nothing without the table it indexes.
+       Left off this list, a level swapped in would read its own tiles through
+       the PREVIOUS level's table and come out painted in somebody else's
+       rooms, which is precisely the class of fault the note above this list
+       describes: anything left off is silently retained. */
+    'zoneName', 'surfName',
     'doorways', 'openings', 'desks', 'worktops', 'tables', 'counters', 'blocked',
     /* The cars are the map's, not the driver's: leave the pool car in the
        middle of Fenn Street, walk into the building and come back out, and it

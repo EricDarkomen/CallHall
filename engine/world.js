@@ -10,6 +10,16 @@
    object it always did and never has to know that levels exist. Levels.go()
    swaps the contents underneath it; engine/levels.js keeps the ones it is not
    currently showing. */
+/* ONE ROW OF A FLAT GRID, AS A VIEW. Every grid the builder makes is one
+   typed buffer; this hangs a subarray off it per row so that `grid[y][x]`
+   still means what it has always meant. A view is a window onto the buffer,
+   not a copy: writing through it writes the buffer. */
+function rows(buf) {
+  const out = new Array(MAPH);
+  for (let y = 0; y < MAPH; y++) out[y] = buf.subarray(y * MAPW, (y + 1) * MAPW);
+  return out;
+}
+
 const World = {
   /* The id of the loaded level, and the definition it was built from. Anything
      that has to behave differently in the basement than on the fourth floor
@@ -22,7 +32,7 @@ const World = {
     /* The live dimensions of the map, which is what MAPW/MAPH mean. Set before
        anything below reads them: every loop in this file is bounded by them. */
     MAPW = def.w; MAPH = def.h;
-    this.solid = []; this.zone = []; this.seed = []; this.surf = []; this.objects = []; this.byTile = new Map();
+    this.objects = []; this.byTile = new Map();
     /* Everything derived. Reset rather than left over, or a level with no desks
        in it draws the previous level's desks on its floor. */
     this.desks = []; this.worktops = []; this.tables = []; this.doorways = [];
@@ -32,13 +42,46 @@ const World = {
        the game is running and left empty everywhere else — see isSolid(), and
        the note there about why a car is not built into the map. */
     this.carTiles = new Set();
-    for (let y = 0; y < MAPH; y++) {
-      this.solid[y] = []; this.zone[y] = []; this.seed[y] = []; this.surf[y] = [];
-      for (let x = 0; x < MAPW; x++) { this.solid[y][x] = 1; this.zone[y][x] = null; this.seed[y][x] = Math.random(); this.surf[y][x] = null; }
-    }
+    /* THE GRIDS, and what they are made of is the only thing about them that
+       has changed. They were four arrays of arrays of boxed numbers, strings
+       and nulls, which V8 stores at about ten bytes a tile EACH — fine for
+       sixty-four by forty-four, and fifty-odd megabytes for a map a kilometre
+       across, which is the size this engine is being asked to reach.
+
+       One flat typed buffer per grid now, with a SUBARRAY PER ROW hung off it,
+       so every reader in the engine and the editor still says
+       `World.solid[y][x]` and gets the same answer at the same cost. That is
+       the whole trick and it is why this is a storage change rather than a
+       rewrite: `solid[y]` is a Uint8Array view onto row y of one buffer.
+
+       Four bytes a tile all told — one for the walls, one for the contact
+       shadows, two for the zone, one for the surface — plus four for the
+       per-tile noise, against about fifty before. See zid()/sid() for the two
+       that hold names: a zone is an index into a table of its own, so a tile
+       costs two bytes instead of a pointer. */
+    const N = MAPW * MAPH;
+    this._solid = new Uint8Array(N).fill(1);
+    this._zone = new Uint16Array(N);
+    this._surf = new Uint8Array(N);
+    /* Float32 rather than double: the value is a texture seed thresholded at a
+       couple of decimal places and never arithmetic, so the extra four bytes a
+       tile bought nothing. Filled in the same row-major order it always was, so
+       the same tile gets the same number. */
+    this._seed = new Float32Array(N);
+    for (let i = 0; i < N; i++) this._seed[i] = Math.random();
+    this.solid = rows(this._solid);
+    this.zone = rows(this._zone);
+    this.surf = rows(this._surf);
+    this.seed = rows(this._seed);
+    /* The names behind those indices. Index 0 is "none" in both, which is what
+       makes every `!World.zone[y][x]` test in the engine go on working without
+       being told anything. */
+    this.zoneName = [null]; this._zoneId = new Map();
+    this.surfName = [null]; this._surfId = new Map();
     (def.rooms || []).forEach(rm => {
       const [x1, y1, x2, y2] = rm.r;
-      for (let y = y1; y <= y2; y++) for (let x = x1; x <= x2; x++) { this.solid[y][x] = 0; this.zone[y][x] = rm.z; }
+      const z = this.zid(rm.z);
+      for (let y = y1; y <= y2; y++) for (let x = x1; x <= x2; x++) { this.solid[y][x] = 0; this.zone[y][x] = z; }
     });
     /* What the ground is MADE of, where that differs from what its room is made
        of — the tarmac over the middle of a street, laid on after the rooms
@@ -48,7 +91,7 @@ const World = {
     (def.surfaces || []).forEach(sf => {
       const [x1, y1, x2, y2] = sf.r;
       for (let y = Math.max(0, y1); y <= Math.min(MAPH - 1, y2); y++)
-        for (let x = Math.max(0, x1); x <= Math.min(MAPW - 1, x2); x++) this.surf[y][x] = sf.s;
+        for (let x = Math.max(0, x1); x <= Math.min(MAPW - 1, x2); x++) this.surf[y][x] = this.sid(sf.s);
     });
     /* The cars, if this level has any. Built here rather than in furnish()
        because a car is not an object on a tile: it is at a pixel, at an angle,
@@ -77,8 +120,8 @@ const World = {
          two tiles either side of a doorway in a wall run — the one above an
          opening is its head and is finished like the room it leads to, and the
          one below an opening is NOT the room above it and must not be. */
-      if (this.zone[d.y][d.x] === null) this.openings.add(d.x + ',' + d.y);
-      this.zone[d.y][d.x] = this.zone[d.y][d.x] || d.z;
+      if (!this.zone[d.y][d.x]) this.openings.add(d.x + ',' + d.y);
+      this.zone[d.y][d.x] = this.zone[d.y][d.x] || this.zid(d.z);
       this.add({ x: d.x, y: d.y, e: d.locked ? '🔐' : '🚪', name: d.name, kind: 'door', solid: false, use: d.locked ? 'lockedDoor' : 'door', locked: d.locked || null });
     });
     /* THE POLES. A signal's arms declare where its posts stand, and a post on
@@ -297,9 +340,9 @@ const World = {
      shadow along those edges — the cheapest way to stop the floor and the walls
      looking like two unrelated flat colours. */
   computeAO() {
-    this.ao = [];
+    this._ao = new Uint8Array(MAPW * MAPH);
+    this.ao = rows(this._ao);
     for (let y = 0; y < MAPH; y++) {
-      this.ao[y] = [];
       for (let x = 0; x < MAPW; x++) {
         if (this.solid[y][x] || !this.zone[y][x]) { this.ao[y][x] = 0; continue; }
         let m = 0;
@@ -365,11 +408,28 @@ const World = {
      that does not declare a surface. */
   surfAt(tx, ty) {
     if (!this.surf || tx < 0 || ty < 0 || tx >= MAPW || ty >= MAPH) return null;
-    return this.surf[ty][tx];
+    return this.surfName[this.surf[ty][tx]] || null;
+  },
+  /* A NAME, AS AN INDEX. Both tables start with a null at 0, so a tile with no
+     zone and a tile with no surface both read as 0 — which is falsy, which is
+     exactly what `null` was, and is why every truthiness test in the engine
+     went on working when the strings became numbers. Registered on the way in
+     and never removed: a level has a dozen zones and five surfaces. */
+  zid(name) {
+    if (!name) return 0;
+    let i = this._zoneId.get(name);
+    if (i === undefined) { i = this.zoneName.length; this.zoneName.push(name); this._zoneId.set(name, i); }
+    return i;
+  },
+  sid(name) {
+    if (!name) return 0;
+    let i = this._surfId.get(name);
+    if (i === undefined) { i = this.surfName.length; this.surfName.push(name); this._surfId.set(name, i); }
+    return i;
   },
   zoneAt(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= MAPW || ty >= MAPH) return null;
-    return this.zone[ty][tx];
+    return this.zoneName[this.zone[ty][tx]] || null;
   },
   /* The furniture itself is content, and lives with the rest of the content:
      each level's `furnish` in data/levels.js, called above with World as `this`
