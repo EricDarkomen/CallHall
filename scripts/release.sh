@@ -10,9 +10,9 @@
 # reading an old level, for ten minutes, silently. It happened twice before this
 # script existed, which is why it exists.
 #
-# It also runs the checks that are cheap and catch the two things that have
-# actually gone out broken before: a stale sprite atlas, and a JavaScript file
-# that does not parse.
+# It also runs the checks that are cheap and catch the three things that have
+# actually gone out broken before: a stale sprite atlas, a JavaScript file that
+# does not parse, and a level you cannot walk across.
 #
 # What it deliberately does NOT do is publish. The public repository is built
 # from this one and its remote is not recorded here; see the README. This gets
@@ -49,6 +49,16 @@ for f in engine/*.js data/*.js minigames/*.js editor/*.js art/sprites/manifest.j
   node --check "$f" >/dev/null 2>&1 || { say "  FAILS TO PARSE: $f"; BAD=1; }
 done
 [ "$BAD" -eq 0 ] || die "one or more scripts do not parse; nothing stamped"
+
+# Every level, built for real and walked. The parse check above catches a file
+# that cannot run; this catches a file that runs perfectly and describes a
+# building you cannot get across — the ground floor's lift lobby was cut off
+# from its own front door for eight releases, because the flood fill that finds
+# that in half a second lived in the editor and only ever ran on whichever level
+# somebody happened to have open.
+say "release: building every level and checking it..."
+node tools/levelcheck.mjs >/dev/null 2>&1 \
+  || die "a level is broken — run: node tools/levelcheck.mjs"
 
 # The atlas and the credits are generated, and a release with a stale one ships
 # art whose licence data does not describe it — which is the one thing

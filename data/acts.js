@@ -261,7 +261,7 @@ const Acts = {
     '“EXCELLENCE IS NOT AN ACT, IT IS A HABIT.” Someone has added, in biro: “so is this job”.',
     '“THERE IS NO I IN TEAM.” Underneath, in pencil: “there is an M and an E though”.'])]); },
   extinguisher() { insp('🧯', 'Fire extinguisher', 'Last inspected: 2019', ['Serviced annually, in the sense that a sticker is applied annually.', 'It is currently holding open a fire door.']); },
-  stationery() { 
+  stationery() {
     insp('📦', 'Stationery cupboard', 'Unlocked since 2016', ['Highlighters in eleven colours. Envelopes for a mailing that never happened. A laminator, still in the box.'],
       [{ t: 'Take a pen.', to: null, do() { Item.give('pen'); } },
        { t: 'Take a notepad.', to: null, do() { Item.give('notepad'); } },
