@@ -8,8 +8,11 @@
  * drew down a lane; a car shoved off that line — by the player, mostly — steers
  * for its target from wherever it was left, and where it was left is frequently
  * the footway. On the footway it can only go forwards, and forwards is a shop
- * front. That is what this reproduces: four scenarios, a few seconds each, and
- * four numbers that say whether the recovery rules in engine/cars.js worked.
+ * front. That is what this reproduces: five scenarios, a minute or two each, and
+ * a handful of numbers that say whether the recovery rules in engine/cars.js
+ * worked. The fifth is a different fault and is described over it: a car that is
+ * driving perfectly well and going nowhere, which every other number here is
+ * blind to by construction.
  *
  * It runs the REAL Cars, Peds, Signals, World and Collide on the REAL town out
  * of data/levels.js, with a stub of everything a car talks to that is not being
@@ -280,6 +283,30 @@ traffic().forEach((c, i) => {
   c.a = -Math.PI / 2; c.fwd = c.lat = 0;
 });
 say('4. ninety seconds after all nine are put on the footway', run(90));
+
+/* ---- 5. across the junction mouth -----------------------------------------
+   The failure that LOOKS like driving, and therefore the one every other number
+   in this file is blind to. A car steers at a point on its own lane and a car
+   turns in a circle of radius speed-over-lock; when the point is nearer than
+   the circle it does not converge on it, it ORBITS it — and a car shoved a tile
+   and a half sideways at a junction mouth, so that the nearest bit of its lane
+   is ninety degrees off its nose, has exactly that. It is not off the road, it
+   is not stopped and it is not stuck. It is doing forty pixels a second, round
+   and round, in a circle the width of a bus, with a queue building behind it.
+
+   So this one is read on LEGS COMPLETED rather than on anything above: a town
+   whose vehicles are all driving and none of which is arriving anywhere is a
+   town every other scenario here would call healthy. */
+reset();
+P.x = 16 * TILE; P.y = 4 * TILE;                  /* over in the car park again */
+const mouths = [[11.2, 18.2, 90], [11.0, 36.0, 90], [62.9, 19.0, 0], [62.7, 55.0, 0]];
+traffic().slice(0, 4).forEach((c, i) => {
+  c.x = mouths[i][0] * TILE; c.y = mouths[i][1] * TILE;
+  c.a = mouths[i][2] * Math.PI / 180; c.fwd = 40; c.lat = 0;
+});
+const mouth = run(60);
+say('5. sixty seconds after four are left across junction mouths', mouth,
+  'legs completed    ' + mouth.legs + ' between ' + traffic().length + ' of them');
 
 console.log('  seed ' + SEED + ', driving from '
   + path.relative(ROOT, CARS_FILE));
