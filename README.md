@@ -1421,7 +1421,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | | |
 | --- | --- |
 | `data/*.js` | The content: people and dialogue, items, callers, the office, the streets, and what happens when you press E. |
-| `data/outskirts.js` | The one level that is not written down: 580 lines of rules and a hash that build an estate, a wood, a hamlet and four hundred acres of field. See **A place nobody wrote down**. |
+| `data/outskirts.js` | The one level that is not written down: 800 lines of rules and a hash that build an estate, a wood, a hamlet and four hundred acres of field. See **A place nobody wrote down**. |
 | `art/sprites/*.png` | The character, world, street and roof art. Third-party, separately licensed. |
 | `art/sprites/manifest.js` | Generated: the rectangles that describe those PNGs. |
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
@@ -1610,7 +1610,7 @@ exactly. All twenty-four came out identical.
 
 ### A place nobody wrote down
 
-`data/outskirts.js` is 580 lines and builds 147,456 tiles — eleven times the
+`data/outskirts.js` is 800 lines and builds 147,456 tiles — eleven times the
 town — in **17 milliseconds**. It is the first level in this game that is not
 authored. `data/levels.js` is three and a half thousand lines for 0.0137 km²,
 which is the right way to build somewhere the player is meant to know by heart
@@ -1646,7 +1646,35 @@ identical rectangles, and from the air it read as a spreadsheet. One hash per
 band jogs the row; one per wall picks the step; three cosines of the bearing
 give the wood a ragged edge and three more give the track through it a wander.
 None of that is more than a line, and it is the whole difference between a place
-and a diagram.
+and a diagram. Two of the seven avenues stop rather than going through, in a
+turning head — about a third of the streets on any estate do, and the houses
+above one still face south into it, so nothing about the wall band's rule
+changed and only the tarmac did.
+
+*Mass that touches mass is one plot.* The corner shop and the pub started at the
+west end, two tiles from the first row of semis, and the roof pass — which
+floods the mass and does not care what anything is called — took the lot as a
+single plot and produced one long jagged slate roof with a shop notched into it.
+Moved four tiles clear they are their own two-unit parade with a party wall down
+the middle. The same rule in the other direction is what gives St Cuthbert's its
+roof: nave, chancel and tower are three overlapping rectangles, so the plot pass
+copes each step where it finds one and every inner corner on it comes off the
+same thirteen tiles as everything else.
+
+*A brook laid one column at a time is a staircase.* The centre line falls most
+of a tile per column, so each column's span cleared the last and what you saw
+from above was a flight of steps with water in it. Each column fills from the
+shallower of its own top and the next column's to the deeper of the two bottoms;
+the spans overlap, the notches close, and it reads as a ribbon.
+
+*And the order things are built in is load-bearing.* The fields go in before the
+water does, because the water follows the shape of the fields — and a lone oak
+or a hedgerow tree is solid, so one dropped where the brook will later run seals
+a tile or two behind it against a wall. Anything solid scattered across a field
+is held back, the water writes every tile it takes into a set, and the flush at
+the end drops whatever landed in it or beside it. Every crossing of the brook is
+a ford for the same reason at a larger scale: four fields cut in half is four
+fields you cannot get out of.
 
 *A kerb is a MADE edge.* `R.kerbs()` drew four inches of pale concrete down both
 sides of a farm track through a wood, because it draws wherever two named
@@ -1674,16 +1702,27 @@ round what is left, so five deep gave three rows, all three of them edge, and
 every house read as a grey tray with one stripe of slate in it. Seven gives
 five, and five gives three of field between the copings.
 
-The estate, the hamlet, the farm and the fields between them are 2,200 objects,
-35 parked cars and 8 people walking circuits, and it runs at **16.7 ms a frame**
-against the town's 20.1 — because the camera culls and there is less on screen
-out there, which is the point of somewhere being out there.
+What is out there: Marley Road across the middle; seven avenues of semis, two
+of them closes, each avenue its own zone so it announces itself as you turn into
+it, with drives, back gardens walled with a gate per plot, and a shed at the
+bottom of each; a block of lock-ups, a green, and a two-unit parade with a
+corner shop and a pub in it; Prior's Wood and the track that wanders through it;
+six cottages and a church along the road east; four hundred acres of field
+walled in dry stone with a gate through every wall, half of them ploughed; two
+farms, a back lane, two copses, a brook and the pond it feeds. 2,219 objects, 32
+parked cars and 8 people walking circuits, and it holds **16.7 ms a frame** — the refresh
+rate — with a tighter spread than the town manages on a tenth of the objects,
+because the camera culls and there is less on screen out there, which is the
+point of somewhere being out there.
 
 `tools/levelcheck.mjs` earns its place here more than anywhere else in the
 repository. A derived level fails in ways an authored one cannot: a field wall
 laid straight through a cottage garden, a copse dense enough to trap a single
-tile of grass inside it, a back garden walled off with no gate. It found all
-three, by name and by coordinate, before any of them were ever on screen.
+tile of grass inside it, a back garden walled off with no gate, a willow dropped
+in the notch where a brook meets a wall, a pond with no ford in it. It found
+every one of those by name and by coordinate, and not one of them was ever on
+screen — which is the whole argument for the tool. Nobody walks two hundred
+thousand tiles.
 
 ### What collides with what
 

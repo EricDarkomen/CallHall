@@ -191,6 +191,7 @@ const ZONES = {
   field:     { name: 'The fields',         floor: '#47503f', alt: '#424b3b', wall: '#34372f', tint: '#5ad48a', tile: 'terrain.grass.autumn', wtile: 'wall.stone' },
   wood:      { name: "Prior's Wood",       floor: '#3f4a38', alt: '#3a4434', wall: '#2f3529', tint: '#5ad48a', tile: 'terrain.grass.autumn', wtile: 'wall.stone' },
   yard:      { name: 'The farmyard',       floor: '#4b4942', alt: '#46443e', wall: '#34322c', tint: '#ffb347', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+  church:    { name: "St Cuthbert's",      floor: '#3f4a3d', alt: '#3a4438', wall: '#2d332c', tint: '#b48cff', tile: 'terrain.grass.autumn', wtile: 'wall.stone' },
   priory:    { name: 'Priorygate',        floor: '#4e4d4a', alt: '#494845', wall: '#353431', tint: '#ffb347', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
   shambles:  { name: 'The Shambles',      floor: '#4c4b46', alt: '#474641', wall: '#33322e', tint: '#ffb347', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
   coopers:   { name: 'Cooper’s Lane', floor: '#47464a', alt: '#424145', wall: '#2f2e32', tint: '#8d9bb5', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },

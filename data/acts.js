@@ -96,6 +96,17 @@ const Acts = {
     'Crack willow, split down the middle in a gale about fifteen years ago, and both halves still alive and still growing, one of them horizontally.']); },
   pondSign() { insp('🪧', 'A sign by the pond', 'DEEP WATER', [
     'DEEP WATER — NO SWIMMING, on a post, at a pond that is about four feet deep at the middle. Everybody in Bellhaven under thirty has been in it.']); },
+  church(o) { Sfx.deny(); insp('⛪', 'St Cuthbert’s, Marley', 'Services 9.30, first and third Sundays', [
+    'Norman at the bottom, Victorian everywhere the Victorians could reach, and a tower with one bell in it out of a frame built for six.',
+    'The estate went up in 1953 in what used to be its glebe. There are four hundred houses out there and about eleven people in here on a good week.']); },
+  churchYew() { insp('🌳', 'A yew in the churchyard', 'Older than the church', [
+    'The rule of thumb is that the yew came first and the church was put where the yew already was. Nobody has ever got a straight answer out of anybody about why.']); },
+  churchGraves() { insp('🪦', 'The graves', 'Mostly the same nine surnames', [
+    'The oldest legible one is 1694. The newest is nineteen years ago. Between them the same nine surnames go round and round, and four of them are on the street signs out there.']); },
+  churchBench() { insp('🪑', 'A bench in the churchyard', 'Out of the wind', [
+    'South-facing, out of the wind, with a view of the back of the Cross Keys. It is the best seat in Marley and three people know it.']); },
+  churchBoard() { insp('🪧', 'The noticeboard', 'Behind glass, mostly', [
+    'A service list, a safeguarding poster, a plea about the roof that has been there long enough to fade, and a photograph of a scaffold that came down in 2019.']); },
   lockUp() { Sfx.deny(); insp('🚪', 'A lock-up garage', 'Up-and-over, painted once', [pick([
     'Nobody on this estate has ever put a car in one of these. There is a motorbike in it that has not run since 2004 and a chest freezer with a padlock on it.',
     'Rented out to somebody two streets away for forty pounds a month, cash, and neither of them has mentioned it to anybody.',
@@ -104,6 +115,14 @@ const Acts = {
     'Faces the road rather than the green, which whoever installed it clearly thought about and got exactly wrong.']); },
   greenBin() { insp('🗑️', 'A litter bin', 'Emptied Mondays', [
     'Half of what is in it was put in it properly. The other half is on the grass within about four feet, which is the exact radius of nearly bothering.']); },
+  cornerShop() { Sfx.deny(); insp('🏪', 'The Marley Road Stores', 'Open till nine, and on Sundays', [pick([
+    'Everything in here is about forty pence more than it is in town and every single person on this estate has made their peace with that at least twice a week.',
+    'A bell over the door, a Post Office counter that opens for three hours on a Tuesday, and a freezer that has been making the same noise since the nineties.',
+    'The window is half handwritten cards: a sofa, two rabbits, a man who will clear your guttering.'])]); },
+  estatePub() { Sfx.deny(); insp('🍺', 'The Cross Keys', 'Food served till eight', [pick([
+    'Carpet, a pool table with a tilt in it, and a function room upstairs that has done four hundred wakes and about the same number of eighteenths.',
+    'The car park is bigger than the pub, which tells you exactly what sort of pub it is and exactly how everybody gets here.',
+    'There is a board outside with QUIZ THURSDAY on it in letters that have not been changed since it was a Wednesday.'])]); },
   cottageFlowers() { insp('💐', 'A flower bed', 'Somebody is out here every day', [
     'Dug, edged, dead-headed and weeded to within an inch of its life. Across the road are nine hundred houses with gravel.']); },
   /* The people on the estate. One act per KIND of person, for the reason the

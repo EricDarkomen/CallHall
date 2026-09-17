@@ -97,6 +97,23 @@ const Outskirts = {
     const room = (z, x1, y1, x2, y2) => rooms.push({ z, r: [x1, y1, x2, y2] });
     const surf = (s, x1, y1, x2, y2) => surfaces.push({ s, r: [x1, y1, x2, y2] });
     const add = o => objects.push(o);
+    /* ORDER OF OPERATIONS, and there is one thing in this file that needs it.
+       The fields go in before the water does, because the water follows the
+       shape of the fields — and a lone oak or a hedgerow tree is SOLID, so one
+       dropped where the brook will later run seals a tile or two behind it
+       against a wall. Nobody would ever have walked into them; levelcheck
+       reports them, and it is right to. So anything solid that is scattered
+       across a field is put on `later` instead of straight into the list, the
+       water writes every tile it takes into `wet`, and the flush at the end
+       drops whatever landed in it or beside it. */
+    const wet = new Set(), later = [];
+    const addLate = o => later.push(o);
+    const soak = (x, y) => wet.add(y * this.W + x);
+    const damp = (x, y) => {
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+        if (wet.has((y + dy) * this.W + (x + dx))) return true;
+      return false;
+    };
     const box = (x1, y1, x2, y2) => solids.push([x1, y1, x2, y2]);
 
     /* A STREET, laid the same way every time: the room, the paving, the
@@ -217,9 +234,27 @@ const Outskirts = {
       const avY = back - this.STREET;
       const nextBack = avY - this.FRONT - this.HOUSE_H - this.BACK;
       if (avY < 10 || nextBack < 12 || avenues >= this.AVENUES.length) break;
-      street(this.AVENUES[avenues], EX1 - 8, avY, EX2 + 8);
+      /* ONE OF THEM IS A CLOSE. An estate laid out as nothing but parallel
+         through-roads is an estate drawn by somebody who has never had to get
+         out of one: about a third of the streets on any of them stop, and the
+         thing they stop in is a turning head. This one runs short of the east
+         end and opens out into one, which the houses in the band above still
+         face south into — the wall band's rule holds, and all that changed is
+         where the tarmac stops. */
+      const close = avenues === 2 || avenues === 5;
+      const avX2 = close ? EX2 - this.PITCH * 2 : EX2 + 8;
+      street(this.AVENUES[avenues], EX1 - 8, avY, avX2);
+      if (close) {
+        /* The head: a square of tarmac a shade wider than the road, with its
+           own paving round it, which is what a turning head is. */
+        room(this.AVENUES[avenues], avX2 + 1, avY - 4, avX2 + 12, avY + this.STREET + 3);
+        surf('slab', avX2 + 1, avY - 4, avX2 + 12, avY + this.STREET + 3);
+        surf('tarmac', avX2 + 1, avY - 2, avX2 + 10, avY + this.STREET + 1);
+        add({ x: avX2 + 6, y: avY - 3, e: '🌳', name: 'The tree in the turning head',
+              kind: 'tree', solid: true, use: 'gardenTree' });
+      }
       avStreets.push(avY);
-      for (let x = EX1; x < EX2; x += 20)
+      for (let x = EX1; x < avX2; x += 20)
         add({ x, y: avY + 1, e: '💡', name: 'A street light', kind: 'lamp', solid: true, use: 'streetLamp' });
       avenues++;
       pave = avY;              /* the next row faces this street from the north */
@@ -254,6 +289,41 @@ const Outskirts = {
       }
       add({ x: px + 4, y: R.y - 3, e: '🪑', name: 'A bench on the green', kind: 'bench', solid: true, use: 'greenBench' });
       add({ x: px + 8, y: R.y - 3, e: '🗑️', name: 'A litter bin', kind: 'bin', solid: true, use: 'greenBin' });
+    }
+
+    /* ---- the parade -------------------------------------------------------
+       Two units on Marley Road at the west end, which is the only reason
+       anybody on this estate walks anywhere. They are ONE run of mass with two
+       doors in it, so the roof pass cuts them into two units under one roof
+       with a party wall between — a parade is a terrace that sells things, and
+       nothing here had to say so. The glass and the sign over each door are
+       the same `shopwin` and `shop` kinds the High Street uses; out here there
+       are two of them instead of sixteen, which is the difference. */
+    {
+      /* EAST of the last pair, in the gap between the estate and the hamlet.
+         It has to be clear of the houses rather than among them: the parade is
+         mass and the first row of semis is mass, and mass that touches mass is
+         ONE plot as far as the roof pass is concerned — put at the west end it
+         merged into the terrace behind it and came out as one long jagged
+         slate roof with the shop notched into it. Four tiles of air is the
+         whole fix. */
+      const sx = EX2 + 4, sy = R.y - this.FRONT - 5;
+      box(sx, sy, sx + 21, sy + 4);
+      room('marley', sx - 3, sy - 3, sx + 24, R.y - 1);
+      surf('slab', sx - 3, sy + 5, sx + 24, R.y - 1);
+      const units = [
+        [4, '🏪', 'The Marley Road Stores', 'cornerShop', 'The window of the Stores'],
+        [16, '🍺', 'The Cross Keys', 'estatePub', 'The window of the Cross Keys']
+      ];
+      for (const [dx, e, name, use, win] of units) {
+        add({ x: sx + dx, y: sy + 4, e: '🚪', name: 'The door of ' + name, kind: 'exit', solid: false, use });
+        add({ x: sx + dx, y: sy + 4, e, name, kind: 'shop', solid: false, use });
+        add({ x: sx + dx + 3, y: sy + 4, e: '🪟', name: win, kind: 'shopwin', solid: false, use: 'shopWindow' });
+        add({ x: sx + dx - 3, y: sy + 4, e: '🪟', name: win, kind: 'shopwin', solid: false, use: 'shopWindow' });
+      }
+      add({ x: sx + 10, y: R.y - 2, e: '🗑️', name: 'A litter bin', kind: 'bin', solid: true, use: 'greenBin' });
+      add({ x: sx + 20, y: R.y - 2, e: '💡', name: 'A street light', kind: 'lamp', solid: true, use: 'streetLamp' });
+      add({ x: sx + 1, y: R.y - 2, e: '💡', name: 'A street light', kind: 'lamp', solid: true, use: 'streetLamp' });
     }
 
     /* ---- Prior's Wood -----------------------------------------------------
@@ -311,6 +381,39 @@ const Outskirts = {
     for (let i = 0; i < 6; i++) {
       const x = EX2 + 26 + i * 30 + (this.hash(i, 3, 141) % 9), y = R.y - 11 - (this.hash(i, 5, 143) % 4);
       if (x + 15 > W - 8) break;
+      /* THE CHURCH, in the middle of the six, and the one building on this map
+         with a plan that is not a rectangle: a nave, a chancel narrower than
+         it, and a tower on the west end. Which matters because the roof pass
+         does not know what a church is — it floods the mass and copes what it
+         finds, so the tower comes out as its own little plot with a coping all
+         the way round and the nave comes out as one long one, and the step
+         between them is drawn because it is there. Every inner corner on it is
+         a tile off the same thirteen. */
+      if (i === 3) {
+        HAM.push([x - 9, y - 11, x + 17, R.y - 1]);
+        box(x - 1, y - 4, x + 10, y + 3);                  /* the nave */
+        box(x + 11, y - 2, x + 15, y + 1);                 /* the chancel */
+        box(x - 5, y - 6, x - 2, y + 3);                   /* the tower */
+        add({ x: x - 3, y: y + 3, e: '⛪', name: 'St Cuthbert’s, Marley', kind: 'exit', solid: false, use: 'church' });
+        room('church', x - 9, y - 9, x + 17, R.y - 1);
+        surf('grass', x - 9, y - 9, x + 17, R.y - 1);
+        surf('slab', x - 3, y + 4, x - 3, R.y - 1);
+        /* The churchyard wall, with the lychgate left out of it. */
+        for (let gx = x - 9; gx <= x + 17; gx++) if (gx !== x - 3) box(gx, R.y - 1, gx, R.y - 1);
+        for (let gy = y - 9; gy < R.y - 1; gy++) { box(x - 9, gy, x - 9, gy); box(x + 17, gy, x + 17, gy); }
+        for (let gx = x - 9; gx <= x + 17; gx++) box(gx, y - 9, gx, y - 9);
+        for (const [tx, ty] of [[x - 7, y - 7], [x + 14, y - 6], [x - 7, y + 6], [x + 13, y + 7]])
+          add({ x: tx, y: ty, e: '🌳', name: 'A yew in the churchyard', kind: 'tree', solid: true, use: 'churchYew' });
+        /* No sprite, which is deliberate: there is no headstone on any sheet
+           in this repository and the nearest thing to one is a packing crate.
+           A `barrier` carries no sprite of its own, so what gets drawn is the
+           emoji, and the emoji is a headstone. */
+        for (const [gx, gy] of [[x + 1, y + 6], [x + 3, y + 7], [x + 6, y + 6], [x + 8, y + 8], [x - 1, y + 8]])
+          add({ x: gx, y: gy, e: '🪦', name: 'The graves', kind: 'barrier', solid: true, use: 'churchGraves' });
+        add({ x: x + 7, y: y + 7, e: '🪑', name: 'A bench in the churchyard', kind: 'bench', solid: true, use: 'churchBench' });
+        add({ x: x - 6, y: R.y - 2, e: '🪧', name: 'The noticeboard', kind: 'sign', solid: true, use: 'churchBoard' });
+        continue;
+      }
       /* NORTH of the road, because a cottage has to face south — the wall band
          only draws the tall face of a wall with floor below it, so a house put
          on the other side of the road would be a house seen from the back for
@@ -372,7 +475,7 @@ const Outskirts = {
          stops a wall being a line. */
       for (let x = 14; x < W - 14; x += 9)
         if (this.rnd(x, y, 93) < .3 && clearOfFarm(x, y - 1))
-          add({ x, y: y - 1, e: '🌳', name: 'A tree in the hedgerow', kind: 'tree', solid: true, use: 'woodTree' });
+          addLate({ x, y: y - 1, e: '🌳', name: 'A tree in the hedgerow', kind: 'tree', solid: true, use: 'woodTree' });
     }
     for (const x of wallCol) {
       for (let i = 0; i + 1 < wallRow.length; i++) {
@@ -406,14 +509,14 @@ const Outskirts = {
         const my = Math.round(wallRow[i] + (wallRow[i + 1] - wallRow[i]) * oy);
         if (!clearOfFarm(mx, my)) continue;
         const r = this.rnd(mx, my, salt);
-        if (r < .26) add({ x: mx, y: my, e: '🌳', name: 'A lone oak', kind: 'tree', solid: true, use: 'woodTree' });
-        else if (r < .44) add({ x: mx, y: my, e: '🚧', name: 'A run of hurdles', kind: 'barrier', solid: true,
+        if (r < .26) addLate({ x: mx, y: my, e: '🌳', name: 'A lone oak', kind: 'tree', solid: true, use: 'woodTree' });
+        else if (r < .44) addLate({ x: mx, y: my, e: '🚧', name: 'A run of hurdles', kind: 'barrier', solid: true,
                                 use: 'fieldHurdles', furn: { sprite: 'obj.railing', size: 34 } });
-        else if (r < .62) add({ x: mx, y: my, e: '📦', name: 'A stack of bales', kind: 'bin', solid: true,
+        else if (r < .62) addLate({ x: mx, y: my, e: '📦', name: 'A stack of bales', kind: 'bin', solid: true,
                                 use: 'fieldBales', furn: { sprite: 'obj.crate', size: 30 } });
-        else if (r < .72) add({ x: mx, y: my, e: '🚜', name: 'A length of fencing', kind: 'barrier', solid: true,
+        else if (r < .72) addLate({ x: mx, y: my, e: '🚜', name: 'A length of fencing', kind: 'barrier', solid: true,
                                 use: 'fieldFence', furn: { sprite: 'obj.fence', size: 32 } });
-        else if (r < .80) add({ x: mx, y: my, e: '🛢️', name: 'A row of blue barrels', kind: 'bin', solid: true,
+        else if (r < .80) addLate({ x: mx, y: my, e: '🛢️', name: 'A row of blue barrels', kind: 'bin', solid: true,
                                 use: 'farmDrums', furn: { sprite: 'obj.barrels', size: 32 } });
       }
     }
@@ -479,7 +582,7 @@ const Outskirts = {
         const d = Math.hypot((x - px) / rxp, (y - py) / ryp);
         const wob = 1 + Math.sin(Math.atan2(y - py, x - px) * 3) * .12;
         if (d > wob || onWall(x, y)) continue;
-        surf('water', x, y, x, y);
+        surf('water', x, y, x, y); soak(x, y);
         /* AND THE WATER IS MASS. Everything out here is standing on one room
            the size of the map, so every tile of it has already been carved
            walkable — and a pond you can stroll across is not a pond. Putting
@@ -490,9 +593,126 @@ const Outskirts = {
         box(x, y, x, y);
       }
       for (const [tx, ty] of [[px - rxp - 2, py - 3], [px - rxp - 1, py + 4], [px + rxp + 2, py - 1], [px + 2, py - ryp - 2]])
-        if (!onWall(tx, ty)) add({ x: tx, y: ty, e: '🌳', name: 'A willow by the pond', kind: 'tree', solid: true, use: 'pondWillow' });
+        if (!onWall(tx, ty) && !onWall(tx - 2, ty) && !onWall(tx + 2, ty) && !onWall(tx, ty - 2) && !onWall(tx, ty + 2))
+          add({ x: tx, y: ty, e: '🌳', name: 'A willow by the pond', kind: 'tree', solid: true, use: 'pondWillow' });
       add({ x: px - 2, y: py + ryp + 2, e: '🪧', name: 'A sign by the pond', kind: 'sign', solid: true, use: 'pondSign' });
+
+      /* ---- THE BROOK, which is the reason the pond is where it is ----------
+         In from the east edge and down to the water, two tiles wide and
+         wandering, because water does. It is mass with `water` on it, exactly
+         as the pond is, so you can see it and not cross it.
+
+         EXCEPT AT THE FORDS. A brook laid straight across four fields cuts
+         every one of them in half and strands whatever is on the far side —
+         which is precisely the class of fault a derived level produces and an
+         authored one cannot, and precisely what tools/levelcheck.mjs is for.
+         There are three places it can be crossed, they are `track` rather than
+         water, and they are where the walls already have their gates. */
+      /* It comes in high at the east edge and falls to the pond, which is the
+         one thing about a watercourse that is not decoration: water arrives
+         somewhere. The centre line interpolates from one to the other and the
+         two sines put the meander on top of it. */
+      const EASTY = py - 52;
+      const brookY = x => {
+        const t = Math.max(0, Math.min(1, (x - px) / (W - 4 - px)));
+        return Math.round(py + (EASTY - py) * t + Math.sin(x * .031) * 7 + Math.sin(x * .0115 + 1.1) * 11);
+      };
+      const fords = [W - 34, 330, 300, 270, 242];
+      const wide = x => 3 + (x - px > 70 ? 0 : 1);      /* it widens as it falls */
+      /* NO STAIRCASE. A brook two tiles wide laid one column at a time comes
+         out as a ziggurat: the centre line drops most of a tile per column, so
+         each column's span clears the last one and what you see from above is
+         a flight of steps with water in it. So each column fills from the
+         SHALLOWER of its own top and the previous column's to the DEEPER of
+         the two bottoms — the spans overlap, the notches close, and it reads
+         as a diagonal ribbon instead.
+
+         TWO PASSES, and the order is the other half of it. Pass one lays a
+         trodden bank one tile deep either side; pass two lays the water over
+         the top of it and puts that back into the solids. Surfaces are ordered
+         and the later one wins, so where a bank and the water land on the same
+         tile the water takes it, and everywhere else there is a continuous
+         walkable margin up both sides. */
+      const cen = {};
+      for (let x = px - 2; x <= W - 4; x++) cen[x] = brookY(x);
+      const span = x => {
+        const a = cen[x], b = cen[x + 1] === undefined ? a : cen[x + 1];
+        return [Math.min(a, b), Math.max(a, b) + wide(x) - 1];
+      };
+      for (let x = W - 4; x > px - 2; x--) {
+        const [t, b] = span(x);
+        for (const y of [t - 1, b + 1])
+          if (y >= 4 && y <= H - 5) surf('track', x, y, x, y);
+      }
+      for (let x = W - 4; x > px - 2; x--) {
+        const [t, b] = span(x);
+        const ford = fords.some(f => Math.abs(x - f) <= 2);
+        for (let y = t; y <= b; y++) {
+          if (y < 4 || y > H - 5) continue;
+          if (ford) { surf('track', x, y, x, y); continue; }
+          surf('water', x, y, x, y); box(x, y, x, y); soak(x, y);
+        }
+      }
+      /* Willows follow a brook the way they follow every brook. */
+      for (let x = px + 14; x < W - 6; x += 17) {
+        const wy = brookY(x) - 3;
+        /* CLEAR OF THE WALLS, and this is not fussiness. A willow is solid, and
+           a solid thing dropped into the notch where a wall meets the bank
+           seals a tile or two behind it — which levelcheck reports and nobody
+           would ever have walked into. Two tiles of margin either side and the
+           notch stays open. */
+        if (this.rnd(x, 3, 167) >= .6) continue;
+        if (onWall(x, wy) || onWall(x - 2, wy) || onWall(x + 2, wy)) continue;
+        add({ x, y: wy, e: '🌳', name: 'A willow on the brook', kind: 'tree', solid: true, use: 'pondWillow' });
+      }
     }
+
+    /* ---- the back lane ----------------------------------------------------
+       Along the bottom of the fields, west to east, with a second farmstead on
+       it. The south third of this map was four hundred yards of nothing until
+       this went in — every rule above was obeyed and there was still nothing
+       there, which is the failure mode of building a place out of rules and
+       never looking at the whole of it from above.
+
+       It is `track` and it goes THROUGH the walls: a gap is punched wherever it
+       crosses one, because a lane that stops at a wall is not a lane. */
+    {
+      const ly = H - 22;
+      room('field', 4, ly - 1, W - 5, ly + 2);
+      surf('track', 4, ly - 1, W - 5, ly + 2);
+      /* And the hedge along the north side of it, which is what gives a lane
+         its shape from the air, with the gateways left out. */
+      for (let x = 8; x < W - 8; x++)
+        if ((x + 5) % 31 > 3 && !damp(x, ly - 3)) box(x, ly - 3, x, ly - 3);
+      for (let x = 14; x < W - 14; x += 23)
+        if (this.rnd(x, ly, 171) < .45 && !damp(x, ly - 4))
+          add({ x, y: ly - 4, e: '🌳', name: 'A tree in the hedgerow', kind: 'tree', solid: true, use: 'woodTree' });
+
+      /* HOLLOWAY FARM: a house, a barn and a yard, on the lane rather than off
+         it, which is the older of the two arrangements and is why this one is
+         a farmhouse with a barn beside it and the other is a yard with sheds
+         round it. */
+      const hx = 96, hy = ly - 18;
+      room('yard', hx - 6, hy - 3, hx + 30, ly - 1);
+      surf('track', hx - 6, hy - 3, hx + 30, ly - 1);
+      surf('slab', hx - 2, hy + 8, hx + 26, hy + 13);
+      box(hx, hy, hx + 10, hy + 6);                      /* the house */
+      box(hx + 15, hy + 1, hx + 28, hy + 6);             /* the barn */
+      add({ x: hx + 5, y: hy + 6, e: '🚪', name: 'Holloway Farm', kind: 'exit', solid: false, use: 'farmHouse' });
+      add({ x: hx + 21, y: hy + 6, e: '🚪', name: 'The barn', kind: 'exit', solid: false, use: 'farmShed' });
+      add({ x: hx + 13, y: hy + 10, e: '🚜', name: 'A tractor', kind: 'barrier', solid: true, use: 'tractor', furn: { size: 40 } });
+      add({ x: hx + 26, y: hy + 10, e: '📦', name: 'A stack of bales', kind: 'bin', solid: true,
+            use: 'fieldBales', furn: { sprite: 'obj.crate', size: 30 } });
+      add({ x: hx - 3, y: hy + 5, e: '🌳', name: 'A tree in the farmyard', kind: 'tree', solid: true, use: 'gardenTree' });
+      add({ x: hx + 30, y: ly - 4, e: '🪧', name: 'The sign at the end of the lane', kind: 'sign', solid: true, use: 'farmSign' });
+      /* The way up to Marley Road, past the west end of the fields. */
+      room('field', 8, ly - 30, 11, ly - 1);
+      surf('track', 8, ly - 30, 11, ly - 1);
+    }
+
+    /* The flush: everything that was scattered across a field before the water
+       knew where it was going, minus whatever the water took. */
+    for (const o of later) if (!damp(o.x, o.y)) add(o);
 
     /* ---- somebody out in it -----------------------------------------------
        Derived like everything else: one circuit per avenue, up one pavement,
