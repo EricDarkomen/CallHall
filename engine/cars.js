@@ -93,6 +93,11 @@ const Cars = {
            and `gave` is who it last gave way to, so that two cars either side
            of a decision do not swap it sixty times a second. See plot(). */
         plot: null, t: 0, off: 0, hold: 0, gave: null, gapTo: Infinity, press: 0, jam: 0,
+        /* And which way it is about to go, for the amber on the corner of it.
+           Separate from `wheel`, which is where the steering actually is: a
+           driver signals BEFORE the wheel moves, which is the entire point of
+           signalling. See signal(). */
+        blink: 0, blinkT: 0,
         /* Which set of lights is holding it, and whether it is being held.
            `sig` is an arm's id rather than the arm itself, for the reason
            Cars.driving is not hung off P: a level rebuild makes new arms, and
@@ -219,21 +224,42 @@ const Cars = {
          walking out into a solid tile, which puts you back where you started
          for ever. */
       if (car === this.driving) continue;
-      const d = car.def, c = Math.cos(car.a), s = Math.sin(car.a);
-      const hl = d.len / 2, hw = d.wid / 2;
-      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-      for (const [u, v] of [[hl, hw], [hl, -hw], [-hl, hw], [-hl, -hw]]) {
-        const px = car.x + u * c - v * s, py = car.y + u * s + v * c;
-        x0 = Math.min(x0, px); x1 = Math.max(x1, px);
-        y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+      /* WHICH TILES, worked out only when the car has actually moved. Fifty of
+         the sixty vehicles on this map are parked and have been parked since
+         the level was built; rebuilding their corners, flooring them into tiles
+         and BUILDING A STRING PER TILE sixty times a second is most of the cost
+         of a function whose answer has not changed since Tuesday. The keys are
+         kept beside the tile numbers that produced them so the rule below can
+         still be applied to each one without any of them being built again. */
+      if (car.keyX !== car.x || car.keyY !== car.y || car.keyA !== car.a || !car.keys) {
+        car.keyX = car.x; car.keyY = car.y; car.keyA = car.a;
+        const keys = car.keys || (car.keys = []);
+        const nums = car.nums || (car.nums = []);
+        keys.length = 0; nums.length = 0;
+        const d = car.def, c = Math.cos(car.a), s = Math.sin(car.a);
+        const hl = d.len / 2, hw = d.wid / 2;
+        /* The extent of the rotated rectangle, which for a box is the two
+           half-extents projected onto each world axis — the same four numbers
+           the four corners used to be looped over to find. */
+        const rx = Math.abs(c) * hl + Math.abs(s) * hw;
+        const ry = Math.abs(s) * hl + Math.abs(c) * hw;
+        /* Inset slightly: a car whose bumper is a pixel over a tile line has
+           not really taken that tile, and claiming it makes a parked car a tile
+           wider than it looks. */
+        const tx0 = Math.floor((car.x - rx + 5) / TILE), tx1 = Math.floor((car.x + rx - 5) / TILE);
+        const ty0 = Math.floor((car.y - ry + 5) / TILE), ty1 = Math.floor((car.y + ry - 5) / TILE);
+        for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+          nums.push(tx, ty); keys.push(tx + ',' + ty);
+        }
       }
-      /* The tiles its corners land in, inset slightly: a car whose bumper is a
-         pixel over a tile line has not really taken that tile, and claiming it
-         makes a parked car a tile wider than it looks. */
-      const tx0 = Math.floor((x0 + 5) / TILE), tx1 = Math.floor((x1 - 5) / TILE);
-      const ty0 = Math.floor((y0 + 5) / TILE), ty1 = Math.floor((y1 - 5) / TILE);
-      for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
-        if (!underfoot(tx, ty)) set.add(tx + ',' + ty);
+      /* And the player is one person in a town, so ask once per car whether
+         they could possibly be standing on any of it rather than once per
+         tile. Nearly always they are half a map away and this is one compare. */
+      const near = Math.abs(P.x - car.x) < car.def.len + TILE && Math.abs(P.y - car.y) < car.def.len + TILE;
+      const keys = car.keys, nums = car.nums;
+      for (let i = 0, n = 0; i < keys.length; i++, n += 2) {
+        if (near && underfoot(nums[n], nums[n + 1])) continue;
+        set.add(keys[i]);
       }
     }
   },
@@ -292,6 +318,11 @@ const Cars = {
        snapped, because a wheel that reaches full lock in one frame reads as a
        glitch and a wheel that takes a fifth of a second reads as steering. */
     car.wheel = lerp(car.wheel || 0, st, Math.min(1, dt * 12));
+    /* And the amber follows it, because the person steering is the one deciding
+       and there is nothing to predict. A little deadband, so that holding a
+       gentle line down Bellhaven Road is not a car indicating for four hundred
+       metres. The traffic plans its own — see signal(). */
+    car.blink = Math.abs(car.wheel) > 0.34 ? (car.wheel > 0 ? 1 : -1) : 0;
 
     this.move(car, dt);
   },
@@ -653,6 +684,7 @@ const Cars = {
     this.bounds(out);
     return out;
   },
+
   /* The box round a plot, hung on the list itself. It exists for giveWay(),
      which is the one thing in here that compares a whole path against a whole
      path: sixteen vehicles is a hundred and twenty pairs and each pair is two
@@ -724,6 +756,61 @@ const Cars = {
       if (plot[i].ux * ux + plot[i].uy * uy < 0.94) return plot[i].s;
     }
     return plot[plot.length - 1].s;
+  },
+
+  /* ---- what it is about to do ----
+     The amber on the corner of the car, and it is the one thing out here that
+     exists entirely for somebody else to read.
+
+     It used to be taken from `wheel`, which is where the steering actually IS,
+     so every vehicle in town signalled DURING its turn. That is not what an
+     indicator is for. A driver signals before the wheel moves, far enough back
+     that the car behind can do something about it, and the reason this can now
+     be done properly is the plot: a corner two seconds up the road is a fact
+     this driver already has, and it did not before.
+
+     Three things get signalled, and they are the three things a driver on this
+     map actually does: a corner that is coming, moving out or back in across
+     the lane, and pulling away from a stop. Latched for the better part of a
+     second once it is on, because an indicator that goes off between two blinks
+     reads as a fault rather than as a decision. */
+  signal(car, dt) {
+    const plot = car.plot;
+    let want = 0;
+    /* A corner, a second or so ahead — which is to say further ahead at speed,
+       exactly as a driver's arm is. Deliberately shorter than it could be: this
+       has the whole plot to read and could signal nine tiles out, and a car
+       that indicates nine tiles before a junction is a car whose indicator is
+       on half the time, which tells the driver behind nothing at all. */
+    const far = Math.max(TILE * 2.2, Math.abs(car.fwd) * 1.05);
+    const ax = plot[1] ? plot[1].ux : Math.cos(car.a), ay = plot[1] ? plot[1].uy : Math.sin(car.a);
+    for (let i = 2; i < plot.length; i++) {
+      const p = plot[i];
+      if (p.s > far) break;
+      const cross = ax * p.uy - ay * p.ux, dot = ax * p.ux + ay * p.uy;
+      if (Math.abs(Math.atan2(cross, dot)) > 0.45) { want = cross > 0 ? 1 : -1; break; }
+    }
+    /* Moving over, or coming back. How fast the lane offset is CHANGING rather
+       than how big it is — sitting a foot off your lane is not a manoeuvre and
+       getting there is — and only when there is a manoeuvre to signal: this
+       traffic is permanently making six-inch corrections round the cars parked
+       on every kerb in town, and indicating for each of them would be a town of
+       cars with a fault. Either it is committed to going round something, or it
+       is a good half-lane out. */
+    if (!want) {
+      const was = car.wasOff === undefined ? car.off : car.wasOff;
+      const shift = (car.off - was) / dt;
+      if (Math.abs(shift) > TILE * 1.2 && (car.pull > 0 || Math.abs(car.off) > TILE * 0.45)) {
+        want = shift > 0 ? 1 : -1;
+      }
+    }
+    car.wasOff = car.off;
+    /* And pulling out from a stop, which is the one the bus stop's own act
+       claims about the 41 and which used to be true by accident. */
+    if (!want && car.stopCool > 0) want = 1;
+
+    if (want) { car.blink = want; car.blinkT = 0.7; }
+    else if ((car.blinkT -= dt) <= 0) { car.blink = 0; car.blinkT = 0; }
   },
 
   /* ---- how fast with this much road in front ----
@@ -882,16 +969,26 @@ const Cars = {
      Only genuinely CROSSING paths are settled here, and the dot product is what
      says so. Two cars nose to tail in the same lane, or passing in opposite
      ones, are not a junction — they are the following model and the width of
-     the road respectively — and the third case, two lanes MERGING into one, was
-     tried here and has been deliberately left out: a car deciding to give way
-     to a merge gives way to whatever is sitting in the lane it is joining,
-     including something that is itself stopped and waiting, and the whole town
-     quietly agrees to wait for the whole town. Sixteen vehicles, three rolling
-     at the end of three minutes. A merge is settled by the deadlock rule at the
+     the road respectively.
+
+     The third case, two lanes MERGING into one, has been tried here twice and
+     taken out twice, and the second attempt is worth recording because it
+     looked right. Half the junctions on this map join rather than cross: the 41
+     comes down Marlow Street and turns west into Corven Way and the 12 comes up
+     Marlow Street and turns west into Corven Way, and settling that before they
+     arrive is obviously better than settling it nose to nose. The trouble is
+     that a car FOLLOWING another down the same lane is the same geometry, and
+     the rule that tells them apart — has the other vehicle already ARRIVED at
+     the point where the paths join — is right about the pair and wrong about
+     the junction, because at a junction the car already in it is exactly the
+     one you must give way to. Taking it out cost two seconds on the control and
+     bought back four vehicles' worth of legs on the scenario that leaves four
+     cars across junction mouths. A merge is settled by the deadlock rule at the
      bottom of steerTraffic() instead, which is a worse-looking answer — two
      buses do come to a stop facing each other first — and is an answer.
+
      Skipping the pairs is also what keeps this cheap: almost every pair on this
-     map fails the dot product immediately.
+     map is thrown out by the box test before the loop runs at all.
 
      The decision itself is antisymmetric by construction, which is the only
      property that matters: whatever two cars conclude, exactly one of them must
@@ -1132,6 +1229,7 @@ const Cars = {
     const bite = Math.max(shuffle, Math.min(1, Math.abs(car.fwd) / (d.top * 0.09)));
     car.a += clamp(err * 2.7, -d.turn, d.turn) * dt * bite;
     car.wheel = clamp(err * 1.6, -1, 1);
+    this.signal(car, dt);
     /* And the last word on the speed: a car that is pointing a long way from
        where it means to go slows down until it is not. */
     want = Math.min(want, car.cruise * (1 - Math.min(0.72, Math.abs(err) * 1.3)));
@@ -1234,7 +1332,16 @@ const Cars = {
     car.press = Math.max(0, (car.press || 0) - dt);
     if (car.press > 0 && facing && see.gap > -4) want = Math.max(want, 26);
 
-    car.braking = car.atRed || want < car.fwd - 8 || (!!see.what && see.gap < TILE * 2.5);
+    /* ---- the brake lights ----
+       Latched for a quarter of a second, because they are not a readout of the
+       speed, they are a signal to the driver behind — and a signal that goes on
+       and off four times a second is not one. A car easing along behind a bus
+       is constantly a hair either side of the speed it wants, and every one of
+       those crossings used to be a flash of red. */
+    const slowing = car.atRed || want < car.fwd - 8 || (!!see.what && see.gap < TILE * 2.5);
+    if (slowing) car.brakeT = 0.28;
+    else car.brakeT = Math.max(0, (car.brakeT || 0) - dt);
+    car.braking = slowing || car.brakeT > 0;
     if (want > car.fwd) car.fwd = Math.min(want, car.fwd + d.acc * dt);
     else car.fwd = Math.max(want, car.fwd - d.acc * 2.2 * dt);
     if (car.fwd < 1.5 && car.fwd > -1.5) car.fwd = 0;

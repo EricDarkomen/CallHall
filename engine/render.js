@@ -1718,14 +1718,15 @@ const R = {
         c.beginPath(); c.roundRect(-hl + 2, v - 2.5, 3, 5, 1.5); c.fill();
       }
     }
-    /* INDICATORS, and they are real: `wheel` is where the steering actually is,
-       so the amber that comes on is the corner the vehicle is genuinely turning
-       towards. Every car at every junction in this town signals, correctly,
-       without a line of the traffic code changing — and the 41 pulling away
-       from a stop has its indicator on, which is a thing the bus stop's act
-       claims about it. Off with Animation, along with everything else that
-       blinks. */
-    const turn = car.wheel || 0;
+    /* INDICATORS, and they are real: `blink` is what the driver has DECIDED,
+       which for the car you are in is the wheel in your own hands and for
+       everything else is the corner it is coming up to — signalled before the
+       turn rather than during it, which is the entire point of an indicator and
+       is a thing a driver can only do if it knows where it is going. See
+       Cars.signal(). The 41 pulling away from a stop has its indicator on,
+       which is a thing the bus stop's act claims about it. Off with Animation,
+       along with everything else that blinks. */
+    const turn = car.blink || 0;
     if (this.animate && Math.abs(turn) > .22 && Math.floor(this.t * 2.6) % 2 === 0) {
       const v = turn < 0 ? -1 : 1;
       c.fillStyle = '#ffb347';

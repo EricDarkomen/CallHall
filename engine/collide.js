@@ -96,7 +96,17 @@ const Collide = {
          are named there rather than guessed at here. */
       rx = ry = TILE / 2;
     }
-    return (o._foot = { ox: 0, oy: 0, rx: Math.max(3, rx), ry: Math.max(3, ry) });
+    /* CLAMPED TO THE TILE, and that is not a formality. Every branch above
+       already lands inside the square the object stands in — `ground` is
+       documented as never bigger than a whole tile and the wall mounts are a
+       slab pushed against one edge — and the scans below now DEPEND on it:
+       they look at the tiles a box touches and no further, which is three times
+       less work than the ring of neighbours they used to walk, and is only
+       correct while no footprint leans out of its own tile. So it cannot. */
+    return (o._foot = {
+      ox: 0, oy: 0,
+      rx: Math.min(TILE / 2, Math.max(3, rx)), ry: Math.min(TILE / 2, Math.max(3, ry))
+    });
   },
   /* Where that footprint actually is, in world pixels. */
   footBox(o) {
@@ -135,11 +145,15 @@ const Collide = {
     return false;
   },
   /* The furniture, at the size it is drawn. Only the objects on the tiles the
-     box touches can matter, so this is a walk of the 3x3 neighbourhood rather
-     than of every object on the floor. */
+     box actually touches can matter — every footprint is inside its own tile,
+     which foot() above now guarantees rather than merely manages — so this is
+     a walk of those tiles and not of the ring around them. It used to take the
+     ring, which for a person's feet is nine tiles instead of one and for a bus
+     is forty-nine instead of fifteen, and every one of them is a string built
+     and a map looked up. */
   objects(x, y, rx, ry, hit) {
-    const tx0 = Math.floor((x - rx) / TILE) - 1, tx1 = Math.floor((x + rx) / TILE) + 1;
-    const ty0 = Math.floor((y - ry) / TILE) - 1, ty1 = Math.floor((y + ry) / TILE) + 1;
+    const tx0 = Math.floor((x - rx) / TILE), tx1 = Math.floor((x + rx) / TILE);
+    const ty0 = Math.floor((y - ry) / TILE), ty1 = Math.floor((y + ry) / TILE);
     for (let ty = ty0; ty <= ty1; ty++) {
       for (let tx = tx0; tx <= tx1; tx++) {
         const here = World.at(tx, ty);
@@ -155,11 +169,25 @@ const Collide = {
     return false;
   },
   /* Cars, as the boxes they are rather than as the tiles they happen to cover.
-     `ignore` is the one you are inside. */
+     `ignore` is the one you are inside.
+
+     THE CIRCLE FIRST, which is not an optimisation so much as an omission being
+     corrected. Every step every person on this map takes comes through here —
+     and a pedestrian takes several, because going round a lamppost is a ladder
+     of candidate angles each of which is a separate question — and each one of
+     them used to do the full rotated-box arithmetic against all sixty vehicles
+     in the town, including the twenty-seven parked on the other side of the
+     railway. Two subtractions and a compare throw out fifty-nine of them.
+     It was two thirds of the entire per-frame cost of the street. */
   cars(x, y, rx, ry, ignore, hit) {
     const list = World.cars || [];
-    for (const car of list) {
+    const rr = Math.hypot(rx, ry);
+    for (let i = 0; i < list.length; i++) {
+      const car = list[i];
       if (car === ignore) continue;
+      const reach = rr + this.hull(car).fr;
+      const qx = x - car.x, qy = y - car.y;
+      if (qx * qx + qy * qy > reach * reach) continue;
       /* The box in the car's own frame, grown by the box's own half-extents
          projected onto the car's axes — the standard cheap OBB-vs-AABB. */
       const c = Math.cos(car.a), s = Math.sin(car.a);
@@ -316,10 +344,27 @@ const Collide = {
   /* A car's rectangle, a pixel and a half inside the paintwork on every side.
      The skin is what lets two cars stand bumper to bumper without each of them
      pushing the other away for ever, and it is small enough that the gap it
-     leaves is invisible. */
-  carBox(car) {
+     leaves is invisible.
+
+     WORKED OUT ONCE PER MODEL and hung on the model, which is the difference
+     between this costing nothing and this costing two thirds of the collision
+     system. It used to return the two numbers as an array, and carFits() asks
+     it of every other vehicle on the map every time anything moves: sixty
+     throwaway arrays per test, twenty-eight tests a frame, sixteen hundred
+     allocations a second for two numbers that depend on nothing but the length
+     and width of a model out of the table in data/world.js. The rectangle of a
+     saloon is the same rectangle it was last frame. */
+  hull(car) {
     const d = car.def;
-    return [Math.max(4, d.len / 2 - 1.5), Math.max(4, d.wid / 2 - 1.5)];
+    if (d.hl === undefined) {
+      d.hl = Math.max(4, d.len / 2 - 1.5);
+      d.hw = Math.max(4, d.wid / 2 - 1.5);
+      d.hr = Math.hypot(d.hl, d.hw);
+      /* And the radius of the vehicle at its FULL size, for the callers that
+         test the paintwork rather than the skinned rectangle. */
+      d.fr = Math.hypot(d.len / 2, d.wid / 2);
+    }
+    return d;
   },
 
   /* Everything a car's rectangle is inside, if the car were at (x, y). With
@@ -330,7 +375,7 @@ const Collide = {
      because "does it fit" only ever needed one. */
   carHits(car, x, y, push) {
     const c = Math.cos(car.a), s = Math.sin(car.a);
-    const [hl, hw] = this.carBox(car);
+    const h = this.hull(car), hl = h.hl, hw = h.hw;
     /* The tiles the rectangle can possibly reach: the box around it. Used to
        decide WHAT TO ASK ABOUT and never to decide the answer, which is the
        whole of the difference between this and what carPush used to do. */
@@ -350,11 +395,12 @@ const Collide = {
         any = true; push[0] += p[0]; push[1] += p[1];
       }
     }
-    /* The furniture, at its drawn size. One tile of margin round the scan,
-       because an object is keyed to the tile it stands in and its footprint may
-       lean out of it. */
-    for (let ty = ty0 - 1; ty <= ty1 + 1; ty++) {
-      for (let tx = tx0 - 1; tx <= tx1 + 1; tx++) {
+    /* The furniture, at its drawn size, over exactly the tiles the rectangle
+       reaches. See the note over objects(): a footprint cannot leave its own
+       tile, so the ring of neighbours this used to walk was forty-nine map
+       lookups per test for a bus, of which thirty-four could never match. */
+    for (let ty = ty0; ty <= ty1; ty++) {
+      for (let tx = tx0; tx <= tx1; tx++) {
         const here = World.at(tx, ty);
         for (let i = 0; i < here.length; i++) {
           const b = this.footBox(here[i]);
@@ -371,13 +417,14 @@ const Collide = {
        invisible to — it was measured by its width whichever way round it was
        lying — and it is why two vehicles now stop touching instead of parking
        twenty pixels inside one another. */
-    const rr = Math.hypot(hl, hw);
-    for (const o of (World.cars || [])) {
+    const list = World.cars || [];
+    for (let i = 0; i < list.length; i++) {
+      const o = list[i];
       if (o === car) continue;
-      const [ol, ow] = this.carBox(o);
-      const dx = o.x - x, dy = o.y - y, reach = rr + Math.hypot(ol, ow);
+      const oh = this.hull(o);
+      const dx = o.x - x, dy = o.y - y, reach = h.hr + oh.hr;
       if (dx * dx + dy * dy > reach * reach) continue;
-      const p = this.obb(x, y, c, s, hl, hw, o.x, o.y, Math.cos(o.a), Math.sin(o.a), ol, ow);
+      const p = this.obb(x, y, c, s, hl, hw, o.x, o.y, Math.cos(o.a), Math.sin(o.a), oh.hl, oh.hw);
       if (!p) continue;
       if (!push) return true;
       any = true; push[0] += p[0]; push[1] += p[1];
@@ -413,8 +460,8 @@ const Collide = {
   PERSON_R: TILE * 0.26,
   carOnPerson(car, x, y) {
     const c = Math.cos(car.a), s = Math.sin(car.a);
-    const [hl, hw] = this.carBox(car);
-    const r = this.PERSON_R, rr = Math.hypot(hl, hw) + r;
+    const h = this.hull(car), hl = h.hl, hw = h.hw;
+    const r = this.PERSON_R, rr = h.hr + r;
     const hit = (px, py) => {
       const dx = px - x, dy = py - y;
       if (dx * dx + dy * dy > rr * rr) return false;
