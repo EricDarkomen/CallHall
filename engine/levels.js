@@ -36,6 +36,10 @@ const Levels = {
   cache: new Map(),
   /* Least-recently-used first. Which one to drop when the budget is exceeded. */
   order: [],
+  /* Which neighbours the prefetcher has already offered to build since the
+     player arrived where they are. Cleared on every arrival — see prefetch(),
+     which is also where the reason it has to exist at all is written down. */
+  offered: new Set(),
   current: null,
   /* Set while a transition is in flight, so a second one cannot start on top of
      it — two overlapping transitions leave the player on one level with the
@@ -83,6 +87,7 @@ const Levels = {
        cannot disagree with itself. */
     for (const id in LEVELS) LEVELS[id].id = id;
     this.cache.clear(); this.order = []; this.current = null; this.moving = false;
+    this.offered = new Set();
   },
   def(id) { return LEVELS[id] || null; },
   /* The level definitions, in catalogue order. */
@@ -249,7 +254,10 @@ const Levels = {
          beats a second copy here that has to be kept in step with it. */
       G.lastZone = null;
       if (!opts.quiet) Sfx.door();
-      /* Whatever is one door from here, built while nothing is happening. */
+      /* Whatever is one door from here, built while nothing is happening. A
+         fresh arrival is a fresh offer: the cache is not what it was last time
+         this level was stood on. */
+      this.offered = new Set();
       this.prefetch();
     };
 
@@ -311,21 +319,55 @@ const Levels = {
   /* ---- streaming ----
      One neighbour per idle slot. Splitting them up matters: building two levels
      back to back inside one callback is a frame the player watches go by, and
-     the whole point of doing it early is that nobody ever sees it happen. */
+     the whole point of doing it early is that nobody ever sees it happen.
+
+     TWO RULES, and both of them are about the cache rather than about the
+     levels. A prefetcher that ignores either one does not stream, it thrashes.
+
+     BUILD ONLY WHAT THE CACHE CAN KEEP. The budget is two besides the hub and
+     the level on screen, and the street has twenty-two ways off it. Building a
+     third neighbour does not cache a third neighbour: it makes trim() throw the
+     first one away, and the work is not saved for later, it is simply lost.
+
+     AND OFFER EACH NEIGHBOUR ONCE. Those two together is the whole of the
+     fault this pair of rules was written for. The old loop took its list of
+     unbuilt neighbours, built one, trimmed, and asked again — and the ask
+     found, every time, that the level the trim had just evicted was unbuilt
+     again. It never terminated. On the fourth floor that was three small rooms
+     going round and round and nobody noticed for a year; outside, where the
+     road east now leads to a hundred and forty-seven thousand tiles, it was
+     the outskirts rebuilt ELEVEN TIMES A SECOND, for as long as you stood in
+     the town, which is two seconds of building in every twenty and a frame
+     lost every few — and it looked exactly like what it was reported as: the
+     driving going to pieces. Nothing in the driving was wrong. */
   prefetch() {
-    const want = ((World.def && World.def.links) || [])
-      .map(l => l.to).filter(id => this.def(id) && !this.built(id));
-    if (!want.length) return;
+    if (this.room() <= 0) return;
+    const next = ((World.def && World.def.links) || [])
+      .map(l => l.to).find(id => this.def(id) && !this.built(id) && !this.offered.has(id));
+    if (!next) return;
     const idle = window.requestIdleCallback || (fn => setTimeout(() => fn(), 220));
+    const from = this.current;
     idle(() => {
-      const next = want.find(id => !this.built(id));
-      if (!next) return;
-      this.ensure(next);
-      this.trim();
-      /* Whatever the newly built level's own budget did to the cache, ask
-         again: the list was taken before it ran. */
+      /* An idle slot is long enough to walk through a door in. If one was
+         walked through, this offer was made on behalf of a level that is no
+         longer on screen — and the arrival has already made its own. */
+      if (this.current !== from) return;
+      /* Marked before it is built and not after, so that a level which fails to
+         build is not offered again on the next pass for ever. */
+      this.offered.add(next);
+      /* Asked again rather than trusted: both answers were taken before the
+         wait, and a level can have been built or evicted since. */
+      if (!this.built(next) && this.room() > 0) { this.ensure(next); this.trim(); }
       this.prefetch();
     });
+  },
+  /* How much room is left for one more level: the budget, less whatever is
+     already cached that is neither the level on screen nor the pinned hub —
+     which is exactly the list trim() evicts from, and so exactly the question
+     "would building one more immediately cost us one we have". */
+  room() {
+    return this.BUDGET - this.order.filter(id =>
+      id !== this.current && !(this.def(id) || {}).hub).length;
   },
 
   /* ---- the curtain ----
@@ -361,6 +403,7 @@ const Levels = {
   },
   start(id, entry) {
     this.cache.clear(); this.order = []; this.current = null; this.moving = false;
+    this.offered = new Set();
     return this.go(id || this.first(), entry || 'start', { quiet: true });
   },
   /* Put a restored save back on the level it was saved on. The position comes

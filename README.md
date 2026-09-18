@@ -1497,6 +1497,7 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/fidelity.mjs` | Dev-time only: every level built and digested to one number per level, so a change that is not supposed to change anything can be proved not to. `--save` then `--check`. |
 | `tools/levelcheck.mjs` | Dev-time only: every level in the catalogue built with the real builder and walked, headless, so that "you can get from the front door to the lift" is a check rather than a thing somebody noticed. Run by `release.sh`. |
 | `tools/carjam.mjs` | Dev-time only: the traffic put through the five things that break it, headless, so a change to the driving can be measured rather than driven into. |
+| `tools/streamjam.mjs` | Dev-time only: the level cache and the prefetcher stood on every level in the catalogue, headless, with the idle time simulated, so that what standing still costs is a count of builds rather than an impression. Run by `release.sh`. |
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
 | `tools/lightjam.mjs` | Dev-time only: the traffic and the crossings put through three sets of lights, headless, so that "nobody ran a red" is a number rather than an impression. |
 | `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
@@ -1793,6 +1794,64 @@ every one of those by name and by coordinate, and not one of them was ever on
 screen — which is the whole argument for the tool. Nobody walks two hundred
 thousand tiles.
 
+### What standing still cost
+
+Two numbers above are why this section exists. The outskirts is eleven times the
+town and takes a hundred milliseconds to build; the level cache keeps the hub,
+the level you are on, and two more. Corven Way has twenty-two ways off it.
+
+The prefetcher took the list of neighbours it had not built, built one in an idle
+slot, let `trim()` bound the cache, and asked again. The ask found that the level
+the trim had just evicted was unbuilt again. **It never terminated.** On the
+fourth floor that had been three small rooms going round and round since the
+cache was written, costing a millisecond nobody could see. Outside, once the road
+east led somewhere, it was the outskirts rebuilt **eleven times a second** — a
+hundred and forty-seven thousand tiles and two thousand two hundred objects,
+thrown away and made again, for as long as you stood in the town. Two seconds of
+building in every twenty, and a frame lost every few. It was reported as the
+driving being choppy, and nothing in the driving was wrong.
+
+Two rules, and both are about the cache rather than about the levels:
+
+**Build only what the cache can keep.** Building a third neighbour does not cache
+a third neighbour. It makes the trim throw the first one away, and that work is
+not saved for later, it is lost.
+
+**Offer each neighbour once per arrival.** Which is what terminates it, and is
+the half that was missing. An arrival is the only thing that changes the answer,
+so an arrival is when the offers are made again.
+
+`tools/streamjam.mjs` is the harness for it, and it is the fifth of them because
+this machinery fails silently by construction: the map is right, the player is
+where they should be, and every other number in this repository is unmoved. The
+whole cost is a frame, somewhere else, a moment later. So it counts the one thing
+that is not free — a call to `World.build()` — with the idle queue pumped by hand
+two hundred times per level, about twenty seconds of a game running at sixty
+frames a second. A prefetcher that has finished has nothing to do with the other
+hundred and ninety.
+
+```sh
+node tools/streamjam.mjs                     # stand on every level in turn
+node tools/streamjam.mjs outside             # one of them, in detail
+node tools/streamjam.mjs path/to/levels.js   # some other copy of the streamer
+```
+
+Standing on each of the twenty-five levels in turn, on a cold cache:
+
+| | before | after |
+|---|---|---|
+| builds while standing in the town | 200 and counting, 7,593 ms | **2, 117 ms** |
+| builds while standing on the fourth floor | 200 and counting, 79 ms | **2, 1 ms** |
+| the outskirts, rebuilt while standing in the town | 66 times | **never** |
+| levels built and then immediately dropped | 2 | **0** |
+| prefetcher still asking after 200 idle slots | 2 levels | **none** |
+
+It exits non-zero on any level built twice while the player stands still, or on a
+prefetcher still asking for work when the pumping stops, so neither can land
+quietly again. Driving the length of Corven Way, measured in the browser over
+thirty seconds: 15 dropped frames instead of 662 builds' worth, and `R.draw` at
+2.8 ms a frame with the rest of the budget left alone.
+
 ### What collides with what
 
 `engine/collide.js` is the one place that answers "can this be here", and it
@@ -1858,8 +1917,9 @@ because a per-file hash is what would let a browser hold a mixed set in the firs
 place.
 
 It also parses every shipped script, builds every level and refuses if one of
-them is broken, refuses if the sprite atlas or `CREDITS.md` is stale, and
-refuses if a page references a file that is not there. It does not publish: the
+them is broken, refuses if the level streamer is building anything twice, refuses
+if the sprite atlas or `CREDITS.md` is stale, and refuses if a page references a
+file that is not there. It does not publish: the
 public repository is built from this one and its remote is not recorded here.
 
 ```sh

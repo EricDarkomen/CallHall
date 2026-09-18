@@ -60,6 +60,15 @@ say "release: building every level and checking it..."
 node tools/levelcheck.mjs >/dev/null 2>&1 \
   || die "a level is broken — run: node tools/levelcheck.mjs"
 
+# The level cache and the prefetcher, stood on every level with the idle time
+# simulated. It is in here because the fault it was written for shipped: a
+# prefetch loop that could not terminate, rebuilding the outskirts eleven times a
+# second for as long as the player stood in the town, with every other check in
+# this file passing and the game correct in every respect but the frame rate.
+say "release: checking the level streamer is not building anything twice..."
+node tools/streamjam.mjs >/dev/null 2>&1 \
+  || die "the level streamer is churning — run: node tools/streamjam.mjs"
+
 # The atlas and the credits are generated, and a release with a stale one ships
 # art whose licence data does not describe it — which is the one thing
 # art/CREDITS.md exists to prevent.
