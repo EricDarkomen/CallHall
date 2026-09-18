@@ -141,7 +141,10 @@ your desk before, which was the problem.
 
 ## Outside
 
-Press `E` on the way out and you are in the car park, and Bellhaven is a town.
+Press `E` on the way out and you are in the car park, and Bellhaven is a town on
+an island — the same map as the twenty minutes of estate, wood and field east of
+it, and as the coast round the lot. See **One island**; what follows is the town
+itself, which is the half of it somebody drew.
 
 The half of it you come out into was built between about 1968 and 1994, and it is
 six streets on a grid: Bellhaven Road along the front of the building, becoming
@@ -1585,11 +1588,12 @@ The game is `index.html` — the engine — plus the files it loads:
 | | |
 | --- | --- |
 | `data/*.js` | The content: people and dialogue, items, callers, the office, the streets, and what happens when you press E. |
-| `data/outskirts.js` | The one level that is not written down: 800 lines of rules and a hash that build an estate, a wood, a hamlet and four hundred acres of field. See **A place nobody wrote down**. |
+| `data/outskirts.js` | The country east of the town, not written down: 800 lines of rules and a hash that build an estate, a wood, a hamlet and four hundred acres of field. A PART of the island rather than a level of its own — see **One island**. |
+| `data/island.js` | The island: where the town and the outskirts sit in it, the piece of road between them, the seafront, and a coast derived by rule. Nobody placed a beach. |
 | `art/sprites/*.png` | The character, world, street and roof art. Third-party, separately licensed. |
 | `art/sprites/manifest.js` | Generated: the rectangles that describe those PNGs. |
 | `tools/build-sprites.mjs` | Builds the sheets and the manifest, and touches nothing else. |
-| `tools/fidelity.mjs` | Dev-time only: every level built and digested to one number per level, so a change that is not supposed to change anything can be proved not to. `--save` then `--check`. |
+| `tools/fidelity.mjs` | Dev-time only: every level built and digested to one number per level, so a change that is not supposed to change anything can be proved not to — and every part of a composed level checked, tile by tile, against the same part built on its own. `--save` then `--check`. |
 | `tools/levelcheck.mjs` | Dev-time only: every level in the catalogue built with the real builder and walked, headless, so that "you can get from the front door to the lift" is a check rather than a thing somebody noticed. Run by `release.sh`. |
 | `tools/carjam.mjs` | Dev-time only: the traffic put through the five things that break it, headless, so a change to the driving can be measured rather than driven into. |
 | `tools/streamjam.mjs` | Dev-time only: the level cache and the prefetcher stood on every level in the catalogue, headless, with the idle time simulated, so that what standing still costs is a count of builds rather than an impression. Run by `release.sh`. |
@@ -1679,7 +1683,11 @@ takes the same five things back, whichever built them.
 A level in `data/levels.js` is its size, its rooms, its doors, its arrival
 points and the links out of it. Two flags on it say what it is to the building:
 `hub: true` is the floor with the twenty people and the ringing phones on it,
-and `arrive: true` is where a shift begins. Both are asked of the catalogue
+and `arrive: true` is where a shift begins. Two more say what it is to the
+CATALOGUE: `part: true` is a level that is not somewhere you can stand — nothing
+links to it and `Levels` never loads it, because it is built into another one —
+and `parts:` is the level it is built into, naming each part and where it sits.
+See **One island**. Both are asked of the catalogue
 rather than written into `engine/` — `arrive` was a hard-coded `'office'` in two
 places, which was true for exactly as long as the building was one floor.
 
@@ -1779,7 +1787,9 @@ exactly. All twenty-four came out identical.
 
 `data/outskirts.js` is 800 lines and builds 147,456 tiles — eleven times the
 town — in **17 milliseconds**. It is the first level in this game that is not
-authored. `data/levels.js` is three and a half thousand lines for 0.0137 km²,
+authored, and it is now a PART of one rather than a level of its own: it is the
+country east of Bellhaven, on the same map as it, and you drive there. See **One
+island** for how that was done without changing a tile of what is below. `data/levels.js` is three and a half thousand lines for 0.0137 km²,
 which is the right way to build somewhere the player is meant to know by heart
 and the wrong way to build the twenty minutes of housing estate, wood and field
 between one town and the next. Nobody hand-places two thousand trees.
@@ -1890,6 +1900,115 @@ in the notch where a brook meets a wall, a pond with no ford in it. It found
 every one of those by name and by coordinate, and not one of them was ever on
 screen — which is the whole argument for the tool. Nobody walks two hundred
 thousand tiles.
+
+### One island
+
+The town and the country east of it were two levels with a signpost between
+them. Driving east out of Bellhaven meant pressing `E` at the last lamp post,
+reading two paragraphs, and being put down on a different map — which is the
+right way to go through a door and the wrong way to go along a road. A road that
+leaves ought to arrive.
+
+They are **one map** now: 612 × 496 tiles, 303,552 of them, about three tenths of
+a square kilometre. Corven Way runs east out of the town, becomes Marley Road at
+the parish boundary, and carries on past the estate to the fields without the
+screen ever fading. And because a map with an edge has to say what is past the
+edge, what is past this one is the sea.
+
+**Nothing about either place was rewritten to put it there.** `parts:` is new,
+and it is a level saying it is made of other levels stamped in at an offset:
+
+```js
+parts: [{ of: 'town', at: [52, 193] }, { of: 'outskirts', at: [176, 56], hem: 2 }]
+```
+
+`composeLevel()` at the bottom of `data/world.js` translates everything either of
+them declares on the way past — rooms, markings, arrival points, traffic routes,
+bus stops, the three arms of a set of lights, the twenty-two doors along the
+parades and the level behind each one — and hands back an ordinary level
+definition. The builder that reads it is the builder that always read it.
+
+The one thing that cannot be translated from out there is `furnish()`, which is
+the only part of a level that is code rather than a table: the town's adds two
+hundred objects at coordinates it works out itself, and the outskirts' puts two
+thousand pieces of mass back into the map. So a part's furnish is called with a
+`this` that is the world **seen from the part's own corner** — `World.shifted()`,
+ten lines, in which `add()` moves what it is given and `solid` is the real grid
+with every row starting at the part's left-hand edge, which a typed array gives
+for nothing. Neither part knows it has been moved.
+
+`tools/fidelity.mjs` is how that claim stops being a claim. It already digested
+every level to one number; it now also asks, of every composed level, whether
+each part **is, here, what it is there** — tile by tile and object by object,
+against the same part built on its own:
+
+```
+town in outside         identical, 13,680 tiles and 477 objects, offset 52,193
+outskirts in outside    identical, 144,400 tiles and 2,219 objects, offset 176,56
+```
+
+and the town's own digest is the same number it was before any of this existed.
+`carjam` and `lightjam` come out to the second and to the car-second, because
+they build the town on its own, which is still a level in the catalogue — a
+`part: true` level, meaning nothing links to it and `Levels` never loads it, but
+the editor opens it and the harnesses build it. A part is where you draw; the
+island is where you stand.
+
+`hem: 2` is the only thing a part says about being part of something. The
+outskirts drew two tiles of solid mass round itself, standing for the rest of
+the world as seen from the last field — the renderer roofs it, which is what you
+are looking at when you look past the edge of a map. It is not the rest of the
+world any more, it is the field before the dunes, so the island takes those two
+tiles back and `fidelity` knows not to count them.
+
+**And the coast is derived too**, by the outskirts' own method one scale up. The
+land is the two built places plus however far the ground runs past them, and how
+far that is comes from three cosines of the bearing from the middle of the
+island, three more of the position along it — headlands about a hundred and
+fifty tiles apart, bays between them, and a diagonal term so that two sides of a
+corner do not agree about where the corner is — and a jitter at eight-tile
+scale. Past that is sea; the last few tiles before it are sand where the shore
+shelves and rock where it does not, in patches of about twenty tiles, with the
+weather side of the island biased towards rock because a coast that takes the
+weather has no sand left on it.
+
+Three rules are the whole of what makes it an island rather than a rectangle
+with a blue border:
+
+*The estuary is the sea.* The bottom six rows of the town are tidal water with a
+quay along them, drawn when the water had to stop somewhere because the map did.
+The coast rule is overruled there: the land gives up almost at once, the tide
+comes to the wall, and Bellhaven is a port. The river down the west side goes
+the same way, because it is the same water.
+
+*Sea and rock are solid and OPEN.* `open` is the flag the river was given when
+the town got one — ground you can see and cannot stand on — and it is the reason
+neither of them comes out roofed like a building, which is what every other
+solid tile out of doors gets. It is also the whole of how a cliff exists in a
+game with no height in it.
+
+*And ground you cannot get to is not ground.* A coastline drawn by a rule leaves
+pockets: a bay the rock closed, a spit cut off behind a headland, six tiles of
+grass on the wrong side of a cliff. So the last thing the coast does is flood
+fill from the land and turn everything the tide of it never reached into rock —
+and then fill in every notch one tile wide, because a person is twenty-six
+pixels across a thirty-two pixel tile and does not fit down one. `levelcheck`
+counts the walkable floor in pieces and would have reported all of it; it reports
+none of it, which is the point.
+
+What it costs: **77 ms to build**, once, kept, and hidden behind the fade that
+was already there. The coast pass is 28 ms of that, and would have been 60 —
+the six trigonometric terms are sampled on a lattice every four tiles and mixed
+in between, because a coastline cannot bend faster than about forty tiles, and
+open sea more than `MAXPAD` from the land is water without asking.
+
+| | town | outskirts | the island |
+|---|---|---|---|
+| tiles | 13,680 | 147,456 | **303,552** |
+| objects | 477 | 2,219 | **3,067** |
+| vehicles | 60 | 32 | **92** |
+| built in | 6 ms | 30 ms | **77 ms** |
+| driving it, 40s | — | — | **60 fps, 12 frames dropped** |
 
 ### What standing still cost
 

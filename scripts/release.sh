@@ -69,6 +69,15 @@ say "release: checking the level streamer is not building anything twice..."
 node tools/streamjam.mjs >/dev/null 2>&1 \
   || die "the level streamer is churning — run: node tools/streamjam.mjs"
 
+# And every part of every composed level, against the same part built on its
+# own. The island is the town and the country stamped into one map at an offset
+# — see the README — and the thing that check exists to catch is an offset that
+# is right for the rooms and wrong for the traffic, which nothing else here
+# would notice until somebody drove into a building that is not there.
+say "release: checking every part is what it is on its own..."
+node tools/fidelity.mjs >/dev/null 2>&1 \
+  || die "a level's parts do not match — run: node tools/fidelity.mjs"
+
 # And every level's map. The same argument as the check above it: this one
 # fails quietly by construction — a blank, squashed or mislabelled map is a
 # game that runs perfectly and a picture in the corner of it that is wrong, and

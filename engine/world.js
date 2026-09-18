@@ -14,6 +14,10 @@
    typed buffer; this hangs a subarray off it per row so that `grid[y][x]`
    still means what it has always meant. A view is a window onto the buffer,
    not a copy: writing through it writes the buffer. */
+/* Somewhere for a part to write when it is drawing past the top or the bottom
+   of the map it has been stamped into. A row that goes nowhere is kinder than
+   a bounds test in the inner loop of somebody else's furnish. */
+const EDGE = new Uint8Array(4096);
 function rows(buf) {
   const out = new Array(MAPH);
   for (let y = 0; y < MAPH; y++) out[y] = buf.subarray(y * MAPW, (y + 1) * MAPW);
@@ -27,6 +31,27 @@ const World = {
      phones to ring. */
   level: null, def: null,
   solid: null, zone: null, seed: null, surf: null, objects: [], byTile: new Map(),
+  /* THE SAME WORLD, SEEN FROM SOMEWHERE ELSE. A part's furnish is handed this
+     instead of World: `add()` moves what it is given, and `solid` is the real
+     grid with every row starting at the part's own left-hand edge, which a
+     typed array gives for nothing — `subarray(dx)` is a view, and a write past
+     the end of a typed array is dropped rather than thrown, which is exactly
+     what a part drawing over the edge of itself should do. Everything else it
+     might reach for is the real World, inherited. */
+  shifted(world, dx, dy) {
+    if (!dx && !dy) return world;
+    const view = Object.create(world);
+    view.add = o => world.add(Object.assign({}, o, { x: o.x + dx, y: o.y + dy }));
+    const rowCache = [];
+    view.solid = new Proxy({}, {
+      get(_, k) {
+        const y = (+k) + dy;
+        if (!(y >= 0 && y < MAPH)) return EDGE;
+        return rowCache[y] || (rowCache[y] = world.solid[y].subarray(dx));
+      }
+    });
+    return view;
+  },
   build(def) {
     this.def = def; this.level = def.id;
     /* The live dimensions of the map, which is what MAPW/MAPH mean. Set before

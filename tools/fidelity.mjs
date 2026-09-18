@@ -57,6 +57,7 @@ load('art/sprites/manifest.js');
 load('data/world.js');
 load('data/levels.js');
 load('data/outskirts.js');
+load('data/island.js');
 load('data/npcs.js');
 load('data/items.js');
 load('engine/core.js');
@@ -214,6 +215,76 @@ const out = {};
 for (const id of Object.keys(LEVELS)) {
   try { out[id] = digest(id); }
   catch (e) { out[id] = { level: id, error: e.message }; }
+}
+
+/* ---- A PART, IN THE LEVEL IT IS BUILT INTO, IS THE PART ---------------------
+   The other thing this file is for, and the one that is not a number to compare
+   against last week's: a level may be assembled out of others — see
+   composeLevel() in data/world.js — and the question that asks is whether the
+   assembly changed any of them. Not "is it the same as it was" but "is it, HERE,
+   what it is THERE": the same walls, the same rooms, the same ground and the
+   same things standing on it, at the same coordinates plus the offset.
+
+   It is checked tile by tile rather than by hash, because the two are not
+   hashable against each other — a zone is an index into a table the level owns,
+   so the same room is a different number in a different level. Names, then, and
+   the object list translated. Two hundred thousand comparisons, and it runs in
+   under a second.
+
+   This is the check that says the town is still the town. */
+const partFaults = [];
+for (const id of Object.keys(LEVELS)) {
+  const def = LEVELS[id];
+  if (!def.parts) continue;
+  /* The whole, then each part on its own, and the part is rebuilt after the
+     whole so that World is holding the small one — the comparison reads the
+     big one out of a copy taken first. */
+  World.build(def);
+  const host = {
+    solid: World.solid.map(r => Array.from(r)),
+    zone: [], surf: [], objects: World.objects.map(o => o.x + ',' + o.y + ',' + (o.use || o.kind || ''))
+  };
+  for (let y = 0; y < def.h; y++) {
+    const zr = [], sr = [];
+    for (let x = 0; x < def.w; x++) { zr.push(World.zoneAt(x, y) || ''); sr.push(World.surfAt(x, y) || ''); }
+    host.zone.push(zr); host.surf.push(sr);
+  }
+  const hostObjects = new Set(host.objects);
+  for (const p of def.parts) {
+    const src = LEVELS[p.of];
+    if (!src) { partFaults.push(id + ': names a part that is not there, ' + p.of); continue; }
+    World.build(src);
+    const dx = p.at[0], dy = p.at[1];
+    let tiles = 0, zones = 0, surfs = 0, missing = 0;
+    /* EXCEPT THE HEM. A part may declare that its outermost tiles belong to
+       whatever it is built into — the outskirts drew two tiles of mass round
+       itself standing for the rest of the world, and on an island the rest of
+       the world is the dunes. Everything inside it is the part's and is checked
+       to the tile. */
+    const hem = p.hem || 0;
+    for (let y = hem; y < src.h - hem; y++) for (let x = hem; x < src.w - hem; x++) {
+      const hx = x + dx, hy = y + dy;
+      if (World.solid[y][x] !== host.solid[hy][hx]) tiles++;
+      if ((World.zoneAt(x, y) || '') !== host.zone[hy][hx]) zones++;
+      if ((World.surfAt(x, y) || '') !== host.surf[hy][hx]) surfs++;
+    }
+    for (const o of World.objects) {
+      if (o.x < hem || o.y < hem || o.x >= src.w - hem || o.y >= src.h - hem) continue;
+      if (!hostObjects.has((o.x + dx) + ',' + (o.y + dy) + ',' + (o.use || o.kind || ''))) missing++;
+    }
+    if (tiles || zones || surfs || missing) {
+      partFaults.push(id + ' ← ' + p.of + ' at ' + p.at.join(',') + ': '
+        + [tiles && tiles + ' walls', zones && zones + ' rooms', surfs && surfs + ' surfaces',
+           missing && missing + ' objects'].filter(Boolean).join(', ') + ' differ');
+    } else if (MODE !== '--save' && MODE !== '--check') {
+      console.log((p.of + ' in ' + id).padEnd(24) + 'identical, ' + ((src.w - 2 * (p.hem || 0)) * (src.h - 2 * (p.hem || 0))) + ' tiles and '
+        + World.objects.length + ' objects, offset ' + p.at.join(','));
+    }
+  }
+}
+if (partFaults.length) {
+  partFaults.forEach(f => console.log('PART  ' + f));
+  if (MODE !== '--save') process.exit(1);
 }
 
 if (MODE === '--save') {

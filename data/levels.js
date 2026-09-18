@@ -1549,13 +1549,20 @@ const LEVELS = {
      first half of this level is the coordinate it always was: the office's
      front doors are still at [20,2] and the Greggs is still at [31,23]. The
      town grew off the bottom of itself, the way one does. */
-  outside: {
-    /* The town, and it is called the town. 'Outside' was true of it while the
-       only thing out here was the car park you came out of the building into;
-       it is a market town with a minster, a quay and eleven streets on it now,
-       every one of them named after it, and the road east goes somewhere that
-       has to be able to point back at it by name. See Atlas.waysOut(). */
+  /* THE TOWN, AND IT IS A PART RATHER THAN A LEVEL. Everything below is
+     exactly what it was when this was `outside` and the only thing out of
+     doors: the same rooms, the same parades, the same traffic and the same
+     lights, at the same coordinates. What changed is where it sits — see
+     data/island.js, which stamps it into a map with a coast round it at an
+     offset, and engine/world.js's compose(), which does the stamping.
+
+     `part: true` says one thing and it is a fact about the catalogue rather
+     than about the town: nothing links here, Levels never loads it, and the
+     only things that build it on its own are the editor and the harnesses,
+     which is exactly what you want of a place you are drawing. */
+  town: {
     name: 'Bellhaven',
+    part: true,
     w: 114, h: 120,
     indoors: false,
     rooms: [

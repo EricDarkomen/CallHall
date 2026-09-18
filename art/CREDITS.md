@@ -855,7 +855,7 @@ or by the Liberated Pixel Cup.
 
 ### `Terrain (all seasons)`
 
-- **Used for:** terrain.grass.spring, terrain.grass.summer, terrain.grass.autumn, terrain.grass.winter, terrain.water, terrain.ballast
+- **Used for:** terrain.grass.spring, terrain.grass.summer, terrain.grass.autumn, terrain.grass.winter, terrain.water, terrain.sea, terrain.sand, terrain.ballast
 - **Sheets:** town
 - **Authors:** Lanea Zimmerman (Sharm), Eliza Wyatt (DeathsDarling)
 - **Licences offered:** OGA-BY 3.0 — used here under OGA-BY 3.0

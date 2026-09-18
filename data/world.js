@@ -126,6 +126,18 @@ const ZONES = {
      every communal stairwell in England is painted, which is a colour with no
      name that everybody would recognise instantly. */
   flats:     { name: 'The flats above the parade', floor: '#4a4a44', alt: '#454540', wall: '#2a2a26', tint: '#ffb347', tile: 'floor.carpet.dim', wtile: 'wall.drywall' },
+  /* ---- THE ISLAND, and the three zones that are neither town nor country.
+     See data/island.js: the ground between the two built places and the sea,
+     which is the edge of everywhere and belongs to nobody. Grass by default —
+     the shore lays sand over it as a surface, exactly as a street lays tarmac
+     over its paving. */
+  heath:     { name: 'The common',        floor: '#4a4c46', alt: '#454741', wall: '#31332e', tint: '#5ad48a', tile: 'terrain.grass.autumn', wtile: 'wall.stone' },
+  shore:     { name: 'The beach',         floor: '#55514a', alt: '#504c45', wall: '#3a3730', tint: '#ffb347', surf: 'concrete', tile: 'terrain.slab', wtile: 'wall.stone' },
+  /* The road down the shore, the car park at the end of it and the three
+     stretches of the town's own roads that reach them: a street like any other
+     street, and named the way a seaside town names that road. */
+  seafront:  { name: 'The seafront',      floor: '#494d55', alt: '#44484e', wall: '#33373d', tint: '#9fb3c8', surf: 'concrete', wsurf: 'block', tile: 'terrain.slab', wtile: 'wall.brick' },
+
   /* Not a street: a walled car park with one way in, like the forecourt at the
      other end of town, and the only place out here big enough to find out what
      the pool car does above thirty. */
@@ -321,6 +333,36 @@ const SURFACES = {
        kit's water is a flat, even sheet, and a shade of alternation on it is
        not a ripple, it is a chessboard the size of the estuary. */
     floor: '#495c54', alt: '#495c54', map: '#22383a', open: true
+  },
+  /* ---- THE COAST ---------------------------------------------------------
+     Two of these three are `open` for the reason the river is: they are ground
+     you can see and cannot stand on. The sea is the obvious one. The rock is
+     the other half of the same idea and the thing that makes a cliff possible
+     at all in a game with no height in it — mass at the edge of the land that
+     is drawn as what it is rather than roofed like a building, which is what
+     every other solid tile out of doors gets. The sand between them is neither:
+     it is a surface over walkable ground, like the tarmac on a road, and it is
+     where the island lets you down to the water. */
+  sea: {
+    /* The deep water off the beach, and a shade darker and bluer than the
+       estuary the town is built on — which is right twice over: it is deeper,
+       and it is not full of the river. Flat, like the road and for the same
+       reason: a quarter of this map is sea, and a grain that repeats every
+       metre across a quarter of a map is a corduroy field. */
+    tile: 'terrain.sea',
+    floor: '#657d8c', alt: '#657d8c', map: '#1b3446', open: true
+  },
+  sand: {
+    tile: 'terrain.sand',
+    /* Damp sand rather than holiday-brochure sand: this is the North Sea. */
+    floor: '#c8c2b2', alt: '#c2bcac', map: '#9e8f6b', soft: true
+  },
+  rock: {
+    /* The cliff, and what there is of the foreshore under it. The kit's stone
+       wall laid flat, which is what a rock face seen from directly above
+       actually looks like, and tinted grey off the brick red it ships in. */
+    tile: 'wall.stone',
+    floor: '#6e7076', alt: '#686a70', map: '#4a4e56', open: true
   },
   rail: {
     tile: 'terrain.ballast',
@@ -846,3 +888,110 @@ const WP = {
   booth: [11, 40], wallboard: [28, 33], goodChair: [40, 31], tin: [9, 18],
   hrCorner: [26, 12], trolleyPark: [60, 12], kettle: [5, 18]
 };
+
+/* ---- A LEVEL BUILT OUT OF PARTS -------------------------------------------
+   A level may say it is made of other levels, stamped in at an offset:
+
+     parts: [ { of: 'town', at: [44, 177] }, { of: 'outskirts', at: [168, 40] } ]
+
+   which is how the town and the twenty minutes of country east of it became
+   one island rather than two levels with a signpost between them — see
+   data/island.js. Everything here is translation and concatenation: what comes
+   out is an ordinary level definition, and the builder that reads it is the
+   builder that always read it. Neither part knows it has been moved, and
+   nothing downstream of this line knows there was ever more than one of them.
+
+   IT IS DONE HERE, at the bottom of the definitions, rather than in
+   engine/world.js — because a composed level has to BE a level from the moment
+   the catalogue has it. Levels.go() reads a level's arrival points before it
+   builds anything, the editor lists them, and tools/levelcheck.mjs checks every
+   link against them; all three would be reading half a level if this waited for
+   the builder.
+
+   WHAT CANNOT BE TRANSLATED FROM OUT HERE is `furnish()`, which is the one
+   thing about a level that is code rather than a table: the town's adds two
+   hundred objects at coordinates it works out itself, and the outskirts' puts
+   two thousand pieces of mass back into the map. So a part's furnish is called
+   with a `this` that is the world seen from the part's own corner — see
+   World.shifted() in engine/world.js, which is ten lines and makes the other
+   eight hundred somebody else's problem. */
+function composeLevel(def) {
+  if (!def.parts || !def.parts.length || def.composed) return def;
+  const out = Object.assign({}, def);
+  /* `parts` is KEPT rather than dropped, because what a level is made of is a
+     fact about it and not a step in making it: Levels.partOf() reads it to
+     answer "where is the town inside the island", which is the question
+     anything written in a part's own coordinates has to ask. `composed` is what
+     stops this running twice. */
+  out.composed = true;
+  const ids = def.parts.map(p => p.of);
+  /* The translation, one shape at a time and explicitly, because nothing
+     generic can tell an [x, y] from a [w, h]. */
+  const R = (r, dx, dy) => [r[0] + dx, r[1] + dy, r[2] + dx, r[3] + dy];
+  const P = (p, dx, dy) => (p.length > 2 ? [p[0] + dx, p[1] + dy, p[2]] : [p[0] + dx, p[1] + dy]);
+  ['rooms', 'surfaces', 'roofs', 'paint', 'doors', 'cars', 'peds', 'signals', 'counters']
+    .forEach(f => out[f] = (def[f] || []).slice());
+  out.entries = Object.assign({}, def.entries);
+  out.links = (def.links || []).slice();
+  const furnishes = [];
+
+  for (const part of def.parts) {
+    const src = LEVELS[part.of];
+    if (!src) { console.warn('level ' + def.id + ' names a part that is not there: ' + part.of); continue; }
+    const dx = part.at[0], dy = part.at[1];
+    (src.rooms || []).forEach(o => out.rooms.push(Object.assign({}, o, { r: R(o.r, dx, dy) })));
+    (src.surfaces || []).forEach(o => out.surfaces.push(Object.assign({}, o, { r: R(o.r, dx, dy) })));
+    (src.roofs || []).forEach(o => out.roofs.push(Object.assign({}, o, { r: R(o.r, dx, dy) })));
+    (src.counters || []).forEach(o => out.counters.push(o.r ? Object.assign({}, o, { r: R(o.r, dx, dy) }) : o));
+    (src.doors || []).forEach(o => out.doors.push(Object.assign({}, o, { x: o.x + dx, y: o.y + dy })));
+    /* A marking is a line between two points, a rectangle, or a word at a
+       point, and those three are the whole of `paint`. */
+    (src.paint || []).forEach(o => {
+      const m = Object.assign({}, o);
+      if (o.a) m.a = P(o.a, dx, dy);
+      if (o.b) m.b = P(o.b, dx, dy);
+      if (o.r) m.r = R(o.r, dx, dy);
+      if (o.at) m.at = P(o.at, dx, dy);
+      out.paint.push(m);
+    });
+    /* A car is a tile, a route and a list of stops; a person is a route. */
+    (src.cars || []).forEach(o => out.cars.push(Object.assign({}, o, {
+      x: (o.x || 0) + dx, y: (o.y || 0) + dy,
+      route: o.route && o.route.map(p => P(p, dx, dy)),
+      stops: o.stops && o.stops.map(q => Object.assign({}, q, { at: P(q.at, dx, dy) }))
+    })));
+    (src.peds || []).forEach(o => out.peds.push(Object.assign({}, o, {
+      route: o.route && o.route.map(p => P(p, dx, dy))
+    })));
+    /* A signal is a post at a tile, a stop line at a point on a lane, and — on
+       a crossing — the piece of carriageway people walk over. */
+    (src.signals || []).forEach(inst => out.signals.push(Object.assign({}, inst, {
+      over: inst.over && R(inst.over, dx, dy),
+      arms: inst.arms.map(a => Object.assign({}, a, { at: P(a.at, dx, dy), stop: P(a.stop, dx, dy) }))
+    })));
+    /* An arrival point keeps its NAME, which is the whole reason a shop's link
+       back to `entry: 'greggs'` still lands on the Greggs doorway without the
+       shop being told anything at all. The composed level's own win a clash,
+       because the level is the thing being built. */
+    for (const k in (src.entries || {})) if (!(k in out.entries)) out.entries[k] = P(src.entries[k], dx, dy);
+    /* AND A PART'S WAYS OUT COME WITH IT — except the ones that led somewhere
+       that is now here. The road east out of the town and the road west back
+       into it were a link each; one map later they are a road. */
+    (src.links || []).forEach(l => {
+      if (l.to === def.id || ids.indexOf(l.to) >= 0) return;
+      if (out.links.some(k => k.via === l.via)) return;
+      out.links.push(l);
+    });
+    if (src.furnish) furnishes.push({ f: src.furnish, dx, dy });
+  }
+
+  const own = def.furnish;
+  out.furnish = function () {
+    /* The parts first, in the order they are declared, and then the level's
+       own — which is what lets an island lay a coast round two places that were
+       drawn without one. */
+    for (const p of furnishes) p.f.call(World.shifted(this, p.dx, p.dy));
+    if (own) own.call(this);
+  };
+  return out;
+}

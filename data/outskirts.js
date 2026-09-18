@@ -139,7 +139,7 @@ const Outskirts = {
        Straight through, kerb to kerb. */
     street('marley', 0, R.y, W - 1);
     add({ x: 2, y: R.y + 1, e: '🛣️', name: 'The road back into town',
-          kind: 'sign', solid: false, use: 'backToTown', via: 'townRoad' });
+          kind: 'sign', solid: false, use: 'backToTown', via: 'townRoad' });   /* a sign, now that the road itself goes there — see Acts.backToTown */
     add({ x: Math.floor(W * .46), y: R.y - 1, e: '🚏', name: 'The bus stop on Marley Road',
           kind: 'sign', solid: true, use: 'marleyStop' });
     add({ x: Math.floor(W * .46) + 2, y: R.y - 1, e: '📮', name: 'A postbox',
@@ -749,6 +749,10 @@ const Outskirts = {
     const MASS = solids.slice();
     return {
       name: "Marley Road and Prior's Wood",
+      /* A PART, like the town beside it: this is the country east of Bellhaven
+         and it is built into the island rather than stood on. Nothing else
+         about it changed — see data/island.js. */
+      part: true,
       w: W, h: H,
       indoors: false,
       rooms, surfaces, paint, cars, peds,

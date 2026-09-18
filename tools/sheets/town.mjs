@@ -371,6 +371,45 @@ export default {
       },
     },
     {
+      /* THE SEA. The same four-season terrain sheet the grass and the water
+         come off, and the one crop on it that is a flat, even, seamless sheet
+         of deep water: wrap error of zero, measured, which is what a surface
+         covering a quarter of the map has to have. The estuary keeps
+         `terrain.water` above — that is a tidal river with a town's worth of
+         silt in it, and it is a different colour of water because it is a
+         different water. This is what is past the beach.
+
+         Summer, and only summer, for the reason the water is: upstream's
+         winter water is ICE, and the sea off this coast has never frozen. */
+      name: 'terrain.sea',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Terrain/terrain_summer.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Terrain (all seasons)',
+        rect: [32, 768, 32, 32],
+      },
+    },
+    {
+      /* THE SAND. The interior of the pale sand autotile — not an edge piece —
+         tiled four by four and looked at before it was taken, which is the rule
+         for anything that covers more than one square. Its grain is a scatter
+         of two-pixel lights that repeats on the 32px pitch and reads as sand at
+         a metre a tile; the orange block further up the same sheet is a desert
+         and this is a beach, and the difference between them is most of what
+         makes a coast look like this country's. */
+      name: 'terrain.sand',
+      anchor: 'flat',
+      source: {
+        repo, commit,
+        path: 'Terrain/terrain_summer.png',
+        creditsPath: 'Terrain/Credits.txt',
+        assetName: 'Terrain (all seasons)',
+        rect: [160, 160, 32, 32],
+      },
+    },
+    {
       /* THREE STEPS TO THE TILE. Upstream ships this as a band of treads on a
          transparent cell — one, two and three risers, seven colours — and the
          three-riser cell is 24 pixels tall rather than 32, which is why the

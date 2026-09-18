@@ -90,6 +90,19 @@ const Levels = {
     this.offered = new Set();
   },
   def(id) { return LEVELS[id] || null; },
+  /* WHERE A PART SITS INSIDE THE LEVEL IT IS BUILT INTO, or null if it is not
+     built into anything. The town is a part of the island now — see
+     data/island.js — and anything that was written in the town's own
+     coordinates before the island existed has to be able to ask. There is
+     exactly one such thing and it is where twenty-five people live; see
+     NPCM.townTile(). Cached, because the catalogue does not change. */
+  partOf(id) {
+    if (!this._parts) {
+      this._parts = new Map();
+      for (const k in LEVELS) ((LEVELS[k] || {}).parts || []).forEach(p => this._parts.set(p.of, { level: k, at: p.at }));
+    }
+    return this._parts.get(id) || null;
+  },
   /* The level definitions, in catalogue order. */
   ids() { return Object.keys(LEVELS); },
 
@@ -413,7 +426,15 @@ const Levels = {
     const id = this.def(G.level) ? G.level : this.first();
     const x = P.x, y = P.y;
     this.start(id, 'start');
-    P.x = x; P.y = y;
+    /* WHERE YOU WERE STANDING, IF IT IS STILL SOMEWHERE TO STAND. A save holds
+       a position on a level, and a level can be rebuilt underneath it — the
+       town is a part of an island now, at an offset, which puts every outdoor
+       position in every save written before that in the sea. Rather than a
+       migration for that one change, the general rule: a restored position that
+       is not somewhere a person fits is not restored, and you come back through
+       the door instead. It costs one collision test and it is right for every
+       change of this kind, including the next one. */
+    if (playerFits(x, y)) { P.x = x; P.y = y; }
     Cam.snap();
   }
 };

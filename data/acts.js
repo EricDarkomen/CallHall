@@ -28,19 +28,107 @@ const Acts = {
      sixty houses out there and they were not written down: see
      data/outskirts.js. A level that is derived needs acts that are derived
      too, which here means acts that do not know which house they are in. */
+  /* THE TWO ROAD SIGNS, and neither of them is a door any more. They were:
+     pressing E on one of them read you two paragraphs and put you down on a
+     different map, because the town and the country were two levels. They are
+     one map now — see data/island.js — so the road goes there and the sign does
+     what a sign does, which is tell you what is up ahead and nothing else.
+
+     They ask the catalogue rather than assuming, because that is what
+     Levels.links() is for: if somebody ever splits these two apart again, the
+     signs become doors again on their own. */
   outskirtsRoad() {
-    insp('🛣️', 'The road east', 'Corven Way, and then not', [
+    const on = Levels.links('outskirtsRoad');
+    insp('🛣️', 'The road east', 'Corven Way, and then Marley Road', [
       'The last of the kerb, the last of the lamp posts, and then a road with a hedge either side of it going somewhere that is not here.',
-      'There is a sign. It says MARLEY ROAD and, under that, a mileage somebody has shot at.'],
-      [{ t: 'Go on, then.', to: null, do() { Levels.take('outskirtsRoad'); } },
-       { t: 'Another time.', to: null }]);
+      'The sign says MARLEY ROAD and, under that, a mileage somebody has shot at. The estate is twenty minutes on foot and four in a car, and the road does not stop until the fields do.'],
+      on ? [{ t: 'Go on, then.', to: null, do() { Levels.take('outskirtsRoad'); } },
+            { t: 'Another time.', to: null }] : null);
   },
   backToTown() {
+    const on = Levels.links('townRoad');
     insp('🛣️', 'The road west', 'Back towards Bellhaven', [
       'The way you came. From here the town is a water tower, a church, and the top two floors of one office block.',
-      'It takes about twenty minutes, and it is the only twenty minutes of the day nobody can ring you in.'],
-      [{ t: 'Head back.', to: null, do() { Levels.take('townRoad'); } },
-       { t: 'Not yet.', to: null }]);
+      'It takes about twenty minutes on foot, and it is the only twenty minutes of the day nobody can ring you in.'],
+      on ? [{ t: 'Head back.', to: null, do() { Levels.take('townRoad'); } },
+            { t: 'Not yet.', to: null }] : null);
+  },
+
+  /* --- THE ISLAND ---
+     The coast, the common and the seafront: what is between the town and the
+     water now that there is water. Same rule as the outskirts above — one
+     handler per KIND, because nobody placed any of it. See data/island.js. */
+  parishSign() {
+    insp('🪧', 'The parish boundary', 'BELLHAVEN · please drive carefully', [
+      'A cast sign on two legs, one of them straighter than the other, with the town one side of it and the parish the other.',
+      'Somebody has added a word to it in marker. It has been scrubbed at rather than removed, which has made it a landmark.']);
+  },
+  deadEnd() {
+    insp('🪧', 'The end of the road', 'NO THROUGH ROAD', [
+      pick(['Tarmac, a turning head the width of a bin lorry, and then grass. The road was going somewhere in 1974 and the somewhere was never built.',
+        'The turning head is the widest piece of tarmac in Bellhaven that nobody has ever parked on, because everybody knows what it is for.']),
+      'Past the kerb it is common, and past the common it is the sea.']);
+  },
+  payDisplay() {
+    insp('🅿️', 'Pay and display', 'Seafront car park', [
+      '£1.40 an hour, £4 all day, and free between October and March because there is nobody to charge.',
+      'The machine takes coins, and a card if you hold it there long enough to lose faith and then keep holding it.',
+      'Half the windscreens here have a ticket on them. The other half belong to people from Bellhaven.']);
+  },
+  iceCream() {
+    const hot = Sky.working() && !Sky.dark();
+    insp('🍦', 'The ice cream van', hot ? 'Open, in the way that matters' : 'Shut', [
+      hot ? 'The generator is running, the hatch is open, and the man inside has the radio on and the door of the cab open behind him.'
+          : 'Shut, and the shutter down, and the chimes played at some point today whether anybody bought anything or not.',
+      pick(['The board lists nine things and he has four of them.',
+        'A ninety-nine is two pounds fifty and the flake is at an angle that has been arrived at over thirty years.',
+        'The same van has been on this front since before the office block was built, which is a sentence he will say to you.'])]);
+  },
+  telescope() {
+    insp('🔭', 'The telescope', 'Twenty pence, two minutes', [
+      'Coin-operated, bolted to the promenade, and pointing at the horizon because the last person to use it was pointing it at the horizon.',
+      pick(['Through it: the sea, a container ship that has not appeared to move since you looked, and a gull very much closer than you meant.',
+        'Through it: the far side of the bay, the fields, and something that is either a wind turbine or the end of the lens.',
+        'It is stiff on the vertical and free on the horizontal, so everybody who has ever used it has looked at the same strip of water.'])]);
+  },
+  shoreBench() {
+    insp('🪑', 'A bench facing the sea', 'In memory of somebody', [
+      'Teak, screwed to a concrete pad, with a brass plate on the back rail worn down to the outline of the letters.',
+      pick(['IN LOVING MEMORY OF JEAN, WHO LOVED THIS VIEW. The view is the sea and the car park, in that order.',
+        'The plate has been polished by forty years of people leaning back against it, which is a better memorial than the words.',
+        'Somebody has left a bunch of supermarket flowers under it, still in the cellophane, with the price on.'])]);
+  },
+  shoreBin() {
+    Sfx.deny();
+    insp('🗑️', 'A bin the gulls have been at', 'Seafront', [
+      'Municipal, green, and with a lid designed by somebody who had never met a herring gull.',
+      'There is a chip carton eight feet away that the bin has never contained.']);
+  },
+  beachHut() {
+    Sfx.deny();
+    insp('🏠', 'A beach hut', 'Somebody owns this', [
+      pick(['Six feet by eight, painted the blue that every third hut on this front is painted, padlocked with a padlock worth more than the hut.',
+        'The waiting list for these is eleven years and the council has stopped publishing it.',
+        'Inside — and you can see through the gap in the boards — there is a kettle, four deckchairs and a dartboard.',
+        'It changed hands last year for a sum that made the local paper.'])]);
+  },
+  gorse() {
+    insp('🌿', 'Gorse', 'In flower, which it always is', [
+      pick(['Yellow, spiny, and smelling faintly of coconut in the way that surprises everybody the first time.',
+        'The saying is that kissing is out of season when the gorse is out of flower, and the gorse is never out of flower.',
+        'A bush like this one is nine tenths dead wood holding up one tenth of flower.'])]);
+  },
+  shoreRock() {
+    insp('🪨', 'A boulder in the grass', 'Older than the town', [
+      pick(['Granite, on a map that is otherwise sandstone, which means somebody or something carried it here.',
+        'Sheep have been rubbing against this for long enough to polish one side of it.',
+        'Somebody has painted a face on it. Not recently, and not badly.'])]);
+  },
+  driftwood() {
+    insp('🪵', 'Driftwood', 'Up past the last tide', [
+      pick(['A length of something structural, sanded round by the water and dried to the colour of bone.',
+        'Half a pallet, two lobster pot slats and a fish box with a port on it nobody here can pronounce.',
+        'It is the good sort, and somebody will be along for it.'])]);
   },
   /* Every front door on the estate, and it is the same door. Which is the
      joke, and is also true: they were built in one go by one firm. */
