@@ -36,6 +36,35 @@
 .rar.common{color:var(--dim);border:1px solid var(--line)}
 .rar.rare{color:var(--brand);border:1px solid var(--brand)}
 .rar.legendary{color:var(--hold);border:1px solid var(--hold);box-shadow:0 0 14px -6px var(--hold)}
+/* ---- the map ----
+   The canvas takes whatever is left of the panel after the heading and the
+   legend, and it is the CSS size only: Atlas.panel() sets the pixel size from
+   the screen's own ratio, because a map laid out in CSS pixels and drawn in
+   device pixels is a map with soft edges on every phone there is. `min-height`
+   rather than a ratio — the shape of the map is the shape of the level, and
+   the canvas is the window it is fitted into rather than a frame round it. */
+.mp-wrap{flex:1;min-height:min(58vh,520px);display:flex}
+#mapCv{flex:1;width:100%;height:100%;border-radius:10px;border:1px solid var(--line);
+  background:rgba(8,11,17,.6)}
+/* The legend. One row that wraps, in the same monospace the rest of the HUD
+   labels itself in, and every swatch is the colour the map actually draws —
+   see Atlas.pins(). A legend whose colours are copied by hand is a legend that
+   goes wrong the first time anybody changes one. */
+.mp-key{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 2px 0;
+  font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--dim)}
+.mp-key span{display:inline-flex;align-items:center;gap:6px}
+.mp-key i{width:9px;height:9px;border-radius:2px;display:inline-block;flex:none}
+.mp-you{background:#fff;clip-path:polygon(100% 50%,14% 100%,38% 50%,14% 0)}
+.mp-out{background:#4da3ff;border-radius:999px!important}
+.mp-pin{background:#5ad48a}
+.mp-npc{background:rgba(180,140,255,.85)}
+.mp-car{background:rgba(90,212,138,.9)}
+.mp-ring{background:#ffb347}
+.mp-here{color:var(--brand)}
+/* The panel body is a column for this one tab: the map has to be able to take
+   the height that is left, and a block layout will not give it any. */
+.pn-body:has(.mp-wrap){display:flex;flex-direction:column}
+
 .h2{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
   margin:16px 0 8px;border-bottom:1px dashed var(--line);padding-bottom:5px}
 .h2:first-child{margin-top:0}

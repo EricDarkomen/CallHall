@@ -30,6 +30,7 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 | Take it out | `G` · `Q` swaps · `R` reloads   | grab the green stick           |
 | Aim, fire, swing | the mouse and its button, or the arrows | **two sticks**: left walks, right aims and fires |
 | Dialogue   | `Space`, `1`–`9` to choose      | tap the box, tap a reply       |
+| The map    | `N`, or the minimap             | `☰` · Map                      |
 | Panels     | `J I K C M P L`, `Esc` for menu | `☰`                            |
 | Save/load  | `F5` / `F9`                     | `☰` · Menu                     |
 
@@ -1479,6 +1480,100 @@ page's one loop rather than a `requestAnimationFrame` of its own — same `dt`,
 same clamp, same stop when the tab goes away — for the same reason the arcade
 cabinets do.
 
+## The view from above
+
+There is a minimap in the corner and a map screen behind `N`, and they are the
+same picture at two sizes. `engine/map.js` draws both.
+
+They were not, and that was most of what was wrong with them. The minimap
+rasterised the whole level into a 168×118 canvas with **a scale per axis** —
+`cv.width / MAPW` by `cv.height / MAPH` — which is right for exactly one shape
+of map and a lie about every other. The office is 64×44 and came out about
+right. The town is 114×120 and came out half as wide again as it is: a square
+of streets drawn as an oblong. The outskirts is 384×384 and came out at four
+tenths of a pixel a tile, where a house is a third of a pixel and the dot for
+the player covers eight tiles. It cost 58 ms to build, it was thrown away and
+built again on every walk through a door and every turn of the season, and
+there was no map screen at all — so on a phone, where the corner of the HUD is
+a thumb rest and the minimap is not drawn, there was no map of any kind.
+
+Three ideas, and they are the whole file.
+
+**One raster per level, at a pixel a tile.** Not at the size of the minimap —
+at the size of the map. A level is `MAPW` by `MAPH` pixels of ground, built
+once, kept, and drawn at whatever scale anybody asks for. It is laid down in
+RUNS rather than in tiles, which is the difference between a call per tile and
+a call per stretch of the same colour: the outskirts is **6,574 fills for
+147,456 tiles**, twenty-two tiles a call, because four hundred acres of field
+is four hundred identical rectangles a row and one of them is enough. Keyed by
+level and by season, so the turn of a season costs one rebuild and re-entering
+a level costs nothing.
+
+| | before | after |
+|---|---|---|
+| the outskirts, built | 57.7 ms | **8.5 ms** |
+| ...and built again, walking back in | 57.7 ms | **0 ms** |
+| the town | 2.8 ms | **1.1 ms** |
+| the town's aspect ratio | 1.47 × 0.98 px a tile | **one scale, both axes** |
+| the outskirts at a glance | 0.44 px a tile | **1.6, and a window that follows you** |
+
+**One projection, asked by both.** `fit()` answers where a tile lands on a
+canvas, and everything that draws a dot goes through what it returns. The
+minimap and the map screen cannot disagree about where you are, because neither
+of them works it out.
+
+**And a scale floor.** A map is a thing you read at a glance and there is a
+size below which there is nothing to read. If the whole map will not fit at
+nine tenths of a pixel a tile the minimap stops trying to show it whole and
+shows a WINDOW around the player instead, at a pixel and a half — clamped to
+the edges, and centred rather than clamped when the map is smaller than the
+window, which is the same rule `Cam.bound()` uses on the world itself because
+it is the same problem one level up. The same reasoning drops the markers that
+have stopped being markers: under two pixels a tile a doorway is smaller than
+its own dot, and a town with two hundred doors on it comes out as a rash rather
+than as a town, so at that size the doors and the parked cars are left off and
+the shape of the streets is what you are reading.
+
+The map screen is the same picture with room to say what things are called, and
+everything on it is derived from what is already there. **The names** are the
+centroid of each zone's floor, snapped to the nearest tile actually in that
+zone — the snap is the whole of it, because the centre of mass of a street that
+bends, or of the ring of pavement round the minster, is a point in the middle of
+a building, and a name written there is a name on the wrong thing. **The ways
+out** are the level's own `links`, drawn where the thing that offers them
+stands: a signpost that names a link is found on its own, and `EXITS` in
+`data/world.js` is the two-line table for the exception — a lift is four links
+and one lift, a stairwell is three. Nobody wrote a map of the estate out east
+and nobody is going to: it comes out with its avenues named because it has
+zones and they have names.
+
+What cannot both fit is decided by **size** — how many tiles a place has, and
+how many tiles there are at the other end of a way out — biggest first. That
+one rule puts the road east to four hundred acres over the door of a vape shop,
+and Corven Way over both. A place whose name will not fit inside the place
+itself is left as a shape, and a way out that loses its label keeps its marker.
+The one thing the map will not tell you is the thing the building is keeping
+from you: a level may declare itself `secret` and name the achievement that
+stops it being one, so the square of carpet in the archive is a square of
+carpet until you have lifted the corner of it.
+
+`tools/mapjam.mjs` is the harness, and the reason it exists is that a map is
+the one thing in this game that is wrong *quietly*. A level you cannot walk
+across fails `levelcheck`. A level whose mass moved fails `fidelity`. A level
+whose map comes out blank, or squashed, or with THE ARCHIVE written across the
+break room, fails nothing at all — the game runs, the level is correct, and the
+only thing wrong is the picture nobody is looking at while they play. So it
+asks four things of all twenty-five: how much of the level is drawn at all,
+whether the projection is true at a dozen canvas sizes (one scale for both
+axes, the window inside the map, the player inside the window, the window
+inside the canvas), whether every name sits on the zone it names, and whether
+every link a level declares is offered by something the map can point at.
+
+```sh
+node tools/mapjam.mjs            # every level
+node tools/mapjam.mjs outside    # one of them, in detail
+```
+
 ## Repository layout
 
 This is the **private** repository: full history and staging. The public repo is
@@ -1498,9 +1593,11 @@ The game is `index.html` — the engine — plus the files it loads:
 | `tools/levelcheck.mjs` | Dev-time only: every level in the catalogue built with the real builder and walked, headless, so that "you can get from the front door to the lift" is a check rather than a thing somebody noticed. Run by `release.sh`. |
 | `tools/carjam.mjs` | Dev-time only: the traffic put through the five things that break it, headless, so a change to the driving can be measured rather than driven into. |
 | `tools/streamjam.mjs` | Dev-time only: the level cache and the prefetcher stood on every level in the catalogue, headless, with the idle time simulated, so that what standing still costs is a count of builds rather than an impression. Run by `release.sh`. |
+| `tools/mapjam.mjs` | Dev-time only: every level's map built and measured, headless — how much of it is drawn, whether the projection is true at a dozen canvas sizes, whether every name is on the thing it names, and whether every way out is on it. Run by `release.sh`. |
 | `tools/doorjam.mjs` | Dev-time only: two crowds through one doorway, headless, so a change to the walk can be measured rather than watched. |
 | `tools/lightjam.mjs` | Dev-time only: the traffic and the crossings put through three sets of lights, headless, so that "nobody ran a red" is a number rather than an impression. |
 | `engine/faces.js` | What a person's face is doing: blinking, and the expression they are wearing. |
+| `engine/map.js` | The view from above: one raster per level at a pixel a tile, the minimap that reads a window out of it, and the map screen that reads all of it. Nothing in it knows what a level is. |
 | `engine/sky.js` | The clock past five, the light, the weather and the season. Everything that draws asks it what time it is; nothing that draws knows. |
 | `engine/signals.js` | The lights: the cycle, the demand, and the two questions everything else asks of it — how far in front of you is a line you may not cross, and may you step off this kerb. The only rule outside that is an instruction rather than a fact about where something is. |
 | `engine/guns.js` | The away-day box: five things drawn from a grid of characters rather than fetched — three you fire and two you swing — what they do to the people they land on, the arm the person holding them raises to do it, and the twist that lets somebody walk one way and point another. |
@@ -1917,9 +2014,10 @@ because a per-file hash is what would let a browser hold a mixed set in the firs
 place.
 
 It also parses every shipped script, builds every level and refuses if one of
-them is broken, refuses if the level streamer is building anything twice, refuses
-if the sprite atlas or `CREDITS.md` is stale, and refuses if a page references a
-file that is not there. It does not publish: the
+them is broken, refuses if the level streamer is building anything twice,
+refuses if a level's map is blank or misprojected or has a name on the wrong
+room, refuses if the sprite atlas or `CREDITS.md` is stale, and refuses if a
+page references a file that is not there. It does not publish: the
 public repository is built from this one and its remote is not recorded here.
 
 ```sh

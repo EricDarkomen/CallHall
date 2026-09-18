@@ -647,6 +647,14 @@ const LEVELS = {
      and this is a separate place that you go DOWN to. */
   basement: {
     name: '████████',
+    /* NOT ON THE FLOOR PLAN, and that is a fact about the level rather than
+       about the carpet over it. The map draws every way off a level and names
+       where it goes, which for one square of carpet in the archive would be
+       telling the player the single thing this building is keeping from them.
+       So a level may say it is a secret, and name the achievement that stops it
+       being one — `a_hatch` is got by lifting the corner, in Acts.hatch(). Read
+       by Atlas.waysOut() and by nothing else. */
+    secret: 'a_hatch',
     w: 14, h: 12,
     rooms: [{ z: 'secret', r: [2, 2, 11, 9] }],
     doors: [],
@@ -1542,7 +1550,12 @@ const LEVELS = {
      front doors are still at [20,2] and the Greggs is still at [31,23]. The
      town grew off the bottom of itself, the way one does. */
   outside: {
-    name: 'Outside',
+    /* The town, and it is called the town. 'Outside' was true of it while the
+       only thing out here was the car park you came out of the building into;
+       it is a market town with a minster, a quay and eleven streets on it now,
+       every one of them named after it, and the road east goes somewhere that
+       has to be able to point back at it by name. See Atlas.waysOut(). */
+    name: 'Bellhaven',
     w: 114, h: 120,
     indoors: false,
     rooms: [

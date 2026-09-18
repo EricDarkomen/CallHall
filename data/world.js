@@ -381,6 +381,22 @@ const FLOORS = [
   { b: 'G', via: 'liftToG', name: 'Reception' },
 ];
 
+/* WHAT OFFERS A WAY OUT, where it is not the obvious thing.
+   A link is a `via`, and the thing you press to take it is nearly always the
+   object that names it — a signpost with `use: 'outskirtsRoad'` on it offers
+   the link called 'outskirtsRoad', and the map finds that on its own with no
+   help from anybody. These two are the exceptions, and they are exceptions for
+   the same reason: one piece of furniture that offers SEVERAL links at once. A
+   lift is four buttons and one lift, which is what FLOORS above already says;
+   a stairwell is up, down, and all the way down and out.
+   Read by Atlas.waysOut() and by nothing else — the acts have always worked
+   this out for themselves, and this is what lets a map say where the lift
+   goes without the map knowing what a lift is. */
+const EXITS = [
+  { kind: 'lift', vias: FLOORS.map(f => f.via).filter(Boolean) },
+  { kind: 'stairs', vias: ['stairsUp', 'stairsDown', 'fireExit'] }
+];
+
 /* The cars. One entry per model, keyed by `model` on a car in a level's own
    `cars:` list — the same arrangement as FURN below, and for the same reason:
    what a hatchback IS belongs in one place, and which hatchback is parked in

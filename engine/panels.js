@@ -185,6 +185,13 @@ const Shop = {
 
 /* ---------------- Panels / UIManager ---------------- */
 const TABS = [
+  /* The map is first, and it is the only tab in here that is about the world
+     rather than about the employee: everything else on this row is a thing the
+     company would like you to fill in. It is here at all because the panel is
+     the one piece of UI a phone can reach — the key-hint row is a menu button
+     on a touch screen and the minimap is not drawn there at all — so a map
+     that lived anywhere else would be a map only a desktop has. */
+  { id: 'map', n: 'Map', e: '🗺️' },
   { id: 'quests', n: 'Jobs', e: '🗂️' }, { id: 'inventory', n: 'Inventory', e: '🎒' }, { id: 'skills', n: 'Skills', e: '📈' },
   { id: 'chat', n: 'Chat', e: '💬' }, { id: 'email', n: 'Email', e: '✉️' }, { id: 'ach', n: 'Achievements', e: '🏆' },
   { id: 'stats', n: 'Profile', e: '🪪' }, { id: 'settings', n: 'Menu', e: '⚙️' }
@@ -247,8 +254,32 @@ const Panels = {
     b.querySelectorAll('[data-skill]').forEach(el => el.onclick = () => Sk.buy(el.dataset.branch, el.dataset.skill));
     b.querySelectorAll('[data-buy]').forEach(el => el.onclick = () => Shop.buy(el.dataset.buy));
     b.querySelectorAll('[data-act]').forEach(el => el.onclick = () => Menu[el.dataset.act]());
+    /* The map is a canvas rather than a list, so it is drawn rather than
+       written — and it is drawn AFTER the body, because a canvas has no size
+       until the layout has happened. From then on the loop keeps it up to date
+       four times a second; see Atlas.tick(). */
+    if (this.tab === 'map') Atlas.panel();
   },
   r_shop() { return Shop.render(); },
+  /* WHERE YOU ARE, WHAT IT IS CALLED, AND THE WAY OUT OF IT. The canvas is
+     sized by the stylesheet and drawn by Atlas.panel(); everything here is the
+     furniture round it. The line under the map is the legend, and it is short
+     on purpose: a legend that has to be read is a map that has failed. */
+  r_map() {
+    const here = World.zoneAt(Math.floor(P.x / TILE), Math.floor(P.y / TILE));
+    const level = (World.def && World.def.name) || '';
+    const room = (here && ZONES[here] && ZONES[here].name) || '';
+    return '<div class="h2">' + esc(level) + (room ? ' · <span class="mp-here">' + esc(room) + '</span>' : '') + '</div>'
+      + '<div class="mp-wrap"><canvas id="mapCv"></canvas></div>'
+      + '<div class="mp-key">'
+      + '<span><i class="mp-you"></i>You</span>'
+      + '<span><i class="mp-out"></i>The way out, and where it goes</span>'
+      + '<span><i class="mp-pin"></i>What you are looking for</span>'
+      + '<span><i class="mp-npc"></i>People</span>'
+      + '<span><i class="mp-car"></i>Something you can drive</span>'
+      + '<span><i class="mp-ring"></i>A phone that is ringing</span>'
+      + '</div>';
+  },
   r_quests() {
     const list = Q.list();
     if (!list.length) return '<p class="empty">No jobs yet. Talk to people. They are full of jobs.</p>';

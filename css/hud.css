@@ -189,7 +189,17 @@ canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block;image
 @media(prefers-reduced-motion:reduce){.tk-pin:active,.tk-b:active{transform:none}}
 .tk-empty{padding:8px 10px;font-size:11px;color:var(--dim)}
 #minimapWrap{position:absolute;right:12px;bottom:96px;z-index:5}
-#minimap{display:block;border-radius:8px;border:1px solid var(--line);background:rgba(11,15,22,.85)}
+/* The map is behind the minimap, so the minimap is a button. It keeps the
+   canvas's own border rather than growing one of its own — the thing you are
+   pressing is the map, and a button drawn round a map is a second frame. */
+#minimapBtn{display:block;padding:0;border:0;background:none;cursor:pointer;line-height:0;
+  border-radius:8px;pointer-events:auto}
+#minimapBtn:hover #minimap,#minimapBtn:focus-visible #minimap{border-color:var(--brand)}
+#minimapBtn:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+#minimapBtn:active{transform:scale(.98)}
+@media(prefers-reduced-motion:reduce){#minimapBtn:active{transform:none}}
+#minimap{display:block;border-radius:8px;border:1px solid var(--line);background:rgba(11,15,22,.85);
+  transition:border-color .14s}
 #hudBottom{left:0;right:0;bottom:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
 /* ---- the gun readout ----
    One line above the prompt: what is in your hand, and what is left in it. It

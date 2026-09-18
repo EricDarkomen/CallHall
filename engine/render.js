@@ -36,7 +36,6 @@ const R = {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     mm.style.width = mm.width + 'px'; mm.style.height = mm.height + 'px';
     mm.width = Math.round(mm.width * dpr); mm.height = Math.round(mm.height * dpr);
-    this._mmBase = null;
   },
   /* Pin the app to the height a phone actually shows. 100dvh in the stylesheet
      covers modern browsers; this is exact and reaches further back, because in
@@ -2946,7 +2945,10 @@ const R = {
   /* The map underneath has been replaced. Anything cached off its shape — the
      minimap is baked once and blitted after that — has to go, or the new level
      is played over a picture of the old one. */
-  levelChanged() { this._mmBase = null; this._lamps = null; },
+  /* Nothing to say about the map here any more: Atlas keys its rasters by
+     level and by season, so a level swapped in finds its own or builds it, and
+     a level swapped back finds the one it left. */
+  levelChanged() { this._lamps = null; },
   /* Desks. Thirty-two of them, and until now they were a monitor emoji and a
      phone emoji sitting on carpet with nothing underneath — which is what made
      the floor read as a spreadsheet rather than an office. Each one gets a
@@ -4441,66 +4443,9 @@ const R = {
     c.globalAlpha = 1;
   },
   /* The floor plan never changes, so it is rasterised once and blitted. */
-  minimapBase() {
-    const cv = $('#minimap');
-    const b = document.createElement('canvas');
-    b.width = cv.width; b.height = cv.height;
-    const c = b.getContext('2d');
-    const sx = cv.width / MAPW, sy = cv.height / MAPH;
-    for (let y = 0; y < MAPH; y++) for (let x = 0; x < MAPW; x++) {
-      const z = World.zoneAt(x, y);
-      /* The open surfaces are on here for the same reason they are on the
-         screen: a town map with no river on it is a map of somewhere else.
-         They have no zone at all, so the fallback below would have nothing to
-         ask — which is why an open surface must carry its own `map` colour. */
-      if ((!z || World.solid[y][x]) && !World.open(x, y)) continue;
-      /* A surface paints itself, because a minimap of a town in which the
-         roads are the same colour as the pavements is a minimap of a car park.
-         `map` and not `floor`: a surface's floor colour is a TINT multiplied
-         through a texture, and there is no texture down here to multiply. */
-      const s = World.surfAt(x, y);
-      const S = s && SURFACES[s];
-      /* And the seasonal ones paint themselves four ways, for the same reason
-         the tile does: a green verge on the map in January is a lie about a
-         white one. Sky.newDay() drops the baked minimap when the season turns. */
-      const paint = (S && ((S.maps && S.maps[Sky.season()]) || S.map)) || (z ? ZONES[z].floor : null);
-      /* An open surface that declares no `map` has nothing to paint and no zone
-         to fall back on. Skipped rather than guessed at: a wrong colour on a
-         map is worse than a gap in one. */
-      if (!paint) continue;
-      c.fillStyle = paint;
-      c.fillRect(x * sx, y * sy, sx + .5, sy + .5);
-    }
-    this._mmBase = b;
-  },
-  minimap() {
-    const cv = $('#minimap'), c = cv.getContext('2d');
-    const sx = cv.width / MAPW, sy = cv.height / MAPH;
-    c.clearRect(0, 0, cv.width, cv.height);
-    if (!this._mmBase) this.minimapBase();
-    c.drawImage(this._mmBase, 0, 0);
-    World.objects.forEach(o => {
-      if (o.kind === 'door') { c.fillStyle = '#8d9bb5'; c.fillRect(o.x * sx, o.y * sy, sx, sy); }
-      else if (o.ringing) { c.fillStyle = '#ffb347'; c.fillRect(o.x * sx - 1, o.y * sy - 1, sx + 2, sy + 2); }
-      else if (o.kind === 'coffee' || o.kind === 'printer') { c.fillStyle = 'rgba(255,179,71,.7)'; c.fillRect(o.x * sx, o.y * sy, sx, sy); }
-    });
-    NPCM.list.forEach(n => {
-      const q = this.questMark(n);
-      c.fillStyle = q ? '#ff5f56' : 'rgba(180,140,255,.85)';
-      c.fillRect(n.x / TILE * sx - 1, n.y / TILE * sy - 1, 2.6, 2.6);
-    });
-    (World.cars || []).forEach(car => {
-      if (car === Cars.driving) return;      /* that dot is the player's */
-      c.fillStyle = car.canDrive ? 'rgba(90,212,138,.9)' : 'rgba(200,205,215,.6)';
-      c.fillRect(car.x / TILE * sx - 1, car.y / TILE * sy - 1, 2.6, 2.6);
-    });
-    if (Guide.tx !== null) {
-      c.fillStyle = '#5ad48a';
-      c.fillRect(Guide.tx * sx - 1.5, Guide.ty * sy - 1.5, 4, 4);
-    }
-    c.fillStyle = '#fff';
-    c.fillRect(P.x / TILE * sx - 1.5, P.y / TILE * sy - 1.5, 3.5, 3.5);
-    c.strokeStyle = 'rgba(255,255,255,.25)';
-    c.strokeRect(Cam.x / TILE * sx, Cam.y / TILE * sy, Cam.w / TILE * sx, Cam.h / TILE * sy);
-  }
+  /* The minimap and the map screen are engine/map.js now — one raster per
+     level at a pixel a tile, read by both, rather than the level squashed into
+     a 168×118 canvas with a scale per axis. What was here drew the town half
+     as wide again as it is and the outskirts at four tenths of a pixel a tile,
+     and rebuilt both on every walk through a door. See Atlas. */
 };

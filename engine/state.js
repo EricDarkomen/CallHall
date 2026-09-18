@@ -128,6 +128,12 @@ const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Emo
 const NAME_FONT = '600 11px ui-monospace,"Cascadia Mono",Consolas,"DejaVu Sans Mono",monospace';
 const BUBBLE_FONT = '12px "Trebuchet MS","Segoe UI",Tahoma,sans-serif';
 const FLOAT_FONT = '700 15px "Trebuchet MS","Segoe UI",Tahoma,sans-serif';
+/* The names written on the map — the rooms, the streets, the fields and the
+   ways out. A FAMILY rather than a shorthand, and it is the one stack here
+   that is: the map picks its own size from how big the place it is naming is
+   (see Atlas.names()), so the size is the one part it cannot be told in
+   advance. */
+const MAP_FAMILY = '"Trebuchet MS","Segoe UI",Tahoma,sans-serif';
 /* Words painted on a road. Squashed sideways and stretched tall by the
    transform that draws it — see R.roadPaint() — so the size here is the
    letter height before that, not after. */

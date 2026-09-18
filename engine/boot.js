@@ -92,13 +92,20 @@ const Game = {
       }
       UI.hud();
     }
+    /* The map, four times a second, and BEFORE the overlay check rather than
+       after it: what Atlas draws is the minimap in the corner when there is
+       nothing in front of it and the map screen when there is, and the map
+       screen is the one case where something has to go on being drawn while
+       the world behind it is frozen. The world is not paused — the colleagues
+       and the traffic are still moving above this line — so a map that stopped
+       when it was opened would be a map of a minute ago. */
+    this.mmT -= dt; if (this.mmT <= 0) { this.mmT = .25; Atlas.tick(); }
     if (this.overlayUp()) {
       /* draw one final frame, blur it into the canvas, then stop entirely */
       if (!this.frozen) { this.frozen = true; R.draw(dt); R.freeze(); }
       return;
     }
     this.frozen = false;
-    this.mmT -= dt; if (this.mmT <= 0) { this.mmT = .25; R.minimap(); }
     R.draw(dt);
   },
   loop(now) {

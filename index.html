@@ -223,7 +223,11 @@
       <div id="shiftBar" aria-hidden="true"><i id="shiftBarI"></i></div>
     </div>
 
-    <div id="minimapWrap" aria-hidden="true"><canvas id="minimap" width="168" height="118"></canvas></div>
+    <!-- The minimap is also the way into the map screen, which is the only
+         thing on this HUD that is worth pressing and has nowhere else to say
+         so. A button rather than a canvas with a click handler, so it is a
+         thing the keyboard and a screen reader can find. -->
+    <div id="minimapWrap"><button id="minimapBtn" title="The map · N" aria-label="Open the map"><canvas id="minimap" width="168" height="118" aria-hidden="true"></canvas></button></div>
 
     <!-- What you are doing, and everything you have said you would do. The
          objective used to be the bottom half of the top-right card, where it
@@ -253,6 +257,7 @@
       <div id="gunHud" role="status" aria-live="off" hidden></div>
       <div id="prompt" role="status" aria-live="polite"></div>
       <nav id="keyhints" aria-label="Open a panel">
+        <button data-panel="map"><span class="kh-i" aria-hidden="true">🗺️</span>N · Map</button>
         <button data-panel="quests"><span class="kh-i" aria-hidden="true">🗂️</span>J · Jobs</button>
         <button data-panel="inventory"><span class="kh-i" aria-hidden="true">🎒</span>I · Inventory</button>
         <button data-panel="skills"><span class="kh-i" aria-hidden="true">📈</span>K · Skills</button>
@@ -419,6 +424,7 @@
 <script src="engine/guns.js?v=8e93413"></script>
 <script src="engine/render.js?v=8e93413"></script>
 <script src="engine/panels.js?v=8e93413"></script>
+<script src="engine/map.js?v=8e93413"></script>
 <script src="engine/menus.js?v=8e93413"></script>
 <script src="engine/arcade.js?v=8e93413"></script>
 <script src="engine/look.js?v=8e93413"></script>

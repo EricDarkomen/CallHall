@@ -69,6 +69,14 @@ say "release: checking the level streamer is not building anything twice..."
 node tools/streamjam.mjs >/dev/null 2>&1 \
   || die "the level streamer is churning — run: node tools/streamjam.mjs"
 
+# And every level's map. The same argument as the check above it: this one
+# fails quietly by construction — a blank, squashed or mislabelled map is a
+# game that runs perfectly and a picture in the corner of it that is wrong, and
+# nobody is looking at that picture while they are playing.
+say "release: drawing every level from above and checking it..."
+node tools/mapjam.mjs >/dev/null 2>&1 \
+  || die "a level's map is wrong — run: node tools/mapjam.mjs"
+
 # The atlas and the credits are generated, and a release with a stale one ships
 # art whose licence data does not describe it — which is the one thing
 # art/CREDITS.md exists to prevent.

@@ -100,7 +100,10 @@ function bindInput() {
        than pressed — Cars.update sounds it once on the way down and leaves it
        leaning on it after that. */
     if (e.code === 'KeyH') { if (Cars.driving) Cars.horn = true; return; }
-    const map = { KeyI: 'inventory', KeyJ: 'quests', KeyK: 'skills', KeyC: 'chat', KeyM: 'email', KeyP: 'stats', KeyL: 'ach' };
+    /* N for the map, and not M, which has been the email since there was an
+       email: a key somebody has been pressing for a year is not free just
+       because another game would put a map on it. */
+    const map = { KeyN: 'map', KeyI: 'inventory', KeyJ: 'quests', KeyK: 'skills', KeyC: 'chat', KeyM: 'email', KeyP: 'stats', KeyL: 'ach' };
     if (map[e.code]) { if (Panels.on && Panels.tab === map[e.code]) Panels.close(); else Panels.open(map[e.code]); }
   });
   /* Keep Tab inside whichever modal is open, rather than letting focus escape
@@ -160,6 +163,11 @@ function bindInput() {
     const b = e.target.closest('button'); if (!b) return;
     Panels.open(b.dataset.panel === 'settings' ? 'settings' : b.dataset.panel);
   });
+  /* The minimap opens the map. It is the one control on this HUD that is
+     discovered by looking at the thing it is about, and on a desktop it is the
+     only thing that says the map screen exists at all. */
+  const mmb = $('#minimapBtn');
+  if (mmb) mmb.onclick = () => { if (Panels.on && Panels.tab === 'map') Panels.close(); else Panels.open('map'); };
   $('#pnClose').onclick = () => Panels.close();
   $('#panel').addEventListener('click', e => { if (e.target.id === 'panel') Panels.close(); });
   $('#repNext').onclick = () => Report.next();
