@@ -90,6 +90,19 @@ const Levels = {
     this.offered = new Set();
   },
   def(id) { return LEVELS[id] || null; },
+  /* ARE WE AT WORK. Asked of the catalogue, like first() and hub, because it is
+     a fact about the building rather than about whoever is standing in it — and
+     because the alternative is a list of four level ids written down in
+     engine/, which is the thing this file exists to stop.
+
+     It is the other half of Sky.working(). The clock says whether the shift is
+     running; this says whether you are anywhere it can reach you. Both have to
+     be true before the queue is yours, and until the island was built only one
+     of them could ever be false. See `site` in data/levels.js. */
+  onSite(id) {
+    const d = this.def(id === undefined ? World.level : id);
+    return !!(d && d.site);
+  },
   /* WHERE A PART SITS INSIDE THE LEVEL IT IS BUILT INTO, or null if it is not
      built into anything. The town is a part of the island now — see
      data/island.js — and anything that was written in the town's own
@@ -257,6 +270,10 @@ const Levels = {
          ringing, and a minimap that is of this map rather than the last one. */
       NPCM.enter(id);
       Guide.onLevel();
+      /* And what the tracker says you are doing, which is a different answer in
+         the building and out of it — see Q.restand(), which leaves a job or an
+         act's own instruction exactly where it is. */
+      Q.restand();
       R.levelChanged();
       Cam.snap();
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="A call centre RPG. Answer the phones, survive the shift, and find out who writes the numbers.">
+<meta name="description" content="An RPG that starts in a call centre and does not stay in one. Answer the phones, survive the shift, then clock off and drive until the island runs out.">
 <meta name="author" content="Grant van Zyl">
 <meta name="copyright" content="© 2026 Grant van Zyl">
 <link rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">
@@ -258,6 +258,7 @@
       <div id="prompt" role="status" aria-live="polite"></div>
       <nav id="keyhints" aria-label="Open a panel">
         <button data-panel="map"><span class="kh-i" aria-hidden="true">🗺️</span>N · Map</button>
+        <button data-panel="shift"><span class="kh-i" aria-hidden="true">🕔</span>T · Shift</button>
         <button data-panel="quests"><span class="kh-i" aria-hidden="true">🗂️</span>J · Jobs</button>
         <button data-panel="inventory"><span class="kh-i" aria-hidden="true">🎒</span>I · Inventory</button>
         <button data-panel="skills"><span class="kh-i" aria-hidden="true">📈</span>K · Skills</button>
@@ -364,15 +365,6 @@
           <button class="btn small" id="pnClose">Close · Esc</button></div>
         <div class="tabs" id="pnTabs" role="tablist"></div>
         <div class="pn-body scroll" id="pnBody"></div>
-      </div>
-    </div>
-
-    <!-- report -->
-    <div id="report" role="dialog" aria-modal="true" aria-label="End of shift report">
-      <div class="rep sign">
-        <div class="sign-title"><span>End of shift · performance summary</span><span class="badge" id="repDay">DAY 1</span></div>
-        <div class="rep-body scroll" id="repBody"></div>
-        <div style="padding:0 18px 18px"><button class="btn primary" id="repNext" style="width:100%">Clock out</button></div>
       </div>
     </div>
 

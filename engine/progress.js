@@ -151,6 +151,34 @@ const Rel = {
 
 /* ---------------- Quests ---------------- */
 const Q = {
+  /* THE STANDING INSTRUCTION: what the objective line says when there is no job
+     open. It was one sentence — "Answer phones. Survive until 17:00." — and for
+     as long as the game was one building that was the whole truth of it. Read
+     on the sea wall at half four it is the game telling the player they are
+     doing the wrong thing, which they are not: the queue is the building's, and
+     out here there is a town, a coast road and an island to be on.
+
+     So it is three sentences and the right one is picked from the same two
+     facts the queue itself is picked from — the clock and where you are. See
+     Levels.onSite() and Phones.live(). */
+  IDLE: {
+    desk: 'Answer phones. Survive until 17:00.',
+    out: 'Out of the building. The floor has the queue.',
+    off: 'Off shift. The next one starts at 09:00.'
+  },
+  idle() {
+    if (!Sky.working()) return this.IDLE.off;
+    return Levels.onSite() ? this.IDLE.desk : this.IDLE.out;
+  },
+  /* Put the standing instruction back, and ONLY the standing instruction: an
+     act that has asked for something specific — find the fourth floor, find
+     your desk — owns the line until it is done with it, and walking through a
+     door must not quietly take that off the player. Called on arrival at a
+     level, when the shift opens, and when it closes. */
+  restand() {
+    if (!G.objective || Object.keys(this.IDLE).some(k => this.IDLE[k] === G.objective))
+      UI.objective(this.idle());
+  },
   start(id) {
     if (G.quests[id]) return;
     G.quests[id] = { step: 0, done: false, out: null };
@@ -181,7 +209,7 @@ const Q = {
     UI.toast('✅', 'Completed: <b>' + QUESTS[id].n + '</b>', 'good');
     FX.burst(P.x, P.y, '⭐', 14, '#ffb347');
     const next = Object.keys(G.quests).find(k => !G.quests[k].done);
-    UI.objective(next ? QUESTS[next].steps[G.quests[next].step] : 'Answer phones. Survive until 17:00.');
+    UI.objective(next ? QUESTS[next].steps[G.quests[next].step] : this.idle());
   },
   list() { return Object.keys(G.quests).map(k => ({ id: k, ...QUESTS[k], ...G.quests[k] })); }
 };

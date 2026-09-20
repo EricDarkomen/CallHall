@@ -192,6 +192,10 @@ const TABS = [
      on a touch screen and the minimap is not drawn there at all — so a map
      that lived anywhere else would be a map only a desktop has. */
   { id: 'map', n: 'Map', e: '🗺️' },
+  /* The shift page, which used to be a screen that arrived at five whether you
+     were at a desk or on a dual carriageway. It is a tab now, and a live one:
+     today's figures whenever you ask for them. See Report in engine/menus.js. */
+  { id: 'shift', n: 'Shift', e: '🕔' },
   { id: 'quests', n: 'Jobs', e: '🗂️' }, { id: 'inventory', n: 'Inventory', e: '🎒' }, { id: 'skills', n: 'Skills', e: '📈' },
   { id: 'chat', n: 'Chat', e: '💬' }, { id: 'email', n: 'Email', e: '✉️' }, { id: 'ach', n: 'Achievements', e: '🏆' },
   { id: 'stats', n: 'Profile', e: '🪪' }, { id: 'settings', n: 'Menu', e: '⚙️' }
@@ -280,6 +284,39 @@ const Panels = {
       + '<span><i class="mp-ring"></i>A phone that is ringing</span>'
       + '</div>';
   },
+  /* TODAY, AND WHETHER IT IS OVER YET. One page, two moods: during the shift it
+     is a tally with the clock at the top of it, and after five it is the report
+     that used to be thrown across the screen — the same figures, plus the
+     rating and whatever the evening said on the way out.
+
+     The rows come from Report so there is exactly one list of what a day is
+     made of, and the counters they read are today's. */
+  r_shift() {
+    const done = !!G.flags.clockedOff;
+    const head = done
+      ? clockStr(G.minutes) + '. The phones keep ringing. They are not your phones now.'
+      : Sky.working()
+        ? clockStr(G.minutes) + '. The shift is still running. These are the figures so far.'
+        : clockStr(G.minutes) + '. Before nine. Nothing has happened yet, which is the best it gets.';
+    let h = '<div class="h2">Day ' + G.day + ' · ' + (DAYS[(G.day - 1) % 7] || 'Monday') + '</div>'
+      + '<p style="color:var(--dim);font-size:13px;margin-bottom:12px">' + esc(head) + '</p>'
+      + Report.rows().map(r => '<div class="rep-row"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('');
+    if (done) {
+      const v = Report.verdict();
+      h += '<div class="verdict"><div class="sk" style="font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dim)">OVERALL PERFORMANCE</div>'
+        + '<div class="vt">“' + v[0] + '”</div><div class="vn">*' + v[1] + '</div></div>';
+      if (G.flags.leaving)
+        h += '<p style="margin-top:14px;font-size:13px;color:var(--dim);font-style:italic">' + esc(G.flags.leaving) + '</p>';
+    } else {
+      /* What the page is for while the day is still in front of you: not a
+         verdict, a clock. */
+      h += '<p style="margin-top:14px;font-size:13px;color:var(--dim);font-style:italic">'
+        + (Sky.working()
+          ? 'The rating is worked out at five. It is worked out from these, which is the only honest thing about it.'
+          : 'The queue opens at ' + clockStr(DAY_START) + '.') + '</p>';
+    }
+    return h;
+  },
   r_quests() {
     const list = Q.list();
     if (!list.length) return '<p class="empty">No jobs yet. Talk to people. They are full of jobs.</p>';
@@ -357,7 +394,11 @@ const Panels = {
     ['empathy', 'knowledge', 'patience', 'bullshit', 'chaos'].forEach(k => {
       h += '<div class="stat-box"><div class="sk">' + k + '</div><div class="sv">' + (s[k] || 0).toFixed(1) + '</div><div class="sn">' + notes[k] + '</div></div>';
     });
-    h += '</div><div class="h2">Today</div><div class="stat-grid">';
+    /* ALL TIME, and it always was: these come off G.totals, which is the
+       lifetime tally, and the heading said "Today" — so a profile opened on
+       day four reported four days of coffee as this morning's. Today has a page
+       of its own now and it is the one above. */
+    h += '</div><div class="h2">All time</div><div class="stat-grid">';
     const t = G.totals;
     [['📞 Calls handled', t.calls], ['😊 Resolved', t.satisfied], ['😡 Angered', t.angered],
      ['🙈 Sent to Dave', t.transfers], ['☕ Coffees', t.coffee], ['🚽 Toilet minutes', t.toiletMin],

@@ -5,7 +5,7 @@ const Game = {
   /* A full-screen overlay hides the world entirely, so there is nothing to gain
      from redrawing it — and plenty to lose, since the blurred backdrop then has
      to be re-rasterised every frame. */
-  overlayUp() { return !!Combat.E || Panels.on || Arcade.on || G.state === 'report' || G.state === 'ending'; },
+  overlayUp() { return !!Combat.E || Panels.on || Arcade.on || G.state === 'ending'; },
   tick(dt) {
     if (this.paused) return;
     FX.update(dt);
@@ -79,14 +79,14 @@ const Game = {
           if (G.minutes % 60 === 0) Save.write(true);   /* quiet hourly autosave */
         }
         /* Five o'clock, ONCE — and outside the test above, because at exactly
-           17:00 the shift is over and Sky.working() is already false. The
-           report is a report on the shift now rather than a curtain across the
-           world: Report.next() hands the evening back instead of starting
-           tomorrow, so this needs a flag to stop it going up again on every
-           minute until midnight. Cleared by Sky.newDay() with the rest of
-           today's flags. */
+           17:00 the shift is over and Sky.working() is already false. It is a
+           line rather than a screen: Report.post() closes the queue, writes the
+           day down and says one sentence about it, and the world goes on
+           exactly as it was — you might be at your desk, you might be on the
+           bypass. The flag stops it being announced again on every minute until
+           midnight, and is cleared by Sky.newDay() with the rest of today's. */
         if (G.minutes >= DAY_END && !G.flags.clockedOff) {
-          G.flags.clockedOff = true; Report.show(); break;
+          G.flags.clockedOff = true; Report.post(); break;
         }
         pace = Sky.pace();
       }
@@ -557,7 +557,7 @@ const Boot = {
     if (!Save.read()) { $('#game').classList.remove('on'); $('#titleScreen').classList.add('on'); Title.show(); return; }
     G.state = 'play'; Cam.snap();
     /* the objective survives in the save but lives in the DOM, so put it back */
-    UI.objective(G.objective || 'Answer phones. Survive until 17:00.');
+    UI.objective(G.objective || Q.idle());
     UI.hudDirty();
     UI.zone(ZONES[World.zoneAt(Math.floor(P.x / TILE), Math.floor(P.y / TILE))]
       ? ZONES[World.zoneAt(Math.floor(P.x / TILE), Math.floor(P.y / TILE))].name
@@ -579,6 +579,10 @@ const Boot = {
       '<span class="who">The job</span>'
       + 'You answer the telephone for a company that sells something the training never quite names. '
       + 'Nobody expects you to enjoy it. A surprising number of people will be glad you are there.<br><br>'
+      + '<b>The job is not the whole game, and the building is not the whole map.</b> There is a town outside '
+      + 'the car park with shops you can walk into, a road out of it, and an island round that. The phones are '
+      + 'yours while you are in the building and the shift is running; step out of the front doors and the '
+      + 'floor covers the queue, because nineteen other people work here. Nothing chases you down the road.<br><br>'
       + (TOUCH
         ? (Hand.pad === 'dpad'
             ? 'Walk with the pad in the bottom-' + Hand.padSide() + '.'
@@ -588,9 +592,9 @@ const Boot = {
       '<b>Difficult calls are turn-based.</b> Your <b>Patience</b> is your health and their <b>Frustration</b> is the thing you are reducing, which is a fair description of the job and was not intended as one. Coffee, cubicles and chairs restore you. So does being spoken to kindly, which happens roughly once a day and is not on the rota.<br><br>' +
       '<b>Listen to them.</b> Every turn the caller gives something away — a child shouting in the background, a reference number read out twice, a title given unprompted. That is the <b>tell</b>, and it says what they want right now: to be heard, a straight answer, this to be over, or to be taken seriously. Pick a reply that gives them that and it lands properly and builds <b>Rapport</b>; pick one that does not and it falls short. Repeat the same line and they stop believing it. Get Rapport high enough and you can stop reducing anything and simply <b>land the call</b>, which pays better than winning it.<br><br>' +
       '<b>Talk to everybody.</b> There are twenty people in this building and every one of them will tell you something if you ask twice. Several of them are the only person alive who knows a particular thing, and not one of them has written it down, and that is not carelessness — it is the only job security anybody here has.<br><br>' +
-      '<b>Go everywhere.</b> Thirteen rooms, three of which are not on the floor plan — and the building is not all of it. There is a way down to the car park, and there is something under the archive. Sit on the step outside. Read the suggestion box. Look at the photograph in the archive. The building is the plot.<br><br>' +
-      '<b>J</b> jobs · <b>I</b> inventory · <b>K</b> skills · <b>C</b> office chat · <b>M</b> email · <b>P</b> profile · <b>L</b> achievements · <b>Esc</b> menu and settings.<br><br>' +
-      'The shift runs 09:00 to 17:00. Survive it. Then do it again, because that is the actual game and it is also the actual job.<br><br>' +
+      '<b>Go everywhere.</b> Thirteen rooms on this floor, three of which are not on the floor plan, and four floors under and over it — and the building is not all of it. There is a way down to the car park, something under the archive, a high street with nineteen doors on it, and a coast. Sit on the step outside. Read the suggestion box. Look at the photograph in the archive. Then find the keys to something and go and look at the sea.<br><br>' +
+      '<b>J</b> jobs · <b>T</b> today\'s figures · <b>I</b> inventory · <b>K</b> skills · <b>C</b> office chat · <b>M</b> email · <b>P</b> profile · <b>L</b> achievements · <b>Esc</b> menu and settings.<br><br>' +
+      'The shift runs 09:00 to 17:00. Survive it. Then do it again, because that is the actual game and it is also the actual job. At five the queue closes and your figures for the day are written up under <b>T</b> — nobody stops you to read them, and nobody makes you.<br><br>' +
       'The <b>day</b> does not end when the shift does. At five the phones stop and the floor goes home; the clock carries on, it gets dark, and the next one starts at nine wherever you are standing by then. Sleep is what gives you your patience back, and you only get it if you stop.<br><br>' +
       '<i>This document is Rev. 7. Rev. 6 is the version in the folder on your desk. The differences are not marked.</i>';
     el.onclick = () => { el.onclick = null; el.classList.remove('on'); $('#titleScreen').classList.add('on'); Title.show(); G.state = 'title'; };

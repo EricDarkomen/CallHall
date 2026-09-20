@@ -217,11 +217,12 @@ const Arcade = {
   open(id, from) {
     const def = this.games[id];
     if (!def) { if (typeof Sfx !== 'undefined') Sfx.deny(); return false; }
-    /* Never over a call, and never over the end of the day. Both are the game
-       proper asking for the screen, and a minigame is by definition optional.
-       Refused BEFORE anything is written down: an open that does not happen
-       must leave no state behind it. */
-    if (Combat.E || G.state === 'report' || G.state === 'ending') { Sfx.deny(); return false; }
+    /* Never over a call, and never over an ending. Both are the game proper
+       asking for the screen, and a minigame is by definition optional. Refused
+       BEFORE anything is written down: an open that does not happen must leave
+       no state behind it. Five o'clock is no longer on this list, because five
+       o'clock no longer asks for the screen — see Report.post(). */
+    if (Combat.E || G.state === 'ending') { Sfx.deny(); return false; }
     /* The cabinet it is being played FROM. Passed in by the reply that offered
        it, and looked up otherwise — so opening a game by id alone still gets
        whatever it is wired into rather than nothing. */
@@ -251,9 +252,11 @@ const Arcade = {
     this.on = false; this.cur = null; this.cab = null; this.phase = 'idle';
     this.parts.length = 0; this.floats.length = 0; this.shakeAmt = 0;
     const el = $('#arcade'); if (el) el.classList.remove('on');
-    /* Never leave the world in a state nothing plays in. `report` is what the
-       clock does to you when a round pushed the shift past five, and it owns
-       G.state from the moment Report.show() ran. */
+    /* Never leave the world in a state nothing plays in — and never take one
+       back off something that claimed it while the round was running. A call
+       and an ending both own G.state, so only an arcade that still holds it is
+       handed back. (Five o'clock used to be on that list. It is a notification
+       now and owns nothing; see Report.post().) */
     if (G.state === 'arcade') G.state = 'play';
     Game.last = performance.now();     /* don't fast-forward the office on the way out */
   },
@@ -440,8 +443,9 @@ const Arcade = {
     }
     this._paid = true;
     /* The clock is stopped while you play, so a round costs its minutes here,
-       once, at the end. Past 17:00 the next tick shows the report, which is
-       exactly what happens if you spend the end of the shift playing games. */
+       once, at the end. Past 17:00 the next tick clocks you off where you sit,
+       which is exactly what happens if you spend the end of the shift playing
+       games: the queue closes without you and nobody comes to find you. */
     const mins = def.mins || 0;
     if (mins) G.minutes += mins;
     if (rw.xp) Player.xp(rw.xp);

@@ -69,7 +69,6 @@ function bindInput() {
          keys; this only fires when focus is not in one. */
       if (G.state === 'look') { Boot.goFullscreen(); Look.accept(); return; }
       if (G.state === 'cut') { Cut.press(); return; }
-      if (G.state === 'report') { Report.next(); return; }
       if (G.state === 'play') { Interact.go(); return; }
       return;
     }
@@ -103,7 +102,7 @@ function bindInput() {
     /* N for the map, and not M, which has been the email since there was an
        email: a key somebody has been pressing for a year is not free just
        because another game would put a map on it. */
-    const map = { KeyN: 'map', KeyI: 'inventory', KeyJ: 'quests', KeyK: 'skills', KeyC: 'chat', KeyM: 'email', KeyP: 'stats', KeyL: 'ach' };
+    const map = { KeyN: 'map', KeyI: 'inventory', KeyJ: 'quests', KeyK: 'skills', KeyC: 'chat', KeyM: 'email', KeyP: 'stats', KeyL: 'ach', KeyT: 'shift' };
     if (map[e.code]) { if (Panels.on && Panels.tab === map[e.code]) Panels.close(); else Panels.open(map[e.code]); }
   });
   /* Keep Tab inside whichever modal is open, rather than letting focus escape
@@ -113,7 +112,6 @@ function bindInput() {
     const modal = Panels.on ? $('#panel')
       : Arcade.on ? $('#arcade')
       : Combat.E ? $('#combat')
-      : G.state === 'report' ? $('#report')
       : G.state === 'ending' ? $('#ending')
       : Dialogue.on ? $('#dialogue') : null;
     if (!modal) return;
@@ -170,7 +168,6 @@ function bindInput() {
   if (mmb) mmb.onclick = () => { if (Panels.on && Panels.tab === 'map') Panels.close(); else Panels.open('map'); };
   $('#pnClose').onclick = () => Panels.close();
   $('#panel').addEventListener('click', e => { if (e.target.id === 'panel') Panels.close(); });
-  $('#repNext').onclick = () => Report.next();
   $('#endAgain').onclick = () => { localStorage.removeItem(SAVE_KEY); location.reload(); };
   $('#endTitle').onclick = () => location.reload();
   $('#dialogue').addEventListener('click', e => { if (!e.target.closest('.choice')) Dialogue.advance(); });

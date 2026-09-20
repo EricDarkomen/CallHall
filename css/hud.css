@@ -256,7 +256,7 @@ canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block;image
    z-index 30 they were the most important, painting over the dialogue box you
    were reading, the HUD, the call screen and every panel. Everything with a
    claim on your attention now covers them: the HUD (5), the on-screen controls
-   (6), dialogue (20), the call (25), the panels (26) and the end-of-day report
+   (6), dialogue (20), the call (25), the panels (26) and the exit interview
    (28). They still sit above the canvas, which is all they ever needed. */
 #notify{position:absolute;bottom:calc(48px + env(safe-area-inset-bottom));
   left:calc(12px + env(safe-area-inset-left));z-index:3;

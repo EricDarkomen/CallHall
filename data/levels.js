@@ -34,6 +34,19 @@ const LEVELS = {
     name: 'CALLHALL Services · Fourth Floor',
     w: 64, h: 44,
     hub: true,
+    /* ON THE PREMISES. A fact about the level, like `hub` and `arrive`, and it
+       exists because the game outgrew the building. For a year every level in
+       the catalogue was a floor of this office and the question never came up:
+       the queue was on while the shift was on, because there was nowhere else
+       to be. There is now an island out there with a town on it, and a phone
+       that goes on counting towards being abandoned while you are on the coast
+       road is not a cost, it is a tax on the rest of the game.
+
+       So four levels say they are this company's, and every other one in the
+       catalogue says nothing — a Greggs is not your employer's premises and
+       neither is a field. Read by Levels.onSite(), and through it by Phones
+       and by EventSys. See engine/office.js. */
+    site: true,
     /* Floor 4 of 3-5. It is still the hub — the level with twenty people and a
        queue of ringing phones on it — and it is no longer the level you arrive
        on: see `arrive` on LEVELS.ground, which is the lobby the building's own
@@ -415,6 +428,9 @@ const LEVELS = {
     name: 'CALLHALL Services · Ground Floor',
     w: 32, h: 20,
     arrive: true,
+    /* The lobby is the building. Standing in it while the fourth floor rings is
+       a choice about a staircase, not a journey. See `site` on LEVELS.office. */
+    site: true,
     /* FOUR ROOMS, NOT ONE HALL.
        The first version of this level was a single thirty by sixteen rectangle
        with the furniture pushed out to the edges of it and a thirteen-tile
@@ -572,6 +588,8 @@ const LEVELS = {
   five: {
     name: 'CALLHALL Services · Fifth Floor',
     w: 32, h: 18,
+    /* Management is still work, whatever it looks like from down there. */
+    site: true,
     rooms: [
       { z: 'manage', r: [2, 9, 29, 15] },
       { z: 'corner', r: [2, 2, 10, 7] },
@@ -655,6 +673,11 @@ const LEVELS = {
        being one — `a_hatch` is got by lifting the corner, in Acts.hatch(). Read
        by Atlas.waysOut() and by nothing else. */
     secret: 'a_hatch',
+    /* Under the archive is still under the building, and that is the point of
+       saying so: the one place a player is most tempted to disappear to for
+       twenty minutes of a working day is the one place the queue should still
+       be able to reach them. See `site` on LEVELS.office. */
+    site: true,
     w: 14, h: 12,
     rooms: [{ z: 'secret', r: [2, 2, 11, 9] }],
     doors: [],

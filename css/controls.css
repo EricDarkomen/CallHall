@@ -9,7 +9,6 @@ body.talking #touch.on{display:none}
    faint pad behind a modal is harmless if :has() is missing. */
 #app:has(#combat.on) #touch.on,
 #app:has(#panel.on) #touch.on,
-#app:has(#report.on) #touch.on,
 #app:has(#ending.on) #touch.on{display:none}
 /* The stick's catchment. A thumb pressing "somewhere near the bottom-left" is
    the actual gesture people make; a 150px pad you have to find first is not.

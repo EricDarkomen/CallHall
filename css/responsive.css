@@ -217,7 +217,6 @@
    they are a scrollback, and they will still be there when the call ends. */
 #app:has(#combat.on) #notify,
 #app:has(#panel.on) #notify,
-#app:has(#report.on) #notify,
 #app:has(#ending.on) #notify{display:none}
 /* The on-screen pad owns the bottom of the screen, so the keyboard-hint row is
    replaced by a single menu button — everything it linked to is a tab inside

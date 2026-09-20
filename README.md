@@ -1,12 +1,19 @@
 # Call of Duty: Customer Service
 
-A call centre RPG. Answer the phones, survive the shift, and find out who writes
-the numbers.
+An RPG that starts in a call centre and does not stay in one. Answer the phones,
+survive the shift, find out who writes the numbers — and then clock off, take
+whatever is in the car park, and drive until the island runs out.
 
-You are a new trainee at CALLHALL Services plc. There are thirteen rooms, twenty
-colleagues, fourteen mugs, and a fourth floor that is not on the floor plan.
+You are a new trainee at CALLHALL Services plc. There are four floors, twenty
+colleagues, fourteen mugs, and a room under the archive that is not on the floor
+plan. Outside the front doors there is a town with nineteen doors you can walk
+in through, a road out of it, an estate, four hundred acres of field and a coast.
+The clock does not stop at five and the map does not stop at the car park.
+
 Difficult calls are turn-based: your **Patience** is your health, their
-**Frustration** is what you are reducing.
+**Frustration** is what you are reducing. They are the job, and the job is one
+of the things you can be doing — the queue is the building's, and the building
+is one address on a map that outgrew it.
 
 Play it in a browser. A page, its content, and a directory of art — no build
 step, no dependencies, no network calls.
@@ -31,7 +38,7 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 | Aim, fire, swing | the mouse and its button, or the arrows | **two sticks**: left walks, right aims and fires |
 | Dialogue   | `Space`, `1`–`9` to choose      | tap the box, tap a reply       |
 | The map    | `N`, or the minimap             | `☰` · Map                      |
-| Panels     | `J I K C M P L`, `Esc` for menu | `☰`                            |
+| Panels     | `J I K C M P L`, `T` for today's figures, `Esc` for menu | `☰`         |
 | Save/load  | `F5` / `F9`                     | `☰` · Menu                     |
 
 On a phone the movement control is a floating analogue stick: it appears
@@ -1256,11 +1263,14 @@ over it. And Colin does not go anywhere, ever, which is Colin.
 
 The shift runs 09:00 to 17:00. The day does not.
 
-At five o'clock the report goes up, and when you dismiss it you are standing
-exactly where you were standing at 16:59. Nothing moves you, nothing is rebuilt,
-and nothing is handed back to you: the clock carries on running into the
-evening, the phones stop, the light starts going, everybody around you starts
-leaving, and the day changes at midnight, like a day. Your patience and your
+At five o'clock the queue closes and one line goes into the notification log,
+and you are standing exactly where you were standing at 16:59 — at your desk, in
+the lift, or halfway round a roundabout in a pool car. Nothing moves you,
+nothing is rebuilt, nothing is taken off you and nothing is handed back: the
+clock carries on running into the evening, the phones stop, the light starts
+going, everybody around you starts leaving, and the day changes at midnight,
+like a day. The figures are written up in the portal under **Shift** and stay
+there; see **The queue is a place**. Your patience and your
 energy come back across the small hours instead of arriving full at nine, which
 means walking round town all night has a price and going home does not.
 
@@ -1441,6 +1451,99 @@ checked: a working day on the real fourth floor, and the lunchtime rush at the
 break room with somebody standing in its doorway, come out identical to the
 frame. The break room has a wide way in and never needed any of this. The
 one-square doors are where people live.
+
+## The queue is a place
+
+For a year this game was one building and every question about the job had one
+answer, because there was nowhere else you could be. Is the queue yours? The
+shift is running, so yes. Where are you? In the office, because the office is
+the game. Every rule about the phones was written in that world and each of them
+was right in it.
+
+Then the car park became a level, and the town behind it, and the country behind
+that, and an island round the lot. The rules did not change, and that is how a
+rule that was true becomes a rule that is wrong: a phone on the fourth floor
+went on counting towards being abandoned while you were nine hundred tiles away
+on the coast road, and took a point of reputation off you when it gave up. You
+could lose a day's standing to a stretch of road the game had just spent three
+releases building. The most expensive thing in the game was the thing the game
+most wanted you to do.
+
+**A queue is a place as much as it is an hour.** It is yours while the clock
+says so AND while you are somewhere it can reach you, and those are two
+questions with two answers. `Sky.working()` has always answered the first.
+`Levels.onSite()` answers the second, and it answers it the way this repository
+answers everything about a building: by asking the catalogue. Four levels in
+`data/levels.js` carry `site: true` — the lobby, the fourth floor, management,
+and the room under the archive, which is on the list precisely because it is the
+place a player is most tempted to disappear to for twenty minutes of a working
+day. Every other level says nothing, because a Greggs is not your employer's
+premises and neither is a field.
+
+What follows from it:
+
+**Off the premises, the floor covers it.** Nineteen other people work here and
+the rota does not have your name against the whole of it. The phones that were
+ringing as the front door shut are taken by somebody else, in one line, once —
+not a toast per phone — and they are counted as **covered** rather than lost.
+Nothing new rings while you are out, and nothing costs you anything.
+
+**In the building, nothing has changed.** Standing in the lobby while the fourth
+floor rings is a choice about a staircase, not a journey, so the phones go on
+ringing and go on being abandoned, and that still costs a point. The cost is now
+exactly where it belongs: a phone ringing eight feet away and you deciding to
+look at something else.
+
+**The office only happens in the office.** The printer apocalypse, the fire
+alarm that is always a test, the free pizza, the two consultants nodding at a
+bin — every random event is a thing you are told about because you are standing
+in the room it happened in. They wait now, and the cooldown is not spent while
+you are away, so coming back through the doors does not set four of them off at
+once.
+
+**And the tracker stops telling you off.** "Answer phones. Survive until 17:00."
+read on the sea wall at half four is the game telling the player they are doing
+the wrong thing, which they are not. The standing instruction is picked from the
+same two facts the queue is: at the desk it is the line it always was, out of
+the building it says the floor has the queue, and after five it says when the
+next one starts. It only ever replaces itself — a job, or an act that has asked
+you to find the fourth floor, owns that line until it is done with it.
+
+### Five o'clock is a line, not a screen
+
+The other half of the same argument, and the older half: the shift ending is not
+the day ending. `engine/sky.js` made that true of the clock two releases ago —
+the world is no longer taken away at 17:00 and rebuilt at 09:00 — while the
+performance summary went on behaving exactly as it had when it was a curtain.
+The minute the clock reached five, the world froze and a full-screen report went
+up over whatever you were doing, with one button on it. At your desk that is a
+summary. In a pool car it is the game taking the wheel off you to show you a
+spreadsheet, and the car is still moving when you give it back.
+
+So nothing is taken away any more. Five o'clock closes the queue, writes the day
+down, and says one sentence in the notification log. The report itself moves to
+where every other piece of this company's paperwork already lives: the portal,
+as a tab, under **Shift** — `T`, or `☰ · Shift` on a phone. It can be read at
+five past, or at nine that evening, or never.
+
+Which has a second effect worth more than the first: **the page is live.** It is
+today's figures whenever you open it, so the shift is something you can check at
+half eleven rather than a verdict handed to you once, after everything it
+describes is over. Before five it is a tally with the clock at the top of it and
+a note that the rating is worked out from these; after five it is the report
+that used to be thrown at you, rating, footnote and all, plus whatever the
+evening said on the way out — drawn once, when you clock off, rather than on
+every render, because it is a thing that happened and not a slot machine.
+
+It has one new row. **Covered by the floor** is how many calls somebody else
+took while you were out of the building, and it is there because without it a
+day spent driving looks like a day the queue went quiet. It is left off when it
+is nought, which is most days at a desk.
+
+And while the figures were being moved: the profile page had a block headed
+**Today** that was reading the lifetime totals, so a profile opened on day four
+reported four days of coffee as this morning's. Today has a page of its own now.
+That block is headed **All time**, which is what it always was.
 
 ## The wallboard
 

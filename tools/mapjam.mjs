@@ -98,7 +98,7 @@ vm.runInContext(`
   var FX = { motion: false, shake(){}, parts: [] };
   var UI = { toast(){}, objective(){} };
   var Ach = { get(){} };
-  var Q = { active: () => false, has: () => false };
+  var Q = { active: () => false, has: () => false, restand(){} };
   var Item = { has: () => false };
   var Rel = { get: () => 0 };
   var Arcade = { cabinets: () => [] };

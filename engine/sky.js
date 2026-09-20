@@ -216,10 +216,12 @@ const Sky = {
     G.flags.calls1 = true;
     /* Flags that describe today rather than the save. Leaving these set is how
        yesterday's briefing turns up in tomorrow's meeting room. `clockedOff` is
-       the newest of them and the one that matters most: it is what stops the
-       report going up on every tick after five, and a day that started with it
-       still set would never show one at all. */
-    ['queueTriedToday', 'briefingToday', 'leftAtFive', 'clockedOff', 'coffeeBroken',
+       the one that matters most: it is what stops five o'clock being announced
+       again on every tick until midnight, and a day that started with it still
+       set would never announce it at all. It is also what the shift page reads
+       to decide whether the day it is showing is over — see Panels.r_shift() —
+       so `leaving` goes with it, being the line that day ended on. */
+    ['queueTriedToday', 'briefingToday', 'leftAtFive', 'clockedOff', 'leaving', 'coffeeBroken',
      'phonesDown', 'itDown', 'looClosed', 'audit', 'rodent', 'newSystem',
      'consultants', 'wifiDown', 'kettleDead', 'pigeonInside'].forEach(k => { delete G.flags[k]; });
     Phones.clearAll();
@@ -278,6 +280,7 @@ const Sky = {
        both later and correct — nobody announces Tuesday at midnight. */
     if (m === DAY_START) {
       UI.zone('Day ' + G.day + ' · ' + (DAYS[(G.day - 1) % 7] || 'Monday'));
+      Q.restand();
       UI.toast('🌅', 'Day ' + G.day + '. ' + this.label() + '. '
         + pick(['The lift is still broken. The stairs are still quicker.',
                 'Somebody has already used your mug. It is 09:00.',

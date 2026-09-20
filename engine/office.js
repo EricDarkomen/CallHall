@@ -22,17 +22,46 @@ const Mail = {
   }
 };
 
-/* ---------------- Phone ringing ---------------- */
+/* ---------------- Phone ringing ----------------
+   WHOSE QUEUE IT IS. Two questions, and for a year they were the same one:
+   the shift was running, therefore the phones were yours, because every level
+   in the game was a floor of this office and there was nowhere else you could
+   possibly be. That stopped being true the day there was an island out there.
+
+   A queue is a place as much as it is an hour. It is yours while the clock says
+   so AND while you are somewhere it can reach you — which is the building, all
+   four floors of it, including the one under the archive. Off the premises the
+   floor covers it: nineteen other people are wearing headsets and the rota does
+   not have your name against the whole of it. So nothing new rings, nothing
+   counts towards being abandoned, and the phones that were ringing as you left
+   are COVERED rather than lost. Walking out is not free — it is still a shift
+   you are not doing — but it costs you the calls you would have taken, not
+   reputation for the ones somebody else did.
+
+   Which leaves the cost exactly where it belongs: in the building, with the
+   phone ringing eight feet away and you deciding to look at something else. */
 const ABANDON_AFTER = 42;   /* seconds a caller will hold before giving up */
 const Phones = {
   ringing: [],
+  /* The queue is live: the clock is in the shift and you are on the premises.
+     Everything that pressures the player about phones asks this and nothing
+     else. See Levels.onSite(). */
+  live() { return Sky.working() && Levels.onSite(); },
   tick(dt) {
     if (G.flags.phonesDown || G.state !== 'play') return;
-    /* The queue closes at five. It is the one promise this building keeps, and
+    /* NOT YOUR QUEUE, and the two ways that can be true end differently.
+       AT FIVE the queue closes. It is the one promise this building keeps, and
        until the clock ran past seventeen hundred there was no way to keep it —
        the day simply ended. A phone still ringing at 02:00 is not atmosphere,
-       it is a shift nobody clocked out of. */
-    if (!Sky.working()) { if (this.ringing.length) this.clearAll(); return; }
+       it is a shift nobody clocked out of. Nothing is holding, so nothing is
+       handed over: the phones simply stop.
+       OFF THE PREMISES, mid-shift, whoever is holding is still holding — and
+       somebody on the floor picks them up. That is cover(), and it is the whole
+       of the difference. */
+    if (!this.live()) {
+      if (this.ringing.length) { if (Sky.working()) this.cover(); else this.clearAll(); }
+      return;
+    }
     this.timer = (this.timer || 0) - dt;
     if (this.timer <= 0) {
       this.timer = rnd(7, 16);
@@ -43,10 +72,13 @@ const Phones = {
       p.ringT = (p.ringT || 0) + dt;
       p.waited = (p.waited || 0) + dt;
       /* Only audible on the level the phone is on. It keeps ringing while you
-         are outside — and keeps counting towards being abandoned, which is the
-         cost of being outside — but a desk phone on the fourth floor cannot be
-         heard from the car park, and without this it was heard from anywhere
-         whose map happened to put those tile coordinates on screen. */
+         are elsewhere in the building — in the lobby, upstairs, down the ladder
+         — and keeps counting towards being abandoned, which is the cost of
+         being anywhere but at the desk while the queue is yours. But a desk
+         phone on the fourth floor cannot be heard from the stairwell, and
+         without this it was heard from anywhere whose map happened to put those
+         tile coordinates on screen. Beyond the front doors it does not ring at
+         all any more: see cover() and the note at the top of this section. */
       if (p.ringT > 1.6) { p.ringT = 0; if (p.lvl === World.level && Cam.visible(p.x, p.y)) Sfx.ring(); }
       /* A phone that rings forever is scenery. Let callers give up, so that
          ignoring the queue is a choice with a cost rather than a free option. */
@@ -64,6 +96,23 @@ const Phones = {
     }
   },
   waiting() { return this.ringing.length; },
+  /* SOMEBODY ELSE TAKES THEM. Called the moment the shift is still running and
+     you are no longer in the building: the phones stop, the queue empties, and
+     nobody is charged for it. Counted, because it is a real number about a day
+     — how many calls the floor took that were nominally yours — and because the
+     shift figures should be able to say so out loud rather than quietly showing
+     a smaller tally than a day spent at the desk.
+
+     Not a toast per phone. It is one line, said once, for however many were
+     ringing as the door shut behind you. */
+  cover() {
+    const n = this.ringing.length;
+    this.clearAll();
+    count('covered', n);
+    UI.toast('📞', n === 1
+      ? 'A phone was ringing as you left. Somebody on the floor has taken it. That is what a floor is.'
+      : n + ' phones were ringing as you left. The floor has them. Nobody is keeping a list, officially.');
+  },
   ringRandom(hot) {
     const phones = World.objects.filter(o => o.kind === 'phone' && !o.ringing);
     if (!phones.length) return;
@@ -106,6 +155,14 @@ const Nigel = {
 const EventSys = {
   tick() {
     if (G.state !== 'play') return;
+    /* THESE ARE THINGS THAT HAPPEN ON THE FLOOR. The printer, the fire alarm
+       that is always a test, the pizza, the two people with lanyards walking
+       slowly — every one of them is an event you are told about because you are
+       standing in the room it happened in. Announced to somebody halfway up the
+       coast road they are not atmosphere, they are a phone buzzing about a
+       building you have left. They wait: the cooldown is not spent out here, so
+       walking back in does not set off four of them at once. */
+    if (!Levels.onSite()) return;
     if (G.minutes < 570) return;
     G.eventCooldown -= 1;
     if (G.eventCooldown > 0) return;

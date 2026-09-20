@@ -1204,11 +1204,12 @@ const NPCM = {
          Leaving used to be spread over six seconds, which was fine while the
          only thing on the other side of the front doors was a level called
          'away': the whole exodus was over before anybody could have got down
-         four floors to look at it. There is a car park out there now, and the
-         report screen stands between five o'clock and the player being able to
-         move at all — so by the time you are through the doors the building
-         would already be empty, and the one moment the town most wanted would
-         have happened without you.
+         four floors to look at it. There is a car park out there now — so by
+         the time you were through the doors the building would already be
+         empty, and the one moment the town most wanted would have happened
+         without you. Five o'clock no longer stops the player moving at all
+         (see Report.post()), which makes the length of this the only thing
+         deciding whether the exodus can be watched.
 
          Forty seconds instead, which is also simply truer: nobody has ever
          seen an office empty in twenty. Arriving is still tight, because that
