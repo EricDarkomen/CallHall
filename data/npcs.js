@@ -1944,8 +1944,8 @@ const NPCS = [
   look: { base: 'base:fem/Ivory', eyes: 'eyes:Blue', hair: 'hair:Short 05 - Natural/Gray',
     torso: 'torso:fem/Shirt 09 - Polo/White', legs: 'legs:fem/Pants 03 - Pants/Navy',
     feet: 'feet:fem/Shoes 01 - Shoes/Black' },
-  lines: ["Second one along sticks.", "It's not the machine, love.", "Terry's are due back Thursday.",
-    "I've seen that jacket before."],
+  lines: ["Second one along sticks.", "It’s not the machine, love.", "Terry’s are due back Thursday.",
+    "I’ve seen that jacket before."],
   entry() { return G.flags.metPat ? 'again' : 'first'; },
   nodes: {
     first: { text: ["“You’re from the offices,” says Pat, before you have said anything at all.",

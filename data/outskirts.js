@@ -364,7 +364,7 @@ const Outskirts = {
       const k = jy * W + jx;
       if (treed.has(k)) continue;
       treed.add(k);
-      add({ x: jx, y: jy, e: '🌳', name: "A tree in Prior's Wood", kind: 'tree', solid: true, use: 'woodTree' });
+      add({ x: jx, y: jy, e: '🌳', name: 'A tree in Prior’s Wood', kind: 'tree', solid: true, use: 'woodTree' });
     }
     /* A bench at the top of the track, facing back down it. Somebody's mother
        is on a plaque on it and the game has never said whose. */
@@ -748,7 +748,7 @@ const Outskirts = {
 
     const MASS = solids.slice();
     return {
-      name: "Marley Road and Prior's Wood",
+      name: 'Marley Road and Prior’s Wood',
       /* A PART, like the town beside it: this is the country east of Bellhaven
          and it is built into the island rather than stood on. Nothing else
          about it changed — see data/island.js. */

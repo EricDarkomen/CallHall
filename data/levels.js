@@ -597,7 +597,7 @@ const LEVELS = {
       { z: 'stairwell', r: [26, 2, 29, 7] }
     ],
     doors: [
-      { x: 6, y: 8, z: 'corner', name: "The Area Manager's office" },
+      { x: 6, y: 8, z: 'corner', name: 'The Area Manager’s office' },
       { x: 18, y: 8, z: 'board', name: 'The Boardroom' },
       { x: 27, y: 8, z: 'stairwell', name: 'The Stairwell' }
     ],
