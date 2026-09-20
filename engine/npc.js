@@ -244,7 +244,7 @@ const NPCM = {
         /* Everybody works on the fourth floor. It is a call centre; that is the
            whole premise. Written down anyway, because the moment one person does
            not, every reader of `list` is already correct. */
-        level: def.level || 'office',
+        level: def.level || Levels.hub(),
         x: (def.desk[0] + .5) * TILE, y: (def.desk[1] + .5) * TILE,
         step: 0, speed: TILE * t.pace, bob: rnd(0, 6.3),
         /* Which way they stand when they are where they belong. Two on the
@@ -320,7 +320,7 @@ const NPCM = {
        is for a shift that ends while you are standing in it. */
     this._homeAt = this.now - 200;
     this._homeSpots = null; this._homeRec = null; this._homeDoor = null;
-    const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
+    const hub = Levels.hub();
     this.all.forEach(n => {
       /* If the clock says they are out, they are OUT, and that is asked before
          anything else — an evening outranks the end of a shift here for the
@@ -404,7 +404,7 @@ const NPCM = {
   /* Recompute presence for a level. Called by Levels.go(); a filter once per
      transition rather than a filter every frame in five hot paths. */
   enter(level) {
-    this.list = this.all.filter(n => n.level === (level || 'office'));
+    this.list = this.all.filter(n => n.level === (level || Levels.hub()));
     /* Nobody carries a conversation, a claimed spot or a grudge against a
        doorway across a level change: all three are about a floor plan that is
        no longer loaded. A drill is the one thing that survives, because it is
@@ -593,7 +593,7 @@ const NPCM = {
      rewritten to give three of them a third element. */
   wpLevel(name) {
     const w = WP[name];
-    return (w && w[2]) || (Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office');
+    return (w && w[2]) || (Levels.hub());
   },
   /* GOING UP.
 
@@ -938,7 +938,7 @@ const NPCM = {
      and the way back is that level's own link home. Returns null — and so no
      drill at all, rather than a broken one — if any of that is missing. */
   drillPlan() {
-    const home = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
+    const home = Levels.hub();
     const homeRec = Levels.ensure(home);
     if (!homeRec) return null;
     for (const l of ((Levels.def(home) || {}).links || [])) {
@@ -992,7 +992,7 @@ const NPCM = {
   },
   /* Presence again, WITHOUT the reset enter() does: one person has walked
      through a door and everybody else is exactly where they were. */
-  refresh() { this.list = this.all.filter(n => n.level === (World.level || 'office')); },
+  refresh() { this.list = this.all.filter(n => n.level === (World.level || Levels.hub())); },
   runDrill() {
     const d = this.drill;
     if (!d) return;
@@ -1141,7 +1141,7 @@ const NPCM = {
        a few hundred objects and this is twenty-one boolean comparisons. */
     if (!this.all.some(n => this.offDuty(n) !== !!n.away)) return;
 
-    const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
+    const hub = Levels.hub();
     const rec = Levels.ensure(hub);
     if (!rec) return;
     /* The door, and A SQUARE EACH around it. The second half is the drill's
@@ -1527,7 +1527,7 @@ const NPCM = {
       return want ? n.level !== want.level : (!n.away && this.onErrand(n));
     })) return;
 
-    const hub = Levels.ids().find(id => (Levels.def(id) || {}).hub) || 'office';
+    const hub = Levels.hub();
     const rec = Levels.ensure(hub);
     if (!rec) return;
     /* A SQUARE EACH at the doors, for runHome()'s reason and not a new one:
@@ -2814,7 +2814,7 @@ const Guide = {
     /* Waypoints are named spots on the floor plan of the building, so one only
        means anything while you are in the building. */
     if (t.wp && WP[t.wp]) {
-      if (Levels.current !== 'office') return this.aimAcross('office', t.label || null);
+      if (Levels.current !== Levels.hub()) return this.aimAcross(Levels.hub(), t.label || null);
       this.set(WP[t.wp][0], WP[t.wp][1], t.label || 'this way', null); this.sticky = true;
       return true;
     }

@@ -76,8 +76,15 @@ const Game = {
         if (Sky.working()) {
           Chat.tick(); Mail.tick(); EventSys.tick();
           if (G.minutes % 7 === 0) Player.mod({ energy: -1 });
-          if (G.minutes % 60 === 0) Save.write(true);   /* quiet hourly autosave */
         }
+        /* The quiet hourly autosave, and OUTSIDE the test above rather than
+           inside it, which is where it used to live. An evening was ninety
+           seconds of walking to the car park when that was written; it is a
+           town and a coast road now, and a player who spends one out there and
+           closes the tab was losing all of it back to five o'clock. Throttled
+           on real time rather than on the clock, because the clock past five is
+           not the clock — see Save.auto(). */
+        if (G.minutes % 60 === 0) Save.auto();
         /* Five o'clock, ONCE — and outside the test above, because at exactly
            17:00 the shift is over and Sky.working() is already false. It is a
            line rather than a screen: Report.post() closes the queue, writes the
@@ -128,7 +135,15 @@ const Game = {
     R.resize(); Cam.snap();
     G.state = 'play';
     UI.hud();
-    UI.zone('CALLHALL Services · Fourth Floor');
+    /* WHERE YOU ACTUALLY ARE. This said "Fourth Floor" in letters across the
+       middle of the screen while the player stood in the ground-floor lobby,
+       and had done since the lobby stopped being part of floor four and became
+       a floor of its own: a leftover from a building with one storey in it.
+       The level knows its own name, so it says it, and it will go on being
+       right wherever a shift is made to begin.
+       The objective is not a leftover — finding the fourth floor is the first
+       job the game gives you, and now it is a job with a lift in it. */
+    UI.zone((World.def && World.def.name) || 'CALLHALL Services');
     UI.objective('Find the fourth floor. Find your desk. Try not to be noticed.');
     Guide.setObject('playerDesk', 'Your desk', 'foundDesk');
     setTimeout(() => UI.toast('🧭', (TOUCH
@@ -453,10 +468,11 @@ const Boot = {
        not decode has always had. Costs nothing at all in a build where nobody
        has a `look:`. */
     if (typeof Look !== 'undefined') Look.dressCast();
-    /* One level is built here — the fourth floor, because that is where the
-       game starts. The rest of the catalogue is built the first time somebody
-       goes there, which is what keeps this line the same length however many
-       levels the catalogue grows to. */
+    /* One level is built here — whichever one the catalogue says a shift
+       begins on, which is the lobby and has been since the lobby became a
+       floor of its own. The rest of the catalogue is built the first time
+       somebody goes there, which is what keeps this line the same length
+       however many levels the catalogue grows to. */
     Levels.init();
     /* A level the editor handed over, if there is one. Before Levels.start, so
        the trial level is the one that gets built. */
@@ -559,9 +575,12 @@ const Boot = {
     /* the objective survives in the save but lives in the DOM, so put it back */
     UI.objective(G.objective || Q.idle());
     UI.hudDirty();
-    UI.zone(ZONES[World.zoneAt(Math.floor(P.x / TILE), Math.floor(P.y / TILE))]
-      ? ZONES[World.zoneAt(Math.floor(P.x / TILE), Math.floor(P.y / TILE))].name
-      : 'CALLHALL Services');
+    /* The room you are standing in, then the level, then the company. The last
+       of those was the only fallback there was, which on a restored shift that
+       was saved on a beach announced the name of an office block over the
+       sea. */
+    const z = ZONES[World.zoneAt(Math.floor(P.x / TILE), Math.floor(P.y / TILE))];
+    UI.zone((z && z.name) || (World.def && World.def.name) || 'CALLHALL Services');
   },
   /* The induction page borrows the opening's screen, and `plain` is what stops
      it arriving as one: no letterbox, no camera, no typing, no skip — the

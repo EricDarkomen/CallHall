@@ -45,6 +45,33 @@ const Save = {
       return true;
     } catch (e) { if (!quiet) UI.toast('💾', 'Could not save. Your browser has said no.', 'bad'); return false; }
   },
+  /* THE AUTOSAVE, which is the hourly one and is not the same call as a save
+     somebody asked for. Two reasons it is its own function rather than a
+     `write(true)` at the call site:
+
+     It runs on the WHOLE clock now, not only the shift. The evening used to be
+     ninety seconds of walking to a car park and there was nothing out there to
+     lose; it is a town, a coast road and an island, and an evening spent in it
+     was an evening no save was ever written of — close the tab at eleven and
+     you were back at five.
+
+     And a game hour is not one length any more. At MS_PER_GAME_MIN a working
+     hour is twenty-six seconds of real time, which is what this has always
+     cost; in the small hours, at a twelfth of that pace, "every hour" is every
+     two seconds, and a JSON serialisation of the whole run every two seconds is
+     a phone getting warm for nothing. So the floor is real time, and it is set
+     a shade UNDER the working hour rather than at it: at exactly twenty-six
+     seconds, a frame's hitch either side of the boundary would start silently
+     dropping the day's own autosaves, which are the ones that have always
+     happened. The day is unchanged; the night is written down about as often
+     as an afternoon is. */
+  AUTO_MIN_MS: 20000,
+  auto() {
+    const t = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (this._autoAt !== undefined && t - this._autoAt < this.AUTO_MIN_MS) return false;
+    this._autoAt = t;
+    return this.write(true);
+  },
   has() { return !!this.peek(); },
   /* Read the header without applying it — used by the title screen. */
   peek() {

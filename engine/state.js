@@ -112,8 +112,13 @@ function resetRun() {
   G.look = null;
   Sprites.uncompose('player');
   /* Which level, and what each level remembers. Both have to go, or a new
-     shift starts in the basement with yesterday's coffee already taken. */
-  G.level = 'office'; G.levelState = {};
+     shift starts in the basement with yesterday's coffee already taken. The
+     level is asked of the catalogue rather than named: a shift begins where
+     the building says it begins, which has been the lobby since the lobby
+     became a floor. Levels.start() below writes it again on the way in; this
+     is here so that nothing reading G.level in between reads a level the new
+     shift is not on. */
+  G.level = Levels.first(); G.levelState = {};
   Phones.clearAll();
   /* Rebuild every level from scratch and stand on the fourth floor. This also
      puts the player back at the spawn point, which is why it comes before the

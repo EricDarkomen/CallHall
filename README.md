@@ -1545,6 +1545,49 @@ And while the figures were being moved: the profile page had a block headed
 reported four days of coffee as this morning's. Today has a page of its own now.
 That block is headed **All time**, which is what it always was.
 
+### The rest of the building, and the rest of the evening
+
+Moving the rule from the clock to the map showed up three more places where the
+game was still answering an old question.
+
+**The queue rings where the phones are, not where you are.** `ringRandom` read
+`World.objects` — the level you are standing on — which was the same thing as
+the call floor for exactly as long as the call floor was the whole game. Once
+the building had four storeys it quietly meant something else: stand in the
+lobby, or on five, or down the ladder, and nothing could ring at all, because
+there are no desk phones on those floors. The queue froze the moment you left
+the room, which made "in the building, the queue is still yours" true only of
+the calls that happened to be ringing as you went through the door. It rings on
+the hub now, by reference through `Levels.objectsOn()`, so the phone rung while
+you are three floors down is the same object you walk back up to — and an
+abandoned call you were never in earshot of says so in its own words, because a
+point of reputation going for no visible reason reads as the game being
+arbitrary rather than as the rule it is.
+
+**Nobody is on a rota they have not walked onto.** Which immediately mattered,
+because a shift begins in the lobby and the first job the game gives you is to
+find the fourth floor. Between those two facts, a new player reading the
+visitors' book was losing reputation to a floor they had never seen. One flag,
+set the first time you stand on the floor the phones are on, and permanent
+after that.
+
+**The evening is saved.** The hourly autosave lived inside `if (Sky.working())`,
+which was correct when the evening was ninety seconds of walking to a car park
+and there was nothing out there to lose. It is a town, a coast road and an
+island now, and an evening spent in one was an evening no save was ever written
+of: close the tab at eleven and you were back at five. It runs on the whole
+clock, with the throttle on real time rather than on the game's — a game hour in
+the small hours is two seconds, and serialising the run every two seconds is a
+phone getting warm for nothing. The working day pays exactly what it always did.
+
+And two pieces of tidying that the same reading turned up. `Levels.hub()` is one
+definition of "the floor with the people and the phones on it", replacing seven
+longhand copies of the same find-with-fallback across `engine/npc.js` and
+`engine/office.js`; and the zone banner names the place you are actually
+standing in. It announced **CALLHALL Services · Fourth Floor** across the middle
+of the screen while you stood in the ground-floor lobby, every time a shift
+started, and it had done since the lobby became a floor of its own.
+
 ## The wallboard
 
 Every call centre has one bolted above the desks: how many people are holding,

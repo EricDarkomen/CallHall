@@ -88,6 +88,7 @@ const Levels = {
     for (const id in LEVELS) LEVELS[id].id = id;
     this.cache.clear(); this.order = []; this.current = null; this.moving = false;
     this.offered = new Set();
+    this._hub = undefined;
   },
   def(id) { return LEVELS[id] || null; },
   /* ARE WE AT WORK. Asked of the catalogue, like first() and hub, because it is
@@ -118,6 +119,29 @@ const Levels = {
   },
   /* The level definitions, in catalogue order. */
   ids() { return Object.keys(LEVELS); },
+  /* THE FLOOR WITH THE PEOPLE AND THE PHONES ON IT. Asked of the catalogue,
+     like first() and onSite() — and written here once because it was written
+     out longhand in seven places in engine/npc.js and one in engine/office.js,
+     every one of them the same find with the same fallback. Cached: the
+     catalogue does not change while a tab is open. */
+  hub() {
+    if (this._hub === undefined)
+      this._hub = this.ids().find(id => (this.def(id) || {}).hub) || 'office';
+    return this._hub;
+  },
+  /* WHAT IS STANDING ON A LEVEL THAT IS NOT THE ONE YOU ARE ON. The arrays in
+     a cached record are the same arrays World reads when that level is loaded
+     — see apply() — so this is a reference to the real thing rather than a
+     copy of it, and a phone rung through here is the same phone you walk up to
+     later. Null for a level nobody has built yet, deliberately: this is for
+     things that happen to a level in the background, and none of them is worth
+     building a map for. The hub is pinned, so the one caller that matters
+     never gets a null after the first visit. */
+  objectsOn(id) {
+    if (id === this.current) return World.objects;
+    const rec = this.cache.get(id);
+    return rec ? rec.objects : null;
+  },
 
   /* ---- the cache ---- */
 
@@ -274,6 +298,14 @@ const Levels = {
          the building and out of it — see Q.restand(), which leaves a job or an
          act's own instruction exactly where it is. */
       Q.restand();
+      /* ON THE ROTA. The first time you set foot on the floor the phones are
+         on, and permanently thereafter. It is one flag and it exists because
+         of the opening: a shift begins in the lobby, the queue is the whole
+         building's, and between those two facts a player who had not yet found
+         the lift was losing reputation to a floor they had never seen. Nobody
+         is on the rota before their first morning on the floor. Read by
+         Phones.live(); cleared with everything else by resetRun(). */
+      if (id === this.hub()) G.flags.onTheFloor = true;
       R.levelChanged();
       Cam.snap();
 

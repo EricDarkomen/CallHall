@@ -43,10 +43,15 @@ const Mail = {
 const ABANDON_AFTER = 42;   /* seconds a caller will hold before giving up */
 const Phones = {
   ringing: [],
-  /* The queue is live: the clock is in the shift and you are on the premises.
-     Everything that pressures the player about phones asks this and nothing
-     else. See Levels.onSite(). */
-  live() { return Sky.working() && Levels.onSite(); },
+  /* THE QUEUE IS LIVE: three facts, and everything that pressures the player
+     about phones asks this and nothing else.
+
+     The clock is in the shift — Sky.working(). You are somewhere it can reach
+     you — Levels.onSite(), which is the building rather than the desk. And you
+     have started at all: `onTheFloor` is set the first time you stand on the
+     floor the phones are on (see Levels.go), because a shift begins in the
+     lobby and nobody is on a rota they have not walked onto yet. */
+  live() { return !!G.flags.onTheFloor && Sky.working() && Levels.onSite(); },
   tick(dt) {
     if (G.flags.phonesDown || G.state !== 'play') return;
     /* NOT YOUR QUEUE, and the two ways that can be true end differently.
@@ -59,7 +64,14 @@ const Phones = {
        somebody on the floor picks them up. That is cover(), and it is the whole
        of the difference. */
     if (!this.live()) {
-      if (this.ringing.length) { if (Sky.working()) this.cover(); else this.clearAll(); }
+      /* Only ONE of the ways to fail that test is a handover. Off the premises
+         mid-shift, somebody holding is still somebody holding and the floor
+         takes them — cover(), which says so. The queue closing at five, or a
+         first morning that has not reached the floor yet, is not a handover:
+         there is nobody to hand to and nothing to say. */
+      if (this.ringing.length) {
+        if (Sky.working() && !Levels.onSite()) this.cover(); else this.clearAll();
+      }
       return;
     }
     this.timer = (this.timer || 0) - dt;
@@ -87,7 +99,18 @@ const Phones = {
         this.ringing.splice(i, 1);
         count('abandoned');
         Player.mod({ rep: -1 });
-        UI.toast('📵', pick([
+        /* SAY WHY, when the why is not in front of you. On the call floor this
+           is a phone you watched ring out and the old lines are exactly right.
+           Somewhere else in the building it is a phone you never heard, and a
+           point of reputation going for no visible reason reads as the game
+           being arbitrary rather than as the rule it is — in the building, on
+           shift, the queue is yours. Out of the building it never gets here at
+           all; the floor covers it. See cover(). */
+        UI.toast('📵', p.lvl !== World.level ? pick([
+          'A phone rings out on the fourth floor. You are not on the fourth floor. The queue has no opinion about where you are.',
+          'Somewhere in this building, a caller gives up. Being elsewhere in it is not the same as being off it.',
+          'Another one abandoned on the floor. You are still clocked in, and the rota still says you.'
+        ]) : pick([
           'A phone stops ringing on its own. Somebody has given up. The queue does not record who.',
           'Abandoned call. Somewhere a person decides to try again tomorrow, or not.',
           'One of the phones goes quiet. That counts against the floor, not against you, officially.'
@@ -113,11 +136,28 @@ const Phones = {
       ? 'A phone was ringing as you left. Somebody on the floor has taken it. That is what a floor is.'
       : n + ' phones were ringing as you left. The floor has them. Nobody is keeping a list, officially.');
   },
+  /* A PHONE ON THE CALL FLOOR, wherever you happen to be standing on the
+     premises. This used to read World.objects — the level you are on — which
+     was the same thing as the call floor for as long as the call floor was the
+     game. Once the building had four storeys it quietly meant something else:
+     stand in the lobby, or on five, or down the ladder, and nothing could ring
+     at all, because there are no desk phones on those floors. The queue froze
+     the moment you left the room. Which made a rule written two commits ago —
+     in the building, the queue is still yours — true only of the calls that
+     happened to be ringing as you went through the door.
+
+     So it rings where the phones are: the hub, whichever level that is, asked
+     for by reference through Levels.objectsOn() so that the phone rung while
+     you are downstairs is the same object you walk up to. Never built on
+     demand for this — an unvisited hub simply has no queue yet, and the hub is
+     pinned in the cache from the first time you stand on it. */
   ringRandom(hot) {
-    const phones = World.objects.filter(o => o.kind === 'phone' && !o.ringing);
+    const objs = Levels.objectsOn(Levels.hub());
+    if (!objs) return;
+    const phones = objs.filter(o => o.kind === 'phone' && !o.ringing);
     if (!phones.length) return;
     const p = pick(phones);
-    p.ringing = true; p.hot = !!hot; p.ringT = 0; p.waited = 0; p.lvl = World.level; this.ringing.push(p);
+    p.ringing = true; p.hot = !!hot; p.ringT = 0; p.waited = 0; p.lvl = Levels.hub(); this.ringing.push(p);
   },
   answer(p) {
     p.ringing = false; p.waited = 0; this.ringing = this.ringing.filter(x => x !== p);
